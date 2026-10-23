@@ -78,9 +78,9 @@ export default function DataQualityView({
       {error && (
         <div
           style={{
-            background: '#fef2f2',
-            border: '1px solid #fecaca',
-            color: '#991b1b',
+            background: 'var(--danger-50)',
+            border: '1px solid var(--danger-200)',
+            color: 'var(--danger-800)',
             padding: '12px 16px',
             borderRadius: '8px',
             marginBottom: '16px',
@@ -100,7 +100,7 @@ export default function DataQualityView({
           marginBottom: '24px',
         }}
       >
-        <SummaryCard label={t('total')} value={grandTotal} color="#0f172a" />
+        <SummaryCard label={t('total')} value={grandTotal} color="var(--text-strong)" />
         {SEVERITY_ORDER.map(sev => (
           <SummaryCard
             key={sev}
@@ -159,7 +159,7 @@ export default function DataQualityView({
               </thead>
               <tbody>
                 {bottlenecks.map(b => (
-                  <tr key={b.subsystem_id} style={{ borderTop: '1px solid #f1f5f9' }}>
+                  <tr key={b.subsystem_id} style={{ borderTop: '1px solid var(--gray-100)' }}>
                     <td style={tdStyle}>
                       <ScorePill score={b.bottleneck_score} />
                     </td>
@@ -309,7 +309,7 @@ export default function DataQualityView({
             </thead>
             <tbody>
               {issues.map((iss, i) => (
-                <tr key={`${iss.entity_type}-${iss.entity_id}-${i}`} style={{ borderTop: '1px solid #f1f5f9' }}>
+                <tr key={`${iss.entity_type}-${iss.entity_id}-${i}`} style={{ borderTop: '1px solid var(--gray-100)' }}>
                   <td style={tdStyle}>
                     <span
                       style={{
@@ -324,7 +324,7 @@ export default function DataQualityView({
                   <td style={tdStyle}>{t(`category.${iss.category}`)}</td>
                   <td style={tdStyle}>
                     <div style={{ fontWeight: 500 }}>{iss.entity_label}</div>
-                    <div style={{ color: 'var(--gray-400)', fontSize: '11px' }}>{iss.entity_type}</div>
+                    <div style={{ color: 'var(--text-muted)', fontSize: '11px' }}>{iss.entity_type}</div>
                   </td>
                   <td style={{ ...tdStyle, color: 'var(--text-muted)' }}>{iss.description}</td>
                   <td style={{ ...tdStyle, color: 'var(--text-muted)', fontSize: '12px' }}>{iss.suggested_fix}</td>
@@ -377,7 +377,7 @@ function SummaryCard({
 }
 
 function ScorePill({ score }: { score: number }) {
-  const color = score >= 70 ? '#dc2626' : score >= 40 ? '#ea580c' : '#d97706'
+  const color = score >= 70 ? 'var(--danger-600)' : score >= 40 ? 'var(--orange-600)' : 'var(--warning-600)'
   return (
     <span
       style={{
@@ -405,7 +405,7 @@ function EmptyState({ children }: { children: React.ReactNode }) {
         textAlign: 'center',
         color: 'var(--text-muted)',
         background: 'var(--gray-50)',
-        border: '1px dashed #cbd5e1',
+        border: '1px dashed var(--gray-300)',
         borderRadius: '10px',
         fontSize: '14px',
       }}
@@ -462,7 +462,7 @@ const selectStyle: React.CSSProperties = {
 }
 
 const linkStyle: React.CSSProperties = {
-  color: '#3b82f6',
+  color: 'var(--primary-700)',
   textDecoration: 'none',
   fontWeight: 600,
   fontSize: '16px',

@@ -433,7 +433,7 @@ export default function QRNFCScanner() {
                 borderRadius: 'var(--radius-pill)',
                 fontWeight: 500,
                 background: qrActive ? 'rgba(37, 99, 235, 0.8)' : 'rgba(51, 65, 85, 0.8)',
-                color: qrActive ? 'var(--primary-100)' : 'var(--gray-400)',
+                color: qrActive ? 'var(--on-dark-accent)' : 'var(--gray-400)',
               }}>
                 {qrActive ? `● ${tx('qr.scanning')}` : `⊘ ${tx('qr.inactive')}`}
               </span>

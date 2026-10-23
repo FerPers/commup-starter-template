@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { ShieldCheck, AlertTriangle } from 'lucide-react'
 import { createPssrReview } from '@/app/actions/pssr'
+import { ink } from '@/lib/theme'
 import { DialogSurface } from '@/components/ui/dialog-a11y'
 
 interface System { id: string; code: string; name: string }
@@ -31,11 +32,11 @@ const STATUS_KEY_MAP: Record<string, StatusKey> = {
   rejected: 'rejected',
 }
 const STATUS_STYLES: Record<StatusKey, { color: string; bg: string }> = {
-  draft:            { color: 'var(--text-muted)', bg: 'var(--gray-100)' },
-  inProgress:       { color: '#3b82f6',           bg: '#eff6ff' },
-  pendingApproval:  { color: '#f59e0b',           bg: '#fffbeb' },
-  approved:         { color: '#10b981',           bg: '#ecfdf5' },
-  rejected:         { color: '#ef4444',           bg: '#fee2e2' },
+  draft:           { color: 'var(--text-muted)',  bg: 'var(--gray-100)' },
+  inProgress:      { color: 'var(--primary-700)', bg: 'var(--primary-50)' },
+  pendingApproval: { color: 'var(--warning-700)', bg: 'var(--warning-50)' },
+  approved:        { color: 'var(--success-700)', bg: 'var(--success-50)' },
+  rejected:        { color: 'var(--danger-700)',  bg: 'var(--danger-100)' },
 }
 
 export default function PssrListView({
@@ -91,7 +92,7 @@ export default function PssrListView({
 
   const inputStyle: React.CSSProperties = {
     width: '100%', padding: '9px 12px', borderRadius: '8px',
-    border: '1.5px solid #d1d5db', fontSize: '14px', outline: 'none',
+    border: '1.5px solid var(--gray-300)', fontSize: '14px', outline: 'none',
     boxSizing: 'border-box', fontFamily: 'inherit', color: 'var(--text-strong)', background: 'var(--card-bg)',
   }
 
@@ -132,7 +133,7 @@ export default function PssrListView({
           border: '1.5px dashed var(--gray-300)',
         }}>
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '14px' }}>
-            <ShieldCheck size={40} color="var(--warning-500)" aria-hidden="true" />
+            <ShieldCheck size={40} color='var(--warning-700)' aria-hidden="true" />
           </div>
           <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-strong)', margin: '0 0 6px' }}>
             {t('list.emptyTitle')}
@@ -173,7 +174,7 @@ export default function PssrListView({
                     style={{
                       display: 'flex', alignItems: 'center', gap: '12px',
                       padding: '12px 16px', borderRadius: '8px',
-                      background: 'var(--gray-50)', border: '1px solid #f1f5f9',
+                      background: 'var(--gray-50)', border: '1px solid var(--gray-100)',
                       cursor: 'pointer', textDecoration: 'none', color: 'inherit',
                     }}
                   >
@@ -184,25 +185,25 @@ export default function PssrListView({
                         </span>
                         <span style={{
                           padding: '2px 8px', borderRadius: '20px', fontSize: '11px', fontWeight: 600,
-                          background: sty.bg, color: sty.color,
+                          background: sty.bg, color: ink(sty.color),
                         }}>
                           {t(`status.${statusKey}`)}
                         </span>
                         {review.rfsu_certificate_id && (
                           <span style={{
                             padding: '2px 8px', borderRadius: '20px', fontSize: '11px', fontWeight: 600,
-                            background: '#ecfdf5', color: '#10b981',
+                            background: 'var(--success-50)', color: 'var(--success-700)',
                           }}>
                             {t('list.rfsuIssued')}
                           </span>
                         )}
                       </div>
-                      <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>
+                      <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
                         {new Date(review.created_at).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })}
                         {review.approved_at && ` · ${t('list.approvedOn', { date: new Date(review.approved_at).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' }) })}`}
                       </div>
                     </div>
-                    <span style={{ color: '#cbd5e1', fontSize: '18px' }}>›</span>
+                    <span style={{ color: 'var(--text-muted)', fontSize: '18px' }}>›</span>
                   </Link>
                 )
               })}
@@ -213,8 +214,8 @@ export default function PssrListView({
 
       {/* Systems without reviews (only show if can edit) */}
       {canEdit && templates.length > 0 && systems.filter(s => !reviewsBySystem.has(s.id)).length > 0 && (
-        <div style={{ ...cardStyle, border: '1.5px dashed #e2e8f0' }}>
-          <p style={{ fontSize: '12px', fontWeight: 600, color: '#94a3b8', margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+        <div style={{ ...cardStyle, border: '1.5px dashed var(--gray-200)' }}>
+          <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
             {t('list.systemsWithoutPssr')}
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
@@ -253,7 +254,7 @@ export default function PssrListView({
             </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
-                <label htmlFor={`${uid}-systemLabel`} style={{ fontSize: '13px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
+                <label htmlFor={`${uid}-systemLabel`} style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-body)', display: 'block', marginBottom: '6px' }}>
                   {t('createModal.systemLabel')}
                 </label>
                 <select
@@ -270,7 +271,7 @@ export default function PssrListView({
               </div>
               {templates.length > 1 && (
                 <div>
-                  <label htmlFor={`${uid}-templateLabel`} style={{ fontSize: '13px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
+                  <label htmlFor={`${uid}-templateLabel`} style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-body)', display: 'block', marginBottom: '6px' }}>
                     {t('createModal.templateLabel')}
                   </label>
                   <select
@@ -286,7 +287,7 @@ export default function PssrListView({
                 </div>
               )}
               <div>
-                <label htmlFor={`${uid}-titleLabel`} style={{ fontSize: '13px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
+                <label htmlFor={`${uid}-titleLabel`} style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-body)', display: 'block', marginBottom: '6px' }}>
                   {t('createModal.titleLabel')}
                 </label>
                 <input
@@ -298,7 +299,7 @@ export default function PssrListView({
                 />
               </div>
               <div>
-                <label htmlFor={`${uid}-dueDateLabel`} style={{ fontSize: '13px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
+                <label htmlFor={`${uid}-dueDateLabel`} style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-body)', display: 'block', marginBottom: '6px' }}>
                   {t('createModal.dueDateLabel')}
                 </label>
                 <input
@@ -312,17 +313,17 @@ export default function PssrListView({
                   {t('createModal.dueDateHint')}
                 </p>
               </div>
-              {formError && <p style={{ color: '#dc2626', fontSize: '13px', margin: 0 }}>{formError}</p>}
+              {formError && <p style={{ color: 'var(--danger-700)', fontSize: '13px', margin: 0 }}>{formError}</p>}
               <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '4px' }}>
                 <button onClick={() => setShowModal(false)} style={{
                   padding: '9px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-                  background: 'var(--gray-100)', border: 'none', cursor: 'pointer', color: 'var(--gray-700)',
+                  background: 'var(--gray-100)', border: 'none', cursor: 'pointer', color: 'var(--text-body)',
                 }}>
                   {t('createModal.cancel')}
                 </button>
                 <button onClick={handleCreate} disabled={isPending} style={{
                   padding: '9px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-                  background: '#f59e0b', color: 'white', border: 'none',
+                  background: 'var(--warning-500)', color: 'white', border: 'none',
                   cursor: isPending ? 'not-allowed' : 'pointer', opacity: isPending ? 0.7 : 1,
                 }}>
                   {isPending ? t('createModal.submitting') : t('createModal.submit')}

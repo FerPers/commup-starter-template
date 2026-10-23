@@ -59,7 +59,7 @@ export default function TagTypeControl({ projectId, tagId, current, types, canEd
         {current
           ? <strong style={{ fontSize: 14, color: 'var(--text-strong)' }}><span style={{ fontFamily: 'ui-monospace, monospace' }}>{current.code}</span> · {current.name}</strong>
           : <strong style={{ fontSize: 14, color: 'var(--warning-800)' }}>{t('tag.none')}</strong>}
-        {!current && <Link href={`/projects/${projectId}/itrs/requirements/untyped`} style={{ fontSize: 12, fontWeight: 600, color: 'var(--primary-600)' }}>{t('tag.groups')}</Link>}
+        {!current && <Link href={`/projects/${projectId}/itrs/requirements/untyped`} style={{ fontSize: 12, fontWeight: 600, color: 'var(--primary-700)' }}>{t('tag.groups')}</Link>}
         <span style={{ flex: 1 }} />
         {canEdit && (
           <button type="button" onClick={() => setOpen(v => !v)} aria-expanded={open}
@@ -101,7 +101,7 @@ export default function TagTypeControl({ projectId, tagId, current, types, canEd
 
           {preview && (
             <button type="button" disabled={!ok || isPending} onClick={confirm}
-              style={{ ...btn, marginTop: 12, border: 'none', background: ok && !isPending ? 'var(--primary-600)' : 'var(--gray-100)', color: ok && !isPending ? '#ffffff' : 'var(--gray-500)', cursor: ok && !isPending ? 'pointer' : 'not-allowed' }}>
+              style={{ ...btn, marginTop: 12, border: 'none', background: ok && !isPending ? 'var(--primary-600)' : 'var(--gray-100)', color: ok && !isPending ? '#ffffff' : 'var(--text-muted)', cursor: ok && !isPending ? 'pointer' : 'not-allowed' }}>
               {isPending ? t('tag.saving') : t('tag.confirm')}
             </button>
           )}

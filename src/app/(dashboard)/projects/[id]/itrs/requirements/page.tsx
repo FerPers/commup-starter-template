@@ -175,7 +175,7 @@ export default async function RequirementsPage({ params, searchParams }: {
                   {page.rows.map(r => (
                     <tr key={r.tag_id} style={{ borderTop: '1px solid var(--border)', verticalAlign: 'top' }}>
                       <td style={{ padding: '10px 14px' }}>
-                        <Link href={`/projects/${id}/tags/${r.tag_id}?tab=itrs`} style={{ fontFamily: 'ui-monospace, monospace', fontWeight: 600, color: 'var(--primary-600)', textDecoration: 'none' }}>{r.tag_number}</Link>
+                        <Link href={`/projects/${id}/tags/${r.tag_id}?tab=itrs`} style={{ fontFamily: 'ui-monospace, monospace', fontWeight: 600, color: 'var(--primary-700)', textDecoration: 'none' }}>{r.tag_number}</Link>
                       </td>
                       <td style={{ padding: '10px 8px', fontFamily: 'ui-monospace, monospace' }}>{r.type_code ?? '—'}</td>
                       <td style={{ padding: '10px 8px', color: 'var(--text-muted)' }}>{r.description}</td>

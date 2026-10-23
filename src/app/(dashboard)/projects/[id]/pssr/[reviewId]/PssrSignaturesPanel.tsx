@@ -49,7 +49,7 @@ export default function PssrSignaturesPanel({
             onClick={onOpenSign}
             style={{
               padding: '8px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-              background: '#7c3aed', color: '#fff', border: 'none', cursor: 'pointer',
+              background: 'var(--violet-600)', color: '#fff', border: 'none', cursor: 'pointer',
             }}
           >
             {t('review.signBtn')}
@@ -60,9 +60,9 @@ export default function PssrSignaturesPanel({
       {sigs.length === 0 ? (
         <div style={{
           padding: '28px', textAlign: 'center', background: 'var(--gray-50)',
-          borderRadius: '8px', border: '1.5px dashed #e2e8f0',
+          borderRadius: '8px', border: '1.5px dashed var(--gray-200)',
         }}>
-          <p style={{ fontSize: '13px', color: 'var(--gray-400)', margin: 0 }}>
+          <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>
             {reviewStatus === 'draft'
               ? t('review.signEmptyDraft')
               : t('review.signEmpty')}
@@ -79,7 +79,7 @@ export default function PssrSignaturesPanel({
               <img
                 src={sig.signature_data}
                 alt="Firma"
-                style={{ width: '100%', height: '80px', objectFit: 'contain', background: 'var(--card-bg)', borderRadius: '6px', border: '1px solid #f1f5f9' }}
+                style={{ width: '100%', height: '80px', objectFit: 'contain', background: 'var(--card-bg)', borderRadius: '6px', border: '1px solid var(--gray-100)' }}
               />
               <div style={{ marginTop: '8px' }}>
                 <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)' }}>
@@ -88,7 +88,7 @@ export default function PssrSignaturesPanel({
                 {(sig.capacity ?? sig.discipline) && (
                   <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{sig.capacity ? t(`capacity.${sig.capacity}`) : sig.discipline}</div>
                 )}
-                <div style={{ fontSize: '10px', color: 'var(--gray-400)', marginTop: '2px' }}>
+                <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
                   {new Date(sig.signed_at).toLocaleString(undefined, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                 </div>
               </div>
@@ -97,7 +97,7 @@ export default function PssrSignaturesPanel({
                   onClick={() => onRemoveSig(sig.id)}
                   style={{
                     marginTop: '6px', padding: '3px 8px', borderRadius: '5px', fontSize: '10px',
-                    background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', cursor: 'pointer',
+                    background: 'var(--danger-50)', border: '1px solid var(--danger-200)', color: 'var(--danger-700)', cursor: 'pointer',
                   }}
                 >
                   {t('review.removeSig')}

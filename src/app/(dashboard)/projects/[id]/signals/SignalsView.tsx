@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import SignalChainEditor from './SignalChainEditor'
 import { useTranslations } from 'next-intl'
+import { alpha, ink } from '@/lib/theme'
 
 const SIGNAL_TYPES = ['AI', 'AO', 'DI', 'DO', 'PI', 'PO'] as const
 type SignalType = typeof SIGNAL_TYPES[number]
@@ -138,7 +139,7 @@ export default function SignalsView({
             </p>
           </div>
           {canEdit && <Link href={`/projects/${projectId}/import-signals`} style={{
-            padding: '8px 16px', background: '#10b981', color: 'white',
+            padding: '8px 16px', background: 'var(--success-500)', color: 'white',
             borderRadius: '8px', fontSize: '13px', fontWeight: 500, textDecoration: 'none',
           }}>
             {t('importBtn')}
@@ -153,7 +154,7 @@ export default function SignalsView({
           style={{
             padding: '4px 12px', borderRadius: '999px', fontSize: '12px', fontWeight: 600,
             border: '1px solid',
-            background: typeFilter === 'all' ? 'var(--primary-500)' : 'var(--card-bg)',
+            background: typeFilter === 'all' ? 'var(--primary-600)' : 'var(--card-bg)',
             color: typeFilter === 'all' ? '#fff' : 'var(--text-muted)',
             borderColor: typeFilter === 'all' ? 'var(--primary-500)' : 'var(--border)',
             cursor: 'pointer',
@@ -172,8 +173,8 @@ export default function SignalsView({
               onClick={() => setTypeFilter(active ? 'all' : type)}
               style={{
                 padding: '4px 12px', borderRadius: '999px', fontSize: '12px', fontWeight: 600,
-                border: `1px solid ${active ? color : color + '40'}`,
-                background: active ? color : color + '12',
+                border: `1px solid ${active ? color : alpha(color, 25)}`,
+                background: active ? color : alpha(color, 7),
                 color: active ? 'white' : color,
                 cursor: 'pointer',
               }}
@@ -221,9 +222,9 @@ export default function SignalsView({
         }}>
           <div style={{ fontSize: '40px', marginBottom: '12px', opacity: 0.3 }}>📋</div>
           <p style={{ fontSize: '15px', fontWeight: 500, color: 'var(--text-strong)', margin: '0 0 6px' }}>{t('emptyTitle')}</p>
-          <p style={{ fontSize: '13px', color: '#94a3b8', margin: '0 0 20px' }}>{t('emptyDesc')}</p>
+          <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 20px' }}>{t('emptyDesc')}</p>
           <Link href={`/projects/${projectId}/import-signals`} style={{
-            padding: '9px 20px', background: '#10b981', color: 'white',
+            padding: '9px 20px', background: 'var(--success-500)', color: 'white',
             borderRadius: '8px', fontSize: '13px', fontWeight: 500, textDecoration: 'none',
           }}>
             {t('importBtn')}
@@ -247,7 +248,7 @@ export default function SignalsView({
               <tbody>
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={8} style={{ padding: '40px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>
+                    <td colSpan={8} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
                       {t('noResults')}
                     </td>
                   </tr>
@@ -258,7 +259,7 @@ export default function SignalsView({
                     <tr
                       key={sig.id}
                       style={{
-                        borderBottom: '1px solid #f1f5f9',
+                        borderBottom: '1px solid var(--gray-100)',
                         background: i % 2 === 0 ? 'var(--card-bg)' : 'var(--gray-50)',
                         cursor: 'pointer',
                       }}
@@ -273,8 +274,8 @@ export default function SignalsView({
                       <td style={{ padding: '10px 12px' }}>
                         <span style={{
                           padding: '2px 8px', borderRadius: '999px', fontSize: '11px', fontWeight: 700,
-                          background: color + '18', color,
-                          border: `1px solid ${color}30`,
+                          background: alpha(color, 9), color,
+                          border: `1px solid ${alpha(color, 19)}`,
                         }}>
                           {sig.signal_type}
                         </span>
@@ -288,7 +289,7 @@ export default function SignalsView({
                       {/* Subsystem */}
                       <td style={{ padding: '10px 12px' }}>
                         <div style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-strong)' }}>{sub.code}</div>
-                        <div style={{ fontSize: '11px', color: '#94a3b8' }}>{sub.systems.areas.code} › {sub.systems.code}</div>
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{sub.systems.areas.code} › {sub.systems.code}</div>
                       </td>
 
                       {/* Range */}
@@ -310,7 +311,7 @@ export default function SignalsView({
                       </td>
 
                       {/* Expand */}
-                      <td style={{ padding: '10px 12px', color: '#94a3b8', fontSize: '12px', textAlign: 'right' }}>
+                      <td style={{ padding: '10px 12px', color: 'var(--text-muted)', fontSize: '12px', textAlign: 'right' }}>
                         {selected?.id === sig.id ? '▲' : '▼'}
                       </td>
                     </tr>
@@ -331,12 +332,12 @@ export default function SignalsView({
                   <span style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-strong)', fontFamily: 'monospace' }}>{selected.signal_tag}</span>
                   <span style={{
                     marginLeft: '10px', padding: '2px 9px', borderRadius: '999px', fontSize: '12px', fontWeight: 700,
-                    background: typeColor(selected.signal_type) + '18', color: typeColor(selected.signal_type),
+                    background: alpha(typeColor(selected.signal_type), 9), color: ink(typeColor(selected.signal_type)),
                   }}>
                     {selected.signal_type} — {TYPE_LABELS[selected.signal_type as SignalType] ?? selected.signal_type}
                   </span>
                 </div>
-                <button onClick={() => setSelected(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '16px' }}>✕</button>
+                <button onClick={() => setSelected(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '16px' }}>✕</button>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px' }}>
@@ -355,7 +356,7 @@ export default function SignalsView({
                   { label: t('detail.notes'),       value: selected.notes ?? '—' },
                 ].map(item => (
                   <div key={item.label} style={{ background: 'var(--card-bg)', borderRadius: '8px', padding: '10px 12px', border: '1px solid var(--border)' }}>
-                    <div style={{ fontSize: '10px', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '3px' }}>{item.label}</div>
+                    <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '3px' }}>{item.label}</div>
                     <div style={{ fontSize: '13px', color: 'var(--text-strong)', wordBreak: 'break-word' }}>{item.value}</div>
                   </div>
                 ))}
@@ -369,7 +370,7 @@ export default function SignalsView({
           )}
 
           {filtered.length > 0 && (
-            <div style={{ padding: '10px 16px', borderTop: '1px solid #f1f5f9', background: 'var(--gray-50)', fontSize: '12px', color: '#94a3b8' }}>
+            <div style={{ padding: '10px 16px', borderTop: '1px solid var(--gray-100)', background: 'var(--gray-50)', fontSize: '12px', color: 'var(--text-muted)' }}>
               {t('showing', { filtered: filtered.length, total: signals.length })}
             </div>
           )}

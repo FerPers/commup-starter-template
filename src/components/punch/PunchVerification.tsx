@@ -70,7 +70,7 @@ export function PunchVerification({ punch, projectId, tagId, userId, role, photo
     return (
       <div style={box}>
         {dialog}
-        <label htmlFor={`${uid}-resolve`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>{t('resolveLabel')}</label>
+        <label htmlFor={`${uid}-resolve`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-body)', display: 'block', marginBottom: '6px' }}>{t('resolveLabel')}</label>
         <textarea id={`${uid}-resolve`} rows={2} style={area} value={text} placeholder={t('resolvePlaceholder')} onChange={e => setText(e.target.value)} disabled={isPending} />
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '8px', flexWrap: 'wrap' }}>
           <button type="button" onClick={resolve} disabled={isPending || tooShort} style={btn('#f5f3ff', '#7c3aed', '#ddd6fe', isPending || tooShort)}>
@@ -85,8 +85,8 @@ export function PunchVerification({ punch, projectId, tagId, userId, role, photo
 
   const when = punch.resolved_at ? new Date(punch.resolved_at).toLocaleString() : ''
   return (
-    <div style={{ ...box, background: '#f5f3ff', borderColor: '#ddd6fe' }}>
-      <div style={{ fontSize: '13px', fontWeight: 600, color: '#5b21b6' }}>
+    <div style={{ ...box, background: 'var(--violet-50)', borderColor: 'var(--violet-200)' }}>
+      <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--violet-800)' }}>
         {t('resolvedBy', { who: punch.resolved_by_name ?? t('someone'), when })}
       </div>
       {rights.waitingOther && <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>{t('waitingOther')}</div>}

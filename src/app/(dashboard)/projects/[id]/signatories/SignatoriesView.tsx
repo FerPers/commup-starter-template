@@ -76,7 +76,7 @@ export default function SignatoriesView({ project, designations, members, names,
               </div>
               <p style={{ ...small, margin: 0 }}>{t(`capHelp.${cap}`)}</p>
               {list.length === 0 && (
-                <p style={{ ...small, margin: 0, color: 'var(--warning-700, #b45309)' }}>
+                <p style={{ ...small, margin: 0, color: 'var(--warning-700)' }}>
                   {t('fallback', { roles: CAPACITY_FALLBACK_ROLES[cap].map(roleLabel).join(', ') })}
                 </p>
               )}

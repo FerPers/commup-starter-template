@@ -264,7 +264,7 @@ export default function OperationsView({ project, initialView, systems, transfer
                 <tbody>
                   {activePeople.map(p => (
                     <tr key={p.id}>
-                      <td style={{ ...td, position: 'sticky', left: 0, background: 'var(--surface, #fff)', whiteSpace: 'nowrap' }}>
+                      <td style={{ ...td, position: 'sticky', left: 0, background: 'var(--surface, var(--card-bg))', whiteSpace: 'nowrap' }}>
                         <strong>{p.full_name}</strong><div style={small}>{[p.position, p.shift && `${t('ops.shift')} ${p.shift}`].filter(Boolean).join(' · ')}</div>
                       </td>
                       {systems.map(s => {
@@ -287,7 +287,7 @@ export default function OperationsView({ project, initialView, systems, transfer
                     </tr>
                   ))}
                   <tr>
-                    <td style={{ ...td, ...small, position: 'sticky', left: 0, background: 'var(--surface, #fff)' }}>{t('ops.atLevel3')}</td>
+                    <td style={{ ...td, ...small, position: 'sticky', left: 0, background: 'var(--surface, var(--card-bg))' }}>{t('ops.atLevel3')}</td>
                     {systems.map(s => (
                       <td key={s.id} style={{ ...td, ...small, textAlign: 'center' }}>{activePeople.filter(p => (levels[`${p.id}:${s.id}`]?.level ?? 0) >= 3).length}</td>
                     ))}

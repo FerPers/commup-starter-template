@@ -32,7 +32,7 @@ const small: React.CSSProperties = { fontSize: 'var(--text-sm)', color: 'var(--t
 const input: React.CSSProperties = { padding: '7px 10px', border: '1px solid var(--border)', borderRadius: 8, fontSize: 'var(--text-sm)', background: 'var(--card-bg)', color: 'var(--text-strong)' }
 const btn = (primary: boolean): React.CSSProperties => ({
   padding: '6px 12px', borderRadius: 8, fontSize: 'var(--text-sm)', fontWeight: 600, cursor: 'pointer',
-  border: primary ? 'none' : '1px solid var(--border)', background: primary ? 'var(--primary-500)' : 'var(--card-bg)', color: primary ? '#fff' : 'var(--text-strong)',
+  border: primary ? 'none' : '1px solid var(--border)', background: primary ? 'var(--primary-600)' : 'var(--card-bg)', color: primary ? '#fff' : 'var(--text-strong)',
 })
 
 export default function DocumentReferences({ projectId, kind, targetId, refs, options, locked, canEdit, canRevalidate }: {
@@ -75,11 +75,11 @@ export default function DocumentReferences({ projectId, kind, targetId, refs, op
     <section style={box} aria-labelledby={`docrefs-${targetId}`}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
         <h3 id={`docrefs-${targetId}`} style={{ margin: 0, fontSize: 15, fontWeight: 700, color: 'var(--text-strong)' }}>{t('refs.title')}</h3>
-        <Link href={`/projects/${projectId}/documents`} style={{ ...small, color: 'var(--primary-600, #2563eb)', textDecoration: 'none' }}>{t('refs.register')}</Link>
+        <Link href={`/projects/${projectId}/documents`} style={{ ...small, color: 'var(--primary-700)', textDecoration: 'none' }}>{t('refs.register')}</Link>
       </div>
 
       {outdated.length > 0 && (
-        <div role="alert" style={{ padding: '8px 12px', background: 'var(--danger-50)', border: '1px solid #fecaca', borderRadius: 8, color: 'var(--danger-700)', fontSize: 'var(--text-sm)' }}>
+        <div role="alert" style={{ padding: '8px 12px', background: 'var(--danger-50)', border: '1px solid var(--danger-200)', borderRadius: 8, color: 'var(--danger-700)', fontSize: 'var(--text-sm)' }}>
           {locked ? t('refs.outdatedLocked', { n: outdated.length }) : t(kind === 'itr' ? 'refs.outdatedItr' : 'refs.outdatedProc', { n: outdated.length })}
         </div>
       )}
@@ -97,14 +97,14 @@ export default function DocumentReferences({ projectId, kind, targetId, refs, op
                 <span style={{
                   fontSize: 'var(--text-xs)', fontWeight: 600, padding: '2px 8px', borderRadius: 999,
                   background: r.outdated ? 'var(--danger-50)' : 'var(--success-50)', color: r.outdated ? 'var(--danger-700)' : 'var(--success-700)',
-                  border: `1px solid ${r.outdated ? '#fecaca' : '#a7f3d0'}`,
+                  border: `1px solid ${r.outdated ? 'var(--danger-200)' : 'var(--success-200)'}`,
                 }}>
                   {r.outdated ? t('refs.outdatedChip', { used: r.used_rev, current: r.current_rev ?? '—' }) : t('refs.currentChip', { rev: r.used_rev })}
                 </span>
                 {!r.outdated && r.used_status && !isControlledStatus(r.used_status) && (
                   <span title={t('refs.notIfcHint')} style={{
                     fontSize: 'var(--text-xs)', fontWeight: 600, padding: '2px 8px', borderRadius: 999,
-                    background: 'var(--warning-50, #fffbeb)', color: 'var(--warning-700, #b45309)', border: '1px solid #fde68a',
+                    background: 'var(--warning-50)', color: 'var(--warning-700)', border: '1px solid var(--warning-200)',
                   }}>{t('refs.notIfcChip', { status: r.used_status.toUpperCase() })}</span>
                 )}
                 <span style={{ flex: 1 }} />

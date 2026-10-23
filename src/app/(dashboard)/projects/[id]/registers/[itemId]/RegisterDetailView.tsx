@@ -174,8 +174,8 @@ export default function RegisterDetailView({ project, item, tags: initialTags, e
         </div>
       </div>
 
-      {error && <div role="alert" style={{ padding: '10px 14px', background: 'var(--danger-50)', border: '1px solid #fecaca', borderRadius: 8, color: 'var(--danger-700)', fontSize: 'var(--text-sm)' }}>{error}</div>}
-      {saved && <div role="status" style={{ padding: '10px 14px', background: 'var(--success-50)', border: '1px solid #a7f3d0', borderRadius: 8, color: 'var(--success-700)', fontSize: 'var(--text-sm)' }}>{t('form.saved')}</div>}
+      {error && <div role="alert" style={{ padding: '10px 14px', background: 'var(--danger-50)', border: '1px solid var(--danger-200)', borderRadius: 8, color: 'var(--danger-700)', fontSize: 'var(--text-sm)' }}>{error}</div>}
+      {saved && <div role="status" style={{ padding: '10px 14px', background: 'var(--success-50)', border: '1px solid var(--success-200)', borderRadius: 8, color: 'var(--success-700)', fontSize: 'var(--text-sm)' }}>{t('form.saved')}</div>}
 
       {/* Ciclo de vida */}
       <section style={card} aria-labelledby="reg-lifecycle">
@@ -205,12 +205,12 @@ export default function RegisterDetailView({ project, item, tags: initialTags, e
           <div style={{ borderTop: '1px solid var(--border)', marginTop: 14, paddingTop: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
             {rejected && <div role="alert" style={{ ...small, color: 'var(--danger-700)' }}>{t('detail.rejected')}</div>}
             {missing.length > 0 && (
-              <div style={{ ...small, color: '#b45309' }}>{t('detail.missing', { fields: missing.map(f => t(`field.${f}`)).join(', ') })}</div>
+              <div style={{ ...small, color: 'var(--warning-700)' }}>{t('detail.missing', { fields: missing.map(f => t(`field.${f}`)).join(', ') })}</div>
             )}
             {next === 'verified' && item.kind === 'test_pack' && openBlinds.length > 0 && (
-              <div role="status" style={{ ...small, color: '#b45309' }}>{t('detail.openBlinds', { list: openBlinds.map(b => b.number).join(', ') })}</div>
+              <div role="status" style={{ ...small, color: 'var(--warning-700)' }}>{t('detail.openBlinds', { list: openBlinds.map(b => b.number).join(', ') })}</div>
             )}
-            {blockedBy && <div style={{ ...small, color: '#b45309' }}>{t('detail.otherPerson', { who: blockedBy })}</div>}
+            {blockedBy && <div style={{ ...small, color: 'var(--warning-700)' }}>{t('detail.otherPerson', { who: blockedBy })}</div>}
             <input style={{ ...input, maxWidth: 560 }} placeholder={t('detail.commentPlaceholder')} value={comment} onChange={e => setComment(e.target.value)} />
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               <button type="button" style={btn('primary', advanceDisabled)} onClick={advance} disabled={advanceDisabled}>

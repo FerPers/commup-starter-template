@@ -104,7 +104,7 @@ export default function PunchPhotosSection({
     <div style={{ marginBottom: 20 }}>
       {dialog}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-        <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-700)' }}>
+        <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-body)' }}>
           {t('label', { count: attachments.length })}
         </span>
         {canUpload && <>
@@ -113,8 +113,8 @@ export default function PunchPhotosSection({
           style={{
             display: 'inline-flex', alignItems: 'center', gap: 6,
             padding: '6px 12px',
-            background: uploading ? 'var(--gray-100)' : 'var(--primary-500)',
-            color: uploading ? 'var(--gray-400)' : '#fff',
+            background: uploading ? 'var(--gray-100)' : 'var(--primary-600)',
+            color: uploading ? 'var(--text-muted)' : '#fff',
             border: 'none', borderRadius: 7,
             fontSize: 12, fontWeight: 600,
             cursor: uploading ? 'wait' : 'pointer',
@@ -213,7 +213,7 @@ export default function PunchPhotosSection({
 
       {error && (
         <p style={{
-          fontSize: 12, color: 'var(--danger-500)', padding: '8px 12px',
+          fontSize: 12, color: 'var(--danger-700)', padding: '8px 12px',
           background: 'var(--danger-100)', borderRadius: 6, margin: '8px 0 0',
         }}>
           {error}

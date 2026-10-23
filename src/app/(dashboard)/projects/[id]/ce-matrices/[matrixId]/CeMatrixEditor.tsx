@@ -26,9 +26,9 @@ type Panel =
   | null
 
 const field = { width: '100%', padding: '7px 9px', border: '1px solid var(--border)', borderRadius: '7px', background: 'var(--card-bg)', color: 'var(--text-strong)', fontSize: '12px', boxSizing: 'border-box' } as const
-const primary = { padding: '8px 12px', borderRadius: '7px', border: 0, background: 'var(--primary-600, #2563eb)', color: '#fff', fontSize: '12px', fontWeight: 600, cursor: 'pointer' } as const
+const primary = { padding: '8px 12px', borderRadius: '7px', border: 0, background: 'var(--primary-600)', color: '#fff', fontSize: '12px', fontWeight: 600, cursor: 'pointer' } as const
 const secondary = { padding: '8px 12px', borderRadius: '7px', border: '1px solid var(--border)', background: 'var(--card-bg)', color: 'var(--text-strong)', fontSize: '12px', cursor: 'pointer' } as const
-const danger = { ...secondary, color: '#b91c1c', borderColor: '#fecaca' } as const
+const danger = { ...secondary, color: 'var(--danger-700)', borderColor: 'var(--danger-200)' } as const
 const ITR_STATUSES = ['not_started', 'in_progress', 'completed', 'approved', 'rejected', 'on_hold']
 
 export default function CeMatrixEditor({ projectId, projectName, matrix, causes, effects, links, tagNumbers, canEdit, causeItrs = {}, templates = [], members = [] }: {
@@ -89,8 +89,8 @@ export default function CeMatrixEditor({ projectId, projectName, matrix, causes,
   const cellStyle = (link: CeLink | undefined, active: boolean) => ({
     width: '46px', minWidth: '46px', height: '34px', textAlign: 'center' as const, fontSize: '12px', fontWeight: 700,
     border: '1px solid var(--border)', cursor: canEdit ? 'pointer' : 'default',
-    background: active ? '#dbeafe' : link ? (link.link_type === 'delayed' ? '#fef3c7' : '#dcfce7') : 'var(--card-bg)',
-    color: link?.link_type === 'delayed' ? '#92400e' : '#166534',
+    background: active ? 'var(--primary-100)' : link ? (link.link_type === 'delayed' ? 'var(--warning-100)' : 'var(--success-100)') : 'var(--card-bg)',
+    color: link?.link_type === 'delayed' ? 'var(--warning-800)' : 'var(--success-800)',
   })
 
   return (
@@ -114,11 +114,11 @@ export default function CeMatrixEditor({ projectId, projectName, matrix, causes,
       </div>
 
       {(gaps.causesWithoutEffect.length > 0 || gaps.effectsWithoutCause.length > 0) && (
-        <p style={{ fontSize: '12px', color: '#b45309', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '8px', padding: '8px 12px', margin: '0 0 12px' }}>
+        <p style={{ fontSize: '12px', color: 'var(--warning-700)', background: 'var(--warning-50)', border: '1px solid var(--warning-200)', borderRadius: '8px', padding: '8px 12px', margin: '0 0 12px' }}>
           {tc('gaps', { causes: gaps.causesWithoutEffect.length, effects: gaps.effectsWithoutCause.length })}
         </p>
       )}
-      {error && !panel && <p role="alert" style={{ color: '#b91c1c', fontSize: '12px' }}>{error}</p>}
+      {error && !panel && <p role="alert" style={{ color: 'var(--danger-700)', fontSize: '12px' }}>{error}</p>}
 
       <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
         <div style={{ flex: '1 1 640px', minWidth: 0, background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '12px', overflow: 'auto', maxHeight: '75vh' }}>
@@ -131,7 +131,7 @@ export default function CeMatrixEditor({ projectId, projectName, matrix, causes,
                   <th style={{ position: 'sticky', top: 0, left: 0, zIndex: 3, background: 'var(--gray-50)', padding: '8px 10px', textAlign: 'left', borderBottom: '1px solid var(--border)', minWidth: '280px' }}>{tc('corner')}</th>
                   <th style={{ position: 'sticky', top: 0, zIndex: 2, background: 'var(--gray-50)', padding: '8px 10px', textAlign: 'left', borderBottom: '1px solid var(--border)', fontSize: '11px', color: 'var(--text-muted)', minWidth: '150px' }}>{tc('testCol')}</th>
                   {effects.map(e => (
-                    <th key={e.id} scope="col" title={`${e.code} — ${e.description}${e.tag_number ? ` (${e.tag_number})` : ''}`} style={{ position: 'sticky', top: 0, zIndex: 2, background: loneEffects.has(e.id) ? '#fffbeb' : 'var(--gray-50)', borderBottom: '1px solid var(--border)', padding: '6px 4px', verticalAlign: 'bottom' }}>
+                    <th key={e.id} scope="col" title={`${e.code} — ${e.description}${e.tag_number ? ` (${e.tag_number})` : ''}`} style={{ position: 'sticky', top: 0, zIndex: 2, background: loneEffects.has(e.id) ? 'var(--warning-50)' : 'var(--gray-50)', borderBottom: '1px solid var(--border)', padding: '6px 4px', verticalAlign: 'bottom' }}>
                       <button type="button" disabled={!canEdit} onClick={() => { setError(''); setPanel({ kind: 'effect', row: e }) }} style={{ border: 0, background: 'transparent', cursor: canEdit ? 'pointer' : 'default', writingMode: 'vertical-rl', transform: 'rotate(180deg)', fontSize: '11px', fontWeight: 600, color: 'var(--text-strong)', maxHeight: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', padding: 0 }}>
                         {e.code}{e.tag_number ? ` · ${e.tag_number}` : ''} · {tc(`action.${e.action}`)}
                       </button>
@@ -141,7 +141,7 @@ export default function CeMatrixEditor({ projectId, projectName, matrix, causes,
               </thead>
               <tbody>{causes.map(c => (
                 <tr key={c.id}>
-                  <th scope="row" style={{ position: 'sticky', left: 0, zIndex: 1, background: loneCauses.has(c.id) ? '#fffbeb' : 'var(--card-bg)', borderBottom: '1px solid var(--border)', padding: '6px 10px', textAlign: 'left', fontWeight: 400 }}>
+                  <th scope="row" style={{ position: 'sticky', left: 0, zIndex: 1, background: loneCauses.has(c.id) ? 'var(--warning-50)' : 'var(--card-bg)', borderBottom: '1px solid var(--border)', padding: '6px 10px', textAlign: 'left', fontWeight: 400 }}>
                     <button type="button" disabled={!canEdit} onClick={() => { setError(''); setPanel({ kind: 'cause', row: c }) }} style={{ border: 0, background: 'transparent', padding: 0, cursor: canEdit ? 'pointer' : 'default', textAlign: 'left', color: 'var(--text-strong)', fontSize: '12px' }}>
                       <strong style={{ fontFamily: 'monospace' }}>{c.code}</strong> {c.description}
                       <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
@@ -158,7 +158,7 @@ export default function CeMatrixEditor({ projectId, projectName, matrix, causes,
                     const active = panel?.kind === 'cell' && panel.cause.id === c.id && panel.effect.id === e.id
                     return (
                       <td key={e.id} aria-label={`${c.code} × ${e.code}: ${link ? linkLabel(link) : tc('noLink')}${tested === 'pass' ? `, ${tc('testPassed')}` : tested === 'fail' ? `, ${tc('testFailed')}` : ''}`}
-                        style={{ ...cellStyle(link, active), ...(tested === 'pass' ? { background: '#047857', color: '#fff' } : tested === 'fail' ? { background: '#b91c1c', color: '#fff' } : {}) }}
+                        style={{ ...cellStyle(link, active), ...(tested === 'pass' ? { background: 'var(--solid-success-700)', color: '#fff' } : tested === 'fail' ? { background: 'var(--solid-danger-700)', color: '#fff' } : {}) }}
                         onClick={() => { if (canEdit) { setError(''); setPanel({ kind: 'cell', cause: c, effect: e }) } }}>
                         {linkLabel(link)}{tested === 'pass' ? ' ✓' : tested === 'fail' ? ' ✗' : ''}
                       </td>
@@ -197,7 +197,7 @@ export default function CeMatrixEditor({ projectId, projectName, matrix, causes,
                 if (await confirm({ message: tc('deleteEffectConfirm', { code: panel.row!.code }), confirmLabel: tc('delete'), danger: true })) run(() => deleteCeRow({ projectId, matrixId: matrix.id, kind: 'effect', id: panel.row!.id }))
               } : undefined}
               onClose={() => setPanel(null)} />}
-            {error && <p role="alert" style={{ color: '#b91c1c', fontSize: '12px', margin: '10px 0 0' }}>{error}</p>}
+            {error && <p role="alert" style={{ color: 'var(--danger-700)', fontSize: '12px', margin: '10px 0 0' }}>{error}</p>}
           </aside>
         )}
       </div>
@@ -303,13 +303,13 @@ function FormButtons({ row, pending, onDelete, onClose }: { row: boolean; pendin
 /** Estado del ITR de prueba de una causa: número (enlace), estado y aviso si la matriz cambió después. */
 function CauseItrCell({ info, projectId }: { info: SourceItrInfo | undefined; projectId: string }) {
   const tc = useTranslations('CeMatrix')
-  if (!info) return <span style={{ color: 'var(--gray-400)' }}>{tc('noItr')}</span>
-  const color = info.status === 'approved' ? '#047857' : Object.values(info.rows).includes('fail') ? '#b91c1c' : 'var(--text-strong)'
+  if (!info) return <span style={{ color: 'var(--text-muted)' }}>{tc('noItr')}</span>
+  const color = info.status === 'approved' ? 'var(--success-700)' : Object.values(info.rows).includes('fail') ? 'var(--danger-700)' : 'var(--text-strong)'
   return (
     <span style={{ display: 'inline-flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
       <a href={info.tagId ? `/projects/${projectId}/tags/${info.tagId}/itrs/${info.id}` : '#'} style={{ fontFamily: 'monospace', fontWeight: 600, color }}>{info.itrNumber}</a>
       <span style={{ color: 'var(--text-muted)' }}>{ITR_STATUSES.includes(info.status) ? tc(`itrStatus.${info.status as 'approved'}`) : info.status}</span>
-      {info.outdated && <span title={tc('outdatedHint')} style={{ color: '#b45309', fontWeight: 600 }}>{tc('outdated')}</span>}
+      {info.outdated && <span title={tc('outdatedHint')} style={{ color: 'var(--warning-700)', fontWeight: 600 }}>{tc('outdated')}</span>}
     </span>
   )
 }

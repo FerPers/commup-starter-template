@@ -137,7 +137,7 @@ export default function ReportEditor({ project, report, canEdit, canIssue, canDe
     <div style={{ padding: 32, maxWidth: 1400, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
       {dialog}
       <div>
-        <Link href={`/projects/${project.id}/daily/reports`} style={{ fontSize: 'var(--text-sm)', color: 'var(--primary-600, #2563eb)', textDecoration: 'none', fontWeight: 500 }}>← {t('tab.reports')}</Link>
+        <Link href={`/projects/${project.id}/daily/reports`} style={{ fontSize: 'var(--text-sm)', color: 'var(--primary-700)', textDecoration: 'none', fontWeight: 500 }}>← {t('tab.reports')}</Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginTop: 8 }}>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--text-strong)', margin: 0, fontFamily: 'ui-monospace, monospace' }}>{report.number}</h1>
           <Chip tone={TONE[report.status]}>{t(`report.status.${report.status}`)}</Chip>

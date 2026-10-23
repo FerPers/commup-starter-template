@@ -59,8 +59,8 @@ export default function SignOutDialog({ pending, onCancel, onDone }: {
         <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '10px 0 0', lineHeight: 1.5 }}>
           {synced ? t('stillPending', { n: left }) : t('signOutBody')}
         </p>
-        {!online && <p style={{ fontSize: 12, color: '#b45309', margin: '8px 0 0' }}>{t('offlineNote')}</p>}
-        {error && <p role="alert" style={{ fontSize: 12, color: '#b91c1c', margin: '8px 0 0' }}>{error}</p>}
+        {!online && <p style={{ fontSize: 12, color: 'var(--warning-700)', margin: '8px 0 0' }}>{t('offlineNote')}</p>}
+        {error && <p role="alert" style={{ fontSize: 12, color: 'var(--danger-700)', margin: '8px 0 0' }}>{error}</p>}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'flex-end', marginTop: 18 }}>
           <button type="button" onClick={onCancel} disabled={busy !== null} style={btn('ghost')}>{t('cancel')}</button>
           <button type="button" onClick={discard} disabled={busy !== null} style={btn('danger')}>
@@ -79,7 +79,7 @@ export default function SignOutDialog({ pending, onCancel, onDone }: {
 
 function btn(kind: 'primary' | 'danger' | 'ghost'): React.CSSProperties {
   const base: React.CSSProperties = { padding: '8px 14px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }
-  if (kind === 'primary') return { ...base, background: '#2563eb', color: '#fff', border: '1px solid #2563eb' }
-  if (kind === 'danger') return { ...base, background: 'var(--card-bg)', color: '#b91c1c', border: '1px solid #fecaca' }
+  if (kind === 'primary') return { ...base, background: 'var(--primary-600)', color: '#fff', border: '1px solid var(--primary-600)' }
+  if (kind === 'danger') return { ...base, background: 'var(--card-bg)', color: 'var(--danger-700)', border: '1px solid var(--danger-200)' }
   return { ...base, background: 'var(--card-bg)', color: 'var(--text-muted)', border: '1px solid var(--border)' }
 }

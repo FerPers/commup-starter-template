@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { punchDisplayStatus } from '@/lib/punches/verification'
 import { canRaisePunch } from '@/lib/constants/punch-roles'
+import { ink } from '@/lib/theme'
 import { PUNCH_CATEGORY_CFG as CATEGORY_CFG, PUNCH_STATUS_COLORS as STATUS_COLORS } from '@/lib/constants/status-colors'
 
 // N1b: el detalle de cada punch es su página propia (/projects/[id]/punches/[punchId]); aquí la lista y el alta.
@@ -62,8 +63,8 @@ export default function TagPunchTab({
     return (
       <div style={{ textAlign: 'center', padding: '60px 20px' }}>
         <div style={{ fontSize: '32px', marginBottom: '12px' }}>⚑</div>
-        <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--gray-700)', margin: '0 0 6px' }}>{t('punches.emptyTitle')}</p>
-        <p style={{ fontSize: '13px', color: 'var(--gray-400)', margin: '0 0 20px' }}>{t('punches.emptyMsg')}</p>
+        <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-body)', margin: '0 0 6px' }}>{t('punches.emptyTitle')}</p>
+        <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 20px' }}>{t('punches.emptyMsg')}</p>
         {canRaise && <Link
           href={newHref}
           style={{ display: 'inline-block', padding: '9px 18px', background: 'var(--orange-600)', color: '#fff', borderRadius: '8px', fontSize: '13px', fontWeight: 600, textDecoration: 'none' }}
@@ -96,8 +97,8 @@ export default function TagPunchTab({
                 transition: 'all 0.15s',
               }}
             >
-              <span style={{ fontSize: '12px', fontWeight: 700, color: cfg.color }}>{cfg.label}</span>
-              <span style={{ fontSize: '13px', fontWeight: 700, color: cfg.color }}>{count}</span>
+              <span style={{ fontSize: '12px', fontWeight: 700, color: ink(cfg.color) }}>{cfg.label}</span>
+              <span style={{ fontSize: '13px', fontWeight: 700, color: ink(cfg.color) }}>{count}</span>
             </button>
           )
         })}
@@ -128,20 +129,20 @@ export default function TagPunchTab({
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
                     <span style={{ fontSize: '11px', fontFamily: 'ui-monospace, monospace', color: 'var(--text-muted)', fontWeight: 600 }}>{punch.punch_number}</span>
-                    <span style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '11px', fontWeight: 700, background: catCfg.bg, color: catCfg.color, border: `1px solid ${catCfg.border}` }}>{catCfg.label}</span>
-                    <span style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '11px', fontWeight: 600, background: stColors.bg, color: stColors.color }}>{stLabel}</span>
+                    <span style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '11px', fontWeight: 700, background: catCfg.bg, color: ink(catCfg.color), border: `1px solid ${catCfg.border}` }}>{catCfg.label}</span>
+                    <span style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '11px', fontWeight: 600, background: stColors.bg, color: ink(stColors.color) }}>{stLabel}</span>
                     {!punch.category_reviewed_at && punch.status !== 'closed' && punch.status !== 'cancelled' && (
                       <span style={{ fontSize: '10px', color: 'var(--warning-700)' }}>{tGuide('unreviewedShort')}</span>
                     )}
                   </div>
                   <p style={{ fontSize: '13px', color: 'var(--text-strong)', margin: '0 0 4px', lineHeight: '1.4' }}>{punch.description}</p>
-                  <div style={{ display: 'flex', gap: '12px', fontSize: '11px', color: 'var(--gray-400)', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', gap: '12px', fontSize: '11px', color: 'var(--text-muted)', flexWrap: 'wrap' }}>
                     {punch.assigned_to_profile && <span>👤 {punch.assigned_to_profile.full_name}</span>}
                     {punch.target_date && <span>📅 {punch.target_date}</span>}
                     {punch.itr_id && <span>↗ ITR</span>}
                   </div>
                 </div>
-                <span aria-hidden style={{ fontSize: '11px', color: 'var(--gray-300)' }}>›</span>
+                <span aria-hidden style={{ fontSize: '11px', color: 'var(--text-muted)' }}>›</span>
               </div>
             </Link>
           )

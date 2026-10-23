@@ -53,7 +53,7 @@ export default function GateWeightsCard({ gates }: { gates: G[] }) {
             </label>
           ))}
           <button type="button" disabled={isPending || invalid || !dirty} onClick={save}
-            style={{ padding: '7px 14px', borderRadius: 8, fontSize: 'var(--text-sm)', fontWeight: 600, border: 'none', background: 'var(--primary-500)', color: '#fff',
+            style={{ padding: '7px 14px', borderRadius: 8, fontSize: 'var(--text-sm)', fontWeight: 600, border: 'none', background: 'var(--primary-600)', color: '#fff',
               cursor: isPending || invalid || !dirty ? 'not-allowed' : 'pointer', opacity: isPending || invalid || !dirty ? 0.5 : 1, marginBottom: 20 }}>
             {t('weights.save')}
           </button>

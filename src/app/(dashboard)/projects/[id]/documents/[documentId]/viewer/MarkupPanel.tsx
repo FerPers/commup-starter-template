@@ -207,7 +207,7 @@ export function SelectedMarkupPanel({
               <button type="button" disabled={busy} onClick={onRedraw} style={btn}>{t('markups.redraw')}</button>
             )}
             <button type="button" disabled={busy} onClick={onDelete}
-              style={{ ...btn, color: 'var(--danger-600)', borderColor: 'var(--danger-200)' }}>{t('markups.delete')}</button>
+              style={{ ...btn, color: 'var(--danger-700)', borderColor: 'var(--danger-200)' }}>{t('markups.delete')}</button>
           </div>
         </>
       ) : (

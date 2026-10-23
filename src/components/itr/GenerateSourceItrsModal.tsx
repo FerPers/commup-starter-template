@@ -67,15 +67,15 @@ export default function GenerateSourceItrsModal({ projectId, kind, items, templa
 
         {report ? (
           <>
-            <p role="status" style={{ fontSize: '13px', color: '#047857', fontWeight: 600 }}>{tg('created', { n: report.created })}</p>
+            <p role="status" style={{ fontSize: '13px', color: 'var(--success-700)', fontWeight: 600 }}>{tg('created', { n: report.created })}</p>
             {report.errors.length > 0 && (
-              <ul style={{ fontSize: '12px', color: '#b45309', paddingLeft: '18px' }}>{report.errors.map(e => <li key={e}>{e}</li>)}</ul>
+              <ul style={{ fontSize: '12px', color: 'var(--warning-700)', paddingLeft: '18px' }}>{report.errors.map(e => <li key={e}>{e}</li>)}</ul>
             )}
             <button type="button" onClick={onClose} style={{ padding: '8px 14px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--card-bg)', cursor: 'pointer', fontSize: '13px' }}>{tg('close')}</button>
           </>
         ) : templates.length === 0 ? (
           <>
-            <p role="alert" style={{ fontSize: '13px', color: '#b45309' }}>
+            <p role="alert" style={{ fontSize: '13px', color: 'var(--warning-700)' }}>
               {tg(kind === 'loop' ? 'noTemplatesLoop' : 'noTemplatesCause')}
             </p>
             <button type="button" onClick={onClose} style={{ padding: '8px 14px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--card-bg)', cursor: 'pointer', fontSize: '13px' }}>{tg('close')}</button>
@@ -109,9 +109,9 @@ export default function GenerateSourceItrsModal({ projectId, kind, items, templa
                 </select>
               </label>
             )}
-            {error && <p role="alert" style={{ color: '#b91c1c', fontSize: '12px', margin: 0 }}>{error}</p>}
+            {error && <p role="alert" style={{ color: 'var(--danger-700)', fontSize: '12px', margin: 0 }}>{error}</p>}
             <div style={{ display: 'flex', gap: '8px' }}>
-              <button type="submit" disabled={pending} style={{ padding: '9px 14px', borderRadius: '8px', border: 0, background: 'var(--primary-600, #2563eb)', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>{pending ? tg('generating') : tg('generate', { n: items.length })}</button>
+              <button type="submit" disabled={pending} style={{ padding: '9px 14px', borderRadius: '8px', border: 0, background: 'var(--primary-600)', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>{pending ? tg('generating') : tg('generate', { n: items.length })}</button>
               <button type="button" onClick={onClose} style={{ padding: '9px 14px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--card-bg)', cursor: 'pointer', fontSize: '13px' }}>{tg('cancel')}</button>
             </div>
           </form>

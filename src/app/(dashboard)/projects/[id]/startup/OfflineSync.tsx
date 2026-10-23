@@ -75,7 +75,7 @@ export function SyncBanner({ isOffline, count, syncing, onSync }: { isOffline: b
     <div role="status" style={{
       position: 'sticky', top: 0, zIndex: 5, display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap',
       padding: '10px 14px', borderRadius: 8, fontSize: 'var(--text-sm)', fontWeight: 600,
-      background: isOffline ? '#1f2937' : '#eff6ff', color: isOffline ? '#f9fafb' : '#1d4ed8', border: isOffline ? 'none' : '1px solid #93c5fd',
+      background: isOffline ? 'var(--gray-800)' : 'var(--primary-50)', color: isOffline ? 'var(--sidebar-text-strong)' : 'var(--primary-700)', border: isOffline ? 'none' : '1px solid var(--primary-300)',
     }}>
       <span style={{ flex: 1, minWidth: 180 }}>
         {isOffline ? `📴 ${t('offline')}` : '⏳'} {count > 0 && t('pending', { n: count })}
@@ -120,7 +120,7 @@ export function SyncTray({ entries, isOffline, describe, conflictDetail, onChang
   }
 
   return (
-    <section style={{ ...card, borderColor: '#fecaca', background: 'var(--danger-50)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+    <section style={{ ...card, borderColor: 'var(--danger-200)', background: 'var(--danger-50)', display: 'flex', flexDirection: 'column', gap: 10 }}>
       {dialog}
       <strong style={{ color: 'var(--danger-700)' }}>⚠ {t('trayTitle', { n: issues.length })}</strong>
       <span style={small}>{t('trayHelp')}</span>
@@ -128,7 +128,7 @@ export function SyncTray({ entries, isOffline, describe, conflictDetail, onChang
       {issues.map(e => {
         const held = e.state === 'pending'
         return (
-          <div key={e.id} style={{ borderTop: '1px solid #fecaca', paddingTop: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <div key={e.id} style={{ borderTop: '1px solid var(--danger-200)', paddingTop: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
             <div style={{ fontWeight: 600, color: 'var(--text-strong)' }}>{describe(e)}</div>
             <span style={{ ...small, fontSize: 'var(--text-xs)' }} suppressHydrationWarning>{t('captured', { when: when(e.capturedAt) })}</span>
             {held

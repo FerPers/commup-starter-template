@@ -158,7 +158,7 @@ export default function DashboardCustomizer({ layout, options }: DashboardCustom
                     background: 'transparent',
                     border: '1px solid var(--border)',
                     borderRadius: 'var(--radius-md)',
-                    color: w.hidden ? 'var(--gray-500)' : 'var(--primary-500)',
+                    color: w.hidden ? 'var(--text-muted)' : 'var(--primary-700)',
                     cursor: pending ? 'not-allowed' : 'pointer',
                   }}
                 >
@@ -180,7 +180,7 @@ function iconBtn(disabled: boolean) {
     background: 'transparent',
     border: '1px solid var(--border)',
     borderRadius: 'var(--radius-sm)',
-    color: disabled ? 'var(--gray-300)' : 'var(--text-muted)',
+    color: disabled ? 'var(--text-muted)' : 'var(--text-muted)',
     cursor: disabled ? 'not-allowed' : 'pointer',
     padding: 0,
   } as const

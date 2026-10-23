@@ -6,6 +6,7 @@ import { createPunchOrQueue } from '@/lib/sync/outbox'
 import { DialogSurface } from '@/components/ui'
 import { PunchImpactAndGuide } from '@/components/punch/PunchCategoryGuide'
 import type { PunchImpact } from '@/lib/punches/category-guide'
+import { ink } from '@/lib/theme'
 
 // S06 (C-22): el punch desde el ITR lleva el ítem de origen, responsable opcional y las fotos del defecto.
 // Todo viaja junto (id generado aquí): sin red queda en la bandeja y se registra entero al reconectar.
@@ -42,8 +43,8 @@ export default function CreatePunchModal({
   const tGuide = useTranslations('PunchGuide')
   const titleId = useId()
   const CATEGORY_CONFIG = {
-    A: { label: t('punchModal.catA'), color: 'var(--danger-500)', bg: 'var(--danger-100)', border: 'var(--danger-200)' },
-    B: { label: t('punchModal.catB'), color: 'var(--warning-500)', bg: 'var(--warning-50)', border: 'var(--warning-200)' },
+    A: { label: t('punchModal.catA'), color: 'var(--danger-700)', bg: 'var(--danger-100)', border: 'var(--danger-200)' },
+    B: { label: t('punchModal.catB'), color: 'var(--warning-700)', bg: 'var(--warning-50)', border: 'var(--warning-200)' },
     C: { label: t('punchModal.catC'), color: 'var(--text-muted)', bg: 'var(--gray-50)', border: 'var(--border)' },
   } as const
 
@@ -104,11 +105,11 @@ export default function CreatePunchModal({
       <DialogSurface onClose={onClose} labelledBy={titleId} style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '460px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', maxHeight: '90vh', overflowY: 'auto' }}>
         <h2 id={titleId} style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 4px' }}>{t('punchModal.title')}</h2>
         <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: itemLabel ? '0 0 6px' : '0 0 20px' }}>{t('punchModal.subtitle')}</p>
-        {itemLabel && <p style={{ fontSize: '12px', color: 'var(--gray-700)', margin: '0 0 20px', fontWeight: 600 }}>{t('punchModal.fromItem', { item: itemLabel })}</p>}
+        {itemLabel && <p style={{ fontSize: '12px', color: 'var(--text-body)', margin: '0 0 20px', fontWeight: 600 }}>{t('punchModal.fromItem', { item: itemLabel })}</p>}
 
         {/* Category */}
         <div role="group" aria-labelledby={`${titleId}-cat`} style={{ marginBottom: '16px' }}>
-          <span id={`${titleId}-cat`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '8px' }}>{t('punchModal.labelCategory')}</span>
+          <span id={`${titleId}-cat`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-body)', display: 'block', marginBottom: '8px' }}>{t('punchModal.labelCategory')}</span>
           <div style={{ display: 'flex', gap: '8px' }}>
             {(['A', 'B', 'C'] as const).map(cat => {
               const cfg = CATEGORY_CONFIG[cat]
@@ -118,7 +119,7 @@ export default function CreatePunchModal({
                   key={cat}
                   onClick={() => setCategory(cat)}
                   aria-pressed={active}
-                  style={{ flex: 1, padding: '10px 8px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, border: `2px solid ${active ? cfg.color : 'var(--border)'}`, background: active ? cfg.bg : 'var(--card-bg)', color: active ? cfg.color : 'var(--text-muted)', cursor: 'pointer', textAlign: 'center' }}
+                  style={{ flex: 1, padding: '10px 8px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, border: `2px solid ${active ? cfg.color : 'var(--border)'}`, background: active ? cfg.bg : 'var(--card-bg)', color: ink(active ? cfg.color : 'var(--text-muted)'), cursor: 'pointer', textAlign: 'center' }}
                 >
                   {cfg.label}
                 </button>
@@ -134,7 +135,7 @@ export default function CreatePunchModal({
 
         {/* Description */}
         <div style={{ marginBottom: '16px' }}>
-          <label htmlFor={`${titleId}-desc`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>{t('punchModal.labelDescription')}</label>
+          <label htmlFor={`${titleId}-desc`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-body)', display: 'block', marginBottom: '6px' }}>{t('punchModal.labelDescription')}</label>
           <textarea
             id={`${titleId}-desc`}
             rows={3}
@@ -147,7 +148,7 @@ export default function CreatePunchModal({
 
         {/* Fotos del defecto (S06, C-22) */}
         <div role="group" aria-labelledby={`${titleId}-photos`} style={{ marginBottom: '16px' }}>
-          <span id={`${titleId}-photos`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>{t('punchModal.labelPhotos')}</span>
+          <span id={`${titleId}-photos`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-body)', display: 'block', marginBottom: '6px' }}>{t('punchModal.labelPhotos')}</span>
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
             {photos.map(p => (
               <div key={p.key} style={{ position: 'relative', width: '64px', height: '64px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border)', background: 'var(--gray-50)' }}>
@@ -170,7 +171,7 @@ export default function CreatePunchModal({
         {/* Responsable opcional (S06, C-22) */}
         {assignees.length > 0 && (
           <div style={{ marginBottom: '16px' }}>
-            <label htmlFor={`${titleId}-assignee`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>{t('punchModal.labelAssignee')}</label>
+            <label htmlFor={`${titleId}-assignee`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-body)', display: 'block', marginBottom: '6px' }}>{t('punchModal.labelAssignee')}</label>
             <select id={`${titleId}-assignee`} value={assignedTo} onChange={e => setAssignedTo(e.target.value)}
               style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '7px', fontSize: '13px', background: 'var(--card-bg)', color: 'var(--text-strong)' }}>
               <option value="">{t('punchModal.assigneeNone')}</option>
@@ -181,7 +182,7 @@ export default function CreatePunchModal({
 
         {/* Target date */}
         <div style={{ marginBottom: '20px' }}>
-          <label htmlFor={`${titleId}-date`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>{t('punchModal.labelTargetDate')}</label>
+          <label htmlFor={`${titleId}-date`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-body)', display: 'block', marginBottom: '6px' }}>{t('punchModal.labelTargetDate')}</label>
           <input
             id={`${titleId}-date`}
             type="date"
@@ -192,7 +193,7 @@ export default function CreatePunchModal({
         </div>
 
         {error && (
-          <p style={{ fontSize: '12px', color: 'var(--danger-500)', padding: '8px 12px', background: 'var(--danger-100)', borderRadius: '6px', margin: '0 0 16px' }}>
+          <p style={{ fontSize: '12px', color: 'var(--danger-700)', padding: '8px 12px', background: 'var(--danger-100)', borderRadius: '6px', margin: '0 0 16px' }}>
             {error}
           </p>
         )}

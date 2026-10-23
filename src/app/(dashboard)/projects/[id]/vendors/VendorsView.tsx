@@ -124,7 +124,7 @@ export default function VendorsView({ project, rows, systems, companies, canEdit
             {shown.map(r => (
               <tr key={r.id}>
                 <td style={{ ...td, fontWeight: 600, whiteSpace: 'nowrap' }}>
-                  <Link href={`/projects/${project.id}/vendors/${r.id}`} style={{ color: 'var(--primary-600, #2563eb)', textDecoration: 'none' }}>{r.number}</Link>
+                  <Link href={`/projects/${project.id}/vendors/${r.id}`} style={{ color: 'var(--primary-700)', textDecoration: 'none' }}>{r.number}</Link>
                 </td>
                 <td style={td}>{r.title}</td>
                 <td style={td}>{r.company}</td>

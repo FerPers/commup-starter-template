@@ -11,6 +11,7 @@ import {
 } from '@/app/actions/templates-backup'
 import type { TemplatesBackup, RestoreResult, TaxonomyPreview } from '@/lib/constants/templates-backup'
 import BackupDocumentView from '@/components/templates/BackupDocumentView'
+import { alpha } from '@/lib/theme'
 import { pressable } from '@/lib/a11y/pressable'
 
 interface Props {
@@ -292,7 +293,7 @@ export default function BackupRestoreView({ orgName, orgSlug }: Props) {
             {/* Per-module summaries */}
             <ModuleSummary
               title={`ITR (${parsed.itr_templates.length})`}
-              color="#3b82f6"
+              color='var(--primary-700)'
               entries={parsed.itr_templates.map(t => ({
                 code: t.code,
                 title: t.title,
@@ -303,7 +304,7 @@ export default function BackupRestoreView({ orgName, orgSlug }: Props) {
             />
             <ModuleSummary
               title={`${tb('preservation')} (${parsed.preservation_procedures.length})`}
-              color="#10b981"
+              color='var(--success-700)'
               entries={parsed.preservation_procedures.map(p => ({
                 code: p.code,
                 title: p.title,
@@ -314,7 +315,7 @@ export default function BackupRestoreView({ orgName, orgSlug }: Props) {
             />
             <ModuleSummary
               title={`PSSR (${parsed.pssr_templates.length})`}
-              color="#8b5cf6"
+              color='var(--violet-700)'
               entries={parsed.pssr_templates.map(t => ({
                 code: t.name,
                 title: t.description ?? '',
@@ -329,8 +330,8 @@ export default function BackupRestoreView({ orgName, orgSlug }: Props) {
               <button
                 onClick={() => setShowDoc(true)}
                 style={{
-                  padding: '6px 12px', background: '#eff6ff', border: '1px solid #bfdbfe',
-                  borderRadius: '6px', fontSize: '12px', color: '#1e40af', cursor: 'pointer',
+                  padding: '6px 12px', background: 'var(--primary-50)', border: '1px solid var(--primary-200)',
+                  borderRadius: '6px', fontSize: '12px', color: 'var(--primary-800)', cursor: 'pointer',
                   fontWeight: 600,
                 }}
                 title={tb('viewDocHint')}
@@ -349,8 +350,8 @@ export default function BackupRestoreView({ orgName, orgSlug }: Props) {
               {showRaw && (
                 <pre style={{
                   marginTop: '12px',
-                  background: '#0f172a',
-                  color: '#e2e8f0',
+                  background: 'var(--gray-900)',
+                  color: 'var(--sidebar-text-strong)',
                   padding: '16px',
                   borderRadius: '8px',
                   fontSize: '11px',
@@ -405,9 +406,9 @@ export default function BackupRestoreView({ orgName, orgSlug }: Props) {
                 color: 'var(--text-muted)',
                 margin: 0,
                 padding: '8px 12px',
-                background: '#fef3c7',
+                background: 'var(--warning-100)',
                 borderRadius: '6px',
-                border: '1px solid #fde68a',
+                border: '1px solid var(--warning-200)',
               }}>
                 {tb.rich('mapping', { strong: c => <strong>{c}</strong> })}
               </p>
@@ -477,15 +478,15 @@ function TaxonomyPreflight({
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <span style={{ fontSize: '16px' }}>✓</span>
           <div>
-            <div style={{ fontSize: '13px', fontWeight: 600, color: '#065f46' }}>
+            <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--success-800)' }}>
               {tb('taxonomyOk')}
             </div>
-            <div style={{ fontSize: '12px', color: '#047857' }}>
+            <div style={{ fontSize: '12px', color: 'var(--success-700)' }}>
               {tb('taxonomyOkHelp')}
             </div>
           </div>
         </div>
-        {message && <div style={{ marginTop: '8px', fontSize: '12px', color: '#065f46' }}>{message}</div>}
+        {message && <div style={{ marginTop: '8px', fontSize: '12px', color: 'var(--success-800)' }}>{message}</div>}
       </div>
     )
   }
@@ -494,10 +495,10 @@ function TaxonomyPreflight({
     <div style={preflightCard('#fef3c7', '#fde68a')}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: '13px', fontWeight: 600, color: '#92400e', marginBottom: '6px' }}>
+          <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--warning-800)', marginBottom: '6px' }}>
             {tb('missing', { n: total })}
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px', color: '#92400e' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px', color: 'var(--warning-800)' }}>
             {preview.missingDisciplines.length > 0 && (
               <div><strong>{tb('disciplines')}</strong> {preview.missingDisciplines.join(', ')}</div>
             )}
@@ -508,7 +509,7 @@ function TaxonomyPreflight({
               <div><strong>{tb('types')}</strong> {preview.missingEquipmentTypes.join(', ')}</div>
             )}
           </div>
-          <div style={{ fontSize: '11px', color: '#a16207', marginTop: '8px' }}>
+          <div style={{ fontSize: '11px', color: 'var(--warning-700)', marginTop: '8px' }}>
             {tb('missingHelp')}
           </div>
         </div>
@@ -517,7 +518,7 @@ function TaxonomyPreflight({
           disabled={isCreating}
           style={{
             padding: '8px 14px',
-            background: isCreating ? '#fcd34d' : '#f59e0b',
+            background: isCreating ? 'var(--warning-300)' : 'var(--warning-500)',
             color: '#fff',
             border: 'none',
             borderRadius: '8px',
@@ -532,7 +533,7 @@ function TaxonomyPreflight({
         </button>
       </div>
       {message && (
-        <div style={{ marginTop: '10px', fontSize: '12px', color: message.startsWith('Errores') ? '#dc2626' : '#065f46' }}>
+        <div style={{ marginTop: '10px', fontSize: '12px', color: message.startsWith('Errores') ? 'var(--danger-700)' : 'var(--success-800)' }}>
           {message}
         </div>
       )}
@@ -588,7 +589,7 @@ function ModuleSummary({
     <div style={{ border: '1px solid var(--border)', borderRadius: '10px', overflow: 'hidden' }}>
       <div style={{
         padding: '10px 14px',
-        background: `${color}10`,
+        background: alpha(color, 6),
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -660,19 +661,19 @@ function ResultRow({
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center' }}>
         <strong style={{ color: 'var(--text-strong)' }}>{label}</strong>
         <span>
-          <span style={{ color: '#10b981' }}>{tb('createdN', { n: r.created })}</span>
+          <span style={{ color: 'var(--success-700)' }}>{tb('createdN', { n: r.created })}</span>
           {' · '}
           <span style={{ color: 'var(--text-muted)' }}>{tb('skippedN', { n: r.skipped })}</span>
           {r.errors.length > 0 && (
             <>
               {' · '}
-              <span style={{ color: '#ef4444' }}>{tb('errorsN', { n: r.errors.length })}</span>
+              <span style={{ color: 'var(--danger-700)' }}>{tb('errorsN', { n: r.errors.length })}</span>
             </>
           )}
         </span>
       </div>
       {r.errors.length > 0 && (
-        <ul style={{ margin: '8px 0 0', paddingLeft: '18px', color: '#ef4444', fontSize: '12px' }}>
+        <ul style={{ margin: '8px 0 0', paddingLeft: '18px', color: 'var(--danger-700)', fontSize: '12px' }}>
           {r.errors.slice(0, 10).map((err, i) => <li key={i}>{err}</li>)}
           {r.errors.length > 10 && <li>{tb('more', { n: r.errors.length - 10 })}</li>}
         </ul>
@@ -713,7 +714,7 @@ const cardSubtitle: React.CSSProperties = {
 function primaryButton(disabled: boolean): React.CSSProperties {
   return {
     padding: '10px 20px',
-    background: disabled ? '#93c5fd' : '#3b82f6',
+    background: disabled ? 'var(--primary-300)' : 'var(--primary-600)',
     color: 'white',
     border: 'none',
     borderRadius: '8px',
@@ -735,9 +736,9 @@ const codeStyle: React.CSSProperties = {
 const errorBox: React.CSSProperties = {
   marginTop: '12px',
   padding: '10px 14px',
-  background: '#fee2e2',
-  border: '1px solid #fecaca',
+  background: 'var(--danger-100)',
+  border: '1px solid var(--danger-200)',
   borderRadius: '8px',
-  color: '#991b1b',
+  color: 'var(--danger-800)',
   fontSize: '13px',
 }

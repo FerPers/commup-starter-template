@@ -29,7 +29,7 @@ type Pkg = {
 }
 
 const labelStyle: React.CSSProperties = {
-  fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--gray-600)',
+  fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--text-secondary)',
   textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4, display: 'block',
 }
 
@@ -43,7 +43,7 @@ function statusStyle(s: string): React.CSSProperties {
   if (s === 'ISSUED')     return { ...base, background: 'var(--success-50)', color: 'var(--success-700)' }
   if (s === 'FAILED')     return { ...base, background: 'var(--danger-50)',  color: 'var(--danger-700)' }
   if (s === 'GENERATING') return { ...base, background: 'var(--primary-50)', color: 'var(--primary-700)' }
-  return { ...base, background: 'var(--gray-100)', color: 'var(--gray-600)' }
+  return { ...base, background: 'var(--gray-100)', color: 'var(--text-secondary)' }
 }
 
 export default function HandoverView({
@@ -175,7 +175,7 @@ export default function HandoverView({
             maxHeight: 200, overflowY: 'auto', background: 'var(--gray-50)',
           }}>
             {projectSystems.length === 0 && (
-              <div style={{ color: 'var(--gray-400)', fontSize: 'var(--text-xs)' }}>{t('generator.noSystems')}</div>
+              <div style={{ color: 'var(--text-muted)', fontSize: 'var(--text-xs)' }}>{t('generator.noSystems')}</div>
             )}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px,1fr))', gap: 6 }}>
               {projectSystems.map(s => (
@@ -189,7 +189,7 @@ export default function HandoverView({
                     checked={selectedSystems.has(s.id)}
                     onChange={() => toggleSystem(s.id)}
                   />
-                  <span style={{ fontFamily: 'monospace', color: 'var(--gray-600)' }}>{s.code}</span>
+                  <span style={{ fontFamily: 'monospace', color: 'var(--text-secondary)' }}>{s.code}</span>
                   <span style={{ color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {s.name}
                   </span>
@@ -217,8 +217,8 @@ export default function HandoverView({
         {lastResult && (
           <div style={{
             marginTop: 12, padding: 12, background: 'var(--success-50)',
-            border: '1px solid #a7f3d0', borderRadius: 'var(--radius-sm)',
-            color: '#064e3b', fontSize: 'var(--text-sm)',
+            border: '1px solid var(--success-200)', borderRadius: 'var(--radius-sm)',
+            color: 'var(--success-900)', fontSize: 'var(--text-sm)',
           }}>
             <div style={{ fontWeight: 600, marginBottom: 6 }}>{t('generator.done')}</div>
             <div style={{ display: 'flex', gap: 10 }}>
@@ -272,7 +272,7 @@ export default function HandoverView({
                         </div>
                         <div style={{ color: 'var(--text-muted)', fontSize: 'var(--text-xs)' }}>{proj?.name ?? pkg.project_id}</div>
                       </td>
-                      <td style={{ padding: 8, color: 'var(--gray-600)' }}>{fmtDate(pkg.generated_at)}</td>
+                      <td style={{ padding: 8, color: 'var(--text-secondary)' }}>{fmtDate(pkg.generated_at)}</td>
                       <td style={{ padding: 8 }}>
                         <span style={statusStyle(pkg.status)}>{pkg.status}</span>
                         {pkg.error_message && (
@@ -307,5 +307,5 @@ export default function HandoverView({
 }
 
 const thStyle: React.CSSProperties = {
-  padding: 8, fontSize: 'var(--text-xs)', color: 'var(--gray-600)', fontWeight: 600,
+  padding: 8, fontSize: 'var(--text-xs)', color: 'var(--text-secondary)', fontWeight: 600,
 }

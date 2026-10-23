@@ -42,7 +42,7 @@ export default function MobileTabBar({ counts, role, projects }: MobileTabBarPro
   const mounted = useMounted()
   const { isOnline, pendingCount } = useOfflineSync()
   const syncBadge = mounted && (!isOnline || pendingCount > 0)
-    ? { color: isOnline ? 'var(--warning-500)' : 'var(--danger-500)', label: isOnline ? t('syncPending', { count: pendingCount }) : t('offline', { count: pendingCount }) }
+    ? { color: isOnline ? 'var(--warning-700)' : 'var(--danger-700)', label: isOnline ? t('syncPending', { count: pendingCount }) : t('offline', { count: pendingCount }) }
     : null
 
   const items: TabItem[] = [

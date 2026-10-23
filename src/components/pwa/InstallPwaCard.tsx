@@ -25,7 +25,7 @@ const iconBoxStyle: CSSProperties = {
   height: 36,
   borderRadius: 'var(--radius-md)',
   background: 'var(--brand-50, rgba(124,58,237,0.12))',
-  color: 'var(--brand-600, #7c3aed)',
+  color: 'var(--brand-600)',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -34,7 +34,7 @@ const iconBoxStyle: CSSProperties = {
 
 const primaryButtonStyle: CSSProperties = {
   padding: '8px 14px',
-  background: 'var(--brand-600, #7c3aed)',
+  background: 'var(--brand-600)',
   color: '#fff',
   border: 'none',
   borderRadius: 'var(--radius-md)',
@@ -83,7 +83,7 @@ export default function InstallPwaCard({ variant = 'full' }: InstallPwaCardProps
           fontSize: 'var(--text-sm)',
         }}
       >
-        <CheckCircle2 size={18} aria-hidden="true" style={{ color: 'var(--success-500)' }} />
+        <CheckCircle2 size={18} aria-hidden="true" style={{ color: 'var(--success-700)' }} />
         {t('installed')}
       </div>
     )
@@ -221,7 +221,7 @@ function IosStep({ number, icon, text }: IosStepProps) {
           height: 24,
           borderRadius: '50%',
           background: 'var(--brand-50, rgba(124,58,237,0.12))',
-          color: 'var(--brand-600, #7c3aed)',
+          color: 'var(--brand-600)',
           fontSize: 'var(--text-xs)',
           fontWeight: 700,
           display: 'flex',

@@ -121,7 +121,7 @@ export default function LineupView({ project, sheet, items: serverItems, registe
     <div style={{ padding: '20px 16px', maxWidth: 1000, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
       {dialog}
       <div>
-        <Link href={startupTabHref(project.id, 'lineups')} style={{ ...small, textDecoration: 'none', color: 'var(--primary-600, #2563eb)' }}>← {t('tab.lineups')}</Link>
+        <Link href={startupTabHref(project.id, 'lineups')} style={{ ...small, textDecoration: 'none', color: 'var(--primary-700)' }}>← {t('tab.lineups')}</Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: 6 }}>
           <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0, color: 'var(--text-strong)', fontFamily: 'ui-monospace, monospace' }}>{sheet.number}</h1>
           <Chip tone={SHEET_TONE[sheet.status] ?? 'muted'}>{t(`sheetStatus.${sheet.status}`)}</Chip>
@@ -132,7 +132,7 @@ export default function LineupView({ project, sheet, items: serverItems, registe
         <p style={{ margin: '4px 0 0', color: 'var(--text-strong)' }}>{sheet.title}</p>
         <p style={{ ...small, margin: '2px 0 0' }}>
           {sheet.system} · {t(`purpose.${sheet.purpose}`)}
-          {sheet.procedure && <> · <Link href={`/projects/${project.id}/startup/procedures/${sheet.procedure.id}`} style={{ color: 'var(--primary-600, #2563eb)' }}>{sheet.procedure.number}</Link></>}
+          {sheet.procedure && <> · <Link href={`/projects/${project.id}/startup/procedures/${sheet.procedure.id}`} style={{ color: 'var(--primary-700)' }}>{sheet.procedure.number}</Link></>}
         </p>
         {sheet.verifiedAt && <p style={{ ...small, margin: '2px 0 0' }} suppressHydrationWarning>{t('lineup.verifiedBy', { who: who(sheet.verifiedBy), when: when(sheet.verifiedAt) })} · sha256 {sheet.hash?.slice(0, 16)}</p>}
       </div>
@@ -200,7 +200,7 @@ export default function LineupView({ project, sheet, items: serverItems, registe
                 }}>{t('editor.delete')}</button>
             )}
           </div>
-          {!allRequired && drafts.length > 0 && <p style={{ ...small, margin: 0, color: '#b45309' }}>{t('lineup.needRequired')}</p>}
+          {!allRequired && drafts.length > 0 && <p style={{ ...small, margin: 0, color: 'var(--warning-700)' }}>{t('lineup.needRequired')}</p>}
         </section>
       )}
 
@@ -269,7 +269,7 @@ export default function LineupView({ project, sheet, items: serverItems, registe
                           </button>
                         )}
                         {(st === 'to_verify' || (st === 'aligned' && !i.verified_at)) && i.set_by !== userId && !i.sync && (
-                          <button type="button" style={{ ...btn('primary', isPending || !online), padding: '8px 12px', background: 'var(--success-700, #047857)' }} disabled={isPending || !online}
+                          <button type="button" style={{ ...btn('primary', isPending || !online), padding: '8px 12px', background: 'var(--success-700)' }} disabled={isPending || !online}
                             title={online ? undefined : tOff('needsNetwork')}
                             onClick={() => act(() => verifyLineupItem({ ...ids, itemId: i.id }))}>✓ {t('lineup.verify')}</button>
                         )}

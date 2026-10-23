@@ -32,7 +32,7 @@ function SidebarFooter() {
   if (!mounted || (isOnline && pendingCount === 0)) return null
 
   // Aquí ya estamos montados y hay algo que mostrar: cola pendiente (ámbar) o sin conexión (rojo).
-  const dotColor = isOnline ? '#f59e0b' : '#ef4444'
+  const dotColor = isOnline ? 'var(--warning-500)' : 'var(--danger-500)'
   const label = isOnline ? t('syncing', { count: pendingCount }) : t('offlinePending', { count: pendingCount })
   const canForceSync = isOnline && pendingCount > 0
 

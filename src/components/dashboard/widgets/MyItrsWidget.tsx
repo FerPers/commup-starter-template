@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { ITR_STYLE, TaskSection } from './_shared'
 import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
 import { todayIn } from '@/lib/time/zone'
+import { alpha, ink } from '@/lib/theme'
 
 export default async function MyItrsWidget({ userId }: { userId: string }) {
   const supabase = await createClient()
@@ -50,32 +51,32 @@ export default async function MyItrsWidget({ userId }: { userId: string }) {
         const overdue = itr.scheduled_date && itr.scheduled_date < todayIn((itr.projects as { timezone?: string } | null)?.timezone) && itr.status === 'not_started'
         return (
           <Link key={itr.id} href={`/projects/${itr.project_id}/tags/${itr.tags?.id}/itrs/${itr.id}`} style={{ display: 'block', textDecoration: 'none' }}>
-            <div style={{ padding: '14px 16px', background: 'var(--card-bg)', border: `1px solid ${overdue ? '#fecaca' : 'var(--border)'}`, borderLeft: `3px solid ${overdue ? 'var(--danger-500)' : style.color}`, borderRadius: 'var(--radius-md)', display: 'grid', gridTemplateColumns: '1fr auto', gap: 12, alignItems: 'center' }}>
+            <div style={{ padding: '14px 16px', background: 'var(--card-bg)', border: `1px solid ${overdue ? 'var(--danger-200)' : 'var(--border)'}`, borderLeft: `3px solid ${overdue ? 'var(--danger-500)' : style.color}`, borderRadius: 'var(--radius-md)', display: 'grid', gridTemplateColumns: '1fr auto', gap: 12, alignItems: 'center' }}>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                  {phase && <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 'var(--radius-sm)', background: `${phase.color}18`, color: phase.color }}>{phase.code}</span>}
+                  {phase && <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 'var(--radius-sm)', background: alpha(phase.color, 9), color: ink(phase.color) }}>{phase.code}</span>}
                   <span style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--text-strong)', fontFamily: 'ui-monospace, monospace' }}>{itr.itr_number}</span>
-                  <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--gray-400)', background: 'var(--gray-100)', padding: '1px 6px', borderRadius: 'var(--radius-sm)' }}>
+                  <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', background: 'var(--gray-100)', padding: '1px 6px', borderRadius: 'var(--radius-sm)' }}>
                     {a.role === 'executor' ? t('inspector.executor') : a.role === 'supervisor' ? t('inspector.supervisor') : t('inspector.roleClient')}
                   </span>
                 </div>
-                <div style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-700)' }}>{itr.tags?.tag_number} — {itr.tags?.description}</div>
-                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--gray-400)', marginTop: 3, display: 'flex', gap: 10 }}>
+                <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-body)' }}>{itr.tags?.tag_number} — {itr.tags?.description}</div>
+                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginTop: 3, display: 'flex', gap: 10 }}>
                   <span>{itr.projects?.code}</span>
                   {itr.scheduled_date && (
-                    <span style={{ color: overdue ? 'var(--danger-500)' : 'var(--gray-400)', fontWeight: overdue ? 600 : 400 }}>
+                    <span style={{ color: overdue ? 'var(--danger-700)' : 'var(--text-muted)', fontWeight: overdue ? 600 : 400 }}>
                       {t(overdue ? 'inspector.schedOverdue' : 'inspector.scheduled', { date: itr.scheduled_date })}
                     </span>
                   )}
                 </div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
-                <span style={{ fontSize: 'var(--text-xs)', fontWeight: 600, padding: '3px 10px', borderRadius: 'var(--radius-pill)', background: style.bg, color: style.color, whiteSpace: 'nowrap' }}>{itrLabels[itr.status] ?? itr.status}</span>
+                <span style={{ fontSize: 'var(--text-xs)', fontWeight: 600, padding: '3px 10px', borderRadius: 'var(--radius-pill)', background: style.bg, color: ink(style.color), whiteSpace: 'nowrap' }}>{itrLabels[itr.status] ?? itr.status}</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <div style={{ width: 60, height: 4, background: 'var(--gray-100)', borderRadius: 2, overflow: 'hidden' }}>
                     <div style={{ height: '100%', width: `${itr.progress_pct}%`, background: itr.progress_pct >= 100 ? 'var(--success-500)' : 'var(--primary-500)', borderRadius: 2 }} />
                   </div>
-                  <span style={{ fontSize: 10, color: 'var(--gray-400)' }}>{itr.progress_pct}%</span>
+                  <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{itr.progress_pct}%</span>
                 </div>
               </div>
             </div>

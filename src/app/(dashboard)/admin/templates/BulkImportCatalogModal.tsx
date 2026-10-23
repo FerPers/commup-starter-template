@@ -8,6 +8,7 @@ import { bulkImportCatalog, type CatalogRow } from '@/app/actions/itr-templates'
 import { detectItrPhase } from '@/lib/utils'
 import { DialogSurface } from '@/components/ui/dialog-a11y'
 import { pressable } from '@/lib/a11y/pressable'
+import { alpha, ink } from '@/lib/theme'
 
 interface Discipline { id: string; code: string; name: string; color: string }
 interface Phase { id: string; code: string; name: string; color: string; order_index: number }
@@ -187,7 +188,7 @@ export default function BulkImportCatalogModal({ disciplines, phases, onClose, o
               {step === 'done' && t('done')}
             </p>
           </div>
-          <button onClick={onClose} aria-label={tA11y('close')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', fontSize: '18px', padding: '2px' }}>✕</button>
+          <button onClick={onClose} aria-label={tA11y('close')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '18px', padding: '2px' }}>✕</button>
         </div>
 
         {/* STEP: upload */}
@@ -202,19 +203,19 @@ export default function BulkImportCatalogModal({ disciplines, phases, onClose, o
                 if (e.target instanceof HTMLInputElement) return
                 e.currentTarget.querySelector<HTMLInputElement>('input[type="file"]')?.click()
               })}
-              style={{ border: `2px dashed ${dragOver ? '#3b82f6' : 'var(--gray-300)'}`, borderRadius: '12px', padding: '44px 20px', textAlign: 'center', cursor: 'pointer', background: dragOver ? '#eff6ff' : 'var(--gray-50)', transition: 'all 0.15s' }}
+              style={{ border: `2px dashed ${dragOver ? 'var(--primary-500)' : 'var(--gray-300)'}`, borderRadius: '12px', padding: '44px 20px', textAlign: 'center', cursor: 'pointer', background: dragOver ? 'var(--primary-50)' : 'var(--gray-50)', transition: 'all 0.15s' }}
             >
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '10px', opacity: 0.5 }}>
                 <FileSpreadsheet size={36} aria-hidden="true" />
               </div>
               <p style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-muted)', margin: '0 0 4px' }}>{t('drop')}</p>
-              <p style={{ fontSize: '12px', color: 'var(--gray-400)', margin: '0 0 12px' }}>{t('dropHint')}</p>
+              <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 12px' }}>{t('dropHint')}</p>
               <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: 0, padding: '8px 14px', background: 'var(--gray-100)', borderRadius: '6px', display: 'inline-block' }}>
                 {t('columns')}
               </p>
               <input type="file" accept=".xlsx,.xls" onChange={handleFileChange} style={{ display: 'none' }} />
             </div>
-            {parseError && <p style={{ fontSize: '13px', color: '#ef4444', margin: '12px 0 0', padding: '10px 14px', background: '#fee2e2', borderRadius: '8px' }}>{parseError}</p>}
+            {parseError && <p style={{ fontSize: '13px', color: 'var(--danger-700)', margin: '12px 0 0', padding: '10px 14px', background: 'var(--danger-100)', borderRadius: '8px' }}>{parseError}</p>}
           </div>
         )}
 
@@ -226,12 +227,12 @@ export default function BulkImportCatalogModal({ disciplines, phases, onClose, o
               {/* Summary cards */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '10px', marginBottom: '20px' }}>
                 {[
-                  { label: t('stat.templates'), value: parsed.templateCount, color: '#3b82f6' },
-                  { label: t('stat.items'), value: parsed.itemCount, color: '#10b981' },
-                  { label: t('stat.disciplines'), value: parsed.discLetters.length, color: '#8b5cf6' },
+                  { label: t('stat.templates'), value: parsed.templateCount, color: 'var(--primary-700)' },
+                  { label: t('stat.items'), value: parsed.itemCount, color: 'var(--success-700)' },
+                  { label: t('stat.disciplines'), value: parsed.discLetters.length, color: 'var(--violet-700)' },
                 ].map(c => (
-                  <div key={c.label} style={{ padding: '12px 14px', background: `${c.color}08`, border: `1px solid ${c.color}20`, borderRadius: '10px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '22px', fontWeight: 700, color: c.color }}>{c.value}</div>
+                  <div key={c.label} style={{ padding: '12px 14px', background: alpha(c.color, 3), border: `1px solid ${alpha(c.color, 13)}`, borderRadius: '10px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '22px', fontWeight: 700, color: ink(c.color) }}>{c.value}</div>
                     <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>{c.label}</div>
                   </div>
                 ))}
@@ -246,10 +247,10 @@ export default function BulkImportCatalogModal({ disciplines, phases, onClose, o
                     const phaseId = phaseMap[p.code]
                     return (
                       <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ padding: '2px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 600, background: `${p.color}18`, color: p.color }}>{p.code}</span>
+                        <span style={{ padding: '2px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 600, background: alpha(p.color, 9), color: ink(p.color) }}>{p.code}</span>
                         <span style={{ fontSize: '12px', color: 'var(--text-strong)', fontWeight: 500 }}>{t('templatesN', { n: count })}</span>
-                        {!phaseId && count > 0 && <span style={{ fontSize: '10px', color: '#ef4444' }}>{t('unmapped')}</span>}
-                        {phaseId && count > 0 && <span style={{ fontSize: '10px', color: '#10b981' }}>✓</span>}
+                        {!phaseId && count > 0 && <span style={{ fontSize: '10px', color: 'var(--danger-700)' }}>{t('unmapped')}</span>}
+                        {phaseId && count > 0 && <span style={{ fontSize: '10px', color: 'var(--success-700)' }}>✓</span>}
                       </div>
                     )
                   })}
@@ -257,10 +258,10 @@ export default function BulkImportCatalogModal({ disciplines, phases, onClose, o
                 {/* Allow manual phase override if needed */}
                 {sortedPhases.some(p => !phaseMap[p.code] && (parsed.phaseBreakdown[p.code] ?? 0) > 0) && (
                   <div style={{ marginTop: '12px' }}>
-                    <p style={{ fontSize: '11px', color: '#ef4444', margin: '0 0 8px' }}>{t('mapPhases')}</p>
+                    <p style={{ fontSize: '11px', color: 'var(--danger-700)', margin: '0 0 8px' }}>{t('mapPhases')}</p>
                     <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                       {sortedPhases.filter(p => !phaseMap[p.code] && (parsed.phaseBreakdown[p.code] ?? 0) > 0).map(p => (
-                        <label key={p.code} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--gray-700)' }}>
+                        <label key={p.code} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--text-body)' }}>
                           <span style={{ fontWeight: 600 }}>{t('phase', { code: p.code })}</span>
                           <select
                             value={phaseMap[p.code] ?? ''}
@@ -286,7 +287,7 @@ export default function BulkImportCatalogModal({ disciplines, phases, onClose, o
                     const templateCount = new Set(parsed.rows.filter(r => r.discLetter === letter).map(r => r.code)).size
                     const mapped = discMap[letter]
                     return (
-                      <div key={letter} style={{ display: 'grid', gridTemplateColumns: '40px 120px 1fr', gap: '12px', alignItems: 'center', padding: '10px 12px', background: mapped ? '#f0fdf4' : '#fffbeb', borderRadius: '8px', border: `1px solid ${mapped ? '#bbf7d0' : '#fcd34d'}` }}>
+                      <div key={letter} style={{ display: 'grid', gridTemplateColumns: '40px 120px 1fr', gap: '12px', alignItems: 'center', padding: '10px 12px', background: mapped ? 'var(--success-50)' : 'var(--warning-50)', borderRadius: '8px', border: `1px solid ${mapped ? 'var(--success-200)' : 'var(--warning-300)'}` }}>
                         <span style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-strong)', fontFamily: 'monospace', textAlign: 'center' }}>{letter}</span>
                         <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{t('templatesN', { n: templateCount })} · {t('itemsN', { n: count })}</span>
                         <select
@@ -304,21 +305,21 @@ export default function BulkImportCatalogModal({ disciplines, phases, onClose, o
                   })}
                 </div>
                 {!allMapped && (
-                  <p style={{ fontSize: '11px', color: '#f59e0b', margin: '10px 0 0' }}>
+                  <p style={{ fontSize: '11px', color: 'var(--warning-700)', margin: '10px 0 0' }}>
                     {t('unmappedHelp')}
                   </p>
                 )}
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '20px', paddingTop: '16px', borderTop: '1px solid #f1f5f9' }}>
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--gray-100)' }}>
               <button onClick={() => { setStep('upload'); setParsed(null) }} style={{ padding: '9px 16px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)', cursor: 'pointer' }}>
                 {t('back')}
               </button>
               <button
                 onClick={handleImport}
                 disabled={isPending}
-                style={{ padding: '9px 22px', background: isPending ? '#93c5fd' : '#3b82f6', color: '#fff', borderRadius: '8px', fontSize: '13px', fontWeight: 600, border: 'none', cursor: isPending ? 'not-allowed' : 'pointer' }}
+                style={{ padding: '9px 22px', background: isPending ? 'var(--primary-300)' : 'var(--primary-600)', color: '#fff', borderRadius: '8px', fontSize: '13px', fontWeight: 600, border: 'none', cursor: isPending ? 'not-allowed' : 'pointer' }}
               >
                 {isPending ? t('importing') : t('import', { n: parsed.templateCount })}
               </button>
@@ -333,25 +334,25 @@ export default function BulkImportCatalogModal({ disciplines, phases, onClose, o
             <p style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 6px' }}>{t('done')}</p>
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', margin: '16px 0' }}>
               {[
-                { label: t('stat.created'), value: importResult.templatesCreated, color: '#10b981' },
-                { label: t('stat.skipped'), value: importResult.templatesSkipped, color: 'var(--gray-400)' },
-                { label: t('stat.items'), value: importResult.itemsCreated, color: '#3b82f6' },
+                { label: t('stat.created'), value: importResult.templatesCreated, color: 'var(--success-700)' },
+                { label: t('stat.skipped'), value: importResult.templatesSkipped, color: 'var(--text-muted)' },
+                { label: t('stat.items'), value: importResult.itemsCreated, color: 'var(--primary-700)' },
               ].map(c => (
-                <div key={c.label} style={{ padding: '12px 18px', background: `${c.color}10`, borderRadius: '10px', textAlign: 'center' }}>
-                  <div style={{ fontSize: '22px', fontWeight: 700, color: c.color }}>{c.value}</div>
+                <div key={c.label} style={{ padding: '12px 18px', background: alpha(c.color, 6), borderRadius: '10px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '22px', fontWeight: 700, color: ink(c.color) }}>{c.value}</div>
                   <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{c.label}</div>
                 </div>
               ))}
             </div>
             {importResult.errors.length > 0 && (
-              <div style={{ margin: '0 0 16px', padding: '12px 14px', background: '#fff7ed', borderRadius: '8px', textAlign: 'left', maxHeight: '120px', overflowY: 'auto' }}>
-                <p style={{ fontSize: '11px', fontWeight: 600, color: '#92400e', margin: '0 0 6px' }}>
+              <div style={{ margin: '0 0 16px', padding: '12px 14px', background: 'var(--orange-50)', borderRadius: '8px', textAlign: 'left', maxHeight: '120px', overflowY: 'auto' }}>
+                <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--warning-800)', margin: '0 0 6px' }}>
                   {t('warnings', { n: importResult.errors.length })}
                 </p>
-                {importResult.errors.map((e, i) => <p key={i} style={{ fontSize: '11px', color: '#78350f', margin: '2px 0' }}>• {e}</p>)}
+                {importResult.errors.map((e, i) => <p key={i} style={{ fontSize: '11px', color: 'var(--warning-900)', margin: '2px 0' }}>• {e}</p>)}
               </div>
             )}
-            <button onClick={onSuccess} style={{ padding: '10px 24px', background: '#3b82f6', color: '#fff', borderRadius: '8px', fontSize: '13px', fontWeight: 500, border: 'none', cursor: 'pointer' }}>
+            <button onClick={onSuccess} style={{ padding: '10px 24px', background: 'var(--primary-600)', color: '#fff', borderRadius: '8px', fontSize: '13px', fontWeight: 500, border: 'none', cursor: 'pointer' }}>
               {t('viewTemplates')}
             </button>
           </div>

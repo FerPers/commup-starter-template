@@ -104,7 +104,7 @@ export default function TestEquipmentSection({ itrId, projectId, requires, used,
                 <span style={small}>{t('usedOn', { date: u.used_on })}</span>
                 {u.snapshot.certificate_path && (
                   <button type="button" onClick={() => openCert(u.snapshot.certificate_path!)}
-                    style={{ background: 'none', border: 'none', padding: 0, color: 'var(--primary-600, var(--primary-600))', cursor: 'pointer', fontSize: '12px' }}>{t('viewCert')}</button>
+                    style={{ background: 'none', border: 'none', padding: 0, color: 'var(--primary-700)', cursor: 'pointer', fontSize: '12px' }}>{t('viewCert')}</button>
                 )}
                 {editable && (
                   <button type="button" disabled={isPending} onClick={() => run(() => removeItrTestEquipment({ projectId, itrId, equipmentId: u.equipment_id }))}
@@ -127,7 +127,7 @@ export default function TestEquipmentSection({ itrId, projectId, requires, used,
             })}
           </select>
           <button type="button" disabled={!pick || isPending} onClick={() => run(() => addItrTestEquipment({ projectId, itrId, equipmentId: pick }), () => setPick(''))}
-            style={{ padding: '7px 14px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, border: 'none', background: 'var(--primary-500)', color: '#fff', cursor: pick ? 'pointer' : 'not-allowed', opacity: pick ? 1 : 0.5 }}>
+            style={{ padding: '7px 14px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, border: 'none', background: 'var(--primary-600)', color: '#fff', cursor: pick ? 'pointer' : 'not-allowed', opacity: pick ? 1 : 0.5 }}>
             {t('add')}
           </button>
           {pickedState && !isUsable(pickedState) && <span role="status" style={{ fontSize: '12px', color: 'var(--danger-700)', fontWeight: 600 }}>{t('pickExpired')}</span>}
@@ -135,7 +135,7 @@ export default function TestEquipmentSection({ itrId, projectId, requires, used,
           {available.length === 0 && (
             <span style={small}>
               {t('noInventory')}{' '}
-              {canManageInventory && <Link href="/admin/test-equipment" style={{ color: 'var(--primary-600, var(--primary-600))' }}>{t('goInventory')}</Link>}
+              {canManageInventory && <Link href="/admin/test-equipment" style={{ color: 'var(--primary-700)' }}>{t('goInventory')}</Link>}
             </span>
           )}
         </div>

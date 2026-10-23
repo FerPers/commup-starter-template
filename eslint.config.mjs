@@ -78,6 +78,50 @@ const eslintConfig = [
 			],
 		},
 	},
+	{
+		// G-10: colores por token (var(--danger-700)…), no hex: así responden a oscuro y contraste.
+		// Blanco (#fff) sobre un relleno y negro (#000) sí valen. Para alfa, alpha(color, %) de @/lib/theme.
+		files: ["src/**/*.{ts,tsx}"],
+		ignores: [
+			"src/components/landing/**",
+			"src/lib/pdf/**",
+			"src/lib/excel/**",
+			"src/app/api/**",
+			"src/app/{page,layout,not-found}.tsx",
+			"src/app/{guia,verify,privacy,terms}/**",
+			"src/app/(auth)/**",
+			"src/app/(access)/**",
+			"src/app/(setup)/**",
+			// Datos (colores de disciplina que se guardan en la BD o salen por la API), no estilos.
+			"src/lib/constants/templates-backup.ts",
+			"src/app/actions/**",
+			"src/**/*.test.{ts,tsx}",
+			// Documentos para imprimir: papel blanco en cualquier tema.
+			"src/**/ReportPrint.tsx",
+			"src/**/BackupDocumentView.tsx",
+		],
+		rules: {
+			"no-restricted-syntax": [
+				"error",
+				{
+					selector: "Property[key.name=/^(color|background|backgroundColor|bg|fg|text|border|borderColor|borderTop|borderBottom|borderLeft|borderRight|outline)$/] Literal[value=/#(?!(?:[fF]{3}|0{3}|[fF]{6}|0{6})(?![0-9a-fA-F]))[0-9a-fA-F]{3,6}(?![0-9a-zA-Z])/]",
+					message: "Color por token de escala (var(--danger-700)…) o semántico (var(--text-muted)…), no hex (G-10).",
+				},
+				{
+					selector: "Property[key.name=/^(color|background|backgroundColor|bg|fg|text|border|borderColor|borderTop|borderBottom|borderLeft|borderRight|outline)$/] TemplateElement[value.raw=/#(?!(?:[fF]{3}|0{3}|[fF]{6}|0{6})(?![0-9a-fA-F]))[0-9a-fA-F]{3,6}(?![0-9a-zA-Z])/]",
+					message: "Color por token de escala (var(--danger-700)…) o semántico (var(--text-muted)…), no hex (G-10).",
+				},
+				{
+					selector: "TemplateLiteral > TemplateElement:not(:first-child)[value.raw=/^[0-9a-fA-F]{2}(?![0-9a-zA-Z%.])/]",
+					message: "Alfa con alpha(color, %) de @/lib/theme: pegarle «NN» a un token var(--…) no es CSS válido (G-10).",
+				},
+				{
+					selector: "BinaryExpression[operator='+'][right.type='Literal'][right.value=/^[0-9a-fA-F]{2}$/]",
+					message: "Alfa con alpha(color, %) de @/lib/theme: pegarle «NN» a un token var(--…) no es CSS válido (G-10).",
+				},
+			],
+		},
+	},
 ];
 
 export default eslintConfig;

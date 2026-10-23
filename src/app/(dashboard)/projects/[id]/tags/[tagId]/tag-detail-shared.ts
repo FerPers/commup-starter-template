@@ -95,10 +95,10 @@ export type Tag = {
 // ── Status config ────────────────────────────────────────────────
 
 export const STATUS: Record<string, { color: string; bg: string; border: string }> = {
-  not_started: { color: 'var(--text-muted)', bg: 'var(--gray-100)', border: 'var(--border)' },
-  in_progress:  { color: '#3b82f6', bg: '#eff6ff', border: '#bfdbfe' },
-  completed:    { color: '#10b981', bg: '#ecfdf5', border: '#a7f3d0' },
-  on_hold:      { color: '#f59e0b', bg: '#fffbeb', border: '#fde68a' },
+  not_started: { color: 'var(--text-muted)',  bg: 'var(--gray-100)',   border: 'var(--border)' },
+  in_progress: { color: 'var(--primary-700)', bg: 'var(--primary-50)', border: 'var(--primary-200)' },
+  completed:   { color: 'var(--success-700)', bg: 'var(--success-50)', border: 'var(--success-200)' },
+  on_hold:     { color: 'var(--warning-700)', bg: 'var(--warning-50)', border: 'var(--warning-200)' },
 }
 
 export const SIGNAL_TYPES = ['4-20mA', 'HART', 'Discreta', 'Foundation Fieldbus', 'Profibus', 'Modbus', 'WirelessHART', 'Otra']
@@ -106,9 +106,9 @@ export const SIL_LEVELS   = ['None', 'SIL1', 'SIL2', 'SIL3']
 
 // Criticidad del tag (bloquea gates aunque el % sea alto); colores del badge
 export const CRITICALITY_STYLE: Record<string, { color: string; bg: string; border: string }> = {
-  safety:  { color: '#b91c1c', bg: '#fef2f2', border: '#fecaca' },
-  process: { color: '#b45309', bg: '#fffbeb', border: '#fde68a' },
-  normal:  { color: 'var(--text-muted)', bg: 'var(--gray-100)', border: 'var(--border)' },
+  safety:  { color: 'var(--danger-700)',  bg: 'var(--danger-50)',  border: 'var(--danger-200)' },
+  process: { color: 'var(--warning-700)', bg: 'var(--warning-50)', border: 'var(--warning-200)' },
+  normal:  { color: 'var(--text-muted)',  bg: 'var(--gray-100)',   border: 'var(--border)' },
 }
 
 // Disciplines that work with analog/digital signals, setpoints, and SIL levels
@@ -127,7 +127,7 @@ export const cardStyle: React.CSSProperties = {
 }
 
 export const sectionLabel: React.CSSProperties = {
-  fontSize: '11px', fontWeight: 600, color: 'var(--gray-400)',
+  fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)',
   textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 2px',
 }
 

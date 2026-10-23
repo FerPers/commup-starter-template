@@ -8,6 +8,7 @@ import { setMemberCompany } from '@/app/actions/documents'
 import { ROLE_TIERS } from '@/lib/constants/roles'
 import { useAskDialog } from '@/components/ui/AskDialog'
 import { DialogSurface } from '@/components/ui/dialog-a11y'
+import { alpha, ink } from '@/lib/theme'
 
 type Member = {
   id: string
@@ -35,12 +36,12 @@ type PendingInvite = {
 const ALL_ROLES = ['owner', 'admin', 'architect', 'leader', 'inspector', 'client']
 
 const ROLE_COLORS: Record<string, { color: string; bg: string }> = {
-  owner:     { color: '#7c3aed', bg: '#f5f3ff' },
-  admin:     { color: '#2563eb', bg: '#eff6ff' },
-  architect: { color: '#0891b2', bg: '#ecfeff' },
-  leader:    { color: '#059669', bg: '#ecfdf5' },
-  inspector: { color: '#d97706', bg: '#fffbeb' },
-  client:    { color: 'var(--text-muted)', bg: 'var(--gray-50)' },
+  owner:     { color: 'var(--violet-700)',  bg: 'var(--violet-50)' },
+  admin:     { color: 'var(--primary-700)', bg: 'var(--primary-50)' },
+  architect: { color: 'var(--cyan-700)',    bg: 'var(--cyan-50)' },
+  leader:    { color: 'var(--success-700)', bg: 'var(--success-50)' },
+  inspector: { color: 'var(--warning-700)', bg: 'var(--warning-50)' },
+  client:    { color: 'var(--text-muted)',  bg: 'var(--gray-50)' },
 }
 
 function RoleBadge({ role, label }: { role: string; label: string }) {
@@ -48,7 +49,7 @@ function RoleBadge({ role, label }: { role: string; label: string }) {
   return (
     <span style={{
       padding: '3px 10px', borderRadius: '999px', fontSize: '12px', fontWeight: 600,
-      background: m.bg, color: m.color, border: `1px solid ${m.color}30`,
+      background: m.bg, color: ink(m.color), border: `1px solid ${alpha(m.color, 19)}`,
     }}>
       {label}
     </span>
@@ -64,7 +65,7 @@ function Avatar({ name, url }: { name: string; url: string | null }) {
       width: 36, height: 36, borderRadius: '50%',
       background: '#3b82f620', border: '1px solid #3b82f630',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: '13px', fontWeight: 700, color: '#3b82f6', flexShrink: 0,
+      fontSize: '13px', fontWeight: 700, color: 'var(--primary-700)', flexShrink: 0,
     }}>
       {initials || '?'}
     </div>
@@ -253,7 +254,7 @@ export default function UsersView({
           <button
             onClick={() => { setShowInvite(true); setError(null) }}
             style={{
-              padding: '9px 18px', background: '#3b82f6', color: '#fff',
+              padding: '9px 18px', background: 'var(--primary-600)', color: '#fff',
               border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 500,
               cursor: 'pointer',
             }}
@@ -265,12 +266,12 @@ export default function UsersView({
 
       {/* Feedback */}
       {error && (
-        <div style={{ marginBottom: '16px', padding: '12px 16px', background: '#fee2e2', border: '1px solid #fca5a5', borderRadius: '8px', color: '#dc2626', fontSize: '13px' }}>
+        <div style={{ marginBottom: '16px', padding: '12px 16px', background: 'var(--danger-100)', border: '1px solid var(--danger-300)', borderRadius: '8px', color: 'var(--danger-700)', fontSize: '13px' }}>
           {error}
         </div>
       )}
       {success && (
-        <div style={{ marginBottom: '16px', padding: '12px 16px', background: '#ecfdf5', border: '1px solid #6ee7b7', borderRadius: '8px', color: '#059669', fontSize: '13px' }}>
+        <div style={{ marginBottom: '16px', padding: '12px 16px', background: 'var(--success-50)', border: '1px solid var(--success-300)', borderRadius: '8px', color: 'var(--success-700)', fontSize: '13px' }}>
           {success}
         </div>
       )}
@@ -335,7 +336,7 @@ export default function UsersView({
                 onClick={handleInvite}
                 disabled={isPending || !inviteEmail.trim()}
                 style={{
-                  padding: '9px 18px', background: '#3b82f6', color: '#fff',
+                  padding: '9px 18px', background: 'var(--primary-600)', color: '#fff',
                   border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 500,
                   cursor: isPending ? 'wait' : 'pointer', opacity: (!inviteEmail.trim() || isPending) ? 0.6 : 1,
                 }}
@@ -392,19 +393,19 @@ export default function UsersView({
         <div style={{
           marginBottom: '20px',
           padding: '14px 18px',
-          background: '#fffbeb',
-          border: '1px solid #fcd34d',
+          background: 'var(--warning-50)',
+          border: '1px solid var(--warning-300)',
           borderRadius: '10px',
         }}>
-          <p style={{ margin: '0 0 8px', fontSize: '12px', fontWeight: 600, color: '#92400e', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          <p style={{ margin: '0 0 8px', fontSize: '12px', fontWeight: 600, color: 'var(--warning-800)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
             {t('pending.title', { count: filteredPending.length })}
           </p>
-          <p style={{ margin: '0 0 10px', fontSize: '12px', color: '#78350f' }}>
+          <p style={{ margin: '0 0 10px', fontSize: '12px', color: 'var(--warning-900)' }}>
             {t('pending.desc')}
           </p>
           <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 4 }}>
             {filteredPending.map(p => (
-              <li key={p.userId} style={{ fontSize: 13, color: '#78350f', display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
+              <li key={p.userId} style={{ fontSize: 13, color: 'var(--warning-900)', display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
                 <span>
                   <strong>{p.email}</strong>
                   {p.role && (
@@ -413,7 +414,7 @@ export default function UsersView({
                     </span>
                   )}
                 </span>
-                <span style={{ color: '#a16207', fontSize: 12 }}>
+                <span style={{ color: 'var(--warning-700)', fontSize: 12 }}>
                   {t('pending.invitedOn', { date: formatJoinedDate(p.invitedAt) })}
                 </span>
               </li>
@@ -426,13 +427,13 @@ export default function UsersView({
       {filterStatus !== 'pending' && (
         <div style={{ background: 'var(--card-bg)', borderRadius: '14px', border: '1px solid var(--border)', overflow: 'hidden' }}>
           {filteredMembers.length === 0 ? (
-            <div style={{ padding: '48px', textAlign: 'center', color: 'var(--gray-400)', fontSize: '14px' }}>
+            <div style={{ padding: '48px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '14px' }}>
               {members.length === 0 ? t('table.empty') : t('table.emptyFiltered')}
             </div>
           ) : (
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr style={{ background: 'var(--gray-50)', borderBottom: '1px solid #f1f5f9' }}>
+                <tr style={{ background: 'var(--gray-50)', borderBottom: '1px solid var(--gray-100)' }}>
                   {[
                     t('table.colUser'),
                     t('table.colEmail'),
@@ -444,7 +445,7 @@ export default function UsersView({
                   ].map((h, i) => (
                     <th key={i} style={{
                       padding: '12px 20px', textAlign: 'left',
-                      fontSize: '11px', fontWeight: 600, color: 'var(--gray-400)',
+                      fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)',
                       textTransform: 'uppercase', letterSpacing: '0.06em',
                     }}>
                       {h}
@@ -459,7 +460,7 @@ export default function UsersView({
                   const canEdit = isAdmin && (!isOwner || currentRole === 'owner')
                   return (
                     <tr key={m.id} style={{
-                      borderBottom: i < filteredMembers.length - 1 ? '1px solid #f1f5f9' : 'none',
+                      borderBottom: i < filteredMembers.length - 1 ? '1px solid var(--gray-100)' : 'none',
                       opacity: isPending ? 0.6 : 1,
                     }}>
                       <td style={{ padding: '14px 20px' }}>
@@ -469,7 +470,7 @@ export default function UsersView({
                             <div style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-strong)' }}>
                               {m.fullName}
                               {isSelf && (
-                                <span style={{ marginLeft: '8px', fontSize: '11px', color: 'var(--gray-400)', fontWeight: 400 }}>
+                                <span style={{ marginLeft: '8px', fontSize: '11px', color: 'var(--text-muted)', fontWeight: 400 }}>
                                   {t('table.self')}
                                 </span>
                               )}
@@ -482,7 +483,7 @@ export default function UsersView({
                                     : m.accessExpiresAt ? t('access.until', { date: m.accessExpiresAt.slice(0, 10) }) : null
                               if (!label) return null
                               const bad = m.status === 'suspended' || expired
-                              return <div suppressHydrationWarning style={{ fontSize: '11px', marginTop: 2, color: bad ? '#b91c1c' : m.status === 'invited' ? '#1d4ed8' : 'var(--gray-400)' }}>{label}</div>
+                              return <div suppressHydrationWarning style={{ fontSize: '11px', marginTop: 2, color: bad ? 'var(--danger-700)' : m.status === 'invited' ? 'var(--primary-700)' : 'var(--text-muted)' }}>{label}</div>
                             })()}
                           </div>
                         </div>
@@ -499,7 +500,7 @@ export default function UsersView({
                             style={{
                               padding: '4px 8px', border: '1px solid var(--border)',
                               borderRadius: '6px', fontSize: '12px', fontWeight: 600,
-                              color: ROLE_COLORS[m.role]?.color ?? 'var(--text-muted)',
+                              color: ink(ROLE_COLORS[m.role]?.color ?? 'var(--text-muted)'),
                               background: ROLE_COLORS[m.role]?.bg ?? 'var(--gray-50)',
                               cursor: 'pointer',
                             }}
@@ -528,10 +529,10 @@ export default function UsersView({
                           </select>
                         ) : (companies.find(c => c.id === m.companyId)?.name ?? '—')}
                       </td>
-                      <td style={{ padding: '14px 20px', fontSize: '13px', color: 'var(--gray-400)' }}>
+                      <td style={{ padding: '14px 20px', fontSize: '13px', color: 'var(--text-muted)' }}>
                         {formatJoinedDate(m.joinedAt)}
                       </td>
-                      <td style={{ padding: '14px 20px', fontSize: '13px', color: 'var(--gray-400)' }} title={m.lastActive ?? ''}>
+                      <td style={{ padding: '14px 20px', fontSize: '13px', color: 'var(--text-muted)' }} title={m.lastActive ?? ''}>
                         {formatLastActive(m.lastActive, t)}
                       </td>
                       <td style={{ padding: '14px 20px', textAlign: 'right' }}>
@@ -554,8 +555,8 @@ export default function UsersView({
                             disabled={isPending}
                             style={{
                               padding: '6px 12px', background: 'transparent',
-                              border: '1px solid #fca5a5', borderRadius: '6px',
-                              fontSize: '12px', color: '#ef4444', cursor: 'pointer',
+                              border: '1px solid var(--danger-300)', borderRadius: '6px',
+                              fontSize: '12px', color: 'var(--danger-700)', cursor: 'pointer',
                             }}
                           >
                             {t('table.remove')}
@@ -574,7 +575,7 @@ export default function UsersView({
       {/* Empty pending state */}
       {filterStatus === 'pending' && filteredPending.length === 0 && (
         <div style={{
-          padding: '48px', textAlign: 'center', color: 'var(--gray-400)', fontSize: '14px',
+          padding: '48px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '14px',
           background: 'var(--card-bg)', borderRadius: '14px', border: '1px solid var(--border)',
         }}>
           {t('pending.empty')}
@@ -617,7 +618,7 @@ export default function UsersView({
                       <dt style={{ color: 'var(--text-muted)' }}>{t(`removeDialog.${key}`)}</dt>
                       <dd style={{
                         margin: 0, fontWeight: 700, textAlign: 'right',
-                        color: isOpenWork && n > 0 ? '#b45309' : 'var(--text-strong)',
+                        color: isOpenWork && n > 0 ? 'var(--warning-700)' : 'var(--text-strong)',
                       }}>{n}</dd>
                     </div>
                   ))}
@@ -626,7 +627,7 @@ export default function UsersView({
                 {(removeCtx.openPunches > 0 || removeCtx.openItrAssignments > 0) && (
                   <p style={{
                     margin: '0 0 10px', padding: '10px 12px', borderRadius: 8, fontSize: 12.5, lineHeight: 1.45,
-                    background: '#fffbeb', border: '1px solid #fcd34d', color: '#78350f',
+                    background: 'var(--warning-50)', border: '1px solid var(--warning-300)', color: 'var(--warning-900)',
                   }}>
                     {t('removeDialog.warnOpen')}
                   </p>
@@ -652,7 +653,7 @@ export default function UsersView({
                 onClick={confirmRemove}
                 disabled={isPending || !removeCtx}
                 style={{
-                  padding: '8px 14px', background: '#ef4444', border: '1px solid #ef4444',
+                  padding: '8px 14px', background: 'var(--danger-500)', border: '1px solid var(--danger-500)',
                   borderRadius: 8, fontSize: 13, fontWeight: 600, color: '#fff',
                   cursor: isPending || !removeCtx ? 'wait' : 'pointer', opacity: isPending || !removeCtx ? 0.6 : 1,
                 }}
@@ -666,7 +667,7 @@ export default function UsersView({
 
       {/* Role legend */}
       <div style={{ marginTop: '20px', padding: '16px 20px', background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)' }}>
-        <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 10px' }}>
+        <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 10px' }}>
           {t('legend')}
         </p>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>

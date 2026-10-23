@@ -8,11 +8,11 @@ import type { RegisterKind, RegisterStatus } from '@/lib/registers/catalog'
 
 export const STATUS_STYLE: Record<RegisterStatus, { bg: string; fg: string; border: string }> = {
   proposed:   { bg: 'var(--gray-50)',    fg: 'var(--text-muted)',  border: 'var(--border)' },
-  authorized: { bg: '#eff6ff',           fg: '#1d4ed8',            border: '#93c5fd' },
-  active:     { bg: '#fffbeb',           fg: '#b45309',            border: '#fcd34d' },
-  removed:    { bg: '#f5f3ff',           fg: '#6d28d9',            border: '#c4b5fd' },
-  verified:   { bg: 'var(--success-50)', fg: 'var(--success-700)', border: '#a7f3d0' },
-  cancelled:  { bg: 'var(--gray-50)',    fg: 'var(--gray-400)',    border: 'var(--border)' },
+  authorized: { bg: 'var(--primary-50)', fg: 'var(--primary-700)', border: 'var(--primary-300)' },
+  active:     { bg: 'var(--warning-50)', fg: 'var(--warning-700)', border: 'var(--warning-300)' },
+  removed:    { bg: 'var(--violet-50)',  fg: 'var(--violet-700)',  border: 'var(--violet-300)' },
+  verified:   { bg: 'var(--success-50)', fg: 'var(--success-700)', border: 'var(--success-200)' },
+  cancelled:  { bg: 'var(--gray-50)',    fg: 'var(--text-muted)',  border: 'var(--border)' },
 }
 
 export function useStatusLabel() {
@@ -42,11 +42,11 @@ export const input: React.CSSProperties = {
   width: '100%', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: 8,
   fontSize: 'var(--text-sm)', background: 'var(--card-bg)', color: 'var(--text-strong)', boxSizing: 'border-box',
 }
-export const linkStyle: React.CSSProperties = { fontSize: 'var(--text-sm)', color: 'var(--primary-600, #2563eb)', textDecoration: 'none', fontWeight: 500 }
+export const linkStyle: React.CSSProperties = { fontSize: 'var(--text-sm)', color: 'var(--primary-700)', textDecoration: 'none', fontWeight: 500 }
 export const btn = (variant: 'primary' | 'outline' | 'danger', disabled = false): React.CSSProperties => ({
   padding: '7px 14px', borderRadius: 8, fontSize: 'var(--text-sm)', fontWeight: 600, textDecoration: 'none',
   cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.5 : 1,
   border: variant === 'outline' ? '1px solid var(--border)' : 'none',
-  background: variant === 'primary' ? 'var(--primary-500)' : variant === 'danger' ? 'var(--danger-500)' : 'transparent',
+  background: variant === 'primary' ? 'var(--primary-600)' : variant === 'danger' ? 'var(--danger-600)' : 'transparent',
   color: variant === 'outline' ? 'var(--text-strong)' : '#fff',
 })

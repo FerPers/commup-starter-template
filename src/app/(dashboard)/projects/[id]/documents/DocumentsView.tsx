@@ -182,7 +182,7 @@ export default function DocumentsView({ project, rows, systems, disciplines, com
 
       {/* N2d: planos que los tags citan en su campo P&ID y que no tienen documento en el registro */}
       {type === 'pid' && (pid?.missing.length ?? 0) > 0 && (
-        <section style={{ ...card, background: '#fffbeb', borderColor: '#fde68a' }} aria-label={t('pid.missingTitle')}>
+        <section style={{ ...card, background: 'var(--warning-50)', borderColor: 'var(--warning-200)' }} aria-label={t('pid.missingTitle')}>
           <strong style={{ fontSize: 'var(--text-sm)', color: 'var(--text-strong)' }}>{t('pid.missingTitle', { count: pid!.missing.length })}</strong>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
             {pid!.missing.slice(0, 60).map(n => canEdit
@@ -207,10 +207,10 @@ export default function DocumentsView({ project, rows, systems, disciplines, com
             {shown.map(r => (
               <tr key={r.id}>
                 <td style={{ ...td, fontWeight: 600, whiteSpace: 'nowrap' }}>
-                  <Link href={`/projects/${project.id}/documents/${r.id}`} style={{ color: 'var(--primary-600, #2563eb)', textDecoration: 'none' }}>{r.number}</Link>
+                  <Link href={`/projects/${project.id}/documents/${r.id}`} style={{ color: 'var(--primary-700)', textDecoration: 'none' }}>{r.number}</Link>
                   {r.docType === 'pid' && r.currentHasFile && (
                     <div style={{ marginTop: 4, display: 'flex', gap: 6, alignItems: 'center', fontWeight: 400 }}>
-                      <Link href={`/projects/${project.id}/documents/${r.id}/viewer`} style={{ fontSize: 'var(--text-xs)', color: 'var(--primary-600, #2563eb)', textDecoration: 'none', fontWeight: 600 }}>{t('pid.openViewer')}</Link>
+                      <Link href={`/projects/${project.id}/documents/${r.id}/viewer`} style={{ fontSize: 'var(--text-xs)', color: 'var(--primary-700)', textDecoration: 'none', fontWeight: 600 }}>{t('pid.openViewer')}</Link>
                       <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>{t('pid.pins', { count: pid?.pins[r.id]?.count ?? 0 })}</span>
                       {(pid?.pins[r.id]?.review ?? 0) > 0 && <Chip tone="amber">{t('pid.toReview', { count: pid!.pins[r.id].review })}</Chip>}
                       {(pid?.pins[r.id]?.cited ?? 0) > 0 && (

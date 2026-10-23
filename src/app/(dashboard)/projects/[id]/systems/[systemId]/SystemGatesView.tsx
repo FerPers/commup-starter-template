@@ -33,6 +33,7 @@ import {
   type GateStatus,
   type SystemGate,
 } from '@/lib/readiness/gates'
+import { ink } from '@/lib/theme'
 
 type Props = {
   /** S14 (D14): capacidades del usuario en el proyecto (firmantes designados o respaldo por rol). */
@@ -52,16 +53,16 @@ type Props = {
 }
 
 const RESULT_STYLE: Record<string, { icon: string; color: string }> = {
-  pass: { icon: '✓', color: 'var(--success-500)' },
-  warn: { icon: '!', color: '#d97706' },
-  fail: { icon: '✕', color: 'var(--danger-500)' },
+  pass: { icon: '✓', color: 'var(--success-700)' },
+  warn: { icon: '!', color: 'var(--warning-700)' },
+  fail: { icon: '✕', color: 'var(--danger-700)' },
 }
 
 const card: React.CSSProperties = {
   background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 12, padding: 20,
 }
 const small: React.CSSProperties = { fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }
-const linkStyle: React.CSSProperties = { fontSize: 'var(--text-sm)', color: 'var(--primary-600, #2563eb)', textDecoration: 'none', fontWeight: 500 }
+const linkStyle: React.CSSProperties = { fontSize: 'var(--text-sm)', color: 'var(--primary-700)', textDecoration: 'none', fontWeight: 500 }
 const input: React.CSSProperties = {
   width: '100%', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: 8,
   fontSize: 'var(--text-sm)', background: 'var(--card-bg)', color: 'var(--text-strong)', boxSizing: 'border-box',
@@ -69,7 +70,7 @@ const input: React.CSSProperties = {
 const btn = (variant: 'primary' | 'outline' | 'danger'): React.CSSProperties => ({
   padding: '7px 14px', borderRadius: 8, fontSize: 'var(--text-sm)', fontWeight: 600, cursor: 'pointer',
   border: variant === 'outline' ? '1px solid var(--border)' : 'none',
-  background: variant === 'primary' ? 'var(--primary-500)' : variant === 'danger' ? 'var(--danger-500)' : 'transparent',
+  background: variant === 'primary' ? 'var(--primary-600)' : variant === 'danger' ? 'var(--danger-600)' : 'transparent',
   color: variant === 'outline' ? 'var(--text-strong)' : '#fff',
 })
 
@@ -411,7 +412,7 @@ export default function SystemGatesView({ orgId, role, userId, caps, canEdit, pr
                 <button type="button" style={{ ...linkStyle, background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
                   onClick={() => openEvidence(String(d.file_path))}>{t('attest.view')}</button>
                 {canEdit && !g.approval && (
-                  <button type="button" disabled={isPending} style={{ ...linkStyle, color: 'var(--danger-500)', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+                  <button type="button" disabled={isPending} style={{ ...linkStyle, color: 'var(--danger-700)', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
                     onClick={async () => {
                       // revoke_gate_attestation exige motivo ≥ 10.
                       const reason = await ask({ title: t('attest.revoke'), confirmLabel: t('attest.revoke'), danger: true, input: { label: t('attest.revokePrompt'), minLength: 10 } })
@@ -444,7 +445,7 @@ export default function SystemGatesView({ orgId, role, userId, caps, canEdit, pr
       <p style={{ ...small, margin: 0, lineHeight: 1.5 }}>{t('intro')}</p>
 
       {error && (
-        <div role="alert" style={{ padding: '10px 14px', background: 'var(--danger-50)', border: '1px solid #fecaca', borderRadius: 8, color: 'var(--danger-700)', fontSize: 'var(--text-sm)' }}>
+        <div role="alert" style={{ padding: '10px 14px', background: 'var(--danger-50)', border: '1px solid var(--danger-200)', borderRadius: 8, color: 'var(--danger-700)', fontSize: 'var(--text-sm)' }}>
           {error}
         </div>
       )}
@@ -474,7 +475,7 @@ export default function SystemGatesView({ orgId, role, userId, caps, canEdit, pr
                 const rs = RESULT_STYLE[c.result]
                 return (
                   <li key={c.criterion_id ?? `prev-${i}`} style={{ display: 'grid', gridTemplateColumns: '22px 1fr', gap: 8 }}>
-                    <span aria-label={t(`result.${c.result}`)} style={{ color: rs.color, fontWeight: 800 }}>{rs.icon}</span>
+                    <span aria-label={t(`result.${c.result}`)} style={{ color: ink(rs.color), fontWeight: 800 }}>{rs.icon}</span>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                       <span style={{ fontWeight: 600, color: 'var(--text-strong)', fontSize: 'var(--text-sm)' }}>
                         {c.label ?? t(`kind.${c.kind}`)}
@@ -502,7 +503,7 @@ export default function SystemGatesView({ orgId, role, userId, caps, canEdit, pr
                         </li>
                       ))}
                       {missingSignatures(g).map(c => (
-                        <li key={c} style={{ color: '#1d4ed8' }}>
+                        <li key={c} style={{ color: 'var(--primary-700)' }}>
                           <strong>{t(`capacity.${c}`)}</strong>: {t('signaturePending')}
                         </li>
                       ))}

@@ -70,9 +70,9 @@ export default function MyWorkBoard({ groups, labels, projects, currentProject }
             return (
               <button key={x.key} type="button" role="tab" aria-selected={sel} onClick={() => setTab(x.key)}
                 style={{ minHeight: 40, padding: '0 16px', borderRadius: 999, fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8, fontFamily: 'inherit',
-                  border: `1px solid ${sel ? 'var(--sidebar-bg, #12304a)' : 'var(--border)'}`, background: sel ? 'var(--sidebar-bg, #12304a)' : 'var(--card-bg)', color: sel ? '#fff' : 'var(--text-strong)' }}>
+                  border: `1px solid ${sel ? 'var(--sidebar-bg)' : 'var(--border)'}`, background: sel ? 'var(--sidebar-bg)' : 'var(--card-bg)', color: sel ? '#fff' : 'var(--text-strong)' }}>
                 {x.label}
-                <span style={{ borderRadius: 999, padding: '0 7px', fontSize: 12, fontVariantNumeric: 'tabular-nums', background: sel ? 'var(--brand-orange, #f2a541)' : 'var(--gray-100)', color: sel ? '#12304a' : 'var(--text-strong)' }}>{x.n}</span>
+                <span style={{ borderRadius: 999, padding: '0 7px', fontSize: 12, fontVariantNumeric: 'tabular-nums', background: sel ? 'var(--brand-orange)' : 'var(--gray-100)', color: sel ? 'var(--brand-navy)' : 'var(--text-strong)' }}>{x.n}</span>
               </button>
             )
           })}
@@ -101,7 +101,7 @@ export default function MyWorkBoard({ groups, labels, projects, currentProject }
                   <span style={{ fontSize: 'var(--text-xs)', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{g.label}</span>
                   <span style={{ fontSize: 22, fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>{n}</span>
                 </button>
-                {n === 0 && <p style={{ margin: 0, padding: '10px 16px 0', fontSize: 'var(--text-sm)', color: 'var(--success-500)', fontWeight: 600 }}>{labels.upToDate}</p>}
+                {n === 0 && <p style={{ margin: 0, padding: '10px 16px 0', fontSize: 'var(--text-sm)', color: 'var(--success-700)', fontWeight: 600 }}>{labels.upToDate}</p>}
                 <div style={{ padding: '6px 0 8px' }}>
                   {g.queues.map(q => {
                     const zero = q.total === 0
@@ -120,7 +120,7 @@ export default function MyWorkBoard({ groups, labels, projects, currentProject }
                             {q.rows.slice(0, COLUMN_ROWS)}
                             {q.total > COLUMN_ROWS && (
                               <button type="button" onClick={() => setTab(g.group)}
-                                style={{ alignSelf: 'flex-start', background: 'transparent', border: 'none', padding: '4px 2px', color: 'var(--primary-500)', fontWeight: 600, fontSize: 'var(--text-sm)', cursor: 'pointer', fontFamily: 'inherit' }}>
+                                style={{ alignSelf: 'flex-start', background: 'transparent', border: 'none', padding: '4px 2px', color: 'var(--primary-700)', fontWeight: 600, fontSize: 'var(--text-sm)', cursor: 'pointer', fontFamily: 'inherit' }}>
                                 {labels.seeAll.replace('{n}', countText(q))}
                               </button>
                             )}
@@ -143,7 +143,7 @@ export default function MyWorkBoard({ groups, labels, projects, currentProject }
         return (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {withItems.length === 0 && (
-              <p style={{ margin: 0, padding: '22px 18px', textAlign: 'center', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', color: 'var(--success-500)', fontWeight: 600 }}>{labels.upToDateHere}</p>
+              <p style={{ margin: 0, padding: '22px 18px', textAlign: 'center', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', color: 'var(--success-700)', fontWeight: 600 }}>{labels.upToDateHere}</p>
             )}
             {withItems.map(q => (
               <section key={q.key} style={{ background: 'var(--card-bg)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', overflow: 'hidden' }}>
@@ -153,7 +153,7 @@ export default function MyWorkBoard({ groups, labels, projects, currentProject }
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '10px 12px' }}>{q.rows}</div>
                 {(q.capped || q.total > q.rows.length) && (
-                  <Link href={q.moreHref} style={{ display: 'block', padding: '9px 18px', borderTop: '1px solid var(--gray-100)', fontSize: 'var(--text-sm)', color: 'var(--primary-500)', fontWeight: 600, textDecoration: 'none' }}>
+                  <Link href={q.moreHref} style={{ display: 'block', padding: '9px 18px', borderTop: '1px solid var(--gray-100)', fontSize: 'var(--text-sm)', color: 'var(--primary-700)', fontWeight: 600, textDecoration: 'none' }}>
                     {labels.seeAll.replace('{n}', countText(q))}
                   </Link>
                 )}

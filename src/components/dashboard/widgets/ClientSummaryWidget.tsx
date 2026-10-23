@@ -31,8 +31,8 @@ export default async function ClientSummaryWidget({ userId, orgId }: { userId: s
 
   return (
     <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-      <SummaryPill count={projectCount ?? 0} label={t('clientView.pillProjects')} color="var(--primary-500)" />
-      <SummaryPill count={pendingSignature} label={t('clientView.pillSignatures')} color={pendingSignature > 0 ? 'var(--warning-500)' : 'var(--success-500)'} />
+      <SummaryPill count={projectCount ?? 0} label={t('clientView.pillProjects')} color='var(--primary-700)' />
+      <SummaryPill count={pendingSignature} label={t('clientView.pillSignatures')} color={pendingSignature > 0 ? 'var(--warning-700)' : 'var(--success-700)'} />
     </div>
   )
 }

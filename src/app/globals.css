@@ -94,6 +94,17 @@
   --accent-600: #9333ea;
   --accent-700: #7e22ce;
 
+  /* ---------- Color: Sky / Cyan / Indigo (información, tablas, tipos) — G-10 ---------- */
+  --sky-50:  #f0f9ff;  --sky-100: #e0f2fe;  --sky-200: #bae6fd;  --sky-300: #7dd3fc;
+  --sky-500: #0ea5e9;  --sky-600: #0284c7;  --sky-700: #0369a1;  --sky-800: #075985;
+  --cyan-50:  #ecfeff;  --cyan-100: #cffafe;  --cyan-200: #a5f3fc;  --cyan-300: #67e8f9;
+  --cyan-500: #06b6d4;  --cyan-600: #0891b2;  --cyan-700: #0e7490;  --cyan-800: #155e75;
+  --indigo-50:  #eef2ff;  --indigo-100: #e0e7ff;  --indigo-200: #c7d2fe;  --indigo-300: #a5b4fc;
+  --indigo-500: #6366f1;  --indigo-600: #4f46e5;  --indigo-700: #4338ca;  --indigo-800: #3730a3;
+  /* Solo acentos de categoría (tipos de ítem): sin escala completa. */
+  --pink-500: #ec4899;
+  --teal-500: #14b8a6;
+
   /* ---------- Marca CommUP (logo definitivo): navy + naranja ---------- */
   --brand-navy:        #12304A;
   --brand-navy-dark:   #0B1F33;
@@ -147,7 +158,10 @@
   --foreground:     var(--gray-900);
   --card-bg:        #ffffff;
   --border:         var(--gray-200);
-  --text-muted:     var(--gray-500);
+  /* G-11: ≥ 4.5:1 también sobre --gray-100 (con --gray-500 daba 4.3:1). */
+  --text-muted:     #5b6b80;
+  --text-secondary: var(--gray-600);
+  --text-body:      var(--gray-700);
   --text-strong:    var(--gray-900);
 
   --sidebar-bg:     var(--brand-navy-dark);
@@ -171,8 +185,24 @@
   --punch-b:        var(--warning-500);
   --punch-c:        var(--gray-500);
 
-  /* Colores de la BD usados como texto (ink() en src/lib/theme) */
-  --ink-darken: 0%;
+  /* Rellenos sólidos con texto blanco encima (botones, celda «aprobado»): no se
+     invierten en oscuro como la escala 700–900, que allí pasa a ser tinta clara. */
+  --solid-primary-700: #1d4ed8;
+  --solid-primary-800: #1e40af;
+  --solid-success-700: #047857;
+  --solid-warning-700: #b45309;
+  --solid-danger-700:  #b91c1c;
+  --solid-sky-700:     #0369a1;
+  /* Texto sobre un relleno de tinta 700 (contador de una pestaña activa): blanco en
+     claro, oscuro en oscuro, donde la tinta 700 es un tono claro. */
+  --on-ink:            #ffffff;
+  /* Acento claro sobre superficies siempre oscuras (escáner, avisos push). */
+  --on-dark-accent:    #bfdbfe;
+
+  /* Colores de la BD usados como texto (ink() en src/lib/theme): luminosidad OKLCH
+     acotada para ≥ 4.5:1 sobre la tarjeta del tema. */
+  --ink-l-min: 0;
+  --ink-l-max: 0.5;
 
   /* Focus ring (a11y, consumido por componentes UI Fase 2) */
   --focus-ring:     0 0 0 3px rgba(59, 130, 246, 0.35);
@@ -183,8 +213,15 @@
    Estrategia: invertir solo los grises claros (50/100/200) que las páginas
    usan como fondos/borders sutiles. Los grises medios+oscuros (300-900) se
    mantienen para componentes "siempre oscuros" (PushNotificationManager,
-   etc.) y para texto dim que ya se ve bien en ambos modos.
+   etc.); el texto gris va por --text-muted / --text-secondary / --text-body /
+   --text-strong, que sí cambian.
    Los aliases semánticos cambian completamente.
+
+   G-10: las escalas de estado siguen el mismo contrato en los dos temas:
+   50–200 = superficie y borde teñidos (en oscuro, tinte opaco sobre la tarjeta),
+   300–600 = acento y relleno (iguales), 700–900 = tinta sobre su superficie
+   (en oscuro, los tonos claros). Un chip es fondo 50 + texto 700 + borde 200;
+   un relleno con texto blanco usa 500/600 o --solid-*, nunca 700–900.
    ========================================================================== */
 :root[data-theme="dark"] {
   /* Solo invertir grises claros (fondos/bordes/hovers que deben oscurecerse) */
@@ -197,8 +234,37 @@
   --foreground:     #f8fafc;
   --card-bg:        #1e293b;
   --border:         #334155;
-  --text-muted:     var(--gray-400);
+  /* ≥ 4.5:1 también sobre las superficies teñidas 50/100 y --gray-200 (G-11). */
+  --text-muted:     #aab6c8;
+  --text-secondary: #cbd5e1;
+  --text-body:      #e2e8f0;
   --text-strong:    #f8fafc;
+
+  --primary-50:  #233759;  --primary-100: #253e68;  --primary-200: #2a4e8a;
+  --primary-700: #93c5fd;  --primary-800: #bfdbfe;  --primary-900: #dbeafe;
+  --success-50:  #1c4046;  --success-100: #1b4c4c;  --success-200: #186558;
+  --success-700: #6ee7b7;  --success-800: #a7f3d0;  --success-900: #d1fae5;
+  --warning-50:  #403c33;  --warning-100: #52452f;  --warning-200: #785a27;
+  --warning-700: #fcd34d;  --warning-800: #fde68a;  --warning-900: #fef3c7;
+  --danger-50:   #3f2d3c;  --danger-100:  #502f3d;  --danger-200:  #76343f;
+  --danger-700:  #fca5a5;  --danger-800:  #fecaca;  --danger-900:  #fee2e2;
+  --orange-50:   #413535;  --orange-100:  #533b32;  --orange-200:  #7a482b;
+  --orange-700:  #fdba74;  --orange-800:  #fed7aa;
+  --violet-50:   #2f3159;  --violet-100:  #383568;  --violet-200:  #4c3e8a;
+  --violet-700:  #c4b5fd;  --violet-800:  #ddd6fe;
+  --accent-50:   #343059;  --accent-700:  #d8b4fe;
+  --sky-50:      #1b3d57;  --sky-100:     #1a4765;  --sky-200:     #175d84;
+  --sky-700:     #7dd3fc;  --sky-800:     #bae6fd;
+  --cyan-50:     #1a4053;  --cyan-100:    #184b60;  --cyan-200:    #14647b;
+  --cyan-700:    #67e8f9;  --cyan-800:    #a5f3fc;
+  --indigo-50:   #293358;  --indigo-100:  #2f3867;  --indigo-200:  #3b4387;
+  --indigo-700:  #a5b4fc;  --indigo-800:  #c7d2fe;
+
+  --on-ink: #0f172a;
+
+  /* Colores de la BD como texto: se aclaran para leerse sobre la tarjeta oscura. */
+  --ink-l-min: 0.72;
+  --ink-l-max: 1;
 
   --sidebar-bg:     var(--brand-navy-dark);
   --sidebar-text:   var(--gray-400);
@@ -303,12 +369,27 @@
   --accent-600: #6b21a8;
   --accent-700: #581c87;
 
+  --sky-300: #0369a1;  --sky-500: #075985;  --sky-600: #075985;  --sky-700: #0c4a6e;  --sky-800: #082f49;
+  --cyan-300: #0e7490; --cyan-500: #155e75; --cyan-600: #155e75; --cyan-700: #164e63; --cyan-800: #083344;
+  --indigo-300: #4338ca; --indigo-500: #3730a3; --indigo-600: #3730a3; --indigo-700: #312e81; --indigo-800: #1e1b4b;
+  --pink-500: #9d174d;
+  --teal-500: #115e59;
+
   --background:     #ffffff;
   --foreground:     #000000;
   --card-bg:        #ffffff;
   --border:         #334155;
   --text-muted:     #1e293b;
+  --text-secondary: #0f172a;
+  --text-body:      #000000;
   --text-strong:    #000000;
+
+  --solid-primary-700: #1e3a8a;
+  --solid-primary-800: #172554;
+  --solid-success-700: #064e3b;
+  --solid-warning-700: #451a03;
+  --solid-danger-700:  #450a0a;
+  --solid-sky-700:     #0c4a6e;
 
   /* El menú lateral sigue navy: su texto se fija claro aparte de la escala. */
   --sidebar-text:        #e2e8f0;
@@ -334,7 +415,7 @@
   --shadow-lg: 0 0 0 2px #334155;
 
   --focus-ring: 0 0 0 3px #000000;
-  --ink-darken: 55%;
+  --ink-l-max: 0.44;
 
   /* Texto un punto más grande: con guantes y reflejo, 14 px no alcanza. */
   --text-xs:   12px;

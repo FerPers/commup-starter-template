@@ -96,7 +96,7 @@ export default function SetPasswordPage() {
               <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-base)', margin: '0 0 20px' }}>
                 {t('noSessionHint')}
               </p>
-              <Link href="/forgot-password" style={{ color: 'var(--primary-500)', fontSize: 'var(--text-base)', fontWeight: 600, textDecoration: 'none' }}>
+              <Link href="/forgot-password" style={{ color: 'var(--primary-700)', fontSize: 'var(--text-base)', fontWeight: 600, textDecoration: 'none' }}>
                 {t('requestNew')}
               </Link>
             </div>
@@ -118,7 +118,7 @@ export default function SetPasswordPage() {
                 <div>
                   <label htmlFor="new-password" style={{
                     display: 'block', fontSize: 'var(--text-sm)', fontWeight: 600,
-                    color: 'var(--gray-700)', marginBottom: 7,
+                    color: 'var(--text-body)', marginBottom: 7,
                   }}>
                     {t('newPassword')}
                   </label>
@@ -139,7 +139,7 @@ export default function SetPasswordPage() {
                         aria-label={showPassword ? t('hidePassword') : t('showPassword')}
                         style={{
                           background: 'none', border: 'none', cursor: 'pointer',
-                          padding: 4, color: 'var(--gray-400)',
+                          padding: 4, color: 'var(--text-muted)',
                           display: 'inline-flex', alignItems: 'center',
                         }}
                       >
@@ -152,7 +152,7 @@ export default function SetPasswordPage() {
                 <div>
                   <label htmlFor="confirm-password" style={{
                     display: 'block', fontSize: 'var(--text-sm)', fontWeight: 600,
-                    color: 'var(--gray-700)', marginBottom: 7,
+                    color: 'var(--text-body)', marginBottom: 7,
                   }}>
                     {t('confirmPassword')}
                   </label>

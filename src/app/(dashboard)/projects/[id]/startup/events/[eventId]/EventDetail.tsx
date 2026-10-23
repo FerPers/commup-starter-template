@@ -74,7 +74,7 @@ export default function EventDetail({ project, event: e, params, series, names, 
     <div style={{ padding: '24px 16px', maxWidth: 1100, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
       {dialog}
       <div>
-        <Link href={`${root}/events`} style={{ ...small, textDecoration: 'none', color: 'var(--primary-600, #2563eb)' }}>← {t('tab.events')}</Link>
+        <Link href={`${root}/events`} style={{ ...small, textDecoration: 'none', color: 'var(--primary-700)' }}>← {t('tab.events')}</Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: 6 }}>
           <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0, fontFamily: 'ui-monospace, monospace', color: 'var(--text-strong)' }}>{e.number}</h1>
           <Chip tone={e.kind === 'milestone' ? 'violet' : 'muted'}>{e.kind === 'milestone' ? t(`milestone.${e.milestone}`) : t(`category.${e.category}`)}</Chip>
@@ -84,11 +84,11 @@ export default function EventDetail({ project, event: e, params, series, names, 
         <p style={{ margin: '4px 0 0', color: 'var(--text-strong)', fontSize: 'var(--text-base)' }}>{e.title}</p>
         <p style={{ ...small, margin: '2px 0 0' }} suppressHydrationWarning>
           {e.system} · {when(e.occurredAt)}
-          {e.run && <> · <Link href={`${root}/runs/${e.run.id}`} style={{ color: 'var(--primary-600, #2563eb)' }}>{e.run.number}</Link></>}
+          {e.run && <> · <Link href={`${root}/runs/${e.run.id}`} style={{ color: 'var(--primary-700)' }}>{e.run.number}</Link></>}
           {e.tags.length > 0 && ` · ${e.tags.join(', ')}`}
         </p>
         {e.description && <p style={{ ...small, margin: '6px 0 0', whiteSpace: 'pre-wrap' }}>{e.description}</p>}
-        {e.backdateReason && <p style={{ ...small, margin: '6px 0 0', color: '#b45309' }}>{t('events.backdated', { reason: e.backdateReason })}</p>}
+        {e.backdateReason && <p style={{ ...small, margin: '6px 0 0', color: 'var(--warning-700)' }}>{t('events.backdated', { reason: e.backdateReason })}</p>}
       </div>
 
       {error && <Alert kind="error">{error}</Alert>}
@@ -103,7 +103,7 @@ export default function EventDetail({ project, event: e, params, series, names, 
             : e.status === 'pending_witness' && (
               canWitness(caps, e.milestone!, userId, e.recordedBy)
                 ? <div><button type="button" style={btn('primary', isPending)} disabled={isPending} onClick={() => act(() => witnessStartupEvent(ids))}>✓ {t('events.witness', { cap: t(`capacity.${e.witnessCapacity}`) })}</button></div>
-                : <span style={{ ...small, color: '#b45309' }}>{e.recordedBy === userId ? t('events.witnessOther') : t('events.witnessRole', { cap: t(`capacity.${e.witnessCapacity}`) })}</span>
+                : <span style={{ ...small, color: 'var(--warning-700)' }}>{e.recordedBy === userId ? t('events.witnessOther') : t('events.witnessRole', { cap: t(`capacity.${e.witnessCapacity}`) })}</span>
             )
         )}
         {open && LEADERS.includes(role) && <div><button type="button" style={{ ...btn('outline'), color: 'var(--danger-700)' }} disabled={isPending} onClick={doVoid}>{t('events.void')}</button></div>}
@@ -119,7 +119,7 @@ export default function EventDetail({ project, event: e, params, series, names, 
                 <td style={td}>{fmtVal(p)}{p.unit ? ` ${p.unit}` : ''}</td>
                 <td style={td}>
                   <Chip tone={p.source === 'iiot' ? 'blue' : p.source === 'manual' ? 'muted' : 'amber'}>{t(`events.source.${p.source}`)}</Chip>
-                  {p.source === 'iiot' && p.quality !== null && p.quality !== 0 && <span style={{ ...small, marginLeft: 6, color: '#b45309' }}>q{p.quality}</span>}
+                  {p.source === 'iiot' && p.quality !== null && p.quality !== 0 && <span style={{ ...small, marginLeft: 6, color: 'var(--warning-700)' }}>q{p.quality}</span>}
                 </td>
                 <td style={{ ...td, ...small }} suppressHydrationWarning>
                   {p.sampled_at ? `${new Date(p.sampled_at).toLocaleTimeString()} (${p.offset_s !== null && p.offset_s >= 0 ? '+' : ''}${p.offset_s ?? 0} s)` : '—'}
@@ -153,8 +153,8 @@ export default function EventDetail({ project, event: e, params, series, names, 
                       tickFormatter={v => new Date(Number(v)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} />
                     <YAxis tick={{ fontSize: 10 }} />
                     <Tooltip labelFormatter={v => new Date(Number(v)).toLocaleTimeString()} formatter={v => [String(v), param.label]} />
-                    <ReferenceLine x={eventMs} stroke="var(--danger-500, #ef4444)" strokeDasharray="4 2" label={{ value: e.number, fontSize: 10, position: 'top' }} />
-                    <Line type="monotone" dataKey="v" stroke="var(--primary-500, #2563eb)" strokeWidth={2} dot={false} isAnimationActive={false} />
+                    <ReferenceLine x={eventMs} stroke="var(--danger-500)" strokeDasharray="4 2" label={{ value: e.number, fontSize: 10, position: 'top' }} />
+                    <Line type="monotone" dataKey="v" stroke="var(--primary-500)" strokeWidth={2} dot={false} isAnimationActive={false} />
                   </LineChart>
                 </ResponsiveContainer>
               )}

@@ -100,7 +100,7 @@ export default function ConstraintDetail({ project, opts, names, userId, role, e
         {editable && (
           <div style={{ borderTop: '1px solid var(--border)', marginTop: 14, paddingTop: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
             {status === 'resolved' && openActions.length > 0 && (
-              <div style={{ ...small, color: '#b45309' }}>{t('constraint.openActions', { list: openActions.map(a => a.number).join(', ') })}</div>
+              <div style={{ ...small, color: 'var(--warning-700)' }}>{t('constraint.openActions', { list: openActions.map(a => a.number).join(', ') })}</div>
             )}
             <textarea rows={2} style={{ ...input, maxWidth: 640 }} value={comment} onChange={e => setComment(e.target.value)}
               placeholder={status === 'open' ? t('constraint.resolvePlaceholder') : t('constraint.reopenPlaceholder')} />

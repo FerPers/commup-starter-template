@@ -9,6 +9,7 @@ import { useTranslations } from 'next-intl'
 import { updatePssrReviewDueDate } from '@/app/actions/pssr'
 import { STATUS_KEY_MAP, STATUS_STYLES, type ReviewStatus } from './pssr-review-shared'
 import { browserToday } from '@/lib/time/zone'
+import { ink } from '@/lib/theme'
 
 export default function PssrReviewHeader({
   projectId,
@@ -81,7 +82,7 @@ export default function PssrReviewHeader({
             </h1>
             <span style={{
               padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600,
-              background: statusSty.bg, color: statusSty.color,
+              background: statusSty.bg, color: ink(statusSty.color),
             }}>
               {t(`status.${statusKey}`)}
             </span>
@@ -118,7 +119,7 @@ export default function PssrReviewHeader({
                   <button
                     onClick={handleSaveDueDate}
                     disabled={busy}
-                    style={{ padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 600, background: '#10b981', color: '#fff', border: 'none', cursor: 'pointer' }}
+                    style={{ padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 600, background: 'var(--success-500)', color: '#fff', border: 'none', cursor: 'pointer' }}
                   >
                     {t('review.saveDate')}
                   </button>
@@ -141,9 +142,9 @@ export default function PssrReviewHeader({
                 {savedDueDate ? (
                   <span style={{
                     padding: '2px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 600,
-                    background: isOverdue ? '#fee2e2' : '#f1f5f9',
-                    color: isOverdue ? '#dc2626' : 'var(--text-muted)',
-                    border: `1px solid ${isOverdue ? '#fecaca' : 'var(--border)'}`,
+                    background: isOverdue ? 'var(--danger-100)' : 'var(--gray-100)',
+                    color: isOverdue ? 'var(--danger-700)' : 'var(--text-muted)',
+                    border: `1px solid ${isOverdue ? 'var(--danger-200)' : 'var(--border)'}`,
                   }}>
                     {savedDueDate}{isOverdue ? t('review.overdueSuffix') : ''}
                   </span>
@@ -153,7 +154,7 @@ export default function PssrReviewHeader({
                 {canEditDate && (
                   <button
                     onClick={() => { setDueDate(savedDueDate); setEditingDueDate(true) }}
-                    style={{ padding: '2px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 600, background: 'transparent', color: 'var(--primary-500)', border: '1px solid var(--border)', cursor: 'pointer' }}
+                    style={{ padding: '2px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 600, background: 'transparent', color: 'var(--primary-700)', border: '1px solid var(--border)', cursor: 'pointer' }}
                   >
                     {savedDueDate ? t('review.editDate') : t('review.setDate')}
                   </button>
@@ -169,7 +170,7 @@ export default function PssrReviewHeader({
             href={`/projects/${projectId}/pssr/${review.id}/pdf`}
             style={{
               padding: '9px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-              background: 'var(--card-bg)', border: '1px solid var(--border)', color: 'var(--gray-700)',
+              background: 'var(--card-bg)', border: '1px solid var(--border)', color: 'var(--text-body)',
               textDecoration: 'none',
             }}
           >
@@ -180,7 +181,7 @@ export default function PssrReviewHeader({
               href={`/projects/${projectId}/certificates/${review.rfsu_certificate_id}`}
               style={{
                 padding: '9px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-                background: '#ecfdf5', border: '1px solid #a7f3d0', color: '#065f46',
+                background: 'var(--success-50)', border: '1px solid var(--success-200)', color: 'var(--success-800)',
                 textDecoration: 'none',
               }}
             >
@@ -193,7 +194,7 @@ export default function PssrReviewHeader({
               disabled={isPending}
               style={{
                 padding: '9px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-                background: '#f59e0b', color: '#fff', border: 'none',
+                background: 'var(--warning-500)', color: '#fff', border: 'none',
                 cursor: isPending ? 'not-allowed' : 'pointer', opacity: isPending ? 0.7 : 1,
               }}
             >
@@ -207,7 +208,7 @@ export default function PssrReviewHeader({
                 disabled={isPending}
                 style={{
                   padding: '9px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-                  background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626',
+                  background: 'var(--danger-50)', border: '1px solid var(--danger-200)', color: 'var(--danger-700)',
                   cursor: isPending ? 'not-allowed' : 'pointer',
                 }}
               >
@@ -219,7 +220,7 @@ export default function PssrReviewHeader({
                 title={sigsCount === 0 ? t('review.needsSignatureTooltip') : undefined}
                 style={{
                   padding: '9px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-                  background: sigsCount === 0 ? '#d1fae5' : '#10b981', color: '#fff', border: 'none',
+                  background: sigsCount === 0 ? 'var(--success-100)' : 'var(--success-500)', color: '#fff', border: 'none',
                   cursor: isPending || sigsCount === 0 ? 'not-allowed' : 'pointer', opacity: isPending ? 0.7 : 1,
                 }}
               >

@@ -113,9 +113,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <HeldCaptures userId={ctx.userId} />
         <Suspense fallback={null}><DeniedNotice role={role} /></Suspense>
         {pendingInvitations.length > 0 && (
-          <div role="status" style={{ margin: '12px 16px 0', padding: '10px 14px', borderRadius: 8, background: '#eff6ff', border: '1px solid #bfdbfe', color: '#1d4ed8', fontSize: 13 }}>
+          <div role="status" style={{ margin: '12px 16px 0', padding: '10px 14px', borderRadius: 8, background: 'var(--primary-50)', border: '1px solid var(--primary-200)', color: 'var(--primary-700)', fontSize: 13 }}>
             {tAccess('banner', { n: pendingInvitations.length, org: pendingInvitations[0].orgName })}{' '}
-            <Link href="/access" style={{ fontWeight: 600, color: '#1d4ed8' }}>{tAccess('review')}</Link>
+            <Link href="/access" style={{ fontWeight: 600, color: 'var(--primary-700)' }}>{tAccess('review')}</Link>
           </div>
         )}
         {children}

@@ -10,6 +10,7 @@ import {
 } from '@/app/actions/preservation'
 import PreservationPhotosSection from './PreservationPhotosSection'
 import { useAskDialog } from '@/components/ui'
+import { ink } from '@/lib/theme'
 
 // ── Types ──────────────────────────────────────────────────────
 
@@ -112,9 +113,9 @@ export default function PreservationExecution({
 
   // Result config — labels resolved via i18n
   const RESULT_CFG = {
-    ok:  { label: t('resultOkLabel'),  color: '#16a34a', bg: '#f0fdf4', border: '#86efac' },
-    nok: { label: t('resultNokLabel'), color: '#dc2626', bg: '#fef2f2', border: '#fca5a5' },
-    na:  { label: t('resultNaLabel'),  color: 'var(--text-muted)', bg: 'var(--gray-50)', border: 'var(--border)' },
+    ok:  { label: t('resultOkLabel'),  color: 'var(--success-700)', bg: 'var(--success-50)', border: 'var(--success-300)' },
+    nok: { label: t('resultNokLabel'), color: 'var(--danger-700)',  bg: 'var(--danger-50)',  border: 'var(--danger-300)' },
+    na:  { label: t('resultNaLabel'),  color: 'var(--text-muted)',  bg: 'var(--gray-50)',    border: 'var(--border)' },
   }
 
   // Active record ID (created on first response)
@@ -261,11 +262,11 @@ export default function PreservationExecution({
     return (
       <div style={{ padding: '48px', textAlign: 'center' }}>
         <div style={{ fontSize: '48px', marginBottom: '16px' }}>✓</div>
-        <div style={{ fontSize: '20px', fontWeight: 700, color: '#16a34a', marginBottom: '8px' }}>
+        <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--success-700)', marginBottom: '8px' }}>
           {t('savedTitle')}
         </div>
         {savedPunchNumber && (
-          <div style={{ display: 'inline-block', margin: '8px 0 12px', padding: '6px 14px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', fontSize: '13px', fontWeight: 700, color: '#dc2626' }}>
+          <div style={{ display: 'inline-block', margin: '8px 0 12px', padding: '6px 14px', background: 'var(--danger-50)', border: '1px solid var(--danger-200)', borderRadius: '8px', fontSize: '13px', fontWeight: 700, color: 'var(--danger-700)' }}>
             {t('savedPunchCreated', { number: savedPunchNumber })}
           </div>
         )}
@@ -282,21 +283,21 @@ export default function PreservationExecution({
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
         <button
           onClick={() => router.push(`/projects/${projectId}/tags/${tagId}?tab=preservation`)}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#3b82f6', fontSize: '14px', fontWeight: 500, padding: 0 }}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary-700)', fontSize: '14px', fontWeight: 500, padding: 0 }}
         >
           {tag?.tag_number}
         </button>
-        <span style={{ color: 'var(--gray-400)' }}>›</span>
+        <span style={{ color: 'var(--text-muted)' }}>›</span>
         <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>{t('breadcrumbPreservation')}</span>
-        <span style={{ color: 'var(--gray-400)' }}>›</span>
-        <span style={{ fontSize: '14px', color: 'var(--gray-700)', fontWeight: 600 }}>{procedure.code}</span>
+        <span style={{ color: 'var(--text-muted)' }}>›</span>
+        <span style={{ fontSize: '14px', color: 'var(--text-body)', fontWeight: 600 }}>{procedure.code}</span>
       </div>
 
       {/* Header */}
       <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '12px', padding: '20px', marginBottom: '24px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px', flexWrap: 'wrap' }}>
           <div>
-            <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '3px' }}>
+            <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '3px' }}>
               {procedure.code} — {FREQ_LABELS[procedure.frequency] ?? procedure.frequency} · {procedure.interval_days}d
             </div>
             <h1 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 6px' }}>
@@ -307,7 +308,7 @@ export default function PreservationExecution({
             </div>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '12px', color: 'var(--gray-400)' }}>{t('labelNextDue')}</div>
+            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{t('labelNextDue')}</div>
             <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-strong)' }}>{plan.next_due_date}</div>
           </div>
         </div>
@@ -317,12 +318,12 @@ export default function PreservationExecution({
           <div style={{ marginTop: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
               <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{t('progressLabel')}</span>
-              <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--gray-700)' }}>
+              <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-body)' }}>
                 {t('progressItems', { completed: completedCount, total: items.length })}
               </span>
             </div>
             <div style={{ height: '6px', background: 'var(--gray-100)', borderRadius: '3px', overflow: 'hidden' }}>
-              <div style={{ height: '100%', background: progressPct === 100 ? '#16a34a' : '#3b82f6', width: `${progressPct}%`, transition: 'width 0.3s', borderRadius: '3px' }} />
+              <div style={{ height: '100%', background: progressPct === 100 ? 'var(--success-600)' : 'var(--primary-500)', width: `${progressPct}%`, transition: 'width 0.3s', borderRadius: '3px' }} />
             </div>
           </div>
         )}
@@ -346,8 +347,8 @@ export default function PreservationExecution({
                   key={item.id}
                   style={{
                     background: 'var(--card-bg)', border: '1px solid',
-                    borderColor: item.is_critical && hasResponse && passed === false ? '#fca5a5'
-                      : hasResponse ? '#bbf7d0' : 'var(--border)',
+                    borderColor: item.is_critical && hasResponse && passed === false ? 'var(--danger-300)'
+                      : hasResponse ? 'var(--success-200)' : 'var(--border)',
                     borderRadius: '10px', padding: '14px 16px',
                   }}
                 >
@@ -359,12 +360,12 @@ export default function PreservationExecution({
                       <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap' }}>
                         <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-strong)' }}>{item.label}</span>
                         {item.is_critical && (
-                          <span style={{ padding: '1px 6px', borderRadius: '10px', fontSize: '10px', fontWeight: 700, background: '#fef2f2', color: '#dc2626' }}>
+                          <span style={{ padding: '1px 6px', borderRadius: '10px', fontSize: '10px', fontWeight: 700, background: 'var(--danger-50)', color: 'var(--danger-700)' }}>
                             {t('tagCritical')}
                           </span>
                         )}
                         {!item.is_required && (
-                          <span style={{ padding: '1px 6px', borderRadius: '10px', fontSize: '10px', color: 'var(--gray-400)', background: 'var(--gray-100)' }}>
+                          <span style={{ padding: '1px 6px', borderRadius: '10px', fontSize: '10px', color: 'var(--text-muted)', background: 'var(--gray-100)' }}>
                             {t('tagOptional')}
                           </span>
                         )}
@@ -375,11 +376,11 @@ export default function PreservationExecution({
                         <div style={{ display: 'flex', gap: '8px' }}>
                           <button
                             onClick={() => handleResponse(item, { bool: true })}
-                            style={{ padding: '6px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', border: '2px solid', borderColor: r?.bool === true ? '#16a34a' : 'var(--border)', background: r?.bool === true ? '#f0fdf4' : 'var(--card-bg)', color: r?.bool === true ? '#16a34a' : 'var(--text-muted)' }}
+                            style={{ padding: '6px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', border: '2px solid', borderColor: r?.bool === true ? 'var(--success-600)' : 'var(--border)', background: r?.bool === true ? 'var(--success-50)' : 'var(--card-bg)', color: r?.bool === true ? 'var(--success-700)' : 'var(--text-muted)' }}
                           >{t('btnConform')}</button>
                           <button
                             onClick={() => handleResponse(item, { bool: false })}
-                            style={{ padding: '6px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', border: '2px solid', borderColor: r?.bool === false ? '#dc2626' : 'var(--border)', background: r?.bool === false ? '#fef2f2' : 'var(--card-bg)', color: r?.bool === false ? '#dc2626' : 'var(--text-muted)' }}
+                            style={{ padding: '6px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', border: '2px solid', borderColor: r?.bool === false ? 'var(--danger-600)' : 'var(--border)', background: r?.bool === false ? 'var(--danger-50)' : 'var(--card-bg)', color: r?.bool === false ? 'var(--danger-700)' : 'var(--text-muted)' }}
                           >{t('btnNonConform')}</button>
                         </div>
                       )}
@@ -389,11 +390,11 @@ export default function PreservationExecution({
                         <div style={{ display: 'flex', gap: '8px' }}>
                           <button
                             onClick={() => handleResponse(item, { bool: true })}
-                            style={{ padding: '6px 20px', borderRadius: '8px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', border: '2px solid', borderColor: r?.bool === true ? '#16a34a' : 'var(--border)', background: r?.bool === true ? '#f0fdf4' : 'var(--card-bg)', color: r?.bool === true ? '#16a34a' : 'var(--text-muted)' }}
+                            style={{ padding: '6px 20px', borderRadius: '8px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', border: '2px solid', borderColor: r?.bool === true ? 'var(--success-600)' : 'var(--border)', background: r?.bool === true ? 'var(--success-50)' : 'var(--card-bg)', color: r?.bool === true ? 'var(--success-700)' : 'var(--text-muted)' }}
                           >{t('btnYes')}</button>
                           <button
                             onClick={() => handleResponse(item, { bool: false })}
-                            style={{ padding: '6px 20px', borderRadius: '8px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', border: '2px solid', borderColor: r?.bool === false ? '#dc2626' : 'var(--border)', background: r?.bool === false ? '#fef2f2' : 'var(--card-bg)', color: r?.bool === false ? '#dc2626' : 'var(--text-muted)' }}
+                            style={{ padding: '6px 20px', borderRadius: '8px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', border: '2px solid', borderColor: r?.bool === false ? 'var(--danger-600)' : 'var(--border)', background: r?.bool === false ? 'var(--danger-50)' : 'var(--card-bg)', color: r?.bool === false ? 'var(--danger-700)' : 'var(--text-muted)' }}
                           >{t('btnNo')}</button>
                         </div>
                       )}
@@ -406,13 +407,13 @@ export default function PreservationExecution({
                             value={r?.numeric ?? ''}
                             onChange={e => handleResponse(item, { numeric: e.target.value })}
                             placeholder={t('placeholderValue')}
-                            style={{ padding: '7px 10px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '14px', width: '140px' }}
+                            style={{ padding: '7px 10px', border: '1px solid var(--gray-300)', borderRadius: '8px', fontSize: '14px', width: '140px' }}
                           />
                           {item.unit && <span style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 600 }}>{item.unit}</span>}
-                          {item.min_value != null && <span style={{ fontSize: '12px', color: 'var(--gray-400)' }}>{t('labelMin')} {item.min_value}</span>}
-                          {item.max_value != null && <span style={{ fontSize: '12px', color: 'var(--gray-400)' }}>{t('labelMax')} {item.max_value}</span>}
+                          {item.min_value != null && <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{t('labelMin')} {item.min_value}</span>}
+                          {item.max_value != null && <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{t('labelMax')} {item.max_value}</span>}
                           {passed !== null && r?.numeric !== undefined && r.numeric !== '' && (
-                            <span style={{ padding: '3px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: 700, background: passed ? '#f0fdf4' : '#fef2f2', color: passed ? '#16a34a' : '#dc2626' }}>
+                            <span style={{ padding: '3px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: 700, background: passed ? 'var(--success-50)' : 'var(--danger-50)', color: passed ? 'var(--success-700)' : 'var(--danger-700)' }}>
                               {passed ? t('passInRange') : t('failOutRange')}
                             </span>
                           )}
@@ -427,7 +428,7 @@ export default function PreservationExecution({
                           onBlur={e => handleResponse(item, { text: e.target.value })}
                           rows={2}
                           placeholder={t('placeholderObservation')}
-                          style={{ width: '100%', padding: '8px 10px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '13px', resize: 'vertical', boxSizing: 'border-box' }}
+                          style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--gray-300)', borderRadius: '8px', fontSize: '13px', resize: 'vertical', boxSizing: 'border-box' }}
                         />
                       )}
                     </div>
@@ -457,7 +458,7 @@ export default function PreservationExecution({
                   cursor: 'pointer', border: '2px solid',
                   borderColor: result === r ? cfg.border : 'var(--border)',
                   background: result === r ? cfg.bg : 'var(--card-bg)',
-                  color: result === r ? cfg.color : 'var(--text-muted)',
+                  color: ink(result === r ? cfg.color : 'var(--text-muted)'),
                 }}
               >
                 {cfg.label}
@@ -467,7 +468,7 @@ export default function PreservationExecution({
         </div>
 
         <div style={{ marginBottom: '14px' }}>
-          <label htmlFor={`${uid}-remarks`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '5px' }}>
+          <label htmlFor={`${uid}-remarks`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-body)', display: 'block', marginBottom: '5px' }}>
             {t('labelRemarks')}
           </label>
           <textarea
@@ -476,7 +477,7 @@ export default function PreservationExecution({
             onChange={e => setRemarks(e.target.value)}
             rows={3}
             placeholder={t('placeholderRemarks')}
-            style={{ width: '100%', padding: '9px 10px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '13px', resize: 'vertical', boxSizing: 'border-box' }}
+            style={{ width: '100%', padding: '9px 10px', border: '1px solid var(--gray-300)', borderRadius: '8px', fontSize: '13px', resize: 'vertical', boxSizing: 'border-box' }}
           />
         </div>
 
@@ -492,21 +493,21 @@ export default function PreservationExecution({
         )}
 
         {result === 'nok' && (
-          <div style={{ marginBottom: '14px', padding: '10px 14px', background: '#fef2f2', borderRadius: '8px', border: '1px solid #fecaca' }}>
+          <div style={{ marginBottom: '14px', padding: '10px 14px', background: 'var(--danger-50)', borderRadius: '8px', border: '1px solid var(--danger-200)' }}>
             <div>
-              <span style={{ fontSize: '13px', fontWeight: 600, color: '#dc2626' }}>{t('raisePunchLabel')}</span>
-              <div style={{ fontSize: '12px', color: '#ef4444', marginTop: '1px' }}>
+              <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--danger-700)' }}>{t('raisePunchLabel')}</span>
+              <div style={{ fontSize: '12px', color: 'var(--danger-700)', marginTop: '1px' }}>
                 {t('raisePunchDesc')}
               </div>
             </div>
             {raisePunch && (
-              <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #fecaca', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                <span style={{ fontSize: '12px', fontWeight: 600, color: '#7f1d1d' }}>{t('punchCategoryLabel')}</span>
+              <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--danger-200)', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--danger-900)' }}>{t('punchCategoryLabel')}</span>
                 {(['A', 'B', 'C'] as const).map(cat => {
                   const catCfg = {
-                    A: { label: t('punchCatA'), color: '#dc2626', bg: '#fef2f2', border: '#dc2626' },
-                    B: { label: t('punchCatB'), color: '#d97706', bg: '#fffbeb', border: '#d97706' },
-                    C: { label: t('punchCatC'), color: '#16a34a', bg: '#f0fdf4', border: '#16a34a' },
+                    A: { label: t('punchCatA'), color: 'var(--danger-700)', bg: 'var(--danger-50)', border: 'var(--danger-600)' },
+                    B: { label: t('punchCatB'), color: 'var(--warning-700)', bg: 'var(--warning-50)', border: 'var(--warning-600)' },
+                    C: { label: t('punchCatC'), color: 'var(--success-700)', bg: 'var(--success-50)', border: 'var(--success-600)' },
                   }[cat]
                   const active = punchCategory === cat
                   return (
@@ -519,7 +520,7 @@ export default function PreservationExecution({
                         cursor: 'pointer', border: '2px solid',
                         borderColor: active ? catCfg.border : 'var(--border)',
                         background: active ? catCfg.bg : 'var(--card-bg)',
-                        color: active ? catCfg.color : 'var(--text-muted)',
+                        color: ink(active ? catCfg.color : 'var(--text-muted)'),
                       }}
                     >
                       {cat} — {catCfg.label}
@@ -532,7 +533,7 @@ export default function PreservationExecution({
         )}
 
         {submitError && (
-          <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', padding: '10px 14px', borderRadius: '8px', fontSize: '13px', marginBottom: '14px' }}>
+          <div style={{ background: 'var(--danger-50)', border: '1px solid var(--danger-200)', color: 'var(--danger-700)', padding: '10px 14px', borderRadius: '8px', fontSize: '13px', marginBottom: '14px' }}>
             {submitError}
           </div>
         )}
@@ -547,7 +548,7 @@ export default function PreservationExecution({
           <button
             onClick={handleFinalize}
             disabled={isPending}
-            style={{ padding: '10px 24px', borderRadius: '9px', background: result === 'nok' ? '#dc2626' : '#16a34a', color: '#fff', fontWeight: 700, fontSize: '14px', cursor: isPending ? 'wait' : 'pointer', border: 'none', opacity: isPending ? 0.7 : 1 }}
+            style={{ padding: '10px 24px', borderRadius: '9px', background: result === 'nok' ? 'var(--danger-600)' : 'var(--success-600)', color: '#fff', fontWeight: 700, fontSize: '14px', cursor: isPending ? 'wait' : 'pointer', border: 'none', opacity: isPending ? 0.7 : 1 }}
           >
             {isPending ? t('btnSaving') : t('btnConfirm')}
           </button>
@@ -566,11 +567,11 @@ export default function PreservationExecution({
               return (
                 <div key={rec.id} style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '9px', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
                   <div>
-                    <span style={{ fontSize: '13px', color: 'var(--gray-700)', fontWeight: 600 }}>
+                    <span style={{ fontSize: '13px', color: 'var(--text-body)', fontWeight: 600 }}>
                       {new Date(rec.performed_at).toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' })}
                     </span>
                     {rec.profiles && (
-                      <span style={{ fontSize: '12px', color: 'var(--gray-400)', marginLeft: '10px' }}>
+                      <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginLeft: '10px' }}>
                         {rec.profiles.full_name}
                       </span>
                     )}
@@ -580,11 +581,11 @@ export default function PreservationExecution({
                   </div>
                   <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                     {rec.punch_raised && (
-                      <span style={{ padding: '2px 8px', borderRadius: '10px', fontSize: '11px', fontWeight: 600, background: '#fef2f2', color: '#dc2626' }}>
+                      <span style={{ padding: '2px 8px', borderRadius: '10px', fontSize: '11px', fontWeight: 600, background: 'var(--danger-50)', color: 'var(--danger-700)' }}>
                         {t('punchRaised')}
                       </span>
                     )}
-                    <span style={{ padding: '3px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: 700, background: cfg.bg, color: cfg.color }}>
+                    <span style={{ padding: '3px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: 700, background: cfg.bg, color: ink(cfg.color) }}>
                       {cfg.label}
                     </span>
                   </div>

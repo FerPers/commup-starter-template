@@ -104,7 +104,7 @@ export default function PssrSignModal({
         </h3>
 
         <div style={{ marginBottom: '14px' }}>
-          <label htmlFor={capacityId} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
+          <label htmlFor={capacityId} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-body)', display: 'block', marginBottom: '6px' }}>
             {t('signModal.disciplineLabel')}
           </label>
           <select
@@ -113,7 +113,7 @@ export default function PssrSignModal({
             onChange={e => setCapacity(e.target.value as PssrCapacity)}
             style={{
               width: '100%', padding: '9px 12px', borderRadius: '8px',
-              border: '1.5px solid #d1d5db', fontSize: '13px', outline: 'none',
+              border: '1.5px solid var(--gray-300)', fontSize: '13px', outline: 'none',
               boxSizing: 'border-box', fontFamily: 'inherit', background: 'var(--card-bg)',
             }}
           >
@@ -123,8 +123,8 @@ export default function PssrSignModal({
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-          <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)' }}>{t('signModal.signatureLabel')}</span>
-          <button onClick={clearCanvas} style={{ background: 'none', border: 'none', fontSize: '12px', color: 'var(--gray-400)', cursor: 'pointer' }}>
+          <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-body)' }}>{t('signModal.signatureLabel')}</span>
+          <button onClick={clearCanvas} style={{ background: 'none', border: 'none', fontSize: '12px', color: 'var(--text-muted)', cursor: 'pointer' }}>
             {t('signModal.clear')}
           </button>
         </div>
@@ -143,8 +143,8 @@ export default function PssrSignModal({
 
         {signError && (
           <div style={{
-            padding: '10px 12px', borderRadius: '8px', background: '#fef2f2',
-            border: '1px solid #fecaca', color: '#dc2626', fontSize: '12px', fontWeight: 500,
+            padding: '10px 12px', borderRadius: '8px', background: 'var(--danger-50)',
+            border: '1px solid var(--danger-200)', color: 'var(--danger-700)', fontSize: '12px', fontWeight: 500,
             marginBottom: '14px',
           }}>
             {signError}
@@ -154,7 +154,7 @@ export default function PssrSignModal({
         <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
           <button onClick={onClose} style={{
             padding: '9px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-            background: 'var(--gray-100)', border: 'none', cursor: 'pointer', color: 'var(--gray-700)',
+            background: 'var(--gray-100)', border: 'none', cursor: 'pointer', color: 'var(--text-body)',
           }}>
             {t('signModal.cancel')}
           </button>
@@ -163,7 +163,7 @@ export default function PssrSignModal({
             disabled={isPending || !hasDrawn || !capacity}
             style={{
               padding: '9px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-              background: isPending || !hasDrawn ? '#ddd6fe' : '#7c3aed', color: '#fff', border: 'none',
+              background: isPending || !hasDrawn ? 'var(--violet-200)' : 'var(--violet-600)', color: '#fff', border: 'none',
               cursor: isPending || !hasDrawn ? 'not-allowed' : 'pointer',
             }}
           >

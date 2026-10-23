@@ -38,7 +38,7 @@ export default function ReturnToExecutor({ itrId, projectId, tagId }: { itrId: s
           const res = await returnItrToExecutor({ itrId, projectId, tagId, reason: reason.trim() })
           if (res.error) { setError(res.error); return }
           setOpen(false); setReason(''); router.refresh()
-        })} style={{ padding: '7px 14px', fontSize: '12px', fontWeight: 600, borderRadius: '6px', border: 'none', background: ok && !isPending ? 'var(--warning-700)' : 'var(--warning-300)', color: '#fff', cursor: ok && !isPending ? 'pointer' : 'not-allowed' }}>
+        })} style={{ padding: '7px 14px', fontSize: '12px', fontWeight: 600, borderRadius: '6px', border: 'none', background: ok && !isPending ? 'var(--solid-warning-700)' : 'var(--warning-300)', color: '#fff', cursor: ok && !isPending ? 'pointer' : 'not-allowed' }}>
           {isPending ? t('sending') : t('confirm')}
         </button>
         <button onClick={() => { setOpen(false); setError(null) }} style={{ padding: '7px 14px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--card-bg)', color: 'var(--text-muted)', cursor: 'pointer' }}>{t('back')}</button>

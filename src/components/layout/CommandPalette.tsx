@@ -15,8 +15,8 @@ import {
 } from '@/lib/search/catalog'
 
 const KIND_TONE: Partial<Record<SearchKind, { bg: string; fg: string }>> = {
-  tag: { bg: '#ecf2ff', fg: '#1d4ed8' }, system: { bg: '#e8f3ea', fg: '#2f6b3a' }, subsystem: { bg: '#e8f3ea', fg: '#2f6b3a' },
-  itr: { bg: '#f2edff', fg: '#5b21b6' }, punch: { bg: '#fdecea', fg: '#b42318' }, certificate: { bg: '#fff4e2', fg: '#9a4a06' },
+  tag: { bg: 'var(--primary-50)', fg: 'var(--primary-700)' }, system: { bg: 'var(--success-50)', fg: 'var(--success-700)' }, subsystem: { bg: 'var(--success-50)', fg: 'var(--success-700)' },
+  itr: { bg: 'var(--violet-50)', fg: 'var(--violet-800)' }, punch: { bg: 'var(--danger-50)', fg: 'var(--danger-700)' }, certificate: { bg: 'var(--warning-50)', fg: 'var(--warning-800)' },
 }
 
 export function readRecents(): RecentItem[] {
@@ -123,7 +123,7 @@ export default function CommandPalette() {
       <li key={item.href} id={optionId(i)} role="option" aria-selected={on}
         onMouseEnter={() => setActive(i)} onMouseDown={e => { e.preventDefault(); go(item) }}
         style={{ display: 'flex', gap: 12, alignItems: 'center', minHeight: 44, padding: '0 16px', cursor: 'pointer',
-          background: on ? 'var(--primary-50, #eef4ff)' : 'transparent', boxShadow: on ? 'inset 3px 0 0 var(--primary-500)' : 'none' }}>
+          background: on ? 'var(--primary-50)' : 'transparent', boxShadow: on ? 'inset 3px 0 0 var(--primary-500)' : 'none' }}>
         <span style={{ minWidth: 104, padding: '2px 8px', borderRadius: 6, fontSize: 'var(--text-xs)', fontWeight: 600, background: tone.bg, color: tone.fg, whiteSpace: 'nowrap' }}>{t(`kind.${item.kind}`)}</span>
         <strong style={{ fontFamily: 'ui-monospace, monospace', fontSize: 'var(--text-sm)', color: 'var(--text-strong)', whiteSpace: 'nowrap' }}>{item.ref}</strong>
         <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--text-sm)', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.title ?? ''}</span>

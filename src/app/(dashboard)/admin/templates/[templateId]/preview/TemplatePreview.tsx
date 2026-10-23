@@ -5,6 +5,7 @@ import { itemDescription } from '@/lib/itr/item-text'
 
 import type { Json } from '@/types/supabase.generated'
 import { useId, useState } from 'react'
+import { alpha, ink } from '@/lib/theme'
 import { useLocale, useTranslations } from 'next-intl'
 
 type ItrItemType = 'checkbox' | 'text' | 'number' | 'measurement' | 'select' | 'photo' | 'signature' | 'date' | 'yes_no' | 'continuity' | 'table'
@@ -91,14 +92,14 @@ function ItemControl({ item, d }: { item: PreviewItem; d: Doc }) {
 
   if (item.item_type === 'table') {
     const config = parseTableConfig(item.options)
-    if (!config) return <p style={{ color: '#b91c1c' }}>{d.tableInvalid}</p>
+    if (!config) return <p style={{ color: 'var(--danger-700)' }}>{d.tableInvalid}</p>
     const rows = config.rows.mode === 'fixed' ? config.rows.labels : [`${config.rows.label} 1`, `${config.rows.label} 2`, '…']
     const source = config.rows.mode === 'source' ? config.rows.source : null
     return (
       <div style={{ overflowX: 'auto' }}>
         <table style={{ borderCollapse: 'collapse', fontSize: '12px', width: '100%' }}>
           <thead><tr><th style={{ textAlign: 'left', padding: '4px 8px', color: 'var(--text-muted)' }}>{config.rows.mode === 'fixed' ? d.row : config.rows.label}</th>{config.columns.map(c => <th key={c.key} style={{ textAlign: 'left', padding: '4px 8px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{c.label}{c.unit ? ` (${c.unit})` : ''}</th>)}</tr></thead>
-          <tbody>{rows.map(label => <tr key={label}><td style={{ padding: '4px 8px', fontWeight: 600 }}>{label}</td>{config.columns.map(c => <td key={c.key} style={{ padding: '4px 8px', color: 'var(--gray-400)' }}>{c.type === 'reference' && source ? `‹${SOURCE_REFS[source][c.ref ?? ''] ?? c.ref}›` : c.type === 'result' ? (c.auto_from ? d.auto : d.resultOptions) : c.type === 'computed' ? `${d.computed}${c.tolerance !== null && c.tolerance !== undefined ? ` ±${c.tolerance}` : ''}${c.pass === 'as_found' ? ' (as found)' : ''}` : c.type === 'datetime' ? d.datetime : c.type === 'select' ? (c.options ?? []).join(' / ') : c.type === 'number' ? '0.00' : '…'}</td>)}</tr>)}</tbody>
+          <tbody>{rows.map(label => <tr key={label}><td style={{ padding: '4px 8px', fontWeight: 600 }}>{label}</td>{config.columns.map(c => <td key={c.key} style={{ padding: '4px 8px', color: 'var(--text-muted)' }}>{c.type === 'reference' && source ? `‹${SOURCE_REFS[source][c.ref ?? ''] ?? c.ref}›` : c.type === 'result' ? (c.auto_from ? d.auto : d.resultOptions) : c.type === 'computed' ? `${d.computed}${c.tolerance !== null && c.tolerance !== undefined ? ` ±${c.tolerance}` : ''}${c.pass === 'as_found' ? ' (as found)' : ''}` : c.type === 'datetime' ? d.datetime : c.type === 'select' ? (c.options ?? []).join(' / ') : c.type === 'number' ? '0.00' : '…'}</td>)}</tr>)}</tbody>
         </table>
         {source && <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{d.sourceNote(TABLE_SOURCE_LABELS[source].toLowerCase(), source === 'loop_signals' ? d.signal : d.effect)}</p>}
         {config.rows.mode === 'variable' && <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{d.variableNote(config.rows.min, config.rows.max)}</p>}
@@ -111,7 +112,7 @@ function ItemControl({ item, d }: { item: PreviewItem; d: Doc }) {
   if (item.item_type === 'checkbox') {
     return (
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <input type="checkbox" disabled style={{ width: 18, height: 18, accentColor: '#3b82f6', cursor: 'not-allowed' }} />
+        <input type="checkbox" disabled style={{ width: 18, height: 18, accentColor: 'var(--primary-500)', cursor: 'not-allowed' }} />
         <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{d.verify}</span>
       </div>
     )
@@ -198,7 +199,7 @@ function ItemControl({ item, d }: { item: PreviewItem; d: Doc }) {
     return (
       <div style={{
         display: 'flex', alignItems: 'center', gap: '10px',
-        padding: '12px 16px', border: '1.5px dashed #cbd5e1', borderRadius: '10px',
+        padding: '12px 16px', border: '1.5px dashed var(--gray-300)', borderRadius: '10px',
         background: 'var(--gray-50)', color: 'var(--text-muted)', fontSize: '13px',
       }}>
         <span style={{ fontSize: '22px' }}>📷</span>
@@ -210,9 +211,9 @@ function ItemControl({ item, d }: { item: PreviewItem; d: Doc }) {
   if (item.item_type === 'signature') {
     return (
       <div style={{
-        height: '80px', border: '1.5px dashed #cbd5e1', borderRadius: '10px',
+        height: '80px', border: '1.5px dashed var(--gray-300)', borderRadius: '10px',
         background: 'var(--gray-50)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        color: 'var(--gray-400)', fontSize: '13px', gap: '8px',
+        color: 'var(--text-muted)', fontSize: '13px', gap: '8px',
       }}>
         <span style={{ fontSize: '20px' }}>✍️</span>
         <span>{d.signArea}</span>
@@ -233,7 +234,7 @@ function RemarksField({ d }: { d: Doc }) {
   const uid = useId()
   return (
     <div style={{ marginTop: '8px' }}>
-      <label htmlFor={`${uid}-remarks`} style={{ fontSize: '11px', color: 'var(--gray-400)', fontWeight: 500, display: 'block', marginBottom: '4px' }}>
+      <label htmlFor={`${uid}-remarks`} style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 500, display: 'block', marginBottom: '4px' }}>
         {d.remarks}
       </label>
       <textarea
@@ -243,7 +244,7 @@ function RemarksField({ d }: { d: Doc }) {
         rows={1}
         style={{
           width: '100%', padding: '6px 10px', border: '1px solid var(--border)',
-          borderRadius: '6px', fontSize: '13px', color: 'var(--gray-400)',
+          borderRadius: '6px', fontSize: '13px', color: 'var(--text-muted)',
           background: 'var(--gray-50)', resize: 'none', boxSizing: 'border-box', fontFamily: 'inherit',
         }}
       />
@@ -263,15 +264,15 @@ function SignatureBlock({ role, label, d }: { role: string; label: string; d: Do
         {label} — {role}
       </div>
       <div style={{
-        height: '60px', border: '1.5px dashed #cbd5e1', borderRadius: '8px',
+        height: '60px', border: '1.5px dashed var(--gray-300)', borderRadius: '8px',
         background: 'var(--gray-50)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        color: 'var(--gray-400)', fontSize: '12px',
+        color: 'var(--text-muted)', fontSize: '12px',
       }}>
         {d.digitalSig}
       </div>
       <div style={{ marginTop: '8px', display: 'flex', gap: '8px' }}>
-        <div style={{ flex: 1, borderBottom: '1px solid var(--border)', paddingBottom: '2px', fontSize: '11px', color: 'var(--gray-400)' }}>{d.name}</div>
-        <div style={{ flex: 1, borderBottom: '1px solid var(--border)', paddingBottom: '2px', fontSize: '11px', color: 'var(--gray-400)' }}>{d.date}</div>
+        <div style={{ flex: 1, borderBottom: '1px solid var(--border)', paddingBottom: '2px', fontSize: '11px', color: 'var(--text-muted)' }}>{d.name}</div>
+        <div style={{ flex: 1, borderBottom: '1px solid var(--border)', paddingBottom: '2px', fontSize: '11px', color: 'var(--text-muted)' }}>{d.date}</div>
       </div>
     </div>
   )
@@ -298,7 +299,7 @@ export default function TemplatePreview({ template }: { template: TemplateData }
   const totalItems = sections.reduce((n, s) => n + s.itr_template_items.length, 0)
 
   return (
-    <div style={{ background: '#f0f4f8', minHeight: '100vh', paddingBottom: '60px' }}>
+    <div style={{ background: 'var(--gray-100)', minHeight: '100vh', paddingBottom: '60px' }}>
 
       {/* Top bar */}
       <div style={{
@@ -321,7 +322,7 @@ export default function TemplatePreview({ template }: { template: TemplateData }
           </span>
           <span style={{
             padding: '2px 8px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
-            background: '#f5f3ff', color: '#7c3aed', border: '1px solid #ddd6fe',
+            background: 'var(--violet-50)', color: 'var(--violet-700)', border: '1px solid var(--violet-200)',
           }}>
             {t('readOnly')}
           </span>
@@ -363,7 +364,7 @@ export default function TemplatePreview({ template }: { template: TemplateData }
           {/* Colored top stripe */}
           <div style={{
             height: '4px',
-            background: disc ? `linear-gradient(90deg, ${disc.color}, ${disc.color}88)` : '#3b82f6',
+            background: disc ? `linear-gradient(90deg, ${disc.color}, ${alpha(disc.color, 53)})` : 'var(--primary-500)',
           }} />
           <div style={{ padding: '24px 28px' }}>
             {/* Meta row */}
@@ -371,7 +372,7 @@ export default function TemplatePreview({ template }: { template: TemplateData }
               {disc && (
                 <span style={{
                   padding: '4px 12px', borderRadius: '999px', fontSize: '12px', fontWeight: 600,
-                  background: `${disc.color}15`, color: disc.color,
+                  background: alpha(disc.color, 8), color: ink(disc.color),
                 }}>
                   {disc.code} — {disc.name}
                 </span>
@@ -379,7 +380,7 @@ export default function TemplatePreview({ template }: { template: TemplateData }
               {phase && (
                 <span style={{
                   padding: '4px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: 600,
-                  background: `${phase.color}18`, color: phase.color,
+                  background: alpha(phase.color, 9), color: ink(phase.color),
                 }}>
                   Fase {phase.code}
                 </span>
@@ -397,7 +398,7 @@ export default function TemplatePreview({ template }: { template: TemplateData }
               <span style={{ fontSize: '28px', fontWeight: 800, color: 'var(--text-strong)', fontFamily: 'ui-monospace, monospace', letterSpacing: '-0.5px' }}>
                 {template.code}
               </span>
-              <span style={{ fontSize: '18px', fontWeight: 600, color: '#1e293b' }}>
+              <span style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text-strong)' }}>
                 {template.title}
               </span>
             </div>
@@ -406,7 +407,7 @@ export default function TemplatePreview({ template }: { template: TemplateData }
             )}
 
             {/* Stats */}
-            <div style={{ fontSize: '12px', color: 'var(--gray-400)' }}>
+            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
               {totalItems} ítem{totalItems !== 1 ? 's' : ''} · {sections.length} sección{sections.length !== 1 ? 'es' : ''}
             </div>
 
@@ -425,7 +426,7 @@ export default function TemplatePreview({ template }: { template: TemplateData }
                 { label: lang === 'es' ? 'Supervisor' : 'Supervisor', value: '' },
               ].map(f => (
                 <div key={f.label} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <span style={{ fontSize: '10px', fontWeight: 600, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  <span style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                     {f.label}
                   </span>
                   <div style={{ borderBottom: '1.5px solid var(--border)', height: '24px' }} />
@@ -442,19 +443,19 @@ export default function TemplatePreview({ template }: { template: TemplateData }
           border: '1px solid var(--border)', fontSize: '12px', color: 'var(--text-muted)',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ color: '#ef4444', fontWeight: 700 }}>★</span>
+            <span style={{ color: 'var(--danger-700)', fontWeight: 700 }}>★</span>
             <span>{lang === 'es' ? 'Crítico — falla bloquea firma' : 'Critical — fail blocks signature'}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ color: '#f59e0b', fontWeight: 700 }}>*</span>
+            <span style={{ color: 'var(--warning-700)', fontWeight: 700 }}>*</span>
             <span>{lang === 'es' ? 'Requerido' : 'Required'}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ color: '#ec4899', fontWeight: 700 }}>📷</span>
+            <span style={{ color: 'var(--pink-500)', fontWeight: 700 }}>📷</span>
             <span>{lang === 'es' ? 'Requiere foto' : 'Photo required'}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ color: '#0891b2', fontWeight: 700 }}>📄</span>
+            <span style={{ color: 'var(--cyan-700)', fontWeight: 700 }}>📄</span>
             <span>{lang === 'es' ? 'Requiere documento (PDF)' : 'Document required (PDF)'}</span>
           </div>
         </div>
@@ -464,7 +465,7 @@ export default function TemplatePreview({ template }: { template: TemplateData }
           <div key={section.id} style={{ marginBottom: '20px' }}>
             {/* Section header */}
             <div style={{
-              background: '#1e293b', color: '#fff',
+              background: 'var(--gray-800)', color: '#fff',
               padding: '10px 20px', borderRadius: '10px 10px 0 0',
               display: 'flex', alignItems: 'center', gap: '10px',
             }}>
@@ -498,8 +499,8 @@ export default function TemplatePreview({ template }: { template: TemplateData }
                     key={item.id}
                     style={{
                       padding: '14px 20px',
-                      borderBottom: ii < section.itr_template_items.length - 1 ? '1px solid #f1f5f9' : 'none',
-                      background: item.is_critical ? '#fff8f8' : 'var(--card-bg)',
+                      borderBottom: ii < section.itr_template_items.length - 1 ? '1px solid var(--gray-100)' : 'none',
+                      background: item.is_critical ? 'var(--danger-50)' : 'var(--card-bg)',
                     }}
                   >
                     {/* Item header row */}
@@ -523,10 +524,10 @@ export default function TemplatePreview({ template }: { template: TemplateData }
                           {/* Flags */}
                           <span style={{ display: 'inline-flex', gap: '4px', flexShrink: 0 }}>
                             {item.is_critical && (
-                              <span title={d.critical} style={{ color: '#ef4444', fontSize: '13px', fontWeight: 700 }}>★</span>
+                              <span title={d.critical} style={{ color: 'var(--danger-700)', fontSize: '13px', fontWeight: 700 }}>★</span>
                             )}
                             {item.is_required && !item.is_critical && (
-                              <span title={d.required} style={{ color: '#f59e0b', fontSize: '13px', fontWeight: 700 }}>*</span>
+                              <span title={d.required} style={{ color: 'var(--warning-700)', fontSize: '13px', fontWeight: 700 }}>*</span>
                             )}
                             {item.requires_photo && (
                               <span title={d.photoReq} style={{ fontSize: '13px' }}>📷</span>
@@ -576,7 +577,7 @@ export default function TemplatePreview({ template }: { template: TemplateData }
         </div>
 
         {/* Footer */}
-        <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '11px', color: 'var(--gray-400)' }}>
+        <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '11px', color: 'var(--text-muted)' }}>
           CommUp · {template.code} · v{template.version} · {lang === 'es' ? 'Vista de campo — solo previsualización' : 'Field view — preview only'}
         </div>
       </div>

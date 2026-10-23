@@ -16,6 +16,7 @@ import { browserToday } from '@/lib/time/zone'
 import { punchFiltersQuery } from '@/lib/list/punch-filters'
 import { canRaisePunch } from '@/lib/constants/punch-roles'
 import { ROLE_TIERS } from '@/lib/constants/roles'
+import { alpha, ink } from '@/lib/theme'
 
 const EDITOR_ROLES = ROLE_TIERS.editor
 
@@ -165,7 +166,7 @@ export default function PunchListView({
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
         <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>{t('title')}</h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <span style={{ fontSize: '13px', color: '#94a3b8' }}>{t('filters.count', { filtered: total, total: summary.total })}</span>
+          <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{t('filters.count', { filtered: total, total: summary.total })}</span>
           <a
             href={(allScope ? '/punch-list/export' : `/projects/${projectId}/punches/export`) + punchFiltersQuery(filters)}
             style={{
@@ -206,7 +207,7 @@ export default function PunchListView({
             <Link
               href={`/projects/${projectId}/punches/new`}
               style={{
-                padding: '7px 14px', background: 'var(--primary-500)', border: '1px solid var(--primary-500)',
+                padding: '7px 14px', background: 'var(--primary-600)', border: '1px solid var(--primary-500)',
                 borderRadius: '8px', fontSize: '13px', color: '#fff',
                 whiteSpace: 'nowrap', fontWeight: 600, textDecoration: 'none',
               }}
@@ -220,23 +221,23 @@ export default function PunchListView({
       {/* Summary cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px', marginBottom: '24px' }}>
         {([
-          { labelKey: 'summary.catAOpen' as const, count: catACnt, color: '#ef4444', bg: '#fee2e2', border: '#fecaca', filterVal: 'A' as const },
-          { labelKey: 'summary.catBOpen' as const, count: catBCnt, color: '#f59e0b', bg: '#fffbeb', border: '#fde68a', filterVal: 'B' as const },
+          { labelKey: 'summary.catAOpen' as const, count: catACnt, color: 'var(--danger-700)', bg: 'var(--danger-100)', border: 'var(--danger-200)', filterVal: 'A' as const },
+          { labelKey: 'summary.catBOpen' as const, count: catBCnt, color: 'var(--warning-700)', bg: 'var(--warning-50)', border: 'var(--warning-200)', filterVal: 'B' as const },
           { labelKey: 'summary.catCOpen' as const, count: catCCnt, color: 'var(--text-muted)', bg: 'var(--gray-50)', border: 'var(--border)', filterVal: 'C' as const },
-          { labelKey: 'summary.closed'   as const, count: closedCnt, color: '#10b981', bg: '#ecfdf5', border: '#a7f3d0', filterVal: null },
+          { labelKey: 'summary.closed'   as const, count: closedCnt, color: 'var(--success-700)', bg: 'var(--success-50)', border: 'var(--success-200)', filterVal: null },
         ]).map(card => {
           const filterVal = card.filterVal
           const on = !!filterVal && filterCat === filterVal
           const style: React.CSSProperties = {
             padding: '16px 18px', borderRadius: '12px',
             background: on ? card.bg : 'var(--card-bg)',
-            border: `1px solid ${on ? card.color + '40' : card.border}`,
+            border: `1px solid ${on ? alpha(card.color, 25) : card.border}`,
             cursor: filterVal ? 'pointer' : 'default',
           }
           const body = (
             <>
-              <span style={{ display: 'block', fontSize: '24px', fontWeight: 800, color: card.color }}>{card.count}</span>
-              <span style={{ display: 'block', fontSize: '11px', color: card.color, fontWeight: 600, marginTop: '2px' }}>{t(card.labelKey)}</span>
+              <span style={{ display: 'block', fontSize: '24px', fontWeight: 800, color: ink(card.color) }}>{card.count}</span>
+              <span style={{ display: 'block', fontSize: '11px', color: ink(card.color), fontWeight: 600, marginTop: '2px' }}>{t(card.labelKey)}</span>
             </>
           )
           // G-12: las tarjetas que filtran son botones (Tab + Enter/Espacio); «Cerrados» solo informa.
@@ -254,21 +255,21 @@ export default function PunchListView({
 
       {/* Bulk toolbar */}
       {selected.size > 0 && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', padding: '12px 16px', marginBottom: '12px', background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '10px' }}>
-          <span style={{ fontSize: '13px', fontWeight: 600, color: '#0369a1', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', padding: '12px 16px', marginBottom: '12px', background: 'var(--sky-50)', border: '1px solid var(--sky-200)', borderRadius: '10px' }}>
+          <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--sky-700)', flexShrink: 0 }}>
             {t('bulk.selected', { count: selected.size })}
           </span>
           {/* S06 (C-11, D8): ya no hay cancelación masiva: cada punch se cancela con su motivo. */}
           {canDelete && (
             <>
               <select value={bulkStatus} onChange={e => setBulkStatus(e.target.value as '' | 'open' | 'in_progress')} aria-label={tc('changeStatusTo')}
-                style={{ padding: '7px 10px', borderRadius: '7px', fontSize: '12px', border: '1px solid #bae6fd', background: 'var(--card-bg)', fontFamily: 'inherit' }}>
+                style={{ padding: '7px 10px', borderRadius: '7px', fontSize: '12px', border: '1px solid var(--sky-200)', background: 'var(--card-bg)', fontFamily: 'inherit' }}>
                 <option value="">{tc('changeStatusTo')}</option>
                 <option value="open">{punchStatusLabels.open}</option>
                 <option value="in_progress">{punchStatusLabels.in_progress}</option>
               </select>
               <button onClick={handleBulkStatus} disabled={!bulkStatus || isBulkPending}
-                style={{ padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, background: bulkStatus ? '#0369a1' : 'var(--gray-100)', color: bulkStatus ? '#fff' : 'var(--gray-400)', border: 'none', cursor: bulkStatus ? 'pointer' : 'default' }}>
+                style={{ padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, background: bulkStatus ? 'var(--solid-sky-700)' : 'var(--gray-100)', color: bulkStatus ? '#fff' : 'var(--text-muted)', border: 'none', cursor: bulkStatus ? 'pointer' : 'default' }}>
                 {tc('apply')}
               </button>
             </>
@@ -277,7 +278,7 @@ export default function PunchListView({
             <button
               onClick={handleBulkDelete}
               disabled={isBulkPending}
-              style={{ padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, background: '#fee2e2', color: '#dc2626', border: '1px solid #fecaca', cursor: 'pointer' }}
+              style={{ padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, background: 'var(--danger-100)', color: 'var(--danger-700)', border: '1px solid var(--danger-200)', cursor: 'pointer' }}
             >
               {t('bulk.delete')}
             </button>
@@ -289,7 +290,7 @@ export default function PunchListView({
             {t('bulk.deselect')}
           </button>
           {bulkError && (
-            <span style={{ fontSize: '12px', color: '#ef4444', background: '#fee2e2', padding: '4px 10px', borderRadius: '5px' }}>{bulkError}</span>
+            <span style={{ fontSize: '12px', color: 'var(--danger-700)', background: 'var(--danger-100)', padding: '4px 10px', borderRadius: '5px' }}>{bulkError}</span>
           )}
         </div>
       )}
@@ -341,7 +342,7 @@ export default function PunchListView({
         )}
 
         {filters.assigned === 'me' && (
-          <span style={{ fontSize: '12px', fontWeight: 600, padding: '4px 10px', borderRadius: 999, background: 'var(--primary-50, #eef2ff)', color: 'var(--primary-700, #4338ca)' }}>{t('filters.assignedToMe')}</span>
+          <span style={{ fontSize: '12px', fontWeight: 600, padding: '4px 10px', borderRadius: 999, background: 'var(--primary-50)', color: 'var(--primary-700)' }}>{t('filters.assignedToMe')}</span>
         )}
 
         {hasFilters && (
@@ -356,7 +357,7 @@ export default function PunchListView({
 
       {/* Table */}
       {filtered.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '60px 20px', color: '#94a3b8' }}>
+        <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)' }}>
           <div style={{ fontSize: '28px', marginBottom: '10px' }}>⚑</div>
           <p style={{ fontSize: '14px' }}>{hasFilters ? t('noResultsFiltered') : allScope ? t('noResultsEmptyOrg') : t('noResultsEmpty')}</p>
         </div>
@@ -372,7 +373,7 @@ export default function PunchListView({
                     checked={allFilteredSelected}
                     onChange={toggleAll}
                     aria-label={t('filters.selectAll', { count: filtered.length })}
-                    style={{ width: '15px', height: '15px', cursor: 'pointer', accentColor: '#3b82f6' }}
+                    style={{ width: '15px', height: '15px', cursor: 'pointer', accentColor: 'var(--primary-500)' }}
                   />
                 </th>
                 {[...(allScope ? [t('table.colProject')] : []), t('table.colPunch'), t('table.colTag'), t('table.colCat'), t('table.colDesc'), t('table.colStatus'), t('table.colAssigned'), t('table.colDue')].map(h => (
@@ -393,9 +394,9 @@ export default function PunchListView({
                   <tr
                     key={punch.id}
                     onClick={() => router.push(`/projects/${punch.project_id}/punches/${punch.id}`)}
-                    style={{ borderBottom: i < filtered.length - 1 ? '1px solid #f1f5f9' : 'none', cursor: 'pointer', transition: 'background 0.1s', background: isChecked ? '#eff6ff' : 'transparent' }}
+                    style={{ borderBottom: i < filtered.length - 1 ? '1px solid var(--gray-100)' : 'none', cursor: 'pointer', transition: 'background 0.1s', background: isChecked ? 'var(--primary-50)' : 'transparent' }}
                     onMouseEnter={e => { if (!isChecked) e.currentTarget.style.background = 'var(--gray-50)' }}
-                    onMouseLeave={e => { if (!isChecked) e.currentTarget.style.background = isChecked ? '#eff6ff' : 'transparent' }}
+                    onMouseLeave={e => { if (!isChecked) e.currentTarget.style.background = isChecked ? 'var(--primary-50)' : 'transparent' }}
                   >
                     <td style={{ padding: '12px 14px', width: '36px' }} onClick={e => { e.stopPropagation(); toggleRow(punch.id) }}>
                       <input
@@ -403,7 +404,7 @@ export default function PunchListView({
                         checked={isChecked}
                         onChange={() => toggleRow(punch.id)}
                         onClick={e => e.stopPropagation()}
-                        style={{ width: '15px', height: '15px', cursor: 'pointer', accentColor: '#3b82f6' }}
+                        style={{ width: '15px', height: '15px', cursor: 'pointer', accentColor: 'var(--primary-500)' }}
                       />
                     </td>
                     {allScope && (
@@ -412,7 +413,7 @@ export default function PunchListView({
                           href={`/projects/${punch.project_id}/punches`}
                           onClick={e => e.stopPropagation()}
                           title={punch.project_name}
-                          style={{ fontSize: '10px', fontWeight: 700, color: '#3b82f6', background: '#eff6ff', padding: '2px 7px', borderRadius: '4px', textDecoration: 'none', display: 'inline-block', maxWidth: '94px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                          style={{ fontSize: '10px', fontWeight: 700, color: 'var(--primary-700)', background: 'var(--primary-50)', padding: '2px 7px', borderRadius: '4px', textDecoration: 'none', display: 'inline-block', maxWidth: '94px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                         >
                           {punch.project_code}
                         </Link>
@@ -427,19 +428,19 @@ export default function PunchListView({
                     <td style={{ padding: '12px 14px' }}>
                       {punch.tag_id ? (
                         <div>
-                          <span style={{ fontSize: '12px', fontFamily: 'ui-monospace, monospace', fontWeight: 600, color: punch.discipline_color ?? '#64748b' }}>{punch.tag_number}</span>
-                          <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '1px' }}>{punch.discipline_code}</div>
+                          <span style={{ fontSize: '12px', fontFamily: 'ui-monospace, monospace', fontWeight: 600, color: ink(punch.discipline_color ?? 'var(--text-muted)') }}>{punch.tag_number}</span>
+                          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '1px' }}>{punch.discipline_code}</div>
                         </div>
                       ) : (
-                        <span style={{ fontSize: '12px', color: '#94a3b8' }}>—</span>
+                        <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>—</span>
                       )}
                     </td>
                     <td style={{ padding: '12px 14px' }}>
-                      <span style={{ padding: '3px 9px', borderRadius: '5px', fontSize: '11px', fontWeight: 700, background: catCfg.bg, color: catCfg.color, border: `1px solid ${catCfg.border}`, whiteSpace: 'nowrap' }}>
+                      <span style={{ padding: '3px 9px', borderRadius: '5px', fontSize: '11px', fontWeight: 700, background: catCfg.bg, color: ink(catCfg.color), border: `1px solid ${catCfg.border}`, whiteSpace: 'nowrap' }}>
                         {catCfg.label}
                       </span>
                       {!punch.category_reviewed_at && punch.status !== 'closed' && punch.status !== 'cancelled' && (
-                        <div style={{ fontSize: '10px', color: '#b45309', marginTop: '3px', whiteSpace: 'nowrap' }}>{tGuide('unreviewedShort')}</div>
+                        <div style={{ fontSize: '10px', color: 'var(--warning-700)', marginTop: '3px', whiteSpace: 'nowrap' }}>{tGuide('unreviewedShort')}</div>
                       )}
                     </td>
                     <td style={{ padding: '12px 14px', fontSize: '13px', color: 'var(--text-strong)', maxWidth: '320px' }}>
@@ -448,14 +449,14 @@ export default function PunchListView({
                       </span>
                     </td>
                     <td style={{ padding: '12px 14px' }}>
-                      <span style={{ padding: '3px 9px', borderRadius: '5px', fontSize: '11px', fontWeight: 600, background: stColors.bg, color: stColors.color, whiteSpace: 'nowrap' }}>
+                      <span style={{ padding: '3px 9px', borderRadius: '5px', fontSize: '11px', fontWeight: 600, background: stColors.bg, color: ink(stColors.color), whiteSpace: 'nowrap' }}>
                         {punchStatusLabels[displayStatus] ?? punch.status}
                       </span>
                     </td>
                     <td style={{ padding: '12px 14px', fontSize: '12px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                      <PersonName name={punch.assigned_to_name} inactive={isInactiveMember(punch.assigned_to, memberIds)} fallback={<span style={{ color: '#cbd5e1' }}>{t('noAssignee')}</span>} />
+                      <PersonName name={punch.assigned_to_name} inactive={isInactiveMember(punch.assigned_to, memberIds)} fallback={<span style={{ color: 'var(--text-muted)' }}>{t('noAssignee')}</span>} />
                     </td>
-                    <td style={{ padding: '12px 14px', fontSize: '12px', color: overdue ? 'var(--danger-500)' : punch.target_date ? 'var(--text-muted)' : '#cbd5e1', fontWeight: overdue ? 600 : 400, whiteSpace: 'nowrap' }}>
+                    <td style={{ padding: '12px 14px', fontSize: '12px', color: overdue ? 'var(--danger-700)' : punch.target_date ? 'var(--text-muted)' : 'var(--text-muted)', fontWeight: overdue ? 600 : 400, whiteSpace: 'nowrap' }}>
                       {punch.target_date ?? '—'}
                       {overdue && <span style={{ display: 'block', fontSize: '10px' }}>{t('overdue')}</span>}
                     </td>
@@ -475,5 +476,5 @@ export default function PunchListView({
 
 const selStyle: React.CSSProperties = {
   padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '8px',
-  fontSize: '13px', color: 'var(--gray-700)', background: 'var(--card-bg)', fontFamily: 'inherit', cursor: 'pointer',
+  fontSize: '13px', color: 'var(--text-body)', background: 'var(--card-bg)', fontFamily: 'inherit', cursor: 'pointer',
 }

@@ -66,9 +66,9 @@ export default function AssignmentsPanel({
           const changed = !!draft[role] && draft[role] !== current?.user_id
           return (
             <div key={role} style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-              <span style={{ flex: '0 0 92px', fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)' }}>{t(`roles.${role}` as Parameters<typeof t>[0])}</span>
+              <span style={{ flex: '0 0 92px', fontSize: '12px', fontWeight: 600, color: 'var(--text-body)' }}>{t(`roles.${role}` as Parameters<typeof t>[0])}</span>
               {signed ? (
-                <span style={{ fontSize: '12px', color: 'var(--success-500)', fontWeight: 600 }}>✓ {current?.profiles?.full_name ?? ''} · {t('assign.signedLocked')}</span>
+                <span style={{ fontSize: '12px', color: 'var(--success-700)', fontWeight: 600 }}>✓ {current?.profiles?.full_name ?? ''} · {t('assign.signedLocked')}</span>
               ) : (
                 <>
                   <select
@@ -87,7 +87,7 @@ export default function AssignmentsPanel({
                   <button
                     onClick={() => save(role)}
                     disabled={!changed || isPending}
-                    style={{ padding: '7px 12px', borderRadius: '8px', border: 'none', fontSize: '12px', fontWeight: 600, background: changed && !isPending ? 'var(--primary-500)' : 'var(--gray-100)', color: changed && !isPending ? '#fff' : 'var(--gray-400)', cursor: changed && !isPending ? 'pointer' : 'not-allowed' }}
+                    style={{ padding: '7px 12px', borderRadius: '8px', border: 'none', fontSize: '12px', fontWeight: 600, background: changed && !isPending ? 'var(--primary-600)' : 'var(--gray-100)', color: changed && !isPending ? '#fff' : 'var(--text-muted)', cursor: changed && !isPending ? 'pointer' : 'not-allowed' }}
                   >
                     {isPending ? t('assign.saving') : t('assign.save')}
                   </button>

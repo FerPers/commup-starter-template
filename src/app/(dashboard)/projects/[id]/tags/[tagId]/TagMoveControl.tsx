@@ -65,7 +65,7 @@ export default function TagMoveControl({ projectId, tagId, currentSubsystemId, s
 
       {done && <p role="status" style={{ fontSize: '12px', color: 'var(--success-800)', background: 'var(--success-50)', border: '1px solid var(--success-200)', borderRadius: '6px', padding: '8px 10px', margin: '0 0 12px' }}>{done}</p>}
 
-      <label htmlFor={`${uid}-target`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>{t('targetLabel')}</label>
+      <label htmlFor={`${uid}-target`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-body)', display: 'block', marginBottom: '6px' }}>{t('targetLabel')}</label>
       <select id={`${uid}-target`} value={target} onChange={e => choose(e.target.value)} disabled={isPending}
         style={{ width: '100%', maxWidth: '420px', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '7px', fontSize: '13px', background: 'var(--card-bg)', fontFamily: 'inherit' }}>
         <option value="">{t('targetPlaceholder')}</option>
@@ -100,12 +100,12 @@ export default function TagMoveControl({ projectId, tagId, currentSubsystemId, s
 
           {!blocked && (
             <div style={{ marginTop: '12px' }}>
-              <label htmlFor={`${uid}-reason`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>{t('reasonLabel')}</label>
+              <label htmlFor={`${uid}-reason`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-body)', display: 'block', marginBottom: '6px' }}>{t('reasonLabel')}</label>
               <textarea id={`${uid}-reason`} rows={2} value={reason} onChange={e => setReason(e.target.value)} placeholder={t('reasonPlaceholder')}
                 style={{ width: '100%', boxSizing: 'border-box', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '6px', fontSize: '13px', fontFamily: 'inherit', resize: 'vertical' }} />
               <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '4px 0 8px' }}>{t('hint')}</p>
               <button disabled={!ok || isPending} onClick={confirm}
-                style={{ ...btn, background: ok && !isPending ? 'var(--primary-500)' : 'var(--gray-100)', color: ok && !isPending ? '#fff' : 'var(--gray-400)', border: 'none', cursor: ok && !isPending ? 'pointer' : 'not-allowed' }}>
+                style={{ ...btn, background: ok && !isPending ? 'var(--primary-600)' : 'var(--gray-100)', color: ok && !isPending ? '#fff' : 'var(--text-muted)', border: 'none', cursor: ok && !isPending ? 'pointer' : 'not-allowed' }}>
                 {isPending ? t('moving') : t('confirm')}
               </button>
             </div>

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { addDaysIso, browserToday } from '@/lib/time/zone'
+import { ink } from '@/lib/theme'
 
 const PAGE_SIZE = 50
 
@@ -22,9 +23,9 @@ type Plan = {
 }
 
 const PLAN_STYLE: Record<string, { color: string; bg: string }> = {
-  active:    { color: '#10b981', bg: '#ecfdf5' },
-  suspended: { color: '#f59e0b', bg: '#fffbeb' },
-  completed: { color: 'var(--text-muted)', bg: 'var(--gray-100)' },
+  active:    { color: 'var(--success-700)', bg: 'var(--success-50)' },
+  suspended: { color: 'var(--warning-700)', bg: 'var(--warning-50)' },
+  completed: { color: 'var(--text-muted)',  bg: 'var(--gray-100)' },
 }
 
 export default function PreservationGlobal({
@@ -59,8 +60,8 @@ export default function PreservationGlobal({
     now.setHours(0, 0, 0, 0)
     const due = new Date(nextDue)
     const diffDays = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
-    if (diffDays < 0) return { label: t('due.overdue', { days: Math.abs(diffDays) }), color: '#ef4444', bg: '#fee2e2' }
-    if (diffDays <= 7) return { label: t('due.soon', { days: diffDays }), color: '#f59e0b', bg: '#fffbeb' }
+    if (diffDays < 0) return { label: t('due.overdue', { days: Math.abs(diffDays) }), color: 'var(--danger-700)', bg: 'var(--danger-100)' }
+    if (diffDays <= 7) return { label: t('due.soon', { days: diffDays }), color: 'var(--warning-700)', bg: 'var(--warning-50)' }
     return { label: nextDue, color: 'var(--text-muted)', bg: 'transparent' }
   }
 
@@ -130,22 +131,22 @@ export default function PreservationGlobal({
           type="button"
           aria-pressed={filterDue === 'overdue'}
           onClick={() => setFilterDue(filterDue === 'overdue' ? '' : 'overdue')}
-          style={{ display: 'block', width: '100%', textAlign: 'left', font: 'inherit', padding: '14px 16px', borderRadius: '10px', cursor: 'pointer', transition: 'all 0.15s', background: filterDue === 'overdue' ? '#fee2e2' : 'var(--card-bg)', border: `1px solid ${filterDue === 'overdue' ? '#fca5a540' : 'var(--border)'}` }}
+          style={{ display: 'block', width: '100%', textAlign: 'left', font: 'inherit', padding: '14px 16px', borderRadius: '10px', cursor: 'pointer', transition: 'all 0.15s', background: filterDue === 'overdue' ? 'var(--danger-100)' : 'var(--card-bg)', border: `1px solid ${filterDue === 'overdue' ? '#fca5a540' : 'var(--border)'}` }}
         >
-          <span style={{ display: 'block', fontSize: '22px', fontWeight: 700, color: '#ef4444' }}>{overdueCnt}</span>
+          <span style={{ display: 'block', fontSize: '22px', fontWeight: 700, color: 'var(--danger-700)' }}>{overdueCnt}</span>
           <span style={{ display: 'block', fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>{t('summary.overdue')}</span>
         </button>
         <button
           type="button"
           aria-pressed={filterDue === 'soon'}
           onClick={() => setFilterDue(filterDue === 'soon' ? '' : 'soon')}
-          style={{ display: 'block', width: '100%', textAlign: 'left', font: 'inherit', padding: '14px 16px', borderRadius: '10px', cursor: 'pointer', transition: 'all 0.15s', background: filterDue === 'soon' ? '#fffbeb' : 'var(--card-bg)', border: `1px solid ${filterDue === 'soon' ? '#fde68a' : 'var(--border)'}` }}
+          style={{ display: 'block', width: '100%', textAlign: 'left', font: 'inherit', padding: '14px 16px', borderRadius: '10px', cursor: 'pointer', transition: 'all 0.15s', background: filterDue === 'soon' ? 'var(--warning-50)' : 'var(--card-bg)', border: `1px solid ${filterDue === 'soon' ? 'var(--warning-200)' : 'var(--border)'}` }}
         >
-          <span style={{ display: 'block', fontSize: '22px', fontWeight: 700, color: '#f59e0b' }}>{soonCnt}</span>
+          <span style={{ display: 'block', fontSize: '22px', fontWeight: 700, color: 'var(--warning-700)' }}>{soonCnt}</span>
           <span style={{ display: 'block', fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>{t('summary.dueSoon')}</span>
         </button>
         <div style={{ padding: '14px 16px', borderRadius: '10px', background: 'var(--card-bg)', border: '1px solid var(--border)' }}>
-          <div style={{ fontSize: '22px', fontWeight: 700, color: '#10b981' }}>{activeCnt}</div>
+          <div style={{ fontSize: '22px', fontWeight: 700, color: 'var(--success-700)' }}>{activeCnt}</div>
           <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>{t('summary.active')}</div>
         </div>
       </div>
@@ -177,7 +178,7 @@ export default function PreservationGlobal({
             {tc('clearFilters')}
           </button>
         )}
-        <span style={{ fontSize: '12px', color: 'var(--gray-400)', marginLeft: 'auto' }}>
+        <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginLeft: 'auto' }}>
           {t('filters.count', { filtered: filtered.length, total: plans.length })}
         </span>
       </div>
@@ -185,7 +186,7 @@ export default function PreservationGlobal({
       {/* Table */}
       {filtered.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '60px 20px', background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)' }}>
-          <p style={{ fontSize: '14px', color: 'var(--gray-400)' }}>{t('empty')}</p>
+          <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>{t('empty')}</p>
         </div>
       ) : (
         <div style={{ background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)', overflow: 'hidden' }}>
@@ -208,7 +209,7 @@ export default function PreservationGlobal({
             return (
               <div
                 key={plan.id}
-                style={{ display: 'grid', gridTemplateColumns: '100px 1fr 1fr 90px 110px 110px 90px', gap: '12px', padding: '12px 16px', borderBottom: '1px solid #f8fafc', alignItems: 'center' }}
+                style={{ display: 'grid', gridTemplateColumns: '100px 1fr 1fr 90px 110px 110px 90px', gap: '12px', padding: '12px 16px', borderBottom: '1px solid var(--gray-50)', alignItems: 'center' }}
               >
                 {/* Project */}
                 <div>
@@ -216,7 +217,7 @@ export default function PreservationGlobal({
                     <Link
                       href={`/projects/${proj.id}`}
                       title={proj.name}
-                      style={{ fontSize: '10px', fontWeight: 700, color: '#3b82f6', background: '#eff6ff', padding: '2px 7px', borderRadius: '4px', textDecoration: 'none', display: 'inline-block', maxWidth: '94px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                      style={{ fontSize: '10px', fontWeight: 700, color: 'var(--primary-700)', background: 'var(--primary-50)', padding: '2px 7px', borderRadius: '4px', textDecoration: 'none', display: 'inline-block', maxWidth: '94px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                     >
                       {proj.code}
                     </Link>
@@ -232,7 +233,7 @@ export default function PreservationGlobal({
                     </Link>
                   ) : <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>—</div>}
                   {plan.tags && plan.status === 'active' && (
-                    <Link href={`/projects/${plan.project_id}/tags/${plan.tags.id}/preservation/${plan.id}`} style={{ marginLeft: '8px', fontSize: '11px', fontWeight: 600, color: '#2563eb', textDecoration: 'none' }}>
+                    <Link href={`/projects/${plan.project_id}/tags/${plan.tags.id}/preservation/${plan.id}`} style={{ marginLeft: '8px', fontSize: '11px', fontWeight: 600, color: 'var(--primary-700)', textDecoration: 'none' }}>
                       {t('table.execute')} →
                     </Link>
                   )}
@@ -257,7 +258,7 @@ export default function PreservationGlobal({
                 </div>
 
                 {/* Next due */}
-                <div style={{ fontSize: '11px', fontWeight: 500, color: plan.status === 'active' ? due.color : 'var(--gray-400)', background: plan.status === 'active' ? due.bg : 'transparent', padding: due.bg !== 'transparent' ? '2px 6px' : '0', borderRadius: '4px', display: 'inline-block' }}>
+                <div style={{ fontSize: '11px', fontWeight: 500, color: ink(plan.status === 'active' ? due.color : 'var(--text-muted)'), background: plan.status === 'active' ? due.bg : 'transparent', padding: due.bg !== 'transparent' ? '2px 6px' : '0', borderRadius: '4px', display: 'inline-block' }}>
                   {plan.status === 'active' ? due.label : plan.next_due_date}
                 </div>
 
@@ -267,7 +268,7 @@ export default function PreservationGlobal({
                 </div>
 
                 {/* Status */}
-                <span style={{ padding: '3px 8px', borderRadius: '5px', fontSize: '10px', fontWeight: 600, background: pStyle.bg, color: pStyle.color, whiteSpace: 'nowrap' }}>
+                <span style={{ padding: '3px 8px', borderRadius: '5px', fontSize: '10px', fontWeight: 600, background: pStyle.bg, color: ink(pStyle.color), whiteSpace: 'nowrap' }}>
                   {planStatusLabels[plan.status] ?? plan.status}
                 </span>
               </div>
@@ -279,9 +280,9 @@ export default function PreservationGlobal({
       {/* Pagination */}
       {totalPages > 1 && (
         <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '20px', alignItems: 'center' }}>
-          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={{ padding: '7px 14px', background: page === 1 ? 'var(--gray-50)' : 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '7px', fontSize: '12px', color: page === 1 ? 'var(--gray-300)' : '#374151', cursor: page === 1 ? 'not-allowed' : 'pointer' }}>{tc('prevPage')}</button>
+          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={{ padding: '7px 14px', background: page === 1 ? 'var(--gray-50)' : 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '7px', fontSize: '12px', color: page === 1 ? 'var(--text-muted)' : 'var(--text-body)', cursor: page === 1 ? 'not-allowed' : 'pointer' }}>{tc('prevPage')}</button>
           <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{tc('page', { page, total: totalPages })}</span>
-          <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} style={{ padding: '7px 14px', background: page === totalPages ? 'var(--gray-50)' : 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '7px', fontSize: '12px', color: page === totalPages ? 'var(--gray-300)' : '#374151', cursor: page === totalPages ? 'not-allowed' : 'pointer' }}>{tc('nextPage')}</button>
+          <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} style={{ padding: '7px 14px', background: page === totalPages ? 'var(--gray-50)' : 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '7px', fontSize: '12px', color: page === totalPages ? 'var(--text-muted)' : 'var(--text-body)', cursor: page === totalPages ? 'not-allowed' : 'pointer' }}>{tc('nextPage')}</button>
         </div>
       )}
     </div>
@@ -290,5 +291,5 @@ export default function PreservationGlobal({
 
 const selStyle: React.CSSProperties = {
   padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '8px',
-  fontSize: '13px', color: 'var(--gray-700)', background: 'var(--card-bg)', fontFamily: 'inherit', cursor: 'pointer',
+  fontSize: '13px', color: 'var(--text-body)', background: 'var(--card-bg)', fontFamily: 'inherit', cursor: 'pointer',
 }

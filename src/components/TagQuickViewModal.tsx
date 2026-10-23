@@ -4,12 +4,13 @@ import { useId } from 'react'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { DialogSurface } from '@/components/ui/dialog-a11y'
+import { alpha, ink } from '@/lib/theme'
 
 const STATUS_CONFIG: Record<string, { color: string; bg: string }> = {
-  not_started: { color: '#94a3b8', bg: '#f1f5f9' },
-  in_progress:  { color: '#3b82f6', bg: '#eff6ff' },
-  completed:    { color: '#10b981', bg: '#ecfdf5' },
-  on_hold:      { color: '#f59e0b', bg: '#fffbeb' },
+  not_started: { color: 'var(--text-muted)',  bg: 'var(--gray-100)' },
+  in_progress: { color: 'var(--primary-700)', bg: 'var(--primary-50)' },
+  completed:   { color: 'var(--success-700)', bg: 'var(--success-50)' },
+  on_hold:     { color: 'var(--warning-700)', bg: 'var(--warning-50)' },
 }
 
 export interface TagQuickViewData {
@@ -59,19 +60,19 @@ export default function TagQuickViewModal({ tag, projectId, onClose }: Props) {
         }}
       >
         {/* Header */}
-        <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid #f1f5f9' }}>
+        <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid var(--gray-100)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
               <div id={titleId} style={{
                 fontFamily: 'ui-monospace, monospace',
                 fontSize: '20px',
                 fontWeight: 700,
-                color: '#0f172a',
+                color: 'var(--text-strong)',
                 letterSpacing: '-0.5px',
               }}>
                 {tag.tag_number}
               </div>
-              <div style={{ fontSize: '13px', color: '#64748b', marginTop: '4px', lineHeight: '1.4' }}>
+              <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px', lineHeight: '1.4' }}>
                 {tag.description}
               </div>
             </div>
@@ -80,7 +81,7 @@ export default function TagQuickViewModal({ tag, projectId, onClose }: Props) {
               aria-label={tx('close')}
               style={{
                 background: 'none', border: 'none', cursor: 'pointer',
-                color: '#94a3b8', fontSize: '20px', lineHeight: 1,
+                color: 'var(--text-muted)', fontSize: '20px', lineHeight: 1,
                 padding: '0 0 0 12px', flexShrink: 0,
               }}
             >
@@ -92,14 +93,14 @@ export default function TagQuickViewModal({ tag, projectId, onClose }: Props) {
           <div style={{ display: 'flex', gap: '8px', marginTop: '12px', flexWrap: 'wrap' }}>
             <span style={{
               padding: '3px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
-              background: `${tag.discipline.color}18`,
-              color: tag.discipline.color,
+              background: alpha(tag.discipline.color, 9),
+              color: ink(tag.discipline.color),
             }}>
               {tag.discipline.code} · {tag.discipline.name}
             </span>
             <span style={{
               padding: '3px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: 500,
-              background: status.bg, color: status.color,
+              background: status.bg, color: ink(status.color),
             }}>
               {tx(`status.${statusKey}`)}
             </span>
@@ -111,16 +112,16 @@ export default function TagQuickViewModal({ tag, projectId, onClose }: Props) {
           {/* ITR Progress */}
           <div style={{ marginBottom: '14px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-              <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 500 }}>{tx('itrProgress')}</span>
-              <span style={{ fontSize: '12px', fontWeight: 700, color: pct === 100 ? '#10b981' : '#0f172a' }}>
+              <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>{tx('itrProgress')}</span>
+              <span style={{ fontSize: '12px', fontWeight: 700, color: pct === 100 ? 'var(--success-700)' : 'var(--text-strong)' }}>
                 {pct}%
               </span>
             </div>
-            <div style={{ height: '6px', background: '#f1f5f9', borderRadius: '999px', overflow: 'hidden' }}>
+            <div style={{ height: '6px', background: 'var(--gray-100)', borderRadius: '999px', overflow: 'hidden' }}>
               <div style={{
                 height: '100%',
                 width: `${pct}%`,
-                background: pct === 100 ? '#10b981' : '#3b82f6',
+                background: pct === 100 ? 'var(--success-500)' : 'var(--primary-500)',
                 borderRadius: '999px',
                 transition: 'width 0.3s',
               }} />
@@ -131,17 +132,17 @@ export default function TagQuickViewModal({ tag, projectId, onClose }: Props) {
           <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
             <span style={{
               padding: '4px 12px', borderRadius: '7px', fontSize: '12px', fontWeight: 600,
-              background: tag.open_punches_a > 0 ? '#fef2f2' : '#f0fdf4',
-              color: tag.open_punches_a > 0 ? '#dc2626' : '#16a34a',
-              border: `1px solid ${tag.open_punches_a > 0 ? '#fecaca' : '#bbf7d0'}`,
+              background: tag.open_punches_a > 0 ? 'var(--danger-50)' : 'var(--success-50)',
+              color: tag.open_punches_a > 0 ? 'var(--danger-700)' : 'var(--success-700)',
+              border: `1px solid ${tag.open_punches_a > 0 ? 'var(--danger-200)' : 'var(--success-200)'}`,
             }}>
               Cat A: {tag.open_punches_a}
             </span>
             <span style={{
               padding: '4px 12px', borderRadius: '7px', fontSize: '12px', fontWeight: 600,
-              background: tag.open_punches_b > 0 ? '#fffbeb' : '#f0fdf4',
-              color: tag.open_punches_b > 0 ? '#d97706' : '#16a34a',
-              border: `1px solid ${tag.open_punches_b > 0 ? '#fde68a' : '#bbf7d0'}`,
+              background: tag.open_punches_b > 0 ? 'var(--warning-50)' : 'var(--success-50)',
+              color: tag.open_punches_b > 0 ? 'var(--warning-700)' : 'var(--success-700)',
+              border: `1px solid ${tag.open_punches_b > 0 ? 'var(--warning-200)' : 'var(--success-200)'}`,
             }}>
               Cat B: {tag.open_punches_b}
             </span>
@@ -154,9 +155,9 @@ export default function TagQuickViewModal({ tag, projectId, onClose }: Props) {
               style={{
                 flex: 1, textAlign: 'center',
                 padding: '9px 12px',
-                background: '#eff6ff', color: '#2563eb',
+                background: 'var(--primary-50)', color: 'var(--primary-700)',
                 borderRadius: '8px', fontSize: '13px', fontWeight: 500,
-                textDecoration: 'none', border: '1px solid #bfdbfe',
+                textDecoration: 'none', border: '1px solid var(--primary-200)',
               }}
             >
               🔷 Digital Twin
@@ -166,7 +167,7 @@ export default function TagQuickViewModal({ tag, projectId, onClose }: Props) {
               style={{
                 flex: 1, textAlign: 'center',
                 padding: '9px 12px',
-                background: '#0f172a', color: 'white',
+                background: 'var(--gray-900)', color: 'white',
                 borderRadius: '8px', fontSize: '13px', fontWeight: 500,
                 textDecoration: 'none',
               }}

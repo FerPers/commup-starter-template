@@ -42,11 +42,11 @@ export const STATUS_KEY_MAP: Record<ReviewStatus, StatusKey> = {
 }
 
 export const STATUS_STYLES: Record<StatusKey, { color: string; bg: string }> = {
-  draft:           { color: 'var(--text-muted)', bg: 'var(--gray-100)' },
-  inProgress:      { color: '#3b82f6',           bg: '#eff6ff' },
-  pendingApproval: { color: '#f59e0b',           bg: '#fffbeb' },
-  approvedDone:    { color: '#10b981',           bg: '#ecfdf5' },
-  rejected:        { color: '#ef4444',           bg: '#fee2e2' },
+  draft:           { color: 'var(--text-muted)',  bg: 'var(--gray-100)' },
+  inProgress:      { color: 'var(--primary-700)', bg: 'var(--primary-50)' },
+  pendingApproval: { color: 'var(--warning-700)', bg: 'var(--warning-50)' },
+  approvedDone:    { color: 'var(--success-700)', bg: 'var(--success-50)' },
+  rejected:        { color: 'var(--danger-700)',  bg: 'var(--danger-100)' },
 }
 
 const CAT_COLORS: Record<string, string> = {

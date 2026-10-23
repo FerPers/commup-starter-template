@@ -102,19 +102,19 @@ function jsonLogicToRows(logicJson: Json): ConditionRow[] {
 
 // ── Styles ───────────────────────────────────────────────────
 const btnPrimary: React.CSSProperties = {
-  padding: '8px 14px', background: '#3b82f6', color: '#fff',
+  padding: '8px 14px', background: 'var(--primary-600)', color: '#fff',
   border: 'none', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer',
 }
 const btnOutline: React.CSSProperties = {
   padding: '6px 12px', background: 'var(--card-bg)', color: 'var(--text-muted)',
-  border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+  border: '1px solid var(--gray-300)', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer',
 }
 const btnDanger: React.CSSProperties = {
-  padding: '6px 12px', background: '#fef2f2', color: '#b91c1c',
-  border: '1px solid #fecaca', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+  padding: '6px 12px', background: 'var(--danger-50)', color: 'var(--danger-700)',
+  border: '1px solid var(--danger-200)', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer',
 }
 const input: React.CSSProperties = {
-  padding: '8px 10px', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 13,
+  padding: '8px 10px', border: '1px solid var(--gray-300)', borderRadius: 6, fontSize: 13,
   fontFamily: 'inherit', width: '100%', background: 'var(--card-bg)',
 }
 const label: React.CSSProperties = {
@@ -189,13 +189,13 @@ export default function WorkflowsView({
       </div>
 
       {error && (
-        <div style={{ padding: 12, background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 6, color: '#b91c1c', fontSize: 13, marginBottom: 16 }}>
+        <div style={{ padding: 12, background: 'var(--danger-50)', border: '1px solid var(--danger-200)', borderRadius: 6, color: 'var(--danger-700)', fontSize: 13, marginBottom: 16 }}>
           {error}
         </div>
       )}
 
       {rules.length === 0 && !creating && (
-        <div style={{ padding: 40, background: 'var(--gray-50)', border: '1px dashed #cbd5e1', borderRadius: 8, textAlign: 'center', color: 'var(--text-muted)', fontSize: 14 }}>
+        <div style={{ padding: 40, background: 'var(--gray-50)', border: '1px dashed var(--gray-300)', borderRadius: 8, textAlign: 'center', color: 'var(--text-muted)', fontSize: 14 }}>
           {tx('empty')}
         </div>
       )}
@@ -204,7 +204,7 @@ export default function WorkflowsView({
         <div key={event} style={{ marginBottom: 24 }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8, padding: '0 4px' }}>
             {TRIGGER_EVENTS.includes(event) ? tx(`trigger.${event}`) : event}
-            <span style={{ marginLeft: 6, color: 'var(--gray-400)', fontWeight: 500 }}>({event})</span>
+            <span style={{ marginLeft: 6, color: 'var(--text-muted)', fontWeight: 500 }}>({event})</span>
           </div>
           <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden' }}>
             {rulesByEvent[event].map(rule => (
@@ -258,7 +258,7 @@ function RuleRow({
   const matches = executions.filter(e => e.matched).length
 
   return (
-    <div style={{ borderBottom: '1px solid #f1f5f9' }}>
+    <div style={{ borderBottom: '1px solid var(--gray-100)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px' }}>
         <button
           onClick={onToggle}
@@ -267,7 +267,7 @@ function RuleRow({
           aria-label={tx(rule.enabled ? 'deactivate' : 'activate')}
           style={{
             width: 32, height: 18, borderRadius: 9, border: 'none', cursor: 'pointer', flexShrink: 0,
-            background: rule.enabled ? '#10b981' : 'var(--gray-300)', position: 'relative', padding: 0,
+            background: rule.enabled ? 'var(--success-500)' : 'var(--gray-300)', position: 'relative', padding: 0,
           }}
         >
           <div style={{
@@ -286,12 +286,12 @@ function RuleRow({
           {rule.description && (
             <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{rule.description}</div>
           )}
-          <div style={{ fontSize: 11, color: 'var(--gray-400)', marginTop: 4 }}>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
             → <strong style={{ color: 'var(--text-muted)' }}>{actionLabel}</strong>
             {executions.length > 0 && (
               <span style={{ marginLeft: 10 }}>
                 {tx('recentMatches', { matches, total: executions.length })}
-                {lastExec?.error_message && <span style={{ color: '#ef4444', marginLeft: 6 }}>· {tx('lastError')}</span>}
+                {lastExec?.error_message && <span style={{ color: 'var(--danger-700)', marginLeft: 6 }}>· {tx('lastError')}</span>}
               </span>
             )}
           </div>
@@ -405,7 +405,7 @@ function RuleEditorModal({
         </div>
 
         {err && (
-          <div style={{ padding: 10, background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 6, color: '#b91c1c', fontSize: 13, marginBottom: 14 }}>
+          <div style={{ padding: 10, background: 'var(--danger-50)', border: '1px solid var(--danger-200)', borderRadius: 6, color: 'var(--danger-700)', fontSize: 13, marginBottom: 14 }}>
             {err}
           </div>
         )}
@@ -438,7 +438,7 @@ function RuleEditorModal({
             <select id={`${uid}-action`} style={input} value={actionType} onChange={e => setActionType(e.target.value as WorkflowActionType)}>
               {ACTION_TYPES.map(a => <option key={a} value={a}>{tx(`action.${a}.label`)}</option>)}
             </select>
-            <div style={{ fontSize: 11, color: 'var(--gray-400)', marginTop: 4 }}>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
               {tx(`action.${actionType}.description`)}
             </div>
           </div>
@@ -466,7 +466,7 @@ function RuleEditorModal({
           {!advancedMode ? (
             <>
               {conditionRows.length === 0 && (
-                <div style={{ fontSize: 12, color: 'var(--gray-400)', padding: '8px 0' }}>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)', padding: '8px 0' }}>
                   {tx('conditions.none')}
                 </div>
               )}
@@ -513,7 +513,7 @@ function RuleEditorModal({
               placeholder='{"==": [{"var": "new.category"}, "A"]}'
             />
           )}
-          <div style={{ fontSize: 11, color: 'var(--gray-400)', marginTop: 4 }}>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
             {tx.rich('conditions.fields', { code: c => <code>{c}</code> })}
           </div>
         </div>

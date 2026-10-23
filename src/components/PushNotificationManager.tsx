@@ -300,8 +300,8 @@ export default function PushNotificationManager({ userId, onSubscriptionChange }
               width: 40, height: 40,
               borderRadius: 'var(--radius-lg)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: isSubscribed ? 'var(--primary-800)' : 'var(--gray-700)',
-              color: isSubscribed ? 'var(--primary-200)' : 'var(--gray-400)',
+              background: isSubscribed ? 'var(--solid-primary-800)' : 'var(--gray-700)',
+              color: isSubscribed ? 'var(--on-dark-accent)' : 'var(--gray-400)',
             }}>
               {isSubscribed
                 ? <Bell size={20} aria-hidden="true" />

@@ -84,7 +84,7 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
           padding: '48px', textAlign: 'center',
         }}>
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
-            <ShieldCheck size={32} color="var(--warning-500)" aria-hidden="true" />
+            <ShieldCheck size={32} color='var(--warning-700)' aria-hidden="true" />
           </div>
           <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-strong)', margin: '0 0 6px' }}>
             {tx('emptyTitle')}
@@ -107,7 +107,7 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
                 onClick={() => setShowModal(true)}
                 style={{
                   padding: '9px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-                  background: 'var(--primary-500)', color: '#fff', border: 'none', cursor: 'pointer',
+                  background: 'var(--primary-600)', color: '#fff', border: 'none', cursor: 'pointer',
                 }}
               >
                 {tx('new')}
@@ -135,7 +135,7 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
                 onClick={() => setShowModal(true)}
                 style={{
                   padding: '9px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-                  background: 'var(--primary-500)', color: '#fff', border: 'none', cursor: 'pointer',
+                  background: 'var(--primary-600)', color: '#fff', border: 'none', cursor: 'pointer',
                 }}
               >
                 {tx('new')}
@@ -187,7 +187,7 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
                   title={tx('previewHint')}
                   style={{
                     padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600,
-                    background: '#eff6ff', border: '1px solid #bfdbfe', color: '#1e40af',
+                    background: 'var(--primary-50)', border: '1px solid var(--primary-200)', color: 'var(--primary-800)',
                     cursor: 'pointer',
                   }}
                 >
@@ -202,7 +202,7 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
                       disabled={seedingId === t.id}
                       style={{
                         padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600,
-                        background: '#fffbeb', border: '1px solid #fde68a', color: '#92400e',
+                        background: 'var(--warning-50)', border: '1px solid var(--warning-200)', color: 'var(--warning-800)',
                         cursor: 'pointer',
                       }}
                     >
@@ -224,7 +224,7 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
                     disabled={deletingId === t.id || isPending}
                     style={{
                       padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600,
-                      background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626',
+                      background: 'var(--danger-50)', border: '1px solid var(--danger-200)', color: 'var(--danger-700)',
                       cursor: 'pointer',
                     }}
                   >
@@ -242,9 +242,9 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
       )}
 
       {previewError && (
-        <div style={{ marginTop: '12px', background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', padding: '10px 14px', borderRadius: '8px', fontSize: '13px' }}>
+        <div style={{ marginTop: '12px', background: 'var(--danger-50)', border: '1px solid var(--danger-200)', color: 'var(--danger-700)', padding: '10px 14px', borderRadius: '8px', fontSize: '13px' }}>
           {previewError}
-          <button onClick={() => setPreviewError(null)} style={{ marginLeft: '12px', background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontWeight: 700 }}>✕</button>
+          <button onClick={() => setPreviewError(null)} style={{ marginLeft: '12px', background: 'none', border: 'none', color: 'var(--danger-700)', cursor: 'pointer', fontWeight: 700 }}>✕</button>
         </div>
       )}
 
@@ -298,7 +298,7 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
                 />
               </div>
               {formError && (
-                <p style={{ color: '#dc2626', fontSize: '13px', margin: 0 }}>{formError}</p>
+                <p style={{ color: 'var(--danger-700)', fontSize: '13px', margin: 0 }}>{formError}</p>
               )}
               <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '4px' }}>
                 <button

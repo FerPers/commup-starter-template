@@ -4,6 +4,7 @@ import { useId, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { completeSetup, createProject } from '@/app/actions/setup'
+import { alpha } from '@/lib/theme'
 
 // ── Helpers ───────────────────────────────────────────────────
 
@@ -17,27 +18,27 @@ function toSlug(name: string) {
 // ── Default data ──────────────────────────────────────────────
 
 const DEFAULT_PHASES = [
-  { code: 'A', name: 'Mechanical Completion', order_index: 1, color: '#3b82f6', certificate_name: 'MC' },
-  { code: 'B', name: 'Pre-Commissioning',     order_index: 2, color: '#f59e0b', certificate_name: 'RFPC' },
-  { code: 'C', name: 'Commissioning',          order_index: 3, color: '#10b981', certificate_name: 'RFC' },
+  { code: 'A', name: 'Mechanical Completion', order_index: 1, color: 'var(--primary-500)', certificate_name: 'MC' },
+  { code: 'B', name: 'Pre-Commissioning',     order_index: 2, color: 'var(--warning-500)', certificate_name: 'RFPC' },
+  { code: 'C', name: 'Commissioning',          order_index: 3, color: 'var(--success-500)', certificate_name: 'RFC' },
   // Start-Up no es una 4ª letra de ITR: son pruebas de desempeño ligadas al RFSU.
   // La letra D queda reservada para Decomisionamiento (se crea desde Admin → Config cuando toque).
-  { code: 'SU', name: 'Start-Up / Puesta en marcha', order_index: 4, color: '#8b5cf6', certificate_name: 'RFSU' },
+  { code: 'SU', name: 'Start-Up / Puesta en marcha', order_index: 4, color: 'var(--violet-500)', certificate_name: 'RFSU' },
 ]
 
 // All known disciplines from industry reference (ITR catalog)
 const ALL_DISCIPLINES = [
-  { code: 'ARCH',   name: 'Architectural',     color: '#a855f7', phases: ['A'] },
-  { code: 'DRILL',  name: 'Drilling',           color: '#92400e', phases: ['A'] },
-  { code: 'ELEC',   name: 'Electrical',         color: '#f59e0b', phases: ['A','B','C'] },
-  { code: 'HVAC',   name: 'HVAC',               color: '#06b6d4', phases: ['A','B','C'] },
-  { code: 'INST',   name: 'Instruments',        color: '#10b981', phases: ['A','B','C'] },
-  { code: 'MECH',   name: 'Mechanical',         color: '#3b82f6', phases: ['A','B','C'] },
-  { code: 'PIPE',   name: 'Piping',             color: '#f97316', phases: ['A'] },
-  { code: 'PROC',   name: 'Process',            color: '#14b8a6', phases: ['B','C'] },
-  { code: 'SAFE',   name: 'Safety / Fire',      color: '#ef4444', phases: ['A','B','C'] },
+  { code: 'ARCH',   name: 'Architectural',     color: 'var(--accent-500)', phases: ['A'] },
+  { code: 'DRILL',  name: 'Drilling',           color: 'var(--warning-800)', phases: ['A'] },
+  { code: 'ELEC',   name: 'Electrical',         color: 'var(--warning-500)', phases: ['A','B','C'] },
+  { code: 'HVAC',   name: 'HVAC',               color: 'var(--cyan-500)', phases: ['A','B','C'] },
+  { code: 'INST',   name: 'Instruments',        color: 'var(--success-500)', phases: ['A','B','C'] },
+  { code: 'MECH',   name: 'Mechanical',         color: 'var(--primary-500)', phases: ['A','B','C'] },
+  { code: 'PIPE',   name: 'Piping',             color: 'var(--orange-500)', phases: ['A'] },
+  { code: 'PROC',   name: 'Process',            color: 'var(--teal-500)', phases: ['B','C'] },
+  { code: 'SAFE',   name: 'Safety / Fire',      color: 'var(--danger-500)', phases: ['A','B','C'] },
   { code: 'STRUCT', name: 'Structural / Civil', color: '#6b7280', phases: ['A'] },
-  { code: 'TELE',   name: 'Telecoms',           color: '#8b5cf6', phases: ['A','B','C'] },
+  { code: 'TELE',   name: 'Telecoms',           color: 'var(--violet-500)', phases: ['A','B','C'] },
 ]
 
 // Default selected disciplines (most common for O&G projects)
@@ -160,7 +161,7 @@ export default function SetupWizard({ isNewProject, orgDisciplines = [] }: {
         <div style={{
           display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
           width: '52px', height: '52px', borderRadius: '14px',
-          background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+          background: 'linear-gradient(135deg, var(--primary-500), var(--solid-primary-700))',
           marginBottom: '16px',
         }}>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -187,21 +188,21 @@ export default function SetupWizard({ isNewProject, orgDisciplines = [] }: {
               {i > 0 && (
                 <div style={{
                   position: 'absolute', left: '-50%', top: '14px', width: '100%', height: '2px',
-                  background: done || active ? '#3b82f6' : '#1e293b',
+                  background: done || active ? 'var(--primary-500)' : 'var(--gray-800)',
                   zIndex: 0,
                 }} />
               )}
               <div style={{
                 width: '28px', height: '28px', borderRadius: '50%', zIndex: 1,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                background: done ? '#3b82f6' : active ? '#1d4ed8' : '#1e293b',
-                border: `2px solid ${done || active ? '#3b82f6' : '#334155'}`,
+                background: done ? 'var(--primary-500)' : active ? 'var(--solid-primary-700)' : 'var(--gray-800)',
+                border: `2px solid ${done || active ? 'var(--primary-500)' : 'var(--gray-700)'}`,
                 fontSize: '12px', fontWeight: 600,
                 color: done || active ? 'white' : '#475569',
               }}>
                 {done ? '✓' : n}
               </div>
-              <span style={{ fontSize: '11px', color: active ? '#60a5fa' : done ? '#3b82f6' : '#475569', marginTop: '6px', fontWeight: active ? 600 : 400 }}>
+              <span style={{ fontSize: '11px', color: active ? 'var(--primary-400)' : done ? 'var(--primary-500)' : '#475569', marginTop: '6px', fontWeight: active ? 600 : 400 }}>
                 {label}
               </span>
             </div>
@@ -334,7 +335,7 @@ export default function SetupWizard({ isNewProject, orgDisciplines = [] }: {
               </div>
               <button
                 onClick={() => setPhases(DEFAULT_PHASES)}
-                style={{ fontSize: '12px', color: '#3b82f6', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 0', flexShrink: 0, marginTop: '2px' }}
+                style={{ fontSize: '12px', color: 'var(--primary-500)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 0', flexShrink: 0, marginTop: '2px' }}
               >
                 ↺ {t('phases.reset')}
               </button>
@@ -404,7 +405,7 @@ export default function SetupWizard({ isNewProject, orgDisciplines = [] }: {
                       display: 'flex', alignItems: 'center', gap: '10px',
                       padding: '10px 12px', borderRadius: '8px', cursor: 'pointer',
                       border: `2px solid ${selected ? disc.color : '#e2e8f0'}`,
-                      background: selected ? `${disc.color}12` : '#f8fafc',
+                      background: selected ? alpha(disc.color, 7) : '#f8fafc',
                       textAlign: 'left',
                     }}
                   >
@@ -484,7 +485,7 @@ export default function SetupWizard({ isNewProject, orgDisciplines = [] }: {
         </div>
 
         {error && (
-          <div style={{ marginTop: '12px', padding: '12px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', color: '#dc2626', fontSize: '13px' }}>
+          <div style={{ marginTop: '12px', padding: '12px', background: 'var(--danger-50)', border: '1px solid var(--danger-200)', borderRadius: '8px', color: 'var(--danger-700)', fontSize: '13px' }}>
             {error}
           </div>
         )}
@@ -530,7 +531,7 @@ const stepDescStyle: React.CSSProperties = { fontSize: '14px', color: '#64748b',
 const labelStyle: React.CSSProperties = { display: 'block', fontSize: '13px', fontWeight: 500, color: '#374151', marginBottom: '6px', marginTop: '14px' }
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '10px 12px', borderRadius: '8px',
-  border: '1px solid #d1d5db', fontSize: '14px', outline: 'none',
+  border: '1px solid var(--gray-300)', fontSize: '14px', outline: 'none',
   background: 'white', boxSizing: 'border-box', color: '#0f172a',
 }
 const inputSmall: React.CSSProperties = {
@@ -539,7 +540,7 @@ const inputSmall: React.CSSProperties = {
   background: 'white', boxSizing: 'border-box', color: '#0f172a',
 }
 const btnPrimary: React.CSSProperties = {
-  padding: '10px 24px', background: '#3b82f6', color: 'white',
+  padding: '10px 24px', background: 'var(--primary-500)', color: 'white',
   border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 500,
   cursor: 'pointer',
 }
@@ -549,7 +550,7 @@ const btnSecondary: React.CSSProperties = {
   cursor: 'pointer',
 }
 const btnSuccess: React.CSSProperties = {
-  padding: '10px 24px', background: '#10b981', color: 'white',
+  padding: '10px 24px', background: 'var(--success-500)', color: 'white',
   border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 600,
   cursor: 'pointer',
 }
@@ -560,13 +561,13 @@ const btnDisabled: React.CSSProperties = {
 }
 const removeBtn: React.CSSProperties = {
   width: '28px', height: '28px', borderRadius: '6px', border: 'none',
-  background: '#fee2e2', color: '#dc2626', fontSize: '18px', lineHeight: '1',
+  background: 'var(--danger-100)', color: 'var(--danger-700)', fontSize: '18px', lineHeight: '1',
   cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
   padding: 0, fontWeight: 400,
 }
 const addRowBtn: React.CSSProperties = {
   marginTop: '10px', padding: '8px 14px', background: 'transparent',
-  border: '1px dashed #cbd5e1', borderRadius: '8px', fontSize: '13px',
+  border: '1px dashed var(--gray-300)', borderRadius: '8px', fontSize: '13px',
   color: '#64748b', cursor: 'pointer', width: '100%',
 }
 const arrowBtn: React.CSSProperties = {

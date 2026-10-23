@@ -117,7 +117,7 @@ export default function LookaheadView({ project, initialWindow, initialEdit, cel
 
   const seg = (on: boolean): React.CSSProperties => ({
     ...btn('outline'), padding: '5px 12px', fontSize: 'var(--text-xs)',
-    background: on ? 'var(--primary-500)' : 'var(--card-bg)', color: on ? '#fff' : 'var(--text-strong)',
+    background: on ? 'var(--primary-600)' : 'var(--card-bg)', color: on ? '#fff' : 'var(--text-strong)',
   })
 
   return (

@@ -41,19 +41,19 @@ type Delivery = {
 }
 
 const btnPrimary: React.CSSProperties = {
-  padding: '8px 14px', background: '#3b82f6', color: '#fff',
+  padding: '8px 14px', background: 'var(--primary-600)', color: '#fff',
   border: 'none', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer',
 }
 const btnOutline: React.CSSProperties = {
   padding: '6px 12px', background: 'var(--card-bg)', color: 'var(--text-muted)',
-  border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+  border: '1px solid var(--gray-300)', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer',
 }
 const btnDanger: React.CSSProperties = {
-  padding: '6px 12px', background: '#fef2f2', color: '#b91c1c',
-  border: '1px solid #fecaca', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+  padding: '6px 12px', background: 'var(--danger-50)', color: 'var(--danger-700)',
+  border: '1px solid var(--danger-200)', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer',
 }
 const input: React.CSSProperties = {
-  padding: '8px 10px', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 13,
+  padding: '8px 10px', border: '1px solid var(--gray-300)', borderRadius: 6, fontSize: 13,
   fontFamily: 'inherit', width: '100%', background: 'var(--card-bg)',
 }
 const labelStyle: React.CSSProperties = {
@@ -67,9 +67,9 @@ function fmtDate(s: string | null, locale: string): string {
 }
 
 function statusColors(st: string): { fg: string; bg: string } {
-  if (st === ('delivered' satisfies DeliveryStatus)) return { fg: '#047857', bg: '#ecfdf5' }
-  if (st === ('abandoned' satisfies DeliveryStatus)) return { fg: '#b91c1c', bg: '#fef2f2' }
-  return { fg: '#b45309', bg: '#fef3c7' }
+  if (st === ('delivered' satisfies DeliveryStatus)) return { fg: 'var(--success-700)', bg: 'var(--success-50)' }
+  if (st === ('abandoned' satisfies DeliveryStatus)) return { fg: 'var(--danger-700)', bg: 'var(--danger-50)' }
+  return { fg: 'var(--warning-700)', bg: 'var(--warning-100)' }
 }
 
 export default function WebhooksView({
@@ -149,13 +149,13 @@ export default function WebhooksView({
       </div>
 
       {error && (
-        <div style={{ padding: 12, background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 6, color: '#b91c1c', fontSize: 13, marginBottom: 16 }}>
+        <div style={{ padding: 12, background: 'var(--danger-50)', border: '1px solid var(--danger-200)', borderRadius: 6, color: 'var(--danger-700)', fontSize: 13, marginBottom: 16 }}>
           {error}
         </div>
       )}
 
       {subs.length === 0 && (
-        <div style={{ padding: 40, background: 'var(--gray-50)', border: '1px dashed #cbd5e1', borderRadius: 8, textAlign: 'center', color: 'var(--text-muted)', fontSize: 14 }}>
+        <div style={{ padding: 40, background: 'var(--gray-50)', border: '1px dashed var(--gray-300)', borderRadius: 8, textAlign: 'center', color: 'var(--text-muted)', fontSize: 14 }}>
           {tw('empty')}
         </div>
       )}
@@ -173,7 +173,7 @@ export default function WebhooksView({
                 aria-label={tw(s.enabled ? 'deactivate' : 'activate')}
                 style={{
                   width: 32, height: 18, borderRadius: 9, border: 'none', cursor: 'pointer', flexShrink: 0,
-                  background: s.enabled ? '#10b981' : '#cbd5e1', position: 'relative', padding: 0,
+                  background: s.enabled ? 'var(--success-500)' : 'var(--gray-300)', position: 'relative', padding: 0,
                 }}
               >
                 <div style={{
@@ -187,7 +187,7 @@ export default function WebhooksView({
                 <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 10 }}>
                   {s.name}
                   {s.project_id
-                    ? <span style={{ fontSize: 10, fontWeight: 600, background: '#eff6ff', color: '#1d4ed8', padding: '2px 6px', borderRadius: 4 }}>
+                    ? <span style={{ fontSize: 10, fontWeight: 600, background: 'var(--primary-50)', color: 'var(--primary-700)', padding: '2px 6px', borderRadius: 4 }}>
                         {tw('projectBadge', { name: projectsById[s.project_id] ?? s.project_id.slice(0, 8) })}
                       </span>
                     : <span style={{ fontSize: 10, fontWeight: 600, background: 'var(--gray-100)', color: 'var(--text-muted)', padding: '2px 6px', borderRadius: 4 }}>
@@ -195,7 +195,7 @@ export default function WebhooksView({
                       </span>
                   }
                   {s.failure_count > 0 && (
-                    <span style={{ fontSize: 10, fontWeight: 600, background: '#fef2f2', color: '#b91c1c', padding: '2px 6px', borderRadius: 4 }}>
+                    <span style={{ fontSize: 10, fontWeight: 600, background: 'var(--danger-50)', color: 'var(--danger-700)', padding: '2px 6px', borderRadius: 4 }}>
                       {tw('failures', { n: s.failure_count })}
                     </span>
                   )}
@@ -203,10 +203,10 @@ export default function WebhooksView({
                 <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2, fontFamily: 'ui-monospace, monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {s.endpoint_url}
                 </div>
-                <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                   <span>{tw('events')} <strong style={{ color: 'var(--text-muted)' }}>{s.event_types.join(', ')}</strong></span>
                   <span>{tw('lastOk')} <strong style={{ color: 'var(--text-muted)' }}>{fmtDate(s.last_success_at, locale)}</strong></span>
-                  <span>{tw('lastError')} <strong style={{ color: s.last_error_at ? '#b91c1c' : 'var(--text-muted)' }}>{fmtDate(s.last_error_at, locale)}</strong></span>
+                  <span>{tw('lastError')} <strong style={{ color: s.last_error_at ? 'var(--danger-700)' : 'var(--text-muted)' }}>{fmtDate(s.last_error_at, locale)}</strong></span>
                 </div>
               </div>
 
@@ -255,7 +255,7 @@ function DeliveriesTable({ deliveries }: { deliveries: Delivery[] }) {
   const locale = useLocale()
   if (deliveries.length === 0) {
     return (
-      <div style={{ padding: 20, borderTop: '1px solid #f1f5f9', fontSize: 13, color: '#94a3b8', textAlign: 'center' }}>
+      <div style={{ padding: 20, borderTop: '1px solid var(--gray-100)', fontSize: 13, color: 'var(--text-muted)', textAlign: 'center' }}>
         {tw('noDeliveries')}
       </div>
     )
@@ -268,7 +268,7 @@ function DeliveriesTable({ deliveries }: { deliveries: Delivery[] }) {
     : st
 
   return (
-    <div style={{ borderTop: '1px solid #f1f5f9', maxHeight: 340, overflow: 'auto' }}>
+    <div style={{ borderTop: '1px solid var(--gray-100)', maxHeight: 340, overflow: 'auto' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
         <thead style={{ position: 'sticky', top: 0, background: 'var(--gray-50)' }}>
           <tr>
@@ -285,7 +285,7 @@ function DeliveriesTable({ deliveries }: { deliveries: Delivery[] }) {
           {deliveries.map(d => {
             const c = statusColors(d.status)
             return (
-              <tr key={d.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+              <tr key={d.id} style={{ borderBottom: '1px solid var(--gray-100)' }}>
                 <td style={td}>
                   <span style={{
                     display: 'inline-block', padding: '2px 8px', borderRadius: 4,
@@ -301,8 +301,8 @@ function DeliveriesTable({ deliveries }: { deliveries: Delivery[] }) {
                 <td style={td}>
                   {d.last_response_code ? (
                     <code style={{
-                      background: d.last_response_code >= 200 && d.last_response_code < 300 ? '#ecfdf5' : '#fef2f2',
-                      color:      d.last_response_code >= 200 && d.last_response_code < 300 ? '#047857' : '#b91c1c',
+                      background: d.last_response_code >= 200 && d.last_response_code < 300 ? 'var(--success-50)' : 'var(--danger-50)',
+                      color:      d.last_response_code >= 200 && d.last_response_code < 300 ? 'var(--success-700)' : 'var(--danger-700)',
                       padding: '1px 6px', borderRadius: 4, fontSize: 11,
                     }}>
                       {d.last_response_code}
@@ -328,7 +328,7 @@ const th: React.CSSProperties = {
   textTransform: 'uppercase', letterSpacing: '0.04em',
 }
 const td: React.CSSProperties = {
-  padding: '8px 12px', color: '#334155', verticalAlign: 'middle',
+  padding: '8px 12px', color: 'var(--text-body)', verticalAlign: 'middle',
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -444,8 +444,8 @@ function CreateSubscriptionModal({
                   style={{
                     display: 'flex', alignItems: 'center', gap: 6,
                     padding: '6px 10px', borderRadius: 6, cursor: 'pointer',
-                    background: checked ? '#eff6ff' : 'var(--gray-50)',
-                    border: checked ? '1px solid #93c5fd' : '1px solid var(--border)',
+                    background: checked ? 'var(--primary-50)' : 'var(--gray-50)',
+                    border: checked ? '1px solid var(--primary-300)' : '1px solid var(--border)',
                     fontSize: 12, fontFamily: 'ui-monospace, monospace',
                   }}
                 >
@@ -459,7 +459,7 @@ function CreateSubscriptionModal({
               )
             })}
           </div>
-          <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
             {tw.rich('form.wildcardHint', { code: () => <code>*</code> })}
           </div>
         </div>
@@ -511,8 +511,8 @@ function SecretRevealModal({
         </p>
 
         <div style={{
-          padding: 14, background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: 8,
-          fontSize: 13, color: '#92400e', marginBottom: 16,
+          padding: 14, background: 'var(--warning-50)', border: '1px solid var(--warning-300)', borderRadius: 8,
+          fontSize: 13, color: 'var(--warning-800)', marginBottom: 16,
         }}>
           {tw.rich('secret.warning', {
             strong: c => <strong>{c}</strong>,
@@ -531,7 +531,7 @@ function SecretRevealModal({
           />
           <button
             onClick={copy}
-            style={{ ...btnPrimary, minWidth: 100, background: copied ? '#10b981' : '#3b82f6' }}
+            style={{ ...btnPrimary, minWidth: 100, background: copied ? 'var(--success-500)' : 'var(--primary-600)' }}
           >
             {tw(copied ? 'secret.copied' : 'secret.copy')}
           </button>
@@ -600,7 +600,7 @@ function ModalHeader({ id, title, onClose }: { id?: string; title: string; onClo
 
 function ModalError({ msg }: { msg: string }) {
   return (
-    <div style={{ padding: 10, background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 6, color: '#b91c1c', fontSize: 13, marginBottom: 14 }}>
+    <div style={{ padding: 10, background: 'var(--danger-50)', border: '1px solid var(--danger-200)', borderRadius: 6, color: 'var(--danger-700)', fontSize: 13, marginBottom: 14 }}>
       {msg}
     </div>
   )

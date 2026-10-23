@@ -39,7 +39,7 @@ export default function ToolRail({
               width: 60, minHeight: 52, padding: '6px 2px', borderRadius: 8, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, cursor: 'pointer',
               border: `1px solid ${on ? 'var(--primary-500)' : 'transparent'}`,
               background: on ? 'color-mix(in srgb, var(--primary-500) 10%, var(--card-bg))' : 'transparent',
-              color: on ? 'var(--primary-600)' : 'var(--text-muted)',
+              color: on ? 'var(--primary-700)' : 'var(--text-muted)',
             }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d={icon} />

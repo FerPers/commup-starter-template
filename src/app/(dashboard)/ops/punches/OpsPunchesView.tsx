@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import { nextOpsStates, OPS_STATES } from '@/lib/punches/ops-states'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
+import { ink } from '@/lib/theme'
 import { transferPunchToOpsAction, updatePunchOpsStatusAction } from '@/app/actions/post-handover'
 
 type Project = { id: string; name: string; code: string }
@@ -40,15 +41,15 @@ type OpsPunch = {
 // S06 (C-04): solo las transiciones que la BD acepta (nextOpsStates = update_punch_ops_status).
 
 const btnPrimary: React.CSSProperties = {
-  padding: '8px 14px', background: '#3b82f6', color: '#fff',
+  padding: '8px 14px', background: 'var(--primary-600)', color: '#fff',
   border: 'none', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer',
 }
 const btnOutline: React.CSSProperties = {
   padding: '6px 10px', background: 'var(--card-bg)', color: 'var(--text-muted)',
-  border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+  border: '1px solid var(--gray-300)', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer',
 }
 const input: React.CSSProperties = {
-  padding: '8px 10px', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 13,
+  padding: '8px 10px', border: '1px solid var(--gray-300)', borderRadius: 6, fontSize: 13,
   fontFamily: 'inherit', background: 'var(--card-bg)',
 }
 const card: React.CSSProperties = {
@@ -58,13 +59,13 @@ const card: React.CSSProperties = {
 function statusPill(st: string | null): React.CSSProperties {
   const base = { padding: '2px 8px', borderRadius: 4, fontSize: 11, fontWeight: 600 }
   if (!st) return { ...base, background: 'var(--gray-100)', color: 'var(--text-muted)' }
-  if (st === 'closed_final')          return { ...base, background: '#dcfce7', color: '#166534' }
-  if (st === 'verified_ops')          return { ...base, background: '#dbeafe', color: '#1e40af' }
-  if (st === 'resolved_ops')          return { ...base, background: '#e0e7ff', color: '#3730a3' }
-  if (st === 'in_progress_ops')       return { ...base, background: '#fef3c7', color: '#92400e' }
-  if (st === 'deferred')              return { ...base, background: '#fef9c3', color: '#854d0e' }
-  if (st === 'cancelled_ops')         return { ...base, background: '#fee2e2', color: '#991b1b' }
-  if (st === 'transferred_to_ops')    return { ...base, background: '#ede9fe', color: '#5b21b6' }
+  if (st === 'closed_final')          return { ...base, background: 'var(--success-100)', color: 'var(--success-800)' }
+  if (st === 'verified_ops')          return { ...base, background: 'var(--primary-100)', color: 'var(--primary-800)' }
+  if (st === 'resolved_ops')          return { ...base, background: 'var(--indigo-100)', color: 'var(--indigo-800)' }
+  if (st === 'in_progress_ops')       return { ...base, background: 'var(--warning-100)', color: 'var(--warning-800)' }
+  if (st === 'deferred')              return { ...base, background: 'var(--warning-100)', color: 'var(--warning-800)' }
+  if (st === 'cancelled_ops')         return { ...base, background: 'var(--danger-100)', color: 'var(--danger-800)' }
+  if (st === 'transferred_to_ops')    return { ...base, background: 'var(--violet-100)', color: 'var(--violet-800)' }
   return { ...base, background: 'var(--gray-100)', color: 'var(--text-muted)' }
 }
 
@@ -190,13 +191,13 @@ export default function OpsPunchesView({
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12, marginBottom: 20 }}>
             {[
               { label: t('kpi.total'),     value: kpi.total,    color: 'var(--text-strong)' },
-              { label: t('kpi.inProgress'),value: kpi.inProg,   color: '#92400e' },
-              { label: t('kpi.resolved'),  value: kpi.resolved, color: '#3730a3' },
-              { label: t('kpi.closed'),    value: kpi.closed,   color: '#166534' },
-              { label: t('kpi.overdue'),   value: kpi.overdue,  color: '#991b1b' },
+              { label: t('kpi.inProgress'),value: kpi.inProg,   color: 'var(--warning-800)' },
+              { label: t('kpi.resolved'),  value: kpi.resolved, color: 'var(--indigo-800)' },
+              { label: t('kpi.closed'),    value: kpi.closed,   color: 'var(--success-800)' },
+              { label: t('kpi.overdue'),   value: kpi.overdue,  color: 'var(--danger-800)' },
             ].map(k => (
               <div key={k.label} style={{ ...card, marginBottom: 0, padding: 14 }}>
-                <div style={{ fontSize: 24, fontWeight: 700, color: k.color }}>{k.value}</div>
+                <div style={{ fontSize: 24, fontWeight: 700, color: ink(k.color) }}>{k.value}</div>
                 <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>{k.label}</div>
               </div>
             ))}
@@ -204,8 +205,8 @@ export default function OpsPunchesView({
 
           {error && (
             <div style={{
-              padding: 10, background: '#fef2f2', border: '1px solid #fecaca',
-              borderRadius: 6, color: '#991b1b', fontSize: 13, marginBottom: 16,
+              padding: 10, background: 'var(--danger-50)', border: '1px solid var(--danger-200)',
+              borderRadius: 6, color: 'var(--danger-800)', fontSize: 13, marginBottom: 16,
             }}>{error}</div>
           )}
 
@@ -215,10 +216,10 @@ export default function OpsPunchesView({
               {t('pending.title')} <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>({pendingTransfer.length})</span>
             </h2>
             {pendingTransfer.length === 0 && (
-              <div style={{ color: 'var(--gray-400)', fontSize: 13 }}>{t('pending.empty')}</div>
+              <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>{t('pending.empty')}</div>
             )}
             {pendingTransfer.map(p => (
-              <div key={p.id} style={{ borderTop: '1px solid #f1f5f9', padding: '10px 0' }}>
+              <div key={p.id} style={{ borderTop: '1px solid var(--gray-100)', padding: '10px 0' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
                   <div>
                     <div style={{ fontFamily: 'monospace', fontSize: 13 }}>{p.punch_number}</div>
@@ -259,10 +260,10 @@ export default function OpsPunchesView({
               {t('tracking.title')} <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>({opsPunches.length})</span>
             </h2>
             {opsPunches.length === 0 && (
-              <div style={{ color: 'var(--gray-400)', fontSize: 13 }}>{t('tracking.empty')}</div>
+              <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>{t('tracking.empty')}</div>
             )}
             {opsPunches.map(p => (
-              <div key={p.punch_id} style={{ borderTop: '1px solid #f1f5f9', padding: '12px 0' }}>
+              <div key={p.punch_id} style={{ borderTop: '1px solid var(--gray-100)', padding: '12px 0' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
@@ -317,7 +318,7 @@ export default function OpsPunchesView({
       )}
 
       {!selectedProjectId && (
-        <div style={{ ...card, textAlign: 'center', color: 'var(--gray-400)' }}>
+        <div style={{ ...card, textAlign: 'center', color: 'var(--text-muted)' }}>
           {t('filter.selectHint')}
         </div>
       )}

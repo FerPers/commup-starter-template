@@ -18,6 +18,7 @@ import { Pagination } from '@/components/ui'
 import { useUrlFilters } from '@/lib/list/useUrlFilters'
 import type { ItrListRow, ItrSortKey, ItrStatusCounts } from '@/lib/list/itr-types'
 import type { SortDir } from '@/lib/list/params'
+import { alpha, ink } from '@/lib/theme'
 import { ROLE_TIERS } from '@/lib/constants/roles'
 
 // ── Types ─────────────────────────────────────────────────────────────
@@ -184,7 +185,7 @@ export default function ItrListView({
       {/* Breadcrumb + title */}
       <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '12px' }}>
         <div>
-          <Link href={`/projects/${projectId}`} style={{ fontSize: '12px', color: 'var(--gray-400)', textDecoration: 'none' }}>
+          <Link href={`/projects/${projectId}`} style={{ fontSize: '12px', color: 'var(--text-muted)', textDecoration: 'none' }}>
             ← {projectName}
           </Link>
           <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-strong)', margin: '8px 0 0' }}>ITRs</h1>
@@ -201,7 +202,7 @@ export default function ItrListView({
         )}
         {canEdit && !allScope && (
           <Link href={`/projects/${projectId}/itrs/generate`} style={{
-            padding: '9px 14px', background: 'var(--primary-500)', border: '1px solid var(--primary-500)',
+            padding: '9px 14px', background: 'var(--primary-600)', border: '1px solid var(--primary-500)',
             borderRadius: '8px', fontSize: '13px', color: '#fff', textDecoration: 'none', whiteSpace: 'nowrap', fontWeight: 600,
           }}>
             {t('generate')}
@@ -245,11 +246,11 @@ export default function ItrListView({
               style={{
                 padding: '14px 16px', borderRadius: '10px', cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit',
                 background: active ? cfg.bg : 'var(--card-bg)',
-                border: `1px solid ${active ? cfg.color + '40' : 'var(--border)'}`,
+                border: `1px solid ${active ? alpha(cfg.color, 25) : 'var(--border)'}`,
                 transition: 'all 0.15s',
               }}
             >
-              <div style={{ fontSize: '22px', fontWeight: 700, color: cfg.color }}>{counts[key] ?? 0}</div>
+              <div style={{ fontSize: '22px', fontWeight: 700, color: ink(cfg.color) }}>{counts[key] ?? 0}</div>
               <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>{t(`itrStatus.${key}`)}</div>
             </button>
           )
@@ -261,9 +262,9 @@ export default function ItrListView({
         <div style={{
           display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap',
           padding: '12px 16px', marginBottom: '12px',
-          background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '10px',
+          background: 'var(--sky-50)', border: '1px solid var(--sky-200)', borderRadius: '10px',
         }}>
-          <span style={{ fontSize: '13px', fontWeight: 600, color: '#0369a1', flexShrink: 0 }}>
+          <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--sky-700)', flexShrink: 0 }}>
             {t('bulk.selected', { count: selectedCount })}
           </span>
 
@@ -282,8 +283,8 @@ export default function ItrListView({
                 disabled={!bulkDate || isPending}
                 style={{
                   padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, border: 'none',
-                  background: bulkDate && !isPending ? '#0369a1' : 'var(--border)',
-                  color: bulkDate && !isPending ? 'var(--card-bg)' : 'var(--gray-400)',
+                  background: bulkDate && !isPending ? 'var(--solid-sky-700)' : 'var(--border)',
+                  color: bulkDate && !isPending ? 'var(--card-bg)' : 'var(--text-muted)',
                   cursor: bulkDate && !isPending ? 'pointer' : 'default',
                 }}
               >
@@ -294,7 +295,7 @@ export default function ItrListView({
 
           {canEdit && !allScope && users.length > 0 && (
             <>
-              <div style={{ width: '1px', height: '24px', background: '#bae6fd', flexShrink: 0 }} />
+              <div style={{ width: '1px', height: '24px', background: 'var(--sky-200)', flexShrink: 0 }} />
               <select
                 value={bulkUserId}
                 onChange={e => setBulkUserId(e.target.value)}
@@ -311,8 +312,8 @@ export default function ItrListView({
                 disabled={!bulkUserId || isPending}
                 style={{
                   padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, border: 'none',
-                  background: bulkUserId && !isPending ? '#7c3aed' : 'var(--border)',
-                  color: bulkUserId && !isPending ? 'var(--card-bg)' : 'var(--gray-400)',
+                  background: bulkUserId && !isPending ? 'var(--violet-600)' : 'var(--border)',
+                  color: bulkUserId && !isPending ? 'var(--card-bg)' : 'var(--text-muted)',
                   cursor: bulkUserId && !isPending ? 'pointer' : 'default',
                 }}
               >
@@ -323,14 +324,14 @@ export default function ItrListView({
 
           {canEdit && !allScope && (
             <>
-              <div style={{ width: '1px', height: '24px', background: '#bae6fd', flexShrink: 0 }} />
+              <div style={{ width: '1px', height: '24px', background: 'var(--sky-200)', flexShrink: 0 }} />
               <button
                 onClick={() => setShowPlanModal(true)}
                 disabled={isPending}
                 style={{
                   padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600,
-                  background: '#f0fdf4', color: '#16a34a', cursor: isPending ? 'not-allowed' : 'pointer',
-                  border: '1px solid #bbf7d0',
+                  background: 'var(--success-50)', color: 'var(--success-700)', cursor: isPending ? 'not-allowed' : 'pointer',
+                  border: '1px solid var(--success-200)',
                 }}
               >
                 {t('bulk.addToPlan')}
@@ -346,7 +347,7 @@ export default function ItrListView({
           </button>
 
           {bulkError && (
-            <span style={{ fontSize: '12px', color: '#ef4444', background: '#fee2e2', padding: '4px 10px', borderRadius: '5px' }}>{bulkError}</span>
+            <span style={{ fontSize: '12px', color: 'var(--danger-700)', background: 'var(--danger-100)', padding: '4px 10px', borderRadius: '5px' }}>{bulkError}</span>
           )}
         </div>
       )}
@@ -406,7 +407,7 @@ export default function ItrListView({
             {tc('clear')} ×
           </button>
         )}
-        <span style={{ fontSize: '12px', color: 'var(--gray-400)', marginLeft: 'auto', opacity: busy ? 0.5 : 1 }}>
+        <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginLeft: 'auto', opacity: busy ? 0.5 : 1 }}>
           {t('filters.count', { filtered: total, total: totalAll })}
         </span>
       </div>
@@ -430,7 +431,7 @@ export default function ItrListView({
       {/* Table */}
       {rows.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '60px 20px', background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)' }}>
-          <p style={{ fontSize: '14px', color: 'var(--gray-400)' }}>{t('empty')}</p>
+          <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>{t('empty')}</p>
         </div>
       ) : (
         <div style={{ background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)', overflowX: 'auto', opacity: busy ? 0.6 : 1, transition: 'opacity 0.15s' }}>
@@ -441,7 +442,7 @@ export default function ItrListView({
               checked={allPageSelected}
               onChange={toggleAll}
               title={t('filters.selectPage', { count: rows.length })}
-              style={{ width: '15px', height: '15px', cursor: 'pointer', accentColor: '#3b82f6' }}
+              style={{ width: '15px', height: '15px', cursor: 'pointer', accentColor: 'var(--primary-500)' }}
             />
             {allScope && <span style={thStyle}>{t('table.colProject')}</span>}
             <SortHeader label={t('table.colItr')} sortKey="itr_number" current={sort} dir={dir} onSort={toggleSort} />
@@ -464,8 +465,8 @@ export default function ItrListView({
                 key={itr.id}
                 style={{
                   display: 'grid', gridTemplateColumns: cols, minWidth: minW, gap: '4px',
-                  padding: '12px 16px', borderBottom: '1px solid #f8fafc', alignItems: 'center',
-                  background: isChecked ? '#eff6ff' : 'transparent',
+                  padding: '12px 16px', borderBottom: '1px solid var(--gray-50)', alignItems: 'center',
+                  background: isChecked ? 'var(--primary-50)' : 'transparent',
                   transition: 'background 0.1s',
                 }}
                 onMouseEnter={e => { if (!isChecked) e.currentTarget.style.background = 'var(--gray-50)' }}
@@ -476,12 +477,12 @@ export default function ItrListView({
                   checked={isChecked}
                   onChange={() => toggleRow(itr.id)}
                   onClick={e => e.stopPropagation()}
-                  style={{ width: '15px', height: '15px', cursor: 'pointer', accentColor: '#3b82f6' }}
+                  style={{ width: '15px', height: '15px', cursor: 'pointer', accentColor: 'var(--primary-500)' }}
                 />
 
                 {allScope && (
                   <Link href={`/projects/${itr.project_id}/itrs`} title={itr.project_name}
-                    style={{ fontSize: '10px', fontWeight: 700, color: '#3b82f6', background: '#eff6ff', padding: '2px 7px', borderRadius: '4px', textDecoration: 'none', justifySelf: 'start', maxWidth: '84px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    style={{ fontSize: '10px', fontWeight: 700, color: 'var(--primary-700)', background: 'var(--primary-50)', padding: '2px 7px', borderRadius: '4px', textDecoration: 'none', justifySelf: 'start', maxWidth: '84px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {itr.project_code}
                   </Link>
                 )}
@@ -490,13 +491,13 @@ export default function ItrListView({
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     {itr.phase_code && (
-                      <span style={{ padding: '1px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 700, background: `${itr.phase_color ?? '#64748b'}18`, color: itr.phase_color ?? '#64748b' }}>{itr.phase_code}</span>
+                      <span style={{ padding: '1px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 700, background: alpha(itr.phase_color ?? 'var(--gray-500)', 9), color: ink(itr.phase_color ?? 'var(--text-muted)') }}>{itr.phase_code}</span>
                     )}
                     {itr.tag_id ? (
                       <Link
                         href={`/projects/${itr.project_id}/tags/${itr.tag_id}/itrs/${itr.id}`}
                         onClick={e => e.stopPropagation()}
-                        style={{ fontSize: '12px', fontWeight: 600, color: '#3b82f6', fontFamily: 'ui-monospace, monospace', textDecoration: 'none' }}
+                        style={{ fontSize: '12px', fontWeight: 600, color: 'var(--primary-700)', fontFamily: 'ui-monospace, monospace', textDecoration: 'none' }}
                       >
                         {itr.itr_number}
                       </Link>
@@ -514,9 +515,9 @@ export default function ItrListView({
                 {/* Template */}
                 <div>
                   {itr.discipline_code && (
-                    <span style={{ fontSize: '10px', fontWeight: 600, color: itr.discipline_color ?? '#64748b', marginRight: '6px', padding: '1px 5px', background: `${itr.discipline_color ?? '#64748b'}15`, borderRadius: '4px' }}>{itr.discipline_code}</span>
+                    <span style={{ fontSize: '10px', fontWeight: 600, color: ink(itr.discipline_color ?? 'var(--text-muted)'), marginRight: '6px', padding: '1px 5px', background: alpha(itr.discipline_color ?? 'var(--gray-500)', 8), borderRadius: '4px' }}>{itr.discipline_code}</span>
                   )}
-                  <span style={{ fontSize: '12px', color: 'var(--gray-700)' }}>{itr.template_title ?? '—'}</span>
+                  <span style={{ fontSize: '12px', color: 'var(--text-body)' }}>{itr.template_title ?? '—'}</span>
                 </div>
 
                 {/* Inspector */}
@@ -531,14 +532,14 @@ export default function ItrListView({
 
                 {/* Progress */}
                 <div>
-                  <div style={{ fontSize: '10px', color: 'var(--gray-400)', textAlign: 'right', marginBottom: '3px' }}>{itr.progress_pct}%</div>
+                  <div style={{ fontSize: '10px', color: 'var(--text-muted)', textAlign: 'right', marginBottom: '3px' }}>{itr.progress_pct}%</div>
                   <div style={{ height: '4px', background: 'var(--gray-100)', borderRadius: '2px', overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${itr.progress_pct}%`, background: itr.progress_pct >= 100 ? '#10b981' : '#3b82f6', borderRadius: '2px' }} />
+                    <div style={{ height: '100%', width: `${itr.progress_pct}%`, background: itr.progress_pct >= 100 ? 'var(--success-500)' : 'var(--primary-500)', borderRadius: '2px' }} />
                   </div>
                 </div>
 
                 {/* Status */}
-                <span style={{ padding: '3px 8px', borderRadius: '5px', fontSize: '10px', fontWeight: 600, background: st.bg, color: st.color, whiteSpace: 'nowrap', textAlign: 'center' }}>
+                <span style={{ padding: '3px 8px', borderRadius: '5px', fontSize: '10px', fontWeight: 600, background: st.bg, color: ink(st.color), whiteSpace: 'nowrap', textAlign: 'center' }}>
                   {t(`itrStatus.${itr.status}` as Parameters<typeof t>[0])}
                 </span>
 
@@ -547,7 +548,7 @@ export default function ItrListView({
                   {normalizeRequired(itr.required_signatures).map(role => {
                     const signed = itr.signatures.some(s => s.role === role)
                     return (
-                      <span key={role} style={{ width: '18px', height: '18px', borderRadius: '3px', background: signed ? '#ecfdf5' : 'var(--gray-50)', border: `1px solid ${signed ? '#a7f3d0' : 'var(--border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontWeight: 700, color: signed ? '#10b981' : 'var(--gray-300)' }}>
+                      <span key={role} style={{ width: '18px', height: '18px', borderRadius: '3px', background: signed ? 'var(--success-50)' : 'var(--gray-50)', border: `1px solid ${signed ? 'var(--success-200)' : 'var(--border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontWeight: 700, color: signed ? 'var(--success-700)' : 'var(--text-muted)' }}>
                         {SIGN_LABELS[role]}
                       </span>
                     )
@@ -579,7 +580,7 @@ function SortHeader({ label, sortKey, current, dir, onSort }: {
       onClick={() => onSort(sortKey)}
       style={{
         all: 'unset', display: 'flex', alignItems: 'center', gap: '4px',
-        fontSize: '11px', fontWeight: 700, color: active ? '#3b82f6' : 'var(--gray-400)',
+        fontSize: '11px', fontWeight: 700, color: active ? 'var(--primary-700)' : 'var(--text-muted)',
         textTransform: 'uppercase', letterSpacing: '0.06em', cursor: 'pointer',
         userSelect: 'none',
       }}
@@ -594,10 +595,10 @@ function SortHeader({ label, sortKey, current, dir, onSort }: {
 
 const selStyle: React.CSSProperties = {
   padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '8px',
-  fontSize: '13px', color: 'var(--gray-700)', background: 'var(--card-bg)', fontFamily: 'inherit', cursor: 'pointer',
+  fontSize: '13px', color: 'var(--text-body)', background: 'var(--card-bg)', fontFamily: 'inherit', cursor: 'pointer',
 }
 
 const thStyle: React.CSSProperties = {
-  fontSize: '11px', fontWeight: 700, color: 'var(--gray-400)',
+  fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)',
   textTransform: 'uppercase', letterSpacing: '0.06em',
 }

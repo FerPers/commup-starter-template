@@ -36,9 +36,9 @@ const th: React.CSSProperties = {
 const td: React.CSSProperties = { padding: '10px 12px', borderBottom: '1px solid var(--border)', fontSize: 'var(--text-sm)', verticalAlign: 'top' }
 
 const LINE_STYLE: Record<LineState, { bg: string; fg: string; border: string }> = {
-  pending: { bg: 'var(--gray-50)', fg: 'var(--text-muted)', border: 'var(--border)' },
-  in_test: { bg: '#fffbeb', fg: '#b45309', border: '#fcd34d' },
-  tested:  { bg: 'var(--success-50)', fg: 'var(--success-700)', border: '#a7f3d0' },
+  pending: { bg: 'var(--gray-50)',    fg: 'var(--text-muted)',  border: 'var(--border)' },
+  in_test: { bg: 'var(--warning-50)', fg: 'var(--warning-700)', border: 'var(--warning-300)' },
+  tested:  { bg: 'var(--success-50)', fg: 'var(--success-700)', border: 'var(--success-200)' },
 }
 
 const PACK_STAGE_PCT: Record<RegisterStatus, number> = { proposed: 0, authorized: 25, active: 50, removed: 75, verified: 100, cancelled: 0 }
@@ -46,8 +46,8 @@ const PACK_STAGE_PCT: Record<RegisterStatus, number> = { proposed: 0, authorized
 function Bar({ pct, label }: { pct: number; label: string }) {
   return (
     <div role="progressbar" aria-label={label} aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}
-      style={{ height: 8, background: 'var(--gray-100, #f1f5f9)', borderRadius: 999, overflow: 'hidden', minWidth: 80 }}>
-      <div style={{ width: `${pct}%`, height: '100%', background: 'var(--success-500, #16a34a)' }} />
+      style={{ height: 8, background: 'var(--gray-100)', borderRadius: 999, overflow: 'hidden', minWidth: 80 }}>
+      <div style={{ width: `${pct}%`, height: '100%', background: 'var(--success-500)' }} />
     </div>
   )
 }
@@ -149,7 +149,7 @@ export default function TestPacksView({ project, packs, canEdit }: Props) {
         <div role="tablist" style={{ display: 'flex', gap: 4 }}>
           {(['packs', 'lines'] as const).map(k => (
             <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => setTab(k)}
-              style={{ ...btn('outline'), background: tab === k ? 'var(--primary-500)' : 'var(--card-bg)', color: tab === k ? '#fff' : 'var(--text-strong)' }}>
+              style={{ ...btn('outline'), background: tab === k ? 'var(--primary-600)' : 'var(--card-bg)', color: tab === k ? '#fff' : 'var(--text-strong)' }}>
               {t(`tab.${k}`)} · {k === 'packs' ? packs.length : lines.length}
             </button>
           ))}
@@ -192,14 +192,14 @@ export default function TestPacksView({ project, packs, canEdit }: Props) {
                       {p.title}
                       {p.testType && <div style={{ ...small, fontSize: 'var(--text-xs)' }}>{tr(`option.test_type.${p.testType}`)}</div>}
                     </td>
-                    <td style={td}>{p.system ?? <span style={{ color: 'var(--gray-400)' }}>—</span>}</td>
+                    <td style={td}>{p.system ?? <span style={{ color: 'var(--text-muted)' }}>—</span>}</td>
                     <td style={{ ...td, ...small }}>
                       <strong style={{ color: 'var(--text-strong)' }}>{p.lines.length}</strong>
                       {p.lines.length > 0 && ` · ${p.lines.slice(0, 2).map(l => l.tag_number).join(', ')}${p.lines.length > 2 ? '…' : ''}`}
                     </td>
                     <td style={{ ...td, ...small }}>
                       {p.blinds.length === 0 ? '—' : (
-                        <span style={{ color: pendingBlinds ? '#b45309' : 'var(--success-700)', fontWeight: 600 }}>
+                        <span style={{ color: pendingBlinds ? 'var(--warning-700)' : 'var(--success-700)', fontWeight: 600 }}>
                           {t('blindsCount', { open: installed, total: p.blinds.length })}
                         </span>
                       )}
@@ -229,7 +229,7 @@ export default function TestPacksView({ project, packs, canEdit }: Props) {
                 return (
                   <tr key={l.tag_id}>
                     <td style={{ ...td, fontFamily: 'ui-monospace, monospace', fontWeight: 600 }}>{l.tag_number}</td>
-                    <td style={td}>{l.system ?? <span style={{ color: 'var(--gray-400)' }}>—</span>}</td>
+                    <td style={td}>{l.system ?? <span style={{ color: 'var(--text-muted)' }}>—</span>}</td>
                     <td style={{ ...td, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                       {l.packs.map(p => (
                         <Link key={p.id} href={`/projects/${project.id}/registers/${p.id}`}

@@ -171,7 +171,7 @@ export default function NotificationsBell({
             minWidth: 18,
             height: 18,
             padding: '0 5px',
-            background: '#dc2626',
+            background: 'var(--danger-600)',
             color: '#fff',
             borderRadius: 999,
             fontSize: 11,
@@ -268,7 +268,7 @@ export default function NotificationsBell({
                       {n.title}
                     </span>
                     {!n.read_at && (
-                      <span style={{ width: 8, height: 8, borderRadius: 999, background: '#7c3aed', flexShrink: 0 }} />
+                      <span style={{ width: 8, height: 8, borderRadius: 999, background: 'var(--violet-600)', flexShrink: 0 }} />
                     )}
                   </span>
                   {n.body && (
@@ -276,7 +276,7 @@ export default function NotificationsBell({
                       {n.body}
                     </span>
                   )}
-                  <span style={{ fontSize: 11, color: 'var(--gray-400)' }}>
+                  <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
                     {formatRelative(n.created_at, tx, locale)}
                   </span>
                 </button>

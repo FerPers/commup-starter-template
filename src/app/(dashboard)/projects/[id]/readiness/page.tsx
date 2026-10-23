@@ -44,7 +44,7 @@ function Bar({ pct }: { pct: number }) {
 }
 
 const STATE_TONE: Record<RowState, string> = {
-  regressed: 'var(--danger-700)', blocked: 'var(--danger-500)', signing: '#1d4ed8', ready: 'var(--success-700)', done: 'var(--success-500)',
+  regressed: 'var(--danger-800)', blocked: 'var(--danger-700)', signing: 'var(--primary-700)', ready: 'var(--success-700)', done: 'var(--success-800)',
 }
 const ROW_STATES: RowState[] = ['regressed', 'blocked', 'signing', 'ready', 'done']
 
@@ -117,7 +117,7 @@ export default async function ReadinessPage({
           <h1 style={{ fontSize: 28, fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>{t('title')}</h1>
           <p style={{ fontSize: 'var(--text-base)', color: 'var(--text-muted)', margin: '4px 0 0' }}>{project.code} · {project.name} · {t('subtitle')}</p>
         </div>
-        <a href={`/projects/${projectId}/readiness/export?${query.toString()}`} style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--primary-600)', minHeight: 40, display: 'inline-flex', alignItems: 'center' }}>
+        <a href={`/projects/${projectId}/readiness/export?${query.toString()}`} style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--primary-700)', minHeight: 40, display: 'inline-flex', alignItems: 'center' }}>
           ↓ {t('export')}
         </a>
       </div>
@@ -142,12 +142,12 @@ export default async function ReadinessPage({
             <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', marginTop: 4 }}>
               {byGate.map(g => (
                 <div key={g.code}>
-                  <div style={{ ...kpiValue, marginTop: 0, color: g.approved === rows.length ? 'var(--success-500)' : 'var(--text-strong)' }}>
+                  <div style={{ ...kpiValue, marginTop: 0, color: g.approved === rows.length ? 'var(--success-700)' : 'var(--text-strong)' }}>
                     {g.approved}/{rows.length}
                   </div>
                   <div style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--text-muted)' }}>
                     {g.code}{g.toApprove > 0 && <span style={{ color: 'var(--success-700)' }}> · {t('kpi.toApprove', { count: g.toApprove })}</span>}
-                    {g.toSign > 0 && <span style={{ color: '#1d4ed8' }}> · {t('kpi.toSign', { count: g.toSign })}</span>}
+                    {g.toSign > 0 && <span style={{ color: 'var(--primary-700)' }}> · {t('kpi.toSign', { count: g.toSign })}</span>}
                   </div>
                 </div>
               ))}
@@ -158,7 +158,7 @@ export default async function ReadinessPage({
           </Card>
           <Card padding="md">
             <div style={kpiLabel}>{t('kpi.punchesOpen')}</div>
-            <div style={{ ...kpiValue, color: 'var(--danger-500)' }}>
+            <div style={{ ...kpiValue, color: 'var(--danger-700)' }}>
               {punchTotals.a}<span style={{ fontSize: 'var(--text-base)', color: 'var(--text-muted)', fontWeight: 500 }}> A</span>
               {' · '}
               {punchTotals.b}<span style={{ fontSize: 'var(--text-base)', color: 'var(--text-muted)', fontWeight: 500 }}> B</span>
@@ -210,14 +210,14 @@ export default async function ReadinessPage({
                       <TD>
                         <Link href={systemHref(r.system_id)} style={{ fontWeight: 600, color: 'var(--text-strong)', textDecoration: 'none' }}>{r.system_code}</Link>
                         <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>{r.system_name}</div>
-                        {parts.length > 0 && <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--gray-500)', marginTop: 2 }}>{parts.join(' · ')}</div>}
+                        {parts.length > 0 && <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', marginTop: 2 }}>{parts.join(' · ')}</div>}
                       </TD>
                       <TD>
                         <Bar pct={(w?.pct ?? 0) * 100} />
-                        <div style={{ fontSize: 10, color: 'var(--gray-400)', marginTop: 2 }}>{t('itrsWeighing', { count: w?.itrs ?? 0 })}</div>
+                        <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>{t('itrsWeighing', { count: w?.itrs ?? 0 })}</div>
                       </TD>
-                      <TD style={{ textAlign: 'center', color: p.a > 0 ? 'var(--danger-500)' : 'var(--gray-400)', fontWeight: 600 }}>{p.a}</TD>
-                      <TD style={{ textAlign: 'center', color: p.b > 0 ? 'var(--warning-500)' : 'var(--gray-400)', fontWeight: 600 }}>{p.b}</TD>
+                      <TD style={{ textAlign: 'center', color: p.a > 0 ? 'var(--danger-700)' : 'var(--text-muted)', fontWeight: 600 }}>{p.a}</TD>
+                      <TD style={{ textAlign: 'center', color: p.b > 0 ? 'var(--warning-700)' : 'var(--text-muted)', fontWeight: 600 }}>{p.b}</TD>
                       <TD>
                         <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                           {r.gates.map(g => {
@@ -239,15 +239,15 @@ export default async function ReadinessPage({
                             </div>
                             {(!!commit || conditions > 0) && (
                               <div style={{ fontSize: 'var(--text-xs)', marginTop: 2 }}>
-                                {commit && <span style={{ color: commit < data.today ? 'var(--danger-600)' : 'var(--text-muted)' }}>{t('committedOn', { date: commit })}</span>}
+                                {commit && <span style={{ color: commit < data.today ? 'var(--danger-700)' : 'var(--text-muted)' }}>{t('committedOn', { date: commit })}</span>}
                                 {commit && conditions > 0 && ' · '}
-                                {conditions > 0 && <span style={{ color: '#b45309' }}>{t('conditionsOpen', { count: conditions })}</span>}
+                                {conditions > 0 && <span style={{ color: 'var(--warning-700)' }}>{t('conditionsOpen', { count: conditions })}</span>}
                               </div>
                             )}
                           </>
                         ) : (
-                          <span style={{ color: 'var(--success-500)', fontWeight: 600 }}>
-                            {t('noBlockers')}{conditions > 0 && <span style={{ color: '#b45309', fontWeight: 500 }}> · {t('conditionsOpen', { count: conditions })}</span>}
+                          <span style={{ color: 'var(--success-700)', fontWeight: 600 }}>
+                            {t('noBlockers')}{conditions > 0 && <span style={{ color: 'var(--warning-700)', fontWeight: 500 }}> · {t('conditionsOpen', { count: conditions })}</span>}
                           </span>
                         )}
                       </TD>

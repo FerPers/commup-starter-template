@@ -17,7 +17,7 @@ const VARIANT: Record<BadgeVariant, { bg: string; fg: string; dot: string }> = {
   warning: { bg: 'var(--warning-50)', fg: 'var(--warning-700)', dot: 'var(--warning-500)' },
   danger:  { bg: 'var(--danger-50)',  fg: 'var(--danger-700)',  dot: 'var(--danger-500)' },
   info:    { bg: 'var(--primary-50)', fg: 'var(--primary-700)', dot: 'var(--primary-500)' },
-  neutral: { bg: 'var(--gray-100)',   fg: 'var(--gray-700)',    dot: 'var(--gray-500)' },
+  neutral: { bg: 'var(--gray-100)',   fg: 'var(--text-body)',   dot: 'var(--gray-500)' },
   accent:  { bg: 'var(--accent-50)',  fg: 'var(--accent-700)',  dot: 'var(--accent-500)' },
 };
 

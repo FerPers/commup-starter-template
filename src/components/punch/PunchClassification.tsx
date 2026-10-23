@@ -35,7 +35,7 @@ const sel: React.CSSProperties = {
 const small: React.CSSProperties = { fontSize: '11px', color: 'var(--text-muted)' }
 const btn = (primary: boolean, disabled = false): React.CSSProperties => ({
   padding: '6px 12px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.5 : 1,
-  border: primary ? 'none' : '1px solid var(--border)', background: primary ? 'var(--primary-500)' : 'var(--card-bg)', color: primary ? '#fff' : 'var(--text-strong)',
+  border: primary ? 'none' : '1px solid var(--border)', background: primary ? 'var(--primary-600)' : 'var(--card-bg)', color: primary ? '#fff' : 'var(--text-strong)',
 })
 
 export function PunchClassification({ punch, projectId, tagId, userId, role, onUpdated }: {
@@ -92,13 +92,13 @@ export function PunchClassification({ punch, projectId, tagId, userId, role, onU
         </label>
       </div>
 
-      {suggested && <div style={{ ...small, color: '#92400e' }}>{t('mismatch', { chosen: punch.category, suggested, impact: t(`impact.${impact!}`) })}</div>}
+      {suggested && <div style={{ ...small, color: 'var(--warning-800)' }}>{t('mismatch', { chosen: punch.category, suggested, impact: t(`impact.${impact!}`) })}</div>}
 
       <div style={{ borderTop: '1px solid var(--border)', paddingTop: '10px' }}>
         {punch.category_reviewed_at ? (
           <span style={{ ...small, color: 'var(--success-700)', fontWeight: 600 }}>✓ {t('reviewed')}</span>
         ) : (
-          <span style={{ ...small, color: '#b45309', fontWeight: 600 }}>{t('unreviewed')}</span>
+          <span style={{ ...small, color: 'var(--warning-700)', fontWeight: 600 }}>{t('unreviewed')}</span>
         )}
         {canReview && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px' }}>

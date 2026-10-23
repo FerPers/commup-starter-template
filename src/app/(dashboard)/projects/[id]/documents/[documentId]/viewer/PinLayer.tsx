@@ -62,7 +62,7 @@ export default function PinLayer({
               width: pinSize, height: pinSize,
               borderRadius: '50%',
               background: color,
-              border: h.needs_review ? '2px dashed #f59e0b' : `2px solid white`,
+              border: h.needs_review ? '2px dashed var(--warning-500)' : `2px solid white`,
               cursor: 'pointer',
               zIndex: 10,
               opacity: dimmed(h) ? 0.2 : 1,
@@ -91,7 +91,7 @@ export default function PinLayer({
           {/* Ghost pin */}
           <div style={{
             width: 20, height: 20, borderRadius: '50%',
-            background: '#3b82f6', border: '2px solid white',
+            background: 'var(--primary-500)', border: '2px solid white',
             boxShadow: '0 0 0 3px rgba(59,130,246,0.4)',
             marginBottom: '4px',
           }} />
@@ -112,7 +112,7 @@ export default function PinLayer({
               onClick={e => { e.stopPropagation(); onConfirmPending() }}
               disabled={pendingBusy}
               style={{
-                padding: '5px 12px', background: '#3b82f6', color: '#fff',
+                padding: '5px 12px', background: 'var(--primary-600)', color: '#fff',
                 border: 'none', borderRadius: '6px', fontSize: '12px', cursor: 'pointer', fontWeight: 500,
               }}
             >

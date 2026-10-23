@@ -11,6 +11,7 @@ import { useTranslations } from 'next-intl'
 import { updateTemplateHeader } from '@/app/actions/itr-templates'
 import { fieldInput, fieldLabel, type TemplateData } from './template-builder-shared'
 import { normalizeRequired, type SigningRole } from '@/lib/itr/signatures'
+import { alpha, ink } from '@/lib/theme'
 
 export default function TemplateHeaderCard({
   template,
@@ -93,7 +94,7 @@ export default function TemplateHeaderCard({
               {disc && (
                 <span style={{
                   padding: '4px 12px', borderRadius: '999px', fontSize: '12px', fontWeight: 600,
-                  background: `${disc.color}15`, color: disc.color,
+                  background: alpha(disc.color, 8), color: ink(disc.color),
                 }}>
                   {disc.code} — {disc.name}
                 </span>
@@ -101,36 +102,36 @@ export default function TemplateHeaderCard({
               {phase && (
                 <span style={{
                   padding: '4px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: 600,
-                  background: `${phase.color}18`, color: phase.color,
+                  background: alpha(phase.color, 9), color: ink(phase.color),
                 }}>
                   {t('headerPhaseLabel', { code: phase.code })}
                 </span>
               )}
               <span style={{
                 padding: '3px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: 700,
-                background: '#eff6ff', color: '#3b82f6',
-                border: '1px solid #bfdbfe',
+                background: 'var(--primary-50)', color: 'var(--primary-700)',
+                border: '1px solid var(--primary-200)',
               }}>
                 v{template.version}
               </span>
               <span style={{
                 padding: '3px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
                 background: template.is_active ? '#10b98115' : '#94a3b815',
-                color: template.is_active ? '#10b981' : 'var(--gray-400)',
+                color: template.is_active ? 'var(--success-700)' : 'var(--text-muted)',
                 border: `1px solid ${template.is_active ? '#10b98130' : 'var(--border)'}`,
               }}>
                 {template.is_active ? t('statusActive') : t('statusInactive')}
               </span>
             </div>
-            <p style={{ fontSize: '16px', fontWeight: 600, color: '#1e293b', margin: '0 0 4px' }}>{template.title}</p>
+            <p style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-strong)', margin: '0 0 4px' }}>{template.title}</p>
             {template.description && (
               <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>{template.description}</p>
             )}
-            <p style={{ fontSize: '12px', color: 'var(--gray-700)', margin: '8px 0 0' }}>
+            <p style={{ fontSize: '12px', color: 'var(--text-body)', margin: '8px 0 0' }}>
               <strong>{t('signaturesLabel')}</strong>{' '}
               {normalizeRequired(template.required_signatures).map(r => t(`signatureRole.${r}`)).join(' → ')}
             </p>
-            <p style={{ fontSize: '12px', color: 'var(--gray-400)', margin: '8px 0 0' }}>
+            <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '8px 0 0' }}>
               {t('versionMeta', {
                 version: template.version,
                 items: totalItems,
@@ -143,7 +144,7 @@ export default function TemplateHeaderCard({
               const isErr = publishResult.startsWith('error:')
               return (
                 <p style={{ fontSize: '12px', margin: '8px 0 0', padding: '6px 10px', borderRadius: '5px',
-                  background: isErr ? '#fee2e2' : '#ecfdf5', color: isErr ? '#dc2626' : '#16a34a' }}>
+                  background: isErr ? 'var(--danger-100)' : 'var(--success-50)', color: isErr ? 'var(--danger-700)' : 'var(--success-700)' }}>
                   {publishResult.slice(6)}
                 </p>
               )
@@ -153,8 +154,8 @@ export default function TemplateHeaderCard({
             <a
               href={`/admin/templates/${template.id}/preview`}
               style={{
-                padding: '7px 14px', background: '#f5f3ff', border: '1px solid #ddd6fe',
-                borderRadius: '8px', fontSize: '12px', color: '#7c3aed', cursor: 'pointer',
+                padding: '7px 14px', background: 'var(--violet-50)', border: '1px solid var(--violet-200)',
+                borderRadius: '8px', fontSize: '12px', color: 'var(--violet-700)', cursor: 'pointer',
                 fontWeight: 500, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '5px',
               }}
             >
@@ -165,8 +166,8 @@ export default function TemplateHeaderCard({
                 <button
                   onClick={onImportClick}
                   style={{
-                    padding: '7px 14px', background: '#f0fdf4', border: '1px solid #bbf7d0',
-                    borderRadius: '8px', fontSize: '12px', color: '#16a34a', cursor: 'pointer',
+                    padding: '7px 14px', background: 'var(--success-50)', border: '1px solid var(--success-200)',
+                    borderRadius: '8px', fontSize: '12px', color: 'var(--success-700)', cursor: 'pointer',
                     fontWeight: 500,
                   }}
                 >
@@ -176,8 +177,8 @@ export default function TemplateHeaderCard({
                   onClick={onPreviewDoc}
                   disabled={busy}
                   style={{
-                    padding: '7px 14px', background: '#eff6ff', border: '1px solid #bfdbfe',
-                    borderRadius: '8px', fontSize: '12px', color: '#1e40af', cursor: busy ? 'not-allowed' : 'pointer',
+                    padding: '7px 14px', background: 'var(--primary-50)', border: '1px solid var(--primary-200)',
+                    borderRadius: '8px', fontSize: '12px', color: 'var(--primary-800)', cursor: busy ? 'not-allowed' : 'pointer',
                     fontWeight: 600,
                   }}
                   title={t('viewDocHint')}
@@ -188,8 +189,8 @@ export default function TemplateHeaderCard({
                   onClick={onExportJson}
                   disabled={busy}
                   style={{
-                    padding: '7px 14px', background: '#fef3c7', border: '1px solid #fde68a',
-                    borderRadius: '8px', fontSize: '12px', color: '#a16207', cursor: busy ? 'not-allowed' : 'pointer',
+                    padding: '7px 14px', background: 'var(--warning-100)', border: '1px solid var(--warning-200)',
+                    borderRadius: '8px', fontSize: '12px', color: 'var(--warning-700)', cursor: busy ? 'not-allowed' : 'pointer',
                     fontWeight: 500,
                   }}
                   title={t('exportJsonHint')}
@@ -200,7 +201,7 @@ export default function TemplateHeaderCard({
                   onClick={onPublishClick}
                   disabled={busy}
                   style={{
-                    padding: '7px 14px', background: '#1e40af', border: 'none',
+                    padding: '7px 14px', background: 'var(--solid-primary-800)', border: 'none',
                     borderRadius: '8px', fontSize: '12px', color: '#fff', cursor: busy ? 'not-allowed' : 'pointer',
                     fontWeight: 600, opacity: busy ? 0.7 : 1,
                   }}
@@ -227,7 +228,7 @@ export default function TemplateHeaderCard({
           </h3>
           <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '12px', marginBottom: '12px' }}>
             <label style={fieldLabel}>
-              {t('fieldCode')} <span style={{ color: '#ef4444' }}>*</span>
+              {t('fieldCode')} <span style={{ color: 'var(--danger-700)' }}>*</span>
               <input
                 value={form.code}
                 onChange={e => setForm(f => ({ ...f, code: e.target.value.toUpperCase() }))}
@@ -236,7 +237,7 @@ export default function TemplateHeaderCard({
               />
             </label>
             <label style={fieldLabel}>
-              {t('fieldTitle')} <span style={{ color: '#ef4444' }}>*</span>
+              {t('fieldTitle')} <span style={{ color: 'var(--danger-700)' }}>*</span>
               <input
                 value={form.title}
                 onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
@@ -258,22 +259,22 @@ export default function TemplateHeaderCard({
               type="checkbox"
               checked={form.is_active}
               onChange={e => setForm(f => ({ ...f, is_active: e.target.checked }))}
-              style={{ accentColor: '#10b981', width: '14px', height: '14px' }}
+              style={{ accentColor: 'var(--success-500)', width: '14px', height: '14px' }}
             />
-            <span style={{ fontSize: '13px', color: 'var(--gray-700)' }}>{t('flagActiveLabel')}</span>
+            <span style={{ fontSize: '13px', color: 'var(--text-body)' }}>{t('flagActiveLabel')}</span>
           </label>
           {/* S04 (D4): firmas requeridas del ITR. El ejecutor siempre firma; la fase puede sumar al cliente. */}
           <fieldset style={{ border: '1px solid var(--border)', borderRadius: '8px', padding: '10px 12px', margin: '0 0 16px' }}>
-            <legend style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', padding: '0 4px' }}>{t('signaturesLabel')}</legend>
+            <legend style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-body)', padding: '0 4px' }}>{t('signaturesLabel')}</legend>
             <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
               {(['executor', 'supervisor', 'client'] as const).map(role => (
-                <label key={role} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--gray-700)', cursor: role === 'executor' ? 'default' : 'pointer' }}>
+                <label key={role} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--text-body)', cursor: role === 'executor' ? 'default' : 'pointer' }}>
                   <input
                     type="checkbox"
                     checked={form.required_signatures.includes(role)}
                     disabled={role === 'executor'}
                     onChange={e => setForm(f => ({ ...f, required_signatures: normalizeRequired(e.target.checked ? [...f.required_signatures, role] : f.required_signatures.filter(r => r !== role)) }))}
-                    style={{ accentColor: '#7c3aed', width: '14px', height: '14px' }}
+                    style={{ accentColor: 'var(--violet-600)', width: '14px', height: '14px' }}
                   />
                   {t(`signatureRole.${role}`)}
                 </label>
@@ -282,7 +283,7 @@ export default function TemplateHeaderCard({
             <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '6px 0 0' }}>{t('signaturesHint')}</p>
           </fieldset>
           {error && (
-            <p style={{ fontSize: '12px', color: '#ef4444', margin: '0 0 12px', padding: '8px 12px', background: '#fee2e2', borderRadius: '6px' }}>
+            <p style={{ fontSize: '12px', color: 'var(--danger-700)', margin: '0 0 12px', padding: '8px 12px', background: 'var(--danger-100)', borderRadius: '6px' }}>
               {error}
             </p>
           )}
@@ -290,7 +291,7 @@ export default function TemplateHeaderCard({
             <button
               onClick={saveHeader}
               disabled={isPending}
-              style={{ padding: '8px 18px', background: '#3b82f6', color: '#fff', borderRadius: '8px', fontSize: '13px', fontWeight: 500, border: 'none', cursor: 'pointer' }}
+              style={{ padding: '8px 18px', background: 'var(--primary-600)', color: '#fff', borderRadius: '8px', fontSize: '13px', fontWeight: 500, border: 'none', cursor: 'pointer' }}
             >
               {isPending ? t('btnSaving') : t('btnSave')}
             </button>

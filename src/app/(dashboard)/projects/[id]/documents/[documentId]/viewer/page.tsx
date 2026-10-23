@@ -143,7 +143,7 @@ export default async function PidViewerPage({
   const initialPage = Number.isInteger(Number(sp.page)) && Number(sp.page) >= 1 ? Number(sp.page) : null
   const placeTag: TagItem | null = placeRow ? {
     id: placeRow.id, tag_number: placeRow.tag_number, description: placeRow.description ?? '', status: placeRow.status,
-    discipline: (placeRow.disciplines as TagItem['discipline'] | null) ?? { id: '', code: '??', name: '', color: '#94a3b8' },
+    discipline: (placeRow.disciplines as TagItem['discipline'] | null) ?? { id: '', code: '??', name: '', color: 'var(--text-muted)' },
     system: (placeRow.subsystems as { systems: TagItem['system'] } | null)?.systems ?? null,
   } : null
   const approvedGates: ApprovedGates = {}
@@ -239,7 +239,7 @@ export default async function PidViewerPage({
         id: tag?.disciplines?.id ?? '',
         code: tag?.disciplines?.code ?? '??',
         name: tag?.disciplines?.name ?? '',
-        color: tag?.disciplines?.color ?? '#94a3b8',
+        color: tag?.disciplines?.color ?? 'var(--text-muted)',
       },
       system: systemOf(tag?.subsystems),
       open_punches_a: punchACountByTag.get(tagId) ?? 0,
@@ -275,7 +275,7 @@ export default async function PidViewerPage({
           })}
         </nav>
         {revision.id !== doc.current_revision_id && (
-          <span style={{ fontSize: 12, fontWeight: 600, color: '#b45309' }}>{t('notCurrent')}</span>
+          <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--warning-700)' }}>{t('notCurrent')}</span>
         )}
         <div style={{ marginLeft: 'auto', fontSize: '12px', color: 'var(--text-muted)' }}>
           {t('pins', { count: hotspots.length })} · {t('markups', { count: markups.length })}

@@ -4,6 +4,7 @@ import { useState, useEffect, useTransition, useId } from 'react'
 import { useTranslations } from 'next-intl'
 import { getProjectPlanContext, addItrsToWorkPlan, createWorkPlanAndAddItrs } from '@/app/actions/work-plans'
 import { browserToday } from '@/lib/time/zone'
+import { alpha, ink } from '@/lib/theme'
 import { DialogSurface } from '@/components/ui/dialog-a11y'
 
 // ── Types ─────────────────────────────────────────────────────────────
@@ -35,9 +36,9 @@ interface Props {
 // ── Status style ──────────────────────────────────────────────────────
 
 const PLAN_STATUS_STYLE: Record<string, { color: string; bg: string }> = {
-  draft:       { color: '#64748b', bg: '#f1f5f9' },
-  published:   { color: '#3b82f6', bg: '#eff6ff' },
-  in_progress: { color: '#f59e0b', bg: '#fffbeb' },
+  draft:       { color: 'var(--text-muted)',  bg: 'var(--gray-100)' },
+  published:   { color: 'var(--primary-700)', bg: 'var(--primary-50)' },
+  in_progress: { color: 'var(--warning-700)', bg: 'var(--warning-50)' },
 }
 
 // ── Component ─────────────────────────────────────────────────────────
@@ -130,19 +131,19 @@ export default function AddToWorkPlanModal({ projectId, itrs, members, onClose, 
 
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '22px' }}>
-          <h2 id={titleId} style={{ fontSize: '17px', fontWeight: 700, color: '#0f172a', margin: 0 }}>{t('addToPlanModal.title')}</h2>
-          <button onClick={onClose} aria-label={tA11y('close')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '18px' }}>✕</button>
+          <h2 id={titleId} style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>{t('addToPlanModal.title')}</h2>
+          <button onClick={onClose} aria-label={tA11y('close')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '18px' }}>✕</button>
         </div>
 
         {loading ? (
-          <p style={{ fontSize: '13px', color: '#94a3b8', textAlign: 'center', padding: '20px 0' }}>
+          <p style={{ fontSize: '13px', color: 'var(--text-muted)', textAlign: 'center', padding: '20px 0' }}>
             {t('addToPlanModal.loading')}
           </p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
 
             {/* Mode toggle */}
-            <div style={{ display: 'flex', gap: '6px', padding: '4px', background: '#f1f5f9', borderRadius: '10px' }}>
+            <div style={{ display: 'flex', gap: '6px', padding: '4px', background: 'var(--gray-100)', borderRadius: '10px' }}>
               {(['existing', 'new'] as const).map(m => (
                 <button
                   key={m}
@@ -152,14 +153,14 @@ export default function AddToWorkPlanModal({ projectId, itrs, members, onClose, 
                     flex: 1, padding: '8px 12px', borderRadius: '7px', border: 'none', fontSize: '12px', fontWeight: 600,
                     cursor: m === 'existing' && plans.length === 0 ? 'not-allowed' : 'pointer',
                     background: mode === m ? 'white' : 'transparent',
-                    color: mode === m ? '#0f172a' : (m === 'existing' && plans.length === 0 ? '#cbd5e1' : '#64748b'),
+                    color: mode === m ? 'var(--text-strong)' : (m === 'existing' && plans.length === 0 ? 'var(--text-muted)' : 'var(--text-muted)'),
                     boxShadow: mode === m ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
                     transition: 'all 0.15s',
                   }}
                 >
                   {m === 'existing' ? t('addToPlanModal.modeExisting') : t('addToPlanModal.modeNew')}
                   {m === 'existing' && plans.length === 0 && (
-                    <span style={{ marginLeft: '6px', fontSize: '10px', color: '#94a3b8' }}>({t('addToPlanModal.noPlans')})</span>
+                    <span style={{ marginLeft: '6px', fontSize: '10px', color: 'var(--text-muted)' }}>({t('addToPlanModal.noPlans')})</span>
                   )}
                 </button>
               ))}
@@ -190,11 +191,11 @@ export default function AddToWorkPlanModal({ projectId, itrs, members, onClose, 
                   return (
                     <div style={{ display: 'flex', gap: '6px', marginTop: '6px', alignItems: 'center' }}>
                       {plan.disciplines && (
-                        <span style={{ fontSize: '11px', fontWeight: 600, color: plan.disciplines.color, background: `${plan.disciplines.color}15`, padding: '2px 8px', borderRadius: '4px' }}>
+                        <span style={{ fontSize: '11px', fontWeight: 600, color: ink(plan.disciplines.color), background: alpha(plan.disciplines.color, 8), padding: '2px 8px', borderRadius: '4px' }}>
                           {plan.disciplines.code}
                         </span>
                       )}
-                      <span style={{ fontSize: '11px', fontWeight: 600, color: st.color, background: st.bg, padding: '2px 8px', borderRadius: '4px' }}>
+                      <span style={{ fontSize: '11px', fontWeight: 600, color: ink(st.color), background: st.bg, padding: '2px 8px', borderRadius: '4px' }}>
                         {plan.status}
                       </span>
                     </div>
@@ -221,7 +222,7 @@ export default function AddToWorkPlanModal({ projectId, itrs, members, onClose, 
                 </div>
                 <div>
                   <label htmlFor={`${uid}-notes`} style={labelStyle}>
-                    {t('createModal.notes')} <span style={{ fontWeight: 400, color: '#94a3b8' }}>{t('createModal.notesOpt')}</span>
+                    {t('createModal.notes')} <span style={{ fontWeight: 400, color: 'var(--text-muted)' }}>{t('createModal.notesOpt')}</span>
                   </label>
                   <textarea
                     id={`${uid}-notes`}
@@ -237,12 +238,12 @@ export default function AddToWorkPlanModal({ projectId, itrs, members, onClose, 
 
             {/* ── ITRs to add ── */}
             <div>
-              <div style={{ fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '8px' }}>
+              <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-body)', marginBottom: '8px' }}>
                 {t('addToPlanModal.itrsToAdd', { count: itrs.length })}
               </div>
 
               {/* Header */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', padding: '4px 8px', fontSize: '10px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', padding: '4px 8px', fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                 <span>{t('addToPlanModal.colItr')}</span>
                 <span>{t('addToPlanModal.colAssigned')}</span>
               </div>
@@ -251,18 +252,18 @@ export default function AddToWorkPlanModal({ projectId, itrs, members, onClose, 
                 {itrs.map(itr => (
                   <div
                     key={itr.id}
-                    style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', padding: '8px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', alignItems: 'center' }}
+                    style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', padding: '8px', background: 'var(--gray-50)', borderRadius: '8px', border: '1px solid var(--gray-200)', alignItems: 'center' }}
                   >
                     <div>
-                      <div style={{ fontSize: '12px', fontWeight: 600, color: '#0f172a', fontFamily: 'ui-monospace, monospace' }}>{itr.itrNumber}</div>
+                      <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)', fontFamily: 'ui-monospace, monospace' }}>{itr.itrNumber}</div>
                       {itr.tagNumber && (
-                        <div style={{ fontSize: '11px', color: '#64748b', marginTop: '1px' }}>{itr.tagNumber}</div>
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '1px' }}>{itr.tagNumber}</div>
                       )}
                     </div>
                     <select
                       value={assigned[itr.id] ?? ''}
                       onChange={e => setAssignedFor(itr.id, e.target.value)}
-                      style={{ padding: '6px 8px', border: `1px solid ${assigned[itr.id] ? '#e2e8f0' : '#fca5a5'}`, borderRadius: '6px', fontSize: '12px', fontFamily: 'inherit', background: 'white', color: '#0f172a' }}
+                      style={{ padding: '6px 8px', border: `1px solid ${assigned[itr.id] ? 'var(--gray-200)' : 'var(--danger-300)'}`, borderRadius: '6px', fontSize: '12px', fontFamily: 'inherit', background: 'white', color: 'var(--text-strong)' }}
                     >
                       <option value="">{t('addToPlanModal.assignPh')}</option>
                       {members.map(m => (
@@ -275,16 +276,16 @@ export default function AddToWorkPlanModal({ projectId, itrs, members, onClose, 
             </div>
 
             {error && (
-              <p style={{ fontSize: '12px', color: '#ef4444', padding: '8px 12px', background: '#fee2e2', borderRadius: '6px', margin: 0 }}>
+              <p style={{ fontSize: '12px', color: 'var(--danger-700)', padding: '8px 12px', background: 'var(--danger-100)', borderRadius: '6px', margin: 0 }}>
                 {error}
               </p>
             )}
 
             {/* Buttons */}
-            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', paddingTop: '8px', borderTop: '1px solid #f1f5f9' }}>
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', paddingTop: '8px', borderTop: '1px solid var(--gray-100)' }}>
               <button
                 onClick={onClose}
-                style={{ padding: '9px 16px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', color: '#64748b', cursor: 'pointer' }}
+                style={{ padding: '9px 16px', background: 'white', border: '1px solid var(--gray-200)', borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)', cursor: 'pointer' }}
               >
                 {t('addToPlanModal.cancel')}
               </button>
@@ -293,7 +294,7 @@ export default function AddToWorkPlanModal({ projectId, itrs, members, onClose, 
                 disabled={!canSubmit}
                 style={{
                   padding: '9px 20px', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-                  background: canSubmit ? '#3b82f6' : '#93c5fd',
+                  background: canSubmit ? 'var(--primary-600)' : 'var(--primary-300)',
                   color: 'white',
                   cursor: canSubmit ? 'pointer' : 'not-allowed',
                 }}
@@ -315,10 +316,10 @@ export default function AddToWorkPlanModal({ projectId, itrs, members, onClose, 
 // ── Styles ─────────────────────────────────────────────────────────────
 
 const inputStyle: React.CSSProperties = {
-  width: '100%', padding: '9px 12px', border: '1px solid #e2e8f0', borderRadius: '8px',
-  fontSize: '13px', color: '#0f172a', background: 'white', fontFamily: 'inherit',
+  width: '100%', padding: '9px 12px', border: '1px solid var(--gray-200)', borderRadius: '8px',
+  fontSize: '13px', color: 'var(--text-strong)', background: 'white', fontFamily: 'inherit',
 }
 
 const labelStyle: React.CSSProperties = {
-  display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px',
+  display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-body)', marginBottom: '6px',
 }

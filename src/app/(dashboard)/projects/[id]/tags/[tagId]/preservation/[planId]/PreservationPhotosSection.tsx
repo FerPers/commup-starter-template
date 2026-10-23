@@ -110,14 +110,14 @@ export default function PreservationPhotosSection({
     <div style={{
       marginBottom: 14,
       padding: '12px 14px',
-      background: required && attachments.length === 0 ? '#fffbeb' : 'var(--card-bg)',
-      border: `1px solid ${required && attachments.length === 0 ? '#fde68a' : 'var(--border)'}`,
+      background: required && attachments.length === 0 ? 'var(--warning-50)' : 'var(--card-bg)',
+      border: `1px solid ${required && attachments.length === 0 ? 'var(--warning-200)' : 'var(--border)'}`,
       borderRadius: 8,
     }}>
       {dialog}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
         <div>
-          <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-700)' }}>
+          <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-body)' }}>
             {t(required ? 'labelRequired' : 'labelOptional', { count: attachments.length })}
           </span>
           {!recordId && (
@@ -131,8 +131,8 @@ export default function PreservationPhotosSection({
           style={{
             display: 'inline-flex', alignItems: 'center', gap: 6,
             padding: '6px 12px',
-            background: disabled ? 'var(--gray-100)' : 'var(--primary-500)',
-            color: disabled ? 'var(--gray-400)' : '#fff',
+            background: disabled ? 'var(--gray-100)' : 'var(--primary-600)',
+            color: disabled ? 'var(--text-muted)' : '#fff',
             border: 'none', borderRadius: 7,
             fontSize: 12, fontWeight: 600,
             cursor: disabled ? 'not-allowed' : 'pointer',
@@ -223,8 +223,8 @@ export default function PreservationPhotosSection({
 
       {error && (
         <p style={{
-          fontSize: 12, color: '#ef4444', padding: '8px 12px',
-          background: '#fee2e2', borderRadius: 6, margin: '8px 0 0',
+          fontSize: 12, color: 'var(--danger-700)', padding: '8px 12px',
+          background: 'var(--danger-100)', borderRadius: 6, margin: '8px 0 0',
         }}>
           {error}
         </p>

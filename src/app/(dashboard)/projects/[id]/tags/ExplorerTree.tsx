@@ -42,7 +42,7 @@ function ProgressBar({ pct }: { pct: number }) {
         display: 'block',
         height: '100%',
         width: `${pct}%`,
-        background: pct === 100 ? '#10b981' : '#3b82f6',
+        background: pct === 100 ? 'var(--success-500)' : 'var(--primary-500)',
         borderRadius: '999px',
       }} />
     </span>
@@ -70,7 +70,7 @@ function SubsystemRow({ sub, projectId }: { sub: ExplorerSubsystem; projectId: s
         color: 'inherit', textDecoration: 'none',
       }}
     >
-      <span style={{ color: '#94a3b8', fontSize: '13px', flexShrink: 0 }}>└─</span>
+      <span style={{ color: 'var(--text-muted)', fontSize: '13px', flexShrink: 0 }}>└─</span>
       <span style={{
         fontFamily: 'ui-monospace, monospace', fontSize: '12px', fontWeight: 600,
         color: 'var(--text-muted)', background: 'var(--gray-100)', padding: '2px 7px',
@@ -84,16 +84,16 @@ function SubsystemRow({ sub, projectId }: { sub: ExplorerSubsystem; projectId: s
       <span style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
         {sub.open_punches_a > 0 && (
           <span style={{
-            fontSize: '11px', fontWeight: 600, color: '#dc2626',
-            background: '#fef2f2', padding: '1px 7px', borderRadius: '999px',
-            border: '1px solid #fecaca',
+            fontSize: '11px', fontWeight: 600, color: 'var(--danger-700)',
+            background: 'var(--danger-50)', padding: '1px 7px', borderRadius: '999px',
+            border: '1px solid var(--danger-200)',
           }}>
             ● {sub.open_punches_a} Cat-A
           </span>
         )}
-        <span style={{ fontSize: '11px', color: '#94a3b8' }}>{sub.tag_count} tags</span>
+        <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{sub.tag_count} tags</span>
         <ProgressBar pct={pct} />
-        <span style={{ fontSize: '11px', fontWeight: 600, color: pct === 100 ? '#10b981' : 'var(--text-muted)', width: '32px', textAlign: 'right' }}>
+        <span style={{ fontSize: '11px', fontWeight: 600, color: pct === 100 ? 'var(--success-700)' : 'var(--text-muted)', width: '32px', textAlign: 'right' }}>
           {pct}%
         </span>
       </span>
@@ -126,32 +126,32 @@ function SystemRow({
           width: '100%', border: 'none', font: 'inherit', color: 'inherit', textAlign: 'left',
         }}
       >
-        <span style={{ color: '#94a3b8', fontSize: '11px', width: '14px', textAlign: 'center', flexShrink: 0 }}>
+        <span style={{ color: 'var(--text-muted)', fontSize: '11px', width: '14px', textAlign: 'center', flexShrink: 0 }}>
           {isOpen ? '▾' : '▸'}
         </span>
         <span style={{
           fontFamily: 'ui-monospace, monospace', fontSize: '12px', fontWeight: 600,
-          color: '#334155', background: 'var(--border)', padding: '2px 7px',
+          color: 'var(--text-body)', background: 'var(--border)', padding: '2px 7px',
           borderRadius: '5px', flexShrink: 0,
         }}>
           {sys.code}
         </span>
-        <span style={{ fontSize: '13px', color: '#334155', fontWeight: 500, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <span style={{ fontSize: '13px', color: 'var(--text-body)', fontWeight: 500, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {sys.name}
         </span>
         <span style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
           {roll.punches > 0 && (
             <span style={{
-              fontSize: '11px', fontWeight: 600, color: '#dc2626',
-              background: '#fef2f2', padding: '1px 7px', borderRadius: '999px',
-              border: '1px solid #fecaca',
+              fontSize: '11px', fontWeight: 600, color: 'var(--danger-700)',
+              background: 'var(--danger-50)', padding: '1px 7px', borderRadius: '999px',
+              border: '1px solid var(--danger-200)',
             }}>
               ● {roll.punches} Cat-A
             </span>
           )}
-          <span style={{ fontSize: '11px', color: '#94a3b8' }}>{roll.tags} tags</span>
+          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{roll.tags} tags</span>
           <ProgressBar pct={roll.pct} />
-          <span style={{ fontSize: '11px', fontWeight: 600, color: roll.pct === 100 ? '#10b981' : 'var(--text-muted)', width: '32px', textAlign: 'right' }}>
+          <span style={{ fontSize: '11px', fontWeight: 600, color: roll.pct === 100 ? 'var(--success-700)' : 'var(--text-muted)', width: '32px', textAlign: 'right' }}>
             {roll.pct}%
           </span>
         </span>
@@ -187,7 +187,7 @@ export default function ExplorerTree({ explorerData, projectId }: Props) {
   if (explorerData.length === 0) {
     return (
       <div style={{
-        textAlign: 'center', padding: '60px 20px', color: '#94a3b8',
+        textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)',
         background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)',
       }}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
@@ -209,7 +209,7 @@ export default function ExplorerTree({ explorerData, projectId }: Props) {
         const isAreaOpen = openAreas.has(area.id)
 
         return (
-          <div key={area.id} style={{ borderBottom: aIdx < explorerData.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
+          <div key={area.id} style={{ borderBottom: aIdx < explorerData.length - 1 ? '1px solid var(--gray-100)' : 'none' }}>
             {/* Area row */}
             <button
               type="button"
@@ -239,16 +239,16 @@ export default function ExplorerTree({ explorerData, projectId }: Props) {
               <span style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
                 {roll.punches > 0 && (
                   <span style={{
-                    fontSize: '11px', fontWeight: 600, color: '#dc2626',
-                    background: '#fef2f2', padding: '2px 8px', borderRadius: '999px',
-                    border: '1px solid #fecaca',
+                    fontSize: '11px', fontWeight: 600, color: 'var(--danger-700)',
+                    background: 'var(--danger-50)', padding: '2px 8px', borderRadius: '999px',
+                    border: '1px solid var(--danger-200)',
                   }}>
                     ● {roll.punches} Cat-A
                   </span>
                 )}
                 <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{roll.tags} tags</span>
                 <ProgressBar pct={roll.pct} />
-                <span style={{ fontSize: '12px', fontWeight: 700, color: roll.pct === 100 ? 'var(--success-500)' : 'var(--text-strong)', width: '36px', textAlign: 'right' }}>
+                <span style={{ fontSize: '12px', fontWeight: 700, color: roll.pct === 100 ? 'var(--success-700)' : 'var(--text-strong)', width: '36px', textAlign: 'right' }}>
                   {roll.pct}%
                 </span>
               </span>

@@ -138,7 +138,7 @@ export default function RunView({ project, run: serverRun, steps: serverSteps, n
   return (
     <div style={{ padding: '20px 16px', maxWidth: 760, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
       <div>
-        <Link href={`/projects/${project.id}/startup/procedures/${run.procedureId}`} style={{ ...small, textDecoration: 'none', color: 'var(--primary-600, #2563eb)' }}>← {run.procedureNumber} R{run.rev}</Link>
+        <Link href={`/projects/${project.id}/startup/procedures/${run.procedureId}`} style={{ ...small, textDecoration: 'none', color: 'var(--primary-700)' }}>← {run.procedureNumber} R{run.rev}</Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: 6 }}>
           <h1 style={{ fontSize: 20, fontWeight: 700, margin: 0, color: 'var(--text-strong)', fontFamily: 'ui-monospace, monospace' }}>{run.number}</h1>
           <Chip tone={STATUS_TONE[run.status] ?? 'muted'}>{t(`runStatus.${run.status}`)}</Chip>
@@ -175,8 +175,8 @@ export default function RunView({ project, run: serverRun, steps: serverSteps, n
       {run.status === 'completed' && <Alert kind="ok">{t('run.completed', { when: when(run.completedAt) })}</Alert>}
 
       {hold && (
-        <section style={{ ...card, borderColor: '#fcd34d', background: '#fffbeb', display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <strong style={{ color: '#b45309' }}>⏸ {t('run.holdTitle', { n: hold.ord, who: t(`capacity.${hold.capacity}`) })}</strong>
+        <section style={{ ...card, borderColor: 'var(--warning-300)', background: 'var(--warning-50)', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <strong style={{ color: 'var(--warning-700)' }}>⏸ {t('run.holdTitle', { n: hold.ord, who: t(`capacity.${hold.capacity}`) })}</strong>
           <span style={small} suppressHydrationWarning>{t('run.holdDoneBy', { who: who(hold.doneBy), when: when(hold.doneAt) })}</span>
           {hold.sync === 'pending' ? <span style={small}>{tOff('holdPending')}</span> : canReleaseHold(caps, hold.capacity, userId, hold.doneBy) ? (
             <>
@@ -202,7 +202,7 @@ export default function RunView({ project, run: serverRun, steps: serverSteps, n
             {(next.expectedMin !== null || next.expectedMax !== null) && <span>📏 {rangeLabel(next.expectedMin, next.expectedMax, next.expectedUnit)}</span>}
           </div>
           {next.stopCriteria && <div style={{ ...small, color: 'var(--danger-700)', fontWeight: 600 }}>⛔ {t('run.stopIf', { c: next.stopCriteria })}</div>}
-          {next.isHold && <div style={{ ...small, color: '#b45309', fontWeight: 600 }}>⏸ {t('run.isHold', { who: t(`capacity.${next.capacity}`) })}</div>}
+          {next.isHold && <div style={{ ...small, color: 'var(--warning-700)', fontWeight: 600 }}>⏸ {t('run.isHold', { who: t(`capacity.${next.capacity}`) })}</div>}
           <input style={{ ...input, ...(checkRange(actual, next.expectedMin, next.expectedMax) === 'out' ? { borderColor: 'var(--danger-500)', color: 'var(--danger-700)' } : {}) }}
             inputMode={next.expectedMin !== null || next.expectedMax !== null ? 'decimal' : undefined}
             placeholder={next.expected ? t('run.actualFor', { e: next.expected }) : t('run.actual')} value={actual} onChange={e => setActual(e.target.value)} />

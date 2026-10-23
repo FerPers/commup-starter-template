@@ -25,7 +25,7 @@ function variantStyles(variant: ButtonVariant, hover: boolean, disabled: boolean
   if (disabled) {
     return {
       background: 'var(--gray-200)',
-      color: 'var(--gray-500)',
+      color: 'var(--text-muted)',
       borderColor: 'var(--gray-200)',
       cursor: 'not-allowed',
     };
@@ -33,7 +33,7 @@ function variantStyles(variant: ButtonVariant, hover: boolean, disabled: boolean
   switch (variant) {
     case 'primary':
       return {
-        background: hover ? 'var(--primary-700)' : 'var(--primary-600)',
+        background: hover ? 'var(--solid-primary-700)' : 'var(--primary-600)',
         color: '#ffffff',
         borderColor: 'transparent',
       };
@@ -51,7 +51,7 @@ function variantStyles(variant: ButtonVariant, hover: boolean, disabled: boolean
       };
     case 'danger':
       return {
-        background: hover ? 'var(--danger-700)' : 'var(--danger-600)',
+        background: hover ? 'var(--solid-danger-700)' : 'var(--danger-600)',
         color: '#ffffff',
         borderColor: 'transparent',
       };

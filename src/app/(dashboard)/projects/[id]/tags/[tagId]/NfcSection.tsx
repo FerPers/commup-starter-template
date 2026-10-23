@@ -35,7 +35,7 @@ export default function NfcSection({ projectId, tagId, nfcUid, canEdit }: Props)
           style={{
             width: 32, height: 32, borderRadius: 8,
             background: nfcUid ? 'var(--success-100)' : 'var(--gray-100)',
-            color: nfcUid ? 'var(--success-600)' : 'var(--text-muted)',
+            color: nfcUid ? 'var(--success-700)' : 'var(--text-muted)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             flexShrink: 0,
           }}
@@ -43,7 +43,7 @@ export default function NfcSection({ projectId, tagId, nfcUid, canEdit }: Props)
           <Radio size={16} aria-hidden="true" />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-700)' }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-body)' }}>
             {t('cardLabel')}
           </div>
           {nfcUid ? (
@@ -70,7 +70,7 @@ export default function NfcSection({ projectId, tagId, nfcUid, canEdit }: Props)
             onClick={() => setModalOpen(true)}
             style={{
               padding: '6px 12px',
-              background: nfcUid ? 'var(--gray-100)' : 'var(--primary-500)',
+              background: nfcUid ? 'var(--gray-100)' : 'var(--primary-600)',
               color: nfcUid ? 'var(--text-muted)' : '#fff',
               border: nfcUid ? '1px solid var(--border)' : 'none',
               borderRadius: 7,
@@ -204,13 +204,13 @@ function LinkNfcModal({
           <button
             onClick={onClose}
             aria-label={t('modalClose')}
-            style={{ background: 'none', border: 'none', fontSize: 18, color: 'var(--gray-400)', cursor: 'pointer' }}
+            style={{ background: 'none', border: 'none', fontSize: 18, color: 'var(--text-muted)', cursor: 'pointer' }}
           >
             <X size={18} aria-hidden="true" />
           </button>
         </div>
 
-        <label htmlFor={`${titleId}-uid`} style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: 6 }}>
+        <label htmlFor={`${titleId}-uid`} style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-body)', display: 'block', marginBottom: 6 }}>
           {t('labelUid')}
         </label>
         <input
@@ -257,7 +257,7 @@ function LinkNfcModal({
 
         {error && (
           <p style={{
-            fontSize: 12, color: 'var(--danger-500)',
+            fontSize: 12, color: 'var(--danger-700)',
             padding: '8px 12px', background: 'var(--danger-100)',
             borderRadius: 6, margin: '0 0 12px',
           }}>
@@ -273,7 +273,7 @@ function LinkNfcModal({
               disabled={isPending}
               style={{
                 padding: '8px 14px',
-                background: 'transparent', color: 'var(--danger-500)',
+                background: 'transparent', color: 'var(--danger-700)',
                 border: '1px solid var(--danger-200)', borderRadius: 7,
                 fontSize: 12, fontWeight: 600, cursor: 'pointer',
                 marginRight: 'auto',
@@ -301,8 +301,8 @@ function LinkNfcModal({
             disabled={isPending || !uid.trim() || !dirty}
             style={{
               padding: '8px 14px',
-              background: !isPending && uid.trim() && dirty ? 'var(--primary-500)' : 'var(--gray-100)',
-              color: !isPending && uid.trim() && dirty ? '#fff' : 'var(--gray-400)',
+              background: !isPending && uid.trim() && dirty ? 'var(--primary-600)' : 'var(--gray-100)',
+              color: !isPending && uid.trim() && dirty ? '#fff' : 'var(--text-muted)',
               border: 'none', borderRadius: 7,
               fontSize: 12, fontWeight: 600,
               cursor: !isPending && uid.trim() && dirty ? 'pointer' : 'not-allowed',

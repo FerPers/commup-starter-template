@@ -60,7 +60,7 @@ const card: React.CSSProperties = {
   background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '14px',
   padding: 'clamp(14px, 3vw, 20px)', marginTop: '12px',
 }
-const h2: React.CSSProperties = { fontSize: '13px', fontWeight: 700, color: 'var(--gray-700)', margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '0.04em' }
+const h2: React.CSSProperties = { fontSize: '13px', fontWeight: 700, color: 'var(--text-body)', margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '0.04em' }
 const label: React.CSSProperties = { fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }
 const touch: React.CSSProperties = { minHeight: '44px', padding: '10px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }
 
@@ -127,7 +127,7 @@ export default function PunchDetail({ punch, projectId, projectName, timezone, t
           ← {t('page.backToList', { project: projectName })}
         </Link>
         {punch.tag && (
-          <Link href={`/projects/${projectId}/tags/${punch.tag.id}?tab=punches`} style={{ color: 'var(--primary-500)', textDecoration: 'none', fontFamily: 'ui-monospace, monospace' }}>
+          <Link href={`/projects/${projectId}/tags/${punch.tag.id}?tab=punches`} style={{ color: 'var(--primary-700)', textDecoration: 'none', fontFamily: 'ui-monospace, monospace' }}>
             {punch.tag.tag_number} ↗
           </Link>
         )}
@@ -137,8 +137,8 @@ export default function PunchDetail({ punch, projectId, projectName, timezone, t
       <div style={{ ...card, borderLeft: `4px solid ${catCfg.color}` }}>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '8px' }}>
           <h1 style={{ fontSize: '20px', fontFamily: 'ui-monospace, monospace', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>{punch.punch_number}</h1>
-          <span style={{ padding: '3px 9px', borderRadius: '6px', fontSize: '12px', fontWeight: 700, background: catCfg.bg, color: catCfg.color, border: `1px solid ${catCfg.border}` }}>{catCfg.label}</span>
-          <span style={{ padding: '3px 9px', borderRadius: '6px', fontSize: '12px', fontWeight: 600, background: stColors.bg, color: stColors.color }}>{t(`punchStatus.${displayStatus}`)}</span>
+          <span style={{ padding: '3px 9px', borderRadius: '6px', fontSize: '12px', fontWeight: 700, background: catCfg.bg, color: ink(catCfg.color), border: `1px solid ${catCfg.border}` }}>{catCfg.label}</span>
+          <span style={{ padding: '3px 9px', borderRadius: '6px', fontSize: '12px', fontWeight: 600, background: stColors.bg, color: ink(stColors.color) }}>{t(`punchStatus.${displayStatus}`)}</span>
           {!punch.category_reviewed_at && !isClosed && <span style={{ fontSize: '11px', color: 'var(--warning-700)' }}>{tGuide('unreviewedShort')}</span>}
         </div>
         <p style={{ fontSize: '16px', fontWeight: 500, color: 'var(--text-strong)', margin: 0, lineHeight: 1.45, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{punch.description}</p>
@@ -153,7 +153,7 @@ export default function PunchDetail({ punch, projectId, projectName, timezone, t
           <p style={{ fontSize: '13px', margin: '6px 0 0', color: 'var(--text-muted)' }}>
             {t('page.fromItr')}{' '}
             {punch.itr.tag_id
-              ? <Link href={`/projects/${projectId}/tags/${punch.itr.tag_id}/itrs/${punch.itr.id}`} style={{ color: 'var(--primary-500)', fontFamily: 'ui-monospace, monospace', textDecoration: 'none' }}>{punch.itr.itr_number}</Link>
+              ? <Link href={`/projects/${projectId}/tags/${punch.itr.tag_id}/itrs/${punch.itr.id}`} style={{ color: 'var(--primary-700)', fontFamily: 'ui-monospace, monospace', textDecoration: 'none' }}>{punch.itr.itr_number}</Link>
               : <span style={{ fontFamily: 'ui-monospace, monospace' }}>{punch.itr.itr_number}</span>}
             {itemText && <> · {punch.itrItem?.item_number ? `${punch.itrItem.item_number} ` : ''}{itemText}</>}
           </p>
@@ -182,7 +182,7 @@ export default function PunchDetail({ punch, projectId, projectName, timezone, t
               <button
                 onClick={() => run(() => updatePunchStatus({ punchId: punch.id, status: 'in_progress', projectId, tagId }))}
                 disabled={isPending}
-                style={{ ...touch, background: 'var(--primary-50)', color: 'var(--primary-500)', border: '1px solid var(--primary-200)' }}
+                style={{ ...touch, background: 'var(--primary-50)', color: 'var(--primary-700)', border: '1px solid var(--primary-200)' }}
               >
                 {t('detail.toInProgress')}
               </button>
@@ -210,8 +210,8 @@ export default function PunchDetail({ punch, projectId, projectName, timezone, t
                   disabled={isPending || !reassignDirty}
                   style={{
                     ...touch, whiteSpace: 'nowrap', border: 'none',
-                    background: reassignDirty && !isPending ? 'var(--primary-500)' : 'var(--gray-100)',
-                    color: reassignDirty && !isPending ? '#fff' : 'var(--gray-400)',
+                    background: reassignDirty && !isPending ? 'var(--primary-600)' : 'var(--gray-100)',
+                    color: reassignDirty && !isPending ? '#fff' : 'var(--text-muted)',
                     cursor: reassignDirty && !isPending ? 'pointer' : 'default',
                   }}
                 >
@@ -248,9 +248,9 @@ export default function PunchDetail({ punch, projectId, projectName, timezone, t
                     ? t('page.kind.reassigned', { to: e.to ? (names[e.to] ?? '—') : t('noAssignee') })
                     : t(`page.kind.${e.kind}`)}
                 </div>
-                <div style={{ fontSize: '11px', color: 'var(--gray-400)', marginTop: '1px' }}>{when(e.at)}</div>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '1px' }}>{when(e.at)}</div>
                 {e.text && (
-                  <p style={{ fontSize: '13px', color: 'var(--gray-700)', margin: '4px 0 0', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{e.text}</p>
+                  <p style={{ fontSize: '13px', color: 'var(--text-body)', margin: '4px 0 0', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{e.text}</p>
                 )}
               </div>
             </li>
@@ -271,7 +271,7 @@ export default function PunchDetail({ punch, projectId, projectName, timezone, t
             <button
               onClick={() => run(() => addPunchComment({ punchId: punch.id, comment: comment.trim(), projectId, tagId }), () => setComment(''))}
               disabled={isPending || !comment.trim()}
-              style={{ ...touch, border: 'none', background: comment.trim() ? 'var(--primary-500)' : 'var(--gray-100)', color: comment.trim() ? '#fff' : 'var(--gray-400)', cursor: comment.trim() ? 'pointer' : 'default' }}
+              style={{ ...touch, border: 'none', background: comment.trim() ? 'var(--primary-600)' : 'var(--gray-100)', color: comment.trim() ? '#fff' : 'var(--text-muted)', cursor: comment.trim() ? 'pointer' : 'default' }}
             >
               {t('detail.addComment')}
             </button>

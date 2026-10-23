@@ -34,6 +34,7 @@ import {
   type Phase,
   type TemplateData,
 } from './template-builder-shared'
+import { ink } from '@/lib/theme'
 
 interface Props {
   template: TemplateData
@@ -267,7 +268,7 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
           <Link
             href={`/admin/templates/${template.id}/translations`}
             title={t('translateTitle')}
-            style={{ fontSize: '12px', fontWeight: 600, color: '#6d28d9', background: '#f5f3ff', border: '1px solid #ddd6fe', borderRadius: '7px', padding: '6px 12px', textDecoration: 'none' }}
+            style={{ fontSize: '12px', fontWeight: 600, color: 'var(--violet-700)', background: 'var(--violet-50)', border: '1px solid var(--violet-200)', borderRadius: '7px', padding: '6px 12px', textDecoration: 'none' }}
           >
             {t('translateLabel')}
           </Link>
@@ -290,23 +291,23 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
 
       {/* Global error */}
       {actionError && (
-        <div style={{ padding: '10px 14px', background: '#fee2e2', borderRadius: '8px', marginBottom: '16px', fontSize: '13px', color: '#ef4444' }}>
+        <div style={{ padding: '10px 14px', background: 'var(--danger-100)', borderRadius: '8px', marginBottom: '16px', fontSize: '13px', color: 'var(--danger-700)' }}>
           {actionError}
-          <button onClick={() => setActionError(null)} style={{ marginLeft: '12px', background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', fontWeight: 700 }}>✕</button>
+          <button onClick={() => setActionError(null)} style={{ marginLeft: '12px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger-700)', fontWeight: 700 }}>✕</button>
         </div>
       )}
 
       {/* Sections */}
       {sections.length === 0 && (
         <div style={{
-          background: 'var(--card-bg)', borderRadius: '14px', border: '2px dashed #e2e8f0',
+          background: 'var(--card-bg)', borderRadius: '14px', border: '2px dashed var(--gray-200)',
           padding: '48px', textAlign: 'center', marginBottom: '16px',
         }}>
           <div style={{ fontSize: '28px', opacity: 0.3, marginBottom: '10px' }}>▤</div>
           <p style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-muted)', margin: '0 0 4px' }}>
             {t('emptyTitle')}
           </p>
-          <p style={{ fontSize: '13px', color: 'var(--gray-400)', margin: 0 }}>
+          <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>
             {t('emptyDesc')}
           </p>
         </div>
@@ -347,7 +348,7 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
               <button
                 onClick={handleAddSection}
                 disabled={isPending || !newSectionTitle.trim()}
-                style={{ padding: '9px 18px', background: '#3b82f6', color: '#fff', borderRadius: '8px', fontSize: '13px', fontWeight: 500, border: 'none', cursor: 'pointer' }}
+                style={{ padding: '9px 18px', background: 'var(--primary-600)', color: '#fff', borderRadius: '8px', fontSize: '13px', fontWeight: 500, border: 'none', cursor: 'pointer' }}
               >
                 {t('btnAddSection')}
               </button>
@@ -362,11 +363,11 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
             <button
               onClick={() => setShowAddSection(true)}
               style={{
-                padding: '10px 20px', background: 'var(--card-bg)', border: '1px dashed #cbd5e1',
+                padding: '10px 20px', background: 'var(--card-bg)', border: '1px dashed var(--gray-300)',
                 borderRadius: '10px', fontSize: '13px', color: 'var(--text-muted)', cursor: 'pointer',
                 width: '100%', transition: 'all 0.15s',
               }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = '#3b82f6'; (e.currentTarget as HTMLElement).style.color = '#3b82f6' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--primary-500)'; (e.currentTarget as HTMLElement).style.color = 'var(--primary-700)' }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--gray-300)'; (e.currentTarget as HTMLElement).style.color = 'var(--text-muted)' }}
             >
               {t('btnAddSectionMain')}
@@ -378,13 +379,13 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
       {/* Legend */}
       <div style={{ marginTop: '28px', padding: '12px 16px', background: 'var(--gray-50)', borderRadius: '8px', display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
         {[
-          { icon: '●', color: '#ef4444', label: t('legendCritical') },
-          { icon: '●', color: '#f59e0b', label: t('legendRequired') },
-          { icon: '⊙', color: '#3b82f6', label: t('legendRequiresPhoto') },
+          { icon: '●', color: 'var(--danger-700)', label: t('legendCritical') },
+          { icon: '●', color: 'var(--warning-700)', label: t('legendRequired') },
+          { icon: '⊙', color: 'var(--primary-700)', label: t('legendRequiresPhoto') },
           { icon: '○', color: 'var(--border)', label: t('legendNotApplicable') },
         ].map(l => (
           <span key={l.label} style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: 'var(--text-muted)' }}>
-            <span style={{ color: l.color, fontSize: '13px' }}>{l.icon}</span>
+            <span style={{ color: ink(l.color), fontSize: '13px' }}>{l.icon}</span>
             {l.label}
           </span>
         ))}

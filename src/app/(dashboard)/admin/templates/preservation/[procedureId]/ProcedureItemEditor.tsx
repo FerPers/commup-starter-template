@@ -16,6 +16,7 @@ import BackupDocumentView from '@/components/templates/BackupDocumentView'
 import { useAskDialog } from '@/components/ui/AskDialog'
 import { DialogSurface } from '@/components/ui/dialog-a11y'
 import { useToast } from '@/components/ui/Toast'
+import { alpha, ink } from '@/lib/theme'
 
 function downloadJsonFile(filename: string, payload: unknown) {
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
@@ -74,10 +75,10 @@ interface Props {
 // ── Config ─────────────────────────────────────────────────────
 
 const ITEM_TYPES = [
-  { value: 'checkbox',    color: '#3b82f6' },
-  { value: 'yes_no',      color: '#10b981' },
-  { value: 'number',      color: '#f59e0b' },
-  { value: 'measurement', color: '#8b5cf6' },
+  { value: 'checkbox',    color: 'var(--primary-700)' },
+  { value: 'yes_no',      color: 'var(--success-700)' },
+  { value: 'number',      color: 'var(--warning-700)' },
+  { value: 'measurement', color: 'var(--violet-700)' },
   { value: 'text',        color: 'var(--text-muted)' },
 ] as const
 
@@ -86,11 +87,11 @@ const FREQS = ['daily', 'weekly', 'biweekly', 'monthly', 'quarterly']
 function TypeBadge({ type }: { type: string }) {
   const t = useTranslations('PreservationTemplates')
   const found = ITEM_TYPES.find(x => x.value === type)
-  const cfg = found ? { label: t(`type.${found.value}`), color: found.color } : { label: type, color: 'var(--gray-400)' }
+  const cfg = found ? { label: t(`type.${found.value}`), color: found.color } : { label: type, color: 'var(--text-muted)' }
   return (
     <span style={{
       padding: '2px 8px', borderRadius: '20px', fontSize: '11px', fontWeight: 600,
-      background: cfg.color + '20', color: cfg.color,
+      background: alpha(cfg.color, 13), color: ink(cfg.color),
     }}>
       {cfg.label}
     </span>
@@ -245,11 +246,11 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px' }}>
         <button
           onClick={() => router.push('/admin/templates/preservation')}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#3b82f6', fontSize: '14px', fontWeight: 500, padding: 0 }}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary-700)', fontSize: '14px', fontWeight: 500, padding: 0 }}
         >
           {t('back')}
         </button>
-        <span style={{ color: 'var(--gray-400)' }}>›</span>
+        <span style={{ color: 'var(--text-muted)' }}>›</span>
         <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>{procedure.code}</span>
       </div>
 
@@ -258,7 +259,7 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
         {!editHeader ? (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px' }}>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--gray-400)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '4px' }}>
+              <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '4px' }}>
                 {procedure.code}
               </div>
               <h1 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 8px' }}>
@@ -270,11 +271,11 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
                 </p>
               )}
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600, background: '#f0f9ff', color: '#0ea5e9' }}>
+                <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600, background: 'var(--sky-50)', color: 'var(--sky-700)' }}>
                   {FREQS.includes(procedure.frequency) ? tp(`freq.${procedure.frequency as 'daily'}`) : procedure.frequency} · {t('days', { n: procedure.interval_days })}
                 </span>
                 {procedure.disciplines && (
-                  <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600, background: procedure.disciplines.color + '20', color: procedure.disciplines.color }}>
+                  <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600, background: alpha(procedure.disciplines.color, 13), color: ink(procedure.disciplines.color) }}>
                     {procedure.disciplines.code}
                   </span>
                 )}
@@ -297,7 +298,7 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
                     })
                   }}
                   disabled={isPending}
-                  style={{ padding: '7px 14px', borderRadius: '8px', background: '#eff6ff', color: '#1e40af', border: '1px solid #bfdbfe', fontWeight: 600, fontSize: '13px', cursor: isPending ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap' }}
+                  style={{ padding: '7px 14px', borderRadius: '8px', background: 'var(--primary-50)', color: 'var(--primary-800)', border: '1px solid var(--primary-200)', fontWeight: 600, fontSize: '13px', cursor: isPending ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap' }}
                   title={t('viewDocHint')}
                 >
                   {t('viewDoc')}
@@ -311,14 +312,14 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
                     })
                   }}
                   disabled={isPending}
-                  style={{ padding: '7px 14px', borderRadius: '8px', background: '#fef3c7', color: '#a16207', border: '1px solid #fde68a', fontWeight: 500, fontSize: '13px', cursor: isPending ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap' }}
+                  style={{ padding: '7px 14px', borderRadius: '8px', background: 'var(--warning-100)', color: 'var(--warning-700)', border: '1px solid var(--warning-200)', fontWeight: 500, fontSize: '13px', cursor: isPending ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap' }}
                   title={t('exportJsonHint')}
                 >
                   {t('exportJson')}
                 </button>
                 <button
                   onClick={() => setEditHeader(true)}
-                  style={{ padding: '7px 14px', borderRadius: '8px', background: 'var(--gray-100)', color: 'var(--gray-700)', fontWeight: 600, fontSize: '13px', cursor: 'pointer', border: 'none', whiteSpace: 'nowrap' }}
+                  style={{ padding: '7px 14px', borderRadius: '8px', background: 'var(--gray-100)', color: 'var(--text-body)', fontWeight: 600, fontSize: '13px', cursor: 'pointer', border: 'none', whiteSpace: 'nowrap' }}
                 >
                   {t('editHeader')}
                 </button>
@@ -328,41 +329,41 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
         ) : (
           <div>
             {hdrError && (
-              <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', padding: '10px 14px', borderRadius: '8px', fontSize: '13px', marginBottom: '14px' }}>
+              <div style={{ background: 'var(--danger-50)', border: '1px solid var(--danger-200)', color: 'var(--danger-700)', padding: '10px 14px', borderRadius: '8px', fontSize: '13px', marginBottom: '14px' }}>
                 {hdrError}
               </div>
             )}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '12px' }}>
                 <div>
-                  <label htmlFor={`${uid}-code`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '4px' }}>{t('codePlain')}</label>
+                  <label htmlFor={`${uid}-code`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-body)', display: 'block', marginBottom: '4px' }}>{t('codePlain')}</label>
                   <input id={`${uid}-code`} value={hdrForm.code} onChange={e => setHdrForm(f => ({ ...f, code: e.target.value.toUpperCase() }))}
-                    style={{ width: '100%', padding: '7px 10px', border: '1px solid #d1d5db', borderRadius: '7px', fontSize: '13px', boxSizing: 'border-box' }} />
+                    style={{ width: '100%', padding: '7px 10px', border: '1px solid var(--gray-300)', borderRadius: '7px', fontSize: '13px', boxSizing: 'border-box' }} />
                 </div>
                 <div>
-                  <label htmlFor={`${uid}-title`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '4px' }}>{t('titlePlain')}</label>
+                  <label htmlFor={`${uid}-title`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-body)', display: 'block', marginBottom: '4px' }}>{t('titlePlain')}</label>
                   <input id={`${uid}-title`} value={hdrForm.title} onChange={e => setHdrForm(f => ({ ...f, title: e.target.value }))}
-                    style={{ width: '100%', padding: '7px 10px', border: '1px solid #d1d5db', borderRadius: '7px', fontSize: '13px', boxSizing: 'border-box' }} />
+                    style={{ width: '100%', padding: '7px 10px', border: '1px solid var(--gray-300)', borderRadius: '7px', fontSize: '13px', boxSizing: 'border-box' }} />
                 </div>
               </div>
               <div>
-                <label htmlFor={`${uid}-description`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '4px' }}>{t('description')}</label>
+                <label htmlFor={`${uid}-description`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-body)', display: 'block', marginBottom: '4px' }}>{t('description')}</label>
                 <textarea id={`${uid}-description`} value={hdrForm.description} onChange={e => setHdrForm(f => ({ ...f, description: e.target.value }))}
-                  rows={2} style={{ width: '100%', padding: '7px 10px', border: '1px solid #d1d5db', borderRadius: '7px', fontSize: '13px', resize: 'vertical', boxSizing: 'border-box' }} />
+                  rows={2} style={{ width: '100%', padding: '7px 10px', border: '1px solid var(--gray-300)', borderRadius: '7px', fontSize: '13px', resize: 'vertical', boxSizing: 'border-box' }} />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 100px', gap: '12px' }}>
                 <div>
-                  <label htmlFor={`${uid}-discipline`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '4px' }}>{t('discipline')}</label>
+                  <label htmlFor={`${uid}-discipline`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-body)', display: 'block', marginBottom: '4px' }}>{t('discipline')}</label>
                   <select id={`${uid}-discipline`} value={hdrForm.disciplineId} onChange={e => setHdrForm(f => ({ ...f, disciplineId: e.target.value }))}
-                    style={{ width: '100%', padding: '7px 10px', border: '1px solid #d1d5db', borderRadius: '7px', fontSize: '13px', boxSizing: 'border-box' }}>
+                    style={{ width: '100%', padding: '7px 10px', border: '1px solid var(--gray-300)', borderRadius: '7px', fontSize: '13px', boxSizing: 'border-box' }}>
                     <option value="">{t('none')}</option>
                     {disciplines.map(d => <option key={d.id} value={d.id}>{d.code} — {d.name}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label htmlFor={`${uid}-frequency`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '4px' }}>{t('frequencyPlain')}</label>
+                  <label htmlFor={`${uid}-frequency`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-body)', display: 'block', marginBottom: '4px' }}>{t('frequencyPlain')}</label>
                   <select id={`${uid}-frequency`} value={hdrForm.frequency} onChange={e => setHdrForm(f => ({ ...f, frequency: e.target.value as Enums<'preservation_frequency'> }))}
-                    style={{ width: '100%', padding: '7px 10px', border: '1px solid #d1d5db', borderRadius: '7px', fontSize: '13px', boxSizing: 'border-box' }}>
+                    style={{ width: '100%', padding: '7px 10px', border: '1px solid var(--gray-300)', borderRadius: '7px', fontSize: '13px', boxSizing: 'border-box' }}>
                     <option value="daily">{tp('freq.daily')}</option>
                     <option value="weekly">{tp('freq.weekly')}</option>
                     <option value="biweekly">{tp('freq.biweekly')}</option>
@@ -371,9 +372,9 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
                   </select>
                 </div>
                 <div>
-                  <label htmlFor={`${uid}-days`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '4px' }}>{t('daysLabel')}</label>
+                  <label htmlFor={`${uid}-days`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-body)', display: 'block', marginBottom: '4px' }}>{t('daysLabel')}</label>
                   <input id={`${uid}-days`} type="number" min="1" value={hdrForm.intervalDays} onChange={e => setHdrForm(f => ({ ...f, intervalDays: e.target.value }))}
-                    style={{ width: '100%', padding: '7px 10px', border: '1px solid #d1d5db', borderRadius: '7px', fontSize: '13px', boxSizing: 'border-box' }} />
+                    style={{ width: '100%', padding: '7px 10px', border: '1px solid var(--gray-300)', borderRadius: '7px', fontSize: '13px', boxSizing: 'border-box' }} />
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '20px' }}>
@@ -392,7 +393,7 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
                   {t('cancel')}
                 </button>
                 <button onClick={handleSaveHeader} disabled={isPending}
-                  style={{ padding: '7px 16px', borderRadius: '7px', background: '#3b82f6', color: '#fff', fontWeight: 600, fontSize: '13px', cursor: 'pointer', border: 'none', opacity: isPending ? 0.7 : 1 }}>
+                  style={{ padding: '7px 16px', borderRadius: '7px', background: 'var(--primary-600)', color: '#fff', fontWeight: 600, fontSize: '13px', cursor: 'pointer', border: 'none', opacity: isPending ? 0.7 : 1 }}>
                   {t('save')}
                 </button>
               </div>
@@ -405,14 +406,14 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
         <h2 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>
           {t('itemsTitle')}
-          <span style={{ fontSize: '13px', fontWeight: 400, color: 'var(--gray-400)', marginLeft: '8px' }}>
+          <span style={{ fontSize: '13px', fontWeight: 400, color: 'var(--text-muted)', marginLeft: '8px' }}>
             ({t('items', { n: items.length })})
           </span>
         </h2>
         {canEdit && (
           <button
             onClick={openAdd}
-            style={{ padding: '7px 16px', borderRadius: '8px', background: '#3b82f6', color: '#fff', fontWeight: 600, fontSize: '13px', cursor: 'pointer', border: 'none' }}
+            style={{ padding: '7px 16px', borderRadius: '8px', background: 'var(--primary-600)', color: '#fff', fontWeight: 600, fontSize: '13px', cursor: 'pointer', border: 'none' }}
           >
             {t('addItem')}
           </button>
@@ -420,8 +421,8 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
       </div>
 
       {items.length === 0 ? (
-        <div style={{ background: 'var(--gray-50)', border: '2px dashed #e2e8f0', borderRadius: '10px', padding: '40px', textAlign: 'center' }}>
-          <div style={{ fontSize: '14px', color: 'var(--gray-400)' }}>{t('noItems')}</div>
+        <div style={{ background: 'var(--gray-50)', border: '2px dashed var(--gray-200)', borderRadius: '10px', padding: '40px', textAlign: 'center' }}>
+          <div style={{ fontSize: '14px', color: 'var(--text-muted)' }}>{t('noItems')}</div>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -440,7 +441,7 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
               }}
             >
               {canEdit && (
-                <div style={{ color: 'var(--gray-300)', fontSize: '16px', cursor: 'grab', flexShrink: 0 }}>⠿</div>
+                <div style={{ color: 'var(--text-muted)', fontSize: '16px', cursor: 'grab', flexShrink: 0 }}>⠿</div>
               )}
               <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'var(--gray-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', flexShrink: 0 }}>
                 {idx + 1}
@@ -449,10 +450,10 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
                   <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-strong)' }}>{item.label}</span>
                   {item.is_critical && (
-                    <span style={{ padding: '1px 7px', borderRadius: '10px', fontSize: '10px', fontWeight: 700, background: '#fef2f2', color: '#dc2626' }}>{t('critical')}</span>
+                    <span style={{ padding: '1px 7px', borderRadius: '10px', fontSize: '10px', fontWeight: 700, background: 'var(--danger-50)', color: 'var(--danger-700)' }}>{t('critical')}</span>
                   )}
                   {!item.is_required && (
-                    <span style={{ padding: '1px 7px', borderRadius: '10px', fontSize: '10px', fontWeight: 600, background: 'var(--gray-100)', color: 'var(--gray-400)' }}>{t('optional')}</span>
+                    <span style={{ padding: '1px 7px', borderRadius: '10px', fontSize: '10px', fontWeight: 600, background: 'var(--gray-100)', color: 'var(--text-muted)' }}>{t('optional')}</span>
                   )}
                 </div>
                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
@@ -477,11 +478,11 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
               {canEdit && (
                 <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
                   <button onClick={() => openEdit(item)}
-                    style={{ padding: '5px 10px', borderRadius: '6px', background: 'var(--gray-100)', color: 'var(--gray-700)', fontSize: '12px', fontWeight: 600, cursor: 'pointer', border: 'none' }}>
+                    style={{ padding: '5px 10px', borderRadius: '6px', background: 'var(--gray-100)', color: 'var(--text-body)', fontSize: '12px', fontWeight: 600, cursor: 'pointer', border: 'none' }}>
                     {t('edit')}
                   </button>
                   <button onClick={() => handleDeleteItem(item.id)} aria-label={t('delete')}
-                    style={{ padding: '5px 10px', borderRadius: '6px', background: '#fff5f5', color: '#dc2626', fontSize: '12px', fontWeight: 600, cursor: 'pointer', border: 'none' }}>
+                    style={{ padding: '5px 10px', borderRadius: '6px', background: 'var(--danger-50)', color: 'var(--danger-700)', fontSize: '12px', fontWeight: 600, cursor: 'pointer', border: 'none' }}>
                     ✕
                   </button>
                 </div>
@@ -500,28 +501,28 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
               <h3 id={itemTitleId} style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>
                 {editingItemId ? t('editItem') : t('addItemTitle')}
               </h3>
-              <button onClick={() => setShowAddItem(false)} aria-label={tA11y('close')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', color: 'var(--gray-400)' }}>✕</button>
+              <button onClick={() => setShowAddItem(false)} aria-label={tA11y('close')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', color: 'var(--text-muted)' }}>✕</button>
             </div>
 
             {itemError && (
-              <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', padding: '9px 12px', borderRadius: '7px', fontSize: '13px', marginBottom: '14px' }}>
+              <div style={{ background: 'var(--danger-50)', border: '1px solid var(--danger-200)', color: 'var(--danger-700)', padding: '9px 12px', borderRadius: '7px', fontSize: '13px', marginBottom: '14px' }}>
                 {itemError}
               </div>
             )}
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <div>
-                <label htmlFor={`${uid}-item-label`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '5px' }}>{t('itemLabel')}</label>
+                <label htmlFor={`${uid}-item-label`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-body)', display: 'block', marginBottom: '5px' }}>{t('itemLabel')}</label>
                 <input id={`${uid}-item-label`}
                   value={itemForm.label}
                   onChange={e => setItemForm(f => ({ ...f, label: e.target.value }))}
                   placeholder={t('itemPlaceholder')}
-                  style={{ width: '100%', padding: '8px 10px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '13px', boxSizing: 'border-box' }}
+                  style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--gray-300)', borderRadius: '8px', fontSize: '13px', boxSizing: 'border-box' }}
                 />
               </div>
 
               <div>
-                <span id={`${uid}-item-type`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '5px' }}>{t('itemType')}</span>
+                <span id={`${uid}-item-type`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-body)', display: 'block', marginBottom: '5px' }}>{t('itemType')}</span>
                 <div role="group" aria-labelledby={`${uid}-item-type`} style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                   {ITEM_TYPES.map(it => (
                     <button
@@ -531,8 +532,8 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
                         padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer',
                         border: '2px solid',
                         borderColor: itemForm.item_type === it.value ? it.color : 'var(--border)',
-                        background: itemForm.item_type === it.value ? it.color + '20' : 'var(--card-bg)',
-                        color: itemForm.item_type === it.value ? it.color : 'var(--text-muted)',
+                        background: itemForm.item_type === it.value ? alpha(it.color, 13) : 'var(--card-bg)',
+                        color: ink(itemForm.item_type === it.value ? it.color : 'var(--text-muted)'),
                       }}
                     >
                       {t(`type.${it.value}`)}
@@ -544,30 +545,30 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
               {needsRange && (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
                   <div>
-                    <label htmlFor={`${uid}-unit`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '5px' }}>{t('unit')}</label>
+                    <label htmlFor={`${uid}-unit`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-body)', display: 'block', marginBottom: '5px' }}>{t('unit')}</label>
                     <input id={`${uid}-unit`} value={itemForm.unit} onChange={e => setItemForm(f => ({ ...f, unit: e.target.value }))}
                       placeholder="bar, °C, mA…"
-                      style={{ width: '100%', padding: '7px 9px', border: '1px solid #d1d5db', borderRadius: '7px', fontSize: '13px', boxSizing: 'border-box' }} />
+                      style={{ width: '100%', padding: '7px 9px', border: '1px solid var(--gray-300)', borderRadius: '7px', fontSize: '13px', boxSizing: 'border-box' }} />
                   </div>
                   <div>
-                    <label htmlFor={`${uid}-min`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '5px' }}>{t('min')}</label>
+                    <label htmlFor={`${uid}-min`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-body)', display: 'block', marginBottom: '5px' }}>{t('min')}</label>
                     <input id={`${uid}-min`} type="number" value={itemForm.minValue} onChange={e => setItemForm(f => ({ ...f, minValue: e.target.value }))}
-                      style={{ width: '100%', padding: '7px 9px', border: '1px solid #d1d5db', borderRadius: '7px', fontSize: '13px', boxSizing: 'border-box' }} />
+                      style={{ width: '100%', padding: '7px 9px', border: '1px solid var(--gray-300)', borderRadius: '7px', fontSize: '13px', boxSizing: 'border-box' }} />
                   </div>
                   <div>
-                    <label htmlFor={`${uid}-max`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '5px' }}>{t('max')}</label>
+                    <label htmlFor={`${uid}-max`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-body)', display: 'block', marginBottom: '5px' }}>{t('max')}</label>
                     <input id={`${uid}-max`} type="number" value={itemForm.maxValue} onChange={e => setItemForm(f => ({ ...f, maxValue: e.target.value }))}
-                      style={{ width: '100%', padding: '7px 9px', border: '1px solid #d1d5db', borderRadius: '7px', fontSize: '13px', boxSizing: 'border-box' }} />
+                      style={{ width: '100%', padding: '7px 9px', border: '1px solid var(--gray-300)', borderRadius: '7px', fontSize: '13px', boxSizing: 'border-box' }} />
                   </div>
                 </div>
               )}
 
               <div style={{ display: 'flex', gap: '20px', paddingTop: '4px' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', color: 'var(--gray-700)' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', color: 'var(--text-body)' }}>
                   <input type="checkbox" checked={itemForm.isCritical} onChange={e => setItemForm(f => ({ ...f, isCritical: e.target.checked }))} />
-                  <span>{t('criticalLabel')} <span style={{ fontSize: '11px', color: 'var(--gray-400)' }}>{t('criticalHelp')}</span></span>
+                  <span>{t('criticalLabel')} <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{t('criticalHelp')}</span></span>
                 </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', color: 'var(--gray-700)' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', color: 'var(--text-body)' }}>
                   <input type="checkbox" checked={itemForm.isRequired} onChange={e => setItemForm(f => ({ ...f, isRequired: e.target.checked }))} />
                   {t('requiredLabel')}
                 </label>
@@ -580,7 +581,7 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
                 {t('cancel')}
               </button>
               <button onClick={handleSaveItem} disabled={isPending}
-                style={{ padding: '8px 18px', borderRadius: '8px', background: '#3b82f6', color: '#fff', fontWeight: 600, fontSize: '13px', cursor: isPending ? 'wait' : 'pointer', border: 'none', opacity: isPending ? 0.7 : 1 }}>
+                style={{ padding: '8px 18px', borderRadius: '8px', background: 'var(--primary-600)', color: '#fff', fontWeight: 600, fontSize: '13px', cursor: isPending ? 'wait' : 'pointer', border: 'none', opacity: isPending ? 0.7 : 1 }}>
                 {isPending ? t('saving') : (editingItemId ? t('update') : t('add'))}
               </button>
             </div>

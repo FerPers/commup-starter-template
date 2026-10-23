@@ -234,18 +234,18 @@ export default function ImportItemsModal({ templateId, hasExistingContent, onClo
               {step === 'done' && tx('subtitleDone')}
             </p>
           </div>
-          <button onClick={onClose} aria-label={tA11y('close')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', fontSize: '18px', lineHeight: 1, padding: '2px' }}>✕</button>
+          <button onClick={onClose} aria-label={tA11y('close')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '18px', lineHeight: 1, padding: '2px' }}>✕</button>
         </div>
 
         {/* Step: upload */}
         {step === 'upload' && (
           <div>
             {/* Download template link */}
-            <div style={{ marginBottom: '16px', padding: '10px 14px', background: '#f0f9ff', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: '12px', color: '#0284c7' }}>{tx('firstTime')}</span>
+            <div style={{ marginBottom: '16px', padding: '10px 14px', background: 'var(--sky-50)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: '12px', color: 'var(--sky-700)' }}>{tx('firstTime')}</span>
               <button
                 onClick={() => downloadTemplate(tx)}
-                style={{ fontSize: '12px', fontWeight: 600, color: '#0284c7', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
+                style={{ fontSize: '12px', fontWeight: 600, color: 'var(--sky-700)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
               >
                 {tx('downloadTemplate')}
               </button>
@@ -262,9 +262,9 @@ export default function ImportItemsModal({ templateId, hasExistingContent, onClo
                 e.currentTarget.querySelector<HTMLInputElement>('input[type="file"]')?.click()
               })}
               style={{
-                border: `2px dashed ${dragOver ? '#3b82f6' : 'var(--gray-300)'}`,
+                border: `2px dashed ${dragOver ? 'var(--primary-500)' : 'var(--gray-300)'}`,
                 borderRadius: '12px', padding: '40px 20px', textAlign: 'center',
-                cursor: 'pointer', background: dragOver ? '#eff6ff' : 'var(--gray-50)',
+                cursor: 'pointer', background: dragOver ? 'var(--primary-50)' : 'var(--gray-50)',
                 transition: 'all 0.15s',
               }}
             >
@@ -272,14 +272,14 @@ export default function ImportItemsModal({ templateId, hasExistingContent, onClo
               <p style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-muted)', margin: '0 0 4px' }}>
                 {tx('dropHere')}
               </p>
-              <p style={{ fontSize: '12px', color: 'var(--gray-400)', margin: 0 }}>
+              <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: 0 }}>
                 {tx('orClick')}
               </p>
               <input type="file" accept=".xlsx,.xls" onChange={handleFileChange} style={{ display: 'none' }} />
             </div>
 
             {parseError && (
-              <p style={{ fontSize: '13px', color: '#ef4444', margin: '12px 0 0', padding: '10px 14px', background: '#fee2e2', borderRadius: '8px' }}>
+              <p style={{ fontSize: '13px', color: 'var(--danger-700)', margin: '12px 0 0', padding: '10px 14px', background: 'var(--danger-100)', borderRadius: '8px' }}>
                 {parseError}
               </p>
             )}
@@ -297,12 +297,12 @@ export default function ImportItemsModal({ templateId, hasExistingContent, onClo
                   ['J', tx('col.min')], ['K', tx('col.max')],
                 ].map(([col, label]) => (
                   <div key={col} style={{ display: 'flex', gap: '6px', fontSize: '11px' }}>
-                    <span style={{ fontFamily: 'monospace', fontWeight: 700, color: '#3b82f6', minWidth: '14px' }}>{col}</span>
+                    <span style={{ fontFamily: 'monospace', fontWeight: 700, color: 'var(--primary-700)', minWidth: '14px' }}>{col}</span>
                     <span style={{ color: 'var(--text-muted)' }}>{label}</span>
                   </div>
                 ))}
               </div>
-              <p style={{ fontSize: '11px', color: 'var(--gray-400)', margin: '8px 0 0' }}>
+              <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '8px 0 0' }}>
                 {tx('validTypes')}
               </p>
             </div>
@@ -314,12 +314,12 @@ export default function ImportItemsModal({ templateId, hasExistingContent, onClo
           <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
             {/* Warnings */}
             {parsed.warnings.length > 0 && (
-              <div style={{ padding: '10px 14px', background: '#fffbeb', borderRadius: '8px', marginBottom: '12px', border: '1px solid #fcd34d' }}>
-                <p style={{ fontSize: '11px', fontWeight: 600, color: '#92400e', margin: '0 0 4px' }}>
+              <div style={{ padding: '10px 14px', background: 'var(--warning-50)', borderRadius: '8px', marginBottom: '12px', border: '1px solid var(--warning-300)' }}>
+                <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--warning-800)', margin: '0 0 4px' }}>
                   {tx('warnings', { count: parsed.warnings.length })}
                 </p>
                 {parsed.warnings.map((w, i) => (
-                  <p key={i} style={{ fontSize: '11px', color: '#78350f', margin: '2px 0 0' }}>• {w}</p>
+                  <p key={i} style={{ fontSize: '11px', color: 'var(--warning-900)', margin: '2px 0 0' }}>• {w}</p>
                 ))}
               </div>
             )}
@@ -327,24 +327,24 @@ export default function ImportItemsModal({ templateId, hasExistingContent, onClo
             {/* Section list (scrollable) */}
             <div style={{ flex: 1, overflowY: 'auto', border: '1px solid var(--border)', borderRadius: '10px', marginBottom: '14px' }}>
               {parsed.sections.map((sec, sIdx) => (
-                <div key={sIdx} style={{ borderBottom: sIdx < parsed.sections.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
+                <div key={sIdx} style={{ borderBottom: sIdx < parsed.sections.length - 1 ? '1px solid var(--gray-100)' : 'none' }}>
                   <div style={{ padding: '10px 14px', background: 'var(--gray-50)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)' }}>{sec.title}</span>
                     <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{tx('itemsCount', { count: sec.items.length })}</span>
                   </div>
                   {sec.items.slice(0, 3).map((item, iIdx) => (
-                    <div key={iIdx} style={{ padding: '7px 14px 7px 22px', display: 'flex', gap: '10px', alignItems: 'center', borderTop: '1px solid #f8fafc' }}>
-                      <span style={{ fontSize: '10px', color: 'var(--gray-400)', fontFamily: 'monospace', minWidth: '32px' }}>{item.item_number ?? '—'}</span>
+                    <div key={iIdx} style={{ padding: '7px 14px 7px 22px', display: 'flex', gap: '10px', alignItems: 'center', borderTop: '1px solid var(--gray-50)' }}>
+                      <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontFamily: 'monospace', minWidth: '32px' }}>{item.item_number ?? '—'}</span>
                       <span style={{ fontSize: '12px', color: 'var(--text-muted)', flex: 1 }}>{item.description}</span>
                       <span style={{
                         fontSize: '10px', padding: '1px 6px', borderRadius: '999px',
                         background: 'var(--border)', color: 'var(--text-muted)',
                       }}>{item.item_type}</span>
-                      {item.is_critical && <span style={{ fontSize: '10px', color: '#ef4444' }}>●</span>}
+                      {item.is_critical && <span style={{ fontSize: '10px', color: 'var(--danger-700)' }}>●</span>}
                     </div>
                   ))}
                   {sec.items.length > 3 && (
-                    <p style={{ padding: '6px 22px', fontSize: '11px', color: 'var(--gray-400)', margin: 0 }}>
+                    <p style={{ padding: '6px 22px', fontSize: '11px', color: 'var(--text-muted)', margin: 0 }}>
                       {tx('more', { count: sec.items.length - 3 })}
                     </p>
                   )}
@@ -354,24 +354,24 @@ export default function ImportItemsModal({ templateId, hasExistingContent, onClo
 
             {/* Replace option */}
             {hasExistingContent && (
-              <label style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', alignItems: 'start', columnGap: '8px', cursor: 'pointer', marginBottom: '14px', padding: '12px 14px', background: replace ? '#fff7ed' : 'var(--gray-50)', borderRadius: '8px', border: `1px solid ${replace ? '#fed7aa' : 'var(--border)'}` }}>
+              <label style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', alignItems: 'start', columnGap: '8px', cursor: 'pointer', marginBottom: '14px', padding: '12px 14px', background: replace ? 'var(--orange-50)' : 'var(--gray-50)', borderRadius: '8px', border: `1px solid ${replace ? 'var(--orange-200)' : 'var(--border)'}` }}>
                 <input
                   type="checkbox"
                   checked={replace}
                   onChange={e => setReplace(e.target.checked)}
-                  style={{ accentColor: '#f97316', marginTop: '1px', flexShrink: 0, gridRow: 'span 2' }}
+                  style={{ accentColor: 'var(--orange-500)', marginTop: '1px', flexShrink: 0, gridRow: 'span 2' }}
                 />
-                <p style={{ fontSize: '13px', fontWeight: 500, color: replace ? '#c2410c' : 'var(--text-muted)', margin: '0 0 2px' }}>
+                <p style={{ fontSize: '13px', fontWeight: 500, color: replace ? 'var(--orange-700)' : 'var(--text-muted)', margin: '0 0 2px' }}>
                   {tx('replaceTitle')}
                 </p>
-                <p style={{ fontSize: '11px', color: 'var(--gray-400)', margin: 0 }}>
+                <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: 0 }}>
                   {tx(replace ? 'replaceOn' : 'replaceOff')}
                 </p>
               </label>
             )}
 
             {parseError && (
-              <p style={{ fontSize: '13px', color: '#ef4444', margin: '0 0 12px', padding: '10px 14px', background: '#fee2e2', borderRadius: '8px' }}>
+              <p style={{ fontSize: '13px', color: 'var(--danger-700)', margin: '0 0 12px', padding: '10px 14px', background: 'var(--danger-100)', borderRadius: '8px' }}>
                 {parseError}
               </p>
             )}
@@ -387,7 +387,7 @@ export default function ImportItemsModal({ templateId, hasExistingContent, onClo
                 onClick={handleImport}
                 disabled={isPending}
                 style={{
-                  padding: '9px 20px', background: isPending ? '#93c5fd' : '#3b82f6',
+                  padding: '9px 20px', background: isPending ? 'var(--primary-300)' : 'var(--primary-600)',
                   color: '#fff', borderRadius: '8px', fontSize: '13px', fontWeight: 500,
                   border: 'none', cursor: isPending ? 'not-allowed' : 'pointer',
                 }}
@@ -411,7 +411,7 @@ export default function ImportItemsModal({ templateId, hasExistingContent, onClo
             <button
               onClick={onSuccess}
               style={{
-                padding: '10px 24px', background: '#3b82f6', color: '#fff',
+                padding: '10px 24px', background: 'var(--primary-600)', color: '#fff',
                 borderRadius: '8px', fontSize: '13px', fontWeight: 500, border: 'none', cursor: 'pointer',
               }}
             >

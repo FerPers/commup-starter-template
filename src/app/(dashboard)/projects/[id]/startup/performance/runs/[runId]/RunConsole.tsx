@@ -115,7 +115,7 @@ export default function RunConsole({ project, test, run, rev, variables, points,
     <div style={{ padding: '24px 16px', maxWidth: 1200, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
       {dialog}
       <div>
-        <Link href={`${root}/${test.id}`} style={{ ...small, textDecoration: 'none', color: 'var(--primary-600, #2563eb)' }}>← {test.number} · {test.title}</Link>
+        <Link href={`${root}/${test.id}`} style={{ ...small, textDecoration: 'none', color: 'var(--primary-700)' }}>← {test.number} · {test.title}</Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: 6 }}>
           <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0, fontFamily: 'ui-monospace, monospace', color: 'var(--text-strong)' }}>{run.number}</h1>
           <Chip tone={RUN_TONE[run.status]}>{t(`perf.runStatus.${run.status}`)}</Chip>
@@ -138,7 +138,7 @@ export default function RunConsole({ project, test, run, rev, variables, points,
             const by = phase === 'stabilizing' ? run.stabilization_started_by : phase === 'formal' ? run.formal_started_by : run.closed_by
             const active = run.status === phase || (phase === 'closed' && run.status === 'evaluated')
             return (
-              <div key={phase} style={{ padding: 12, borderRadius: 10, border: `1px solid ${active ? 'var(--primary-500)' : 'var(--border)'}`, background: active ? '#eff6ff' : undefined }}>
+              <div key={phase} style={{ padding: 12, borderRadius: 10, border: `1px solid ${active ? 'var(--primary-500)' : 'var(--border)'}`, background: active ? 'var(--primary-50)' : undefined }}>
                 <div style={label}>{t(`perf.phase.${phase}`)}</div>
                 {startedAt
                   ? <div style={{ ...small, marginTop: 4 }} suppressHydrationWarning>{when(startedAt)} · {who(by)}</div>
@@ -149,9 +149,9 @@ export default function RunConsole({ project, test, run, rev, variables, points,
                     {fmtMinutes(clock.elapsedMin)} {clock.done ? `· ${t('perf.minReached')}` : `· ${t('perf.remaining', { d: fmtMinutes(clock.remainingMin ?? 0) })}`}
                   </div>
                 )}
-                {phase === 'formal' && run.formal_start_note && <div style={{ ...small, marginTop: 4, color: '#b45309' }}>{run.formal_start_note}</div>}
+                {phase === 'formal' && run.formal_start_note && <div style={{ ...small, marginTop: 4, color: 'var(--warning-700)' }}>{run.formal_start_note}</div>}
                 {phase === 'closed' && run.closed_at && clock && <div style={{ ...small, marginTop: 4 }}>{t('perf.formalLasted', { d: fmtMinutes(clock.elapsedMin) })}</div>}
-                {phase === 'closed' && run.early_close_reason && <div style={{ ...small, marginTop: 4, color: '#b45309' }}>{run.early_close_reason}</div>}
+                {phase === 'closed' && run.early_close_reason && <div style={{ ...small, marginTop: 4, color: 'var(--warning-700)' }}>{run.early_close_reason}</div>}
               </div>
             )
           })}
@@ -212,10 +212,10 @@ export default function RunConsole({ project, test, run, rev, variables, points,
                       <Tooltip labelFormatter={x => new Date(Number(x)).toLocaleString()} formatter={x => [String(x), v.key]} />
                       {disturbances.map(d => (
                         <ReferenceArea key={d.id} x1={Date.parse(d.started_at)} x2={d.ended_at ? Date.parse(d.ended_at) : chartTo}
-                          fill={d.excluded ? '#9ca3af' : '#f59e0b'} fillOpacity={0.18} ifOverflow="hidden" />
+                          fill={d.excluded ? 'var(--gray-400)' : 'var(--warning-500)'} fillOpacity={0.18} ifOverflow="hidden" />
                       ))}
-                      {run.formal_started_at && <ReferenceLine x={Date.parse(run.formal_started_at)} stroke="var(--primary-500, #2563eb)" strokeDasharray="4 2" label={{ value: t('perf.phase.formal'), fontSize: 10, position: 'top' }} />}
-                      <Line type="monotone" dataKey="v" stroke="var(--primary-500, #2563eb)" strokeWidth={2} dot={v.source === 'manual'} isAnimationActive={false} connectNulls={false} />
+                      {run.formal_started_at && <ReferenceLine x={Date.parse(run.formal_started_at)} stroke="var(--primary-500)" strokeDasharray="4 2" label={{ value: t('perf.phase.formal'), fontSize: 10, position: 'top' }} />}
+                      <Line type="monotone" dataKey="v" stroke="var(--primary-500)" strokeWidth={2} dot={v.source === 'manual'} isAnimationActive={false} connectNulls={false} />
                     </LineChart>
                   </ResponsiveContainer>
                 )}

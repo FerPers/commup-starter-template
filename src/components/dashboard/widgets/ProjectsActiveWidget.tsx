@@ -44,7 +44,7 @@ export default async function ProjectsActiveWidget({ orgId, role }: { orgId: str
             icon={<FolderKanban size={24} aria-hidden="true" />}
             title={t('projects.noneActive')}
             description={t('projects.noneActiveDesc', { count: (projects ?? []).length })}
-            action={<Link href="/projects" style={{ fontSize: 'var(--text-sm)', color: 'var(--primary-600)', fontWeight: 500 }}>{t('projects.viewAll')}</Link>}
+            action={<Link href="/projects" style={{ fontSize: 'var(--text-sm)', color: 'var(--primary-700)', fontWeight: 500 }}>{t('projects.viewAll')}</Link>}
           />
         ) : (
           <EmptyState

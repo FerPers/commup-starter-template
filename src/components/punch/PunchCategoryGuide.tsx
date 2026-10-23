@@ -17,7 +17,7 @@ import {
 // formularios de alta de punch (lista del proyecto, tag y ejecución del ITR). La categoría la sigue
 // eligiendo cada formulario con sus botones; aquí se sugiere y se avisa, sin bloquear.
 
-const label: React.CSSProperties = { fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }
+const label: React.CSSProperties = { fontSize: '12px', fontWeight: 600, color: 'var(--text-body)', display: 'block', marginBottom: '6px' }
 
 export function PunchImpactAndGuide({ impact, onImpact, category, onCategory, disciplineCode }: {
   impact: PunchImpact | null
@@ -44,7 +44,7 @@ export function PunchImpactAndGuide({ impact, onImpact, category, onCategory, di
                 style={{
                   padding: '6px 10px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, cursor: 'pointer',
                   border: `1px solid ${active ? 'var(--primary-500)' : 'var(--border)'}`,
-                  background: active ? 'var(--primary-500)' : 'var(--card-bg)', color: active ? '#fff' : 'var(--text-strong)',
+                  background: active ? 'var(--primary-600)' : 'var(--card-bg)', color: active ? '#fff' : 'var(--text-strong)',
                 }}>
                 {t(`impact.${i}`)}
               </button>
@@ -55,10 +55,10 @@ export function PunchImpactAndGuide({ impact, onImpact, category, onCategory, di
       </div>
 
       {suggested && (
-        <div role="status" style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', padding: '8px 10px', borderRadius: '8px', background: '#fffbeb', border: '1px solid #fde68a', fontSize: '12px', color: '#92400e' }}>
+        <div role="status" style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', padding: '8px 10px', borderRadius: '8px', background: 'var(--warning-50)', border: '1px solid var(--warning-200)', fontSize: '12px', color: 'var(--warning-800)' }}>
           <span>{t('mismatch', { chosen: category, suggested, impact: t(`impact.${impact!}`) })}</span>
           <button type="button" onClick={() => onCategory(suggested)}
-            style={{ padding: '3px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 600, border: '1px solid #fcd34d', background: '#fff', color: '#92400e', cursor: 'pointer' }}>
+            style={{ padding: '3px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 600, border: '1px solid var(--warning-300)', background: 'var(--card-bg)', color: 'var(--warning-800)', cursor: 'pointer' }}>
             {t('useSuggested', { cat: suggested })}
           </button>
         </div>
@@ -66,7 +66,7 @@ export function PunchImpactAndGuide({ impact, onImpact, category, onCategory, di
 
       <div>
         <button type="button" onClick={() => setOpen(o => !o)} aria-expanded={open}
-          style={{ background: 'none', border: 'none', padding: 0, fontSize: '12px', fontWeight: 600, color: 'var(--primary-600, #2563eb)', cursor: 'pointer' }}>
+          style={{ background: 'none', border: 'none', padding: 0, fontSize: '12px', fontWeight: 600, color: 'var(--primary-700)', cursor: 'pointer' }}>
           {open ? '▾' : '▸'} {t('guideToggle')}
         </button>
         {open && (

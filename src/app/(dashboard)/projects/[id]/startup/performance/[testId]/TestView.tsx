@@ -108,7 +108,7 @@ export default function TestView({ project, test, revisions, shownId, liveCertif
     <div style={{ padding: '24px 16px', maxWidth: 1200, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
       {dialog}
       <div>
-        <Link href={root} style={{ ...small, textDecoration: 'none', color: 'var(--primary-600, #2563eb)' }}>← {t('tab.performance')} · {project.code}</Link>
+        <Link href={root} style={{ ...small, textDecoration: 'none', color: 'var(--primary-700)' }}>← {t('tab.performance')} · {project.code}</Link>
         {editingHead ? (
           <div style={{ ...grid, marginTop: 8 }}>
             <Field text={t('field.title')} wide><input style={input} value={head.title} maxLength={200} onChange={e => setHead({ ...head, title: e.target.value })} /></Field>
@@ -187,7 +187,7 @@ export default function TestView({ project, test, revisions, shownId, liveCertif
               <>
                 {userId !== shown.createdBy && userId !== shown.submittedBy && !shown.editors.includes(userId)
                   ? <button type="button" style={btn('primary', isPending)} disabled={isPending} onClick={() => act(() => transitionPerformanceRevision({ ...ids, revisionId: shown.id, to: 'approved' }))}>✓ {t('perf.approve')}</button>
-                  : <span style={{ ...small, color: '#b45309', alignSelf: 'center' }}>{t('perf.approveOther')}</span>}
+                  : <span style={{ ...small, color: 'var(--warning-700)', alignSelf: 'center' }}>{t('perf.approveOther')}</span>}
                 <button type="button" style={btn('outline', isPending)} disabled={isPending}
                   onClick={() => void askText(t('perf.return'), t('perf.returnPrompt'), c => act(() => transitionPerformanceRevision({ ...ids, revisionId: shown.id, to: 'draft', comment: c })))}>{t('perf.return')}</button>
               </>
@@ -257,7 +257,7 @@ export default function TestView({ project, test, revisions, shownId, liveCertif
               const checked = primary || draft.system_ids.includes(s.id)
               if (!editable && !checked) return null
               return (
-                <label key={s.id} style={{ ...small, display: 'inline-flex', gap: 4, alignItems: 'center', padding: '2px 8px', border: '1px solid var(--border)', borderRadius: 999, background: checked ? '#eff6ff' : undefined }}>
+                <label key={s.id} style={{ ...small, display: 'inline-flex', gap: 4, alignItems: 'center', padding: '2px 8px', border: '1px solid var(--border)', borderRadius: 999, background: checked ? 'var(--primary-50)' : undefined }}>
                   <input type="checkbox" checked={checked} disabled={!editable || primary}
                     onChange={e => setDraft(d => ({ ...d, system_ids: e.target.checked ? [...d.system_ids, s.id] : d.system_ids.filter(x => x !== s.id) }))} />
                   {s.code}{primary ? ` · ${t('perf.primary')}` : ''}

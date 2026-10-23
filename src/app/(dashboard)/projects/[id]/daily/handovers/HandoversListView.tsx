@@ -71,7 +71,7 @@ export default function HandoversListView({ project, rows, canOpen }: { project:
           </tr></thead>
           <tbody>
             {rows.map(h => (
-              <tr key={h.id} style={h.mineToReceive ? { background: '#eff6ff' } : undefined}>
+              <tr key={h.id} style={h.mineToReceive ? { background: 'var(--primary-50)' } : undefined}>
                 <td style={{ ...td, whiteSpace: 'nowrap' }}>
                   <Link href={`/projects/${project.id}/daily/handovers/${h.id}`} style={{ fontWeight: 700, color: 'var(--text-strong)', textDecoration: 'none', fontFamily: 'ui-monospace, monospace' }}>{h.number}</Link>
                 </td>
@@ -79,7 +79,7 @@ export default function HandoversListView({ project, rows, canOpen }: { project:
                 <td style={td}>{t(`handover.label.${h.label}`)}</td>
                 <td style={td}>
                   <Chip tone={TONE[h.status]}>{t(`handover.status.${h.status}`)}</Chip>
-                  {h.mineToReceive && <span style={{ ...small, marginLeft: 6, color: '#1d4ed8', fontWeight: 600 }}>{t('handover.toReceive')}</span>}
+                  {h.mineToReceive && <span style={{ ...small, marginLeft: 6, color: 'var(--primary-700)', fontWeight: 600 }}>{t('handover.toReceive')}</span>}
                 </td>
                 <td style={{ ...td, ...small }}>{h.handedBy ? `${h.handedBy} · ${when(h.handedAt)}` : `${h.openedBy ?? '—'} (${t('handover.status.draft').toLowerCase()})`}</td>
                 <td style={{ ...td, ...small }}>{h.receivedBy ? `${h.receivedBy} · ${when(h.receivedAt)}` : '—'}</td>

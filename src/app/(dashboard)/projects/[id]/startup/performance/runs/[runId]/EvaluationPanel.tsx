@@ -84,7 +84,7 @@ export default function EvaluationPanel({ projectId, run, evaluation, evaluation
 
       {/* S25 (E-19): qué cambian las exclusiones; el cliente las reconoce si cambian el sugerido */}
       {e.without_exclusions && (
-        <div style={{ border: `1px solid ${e.exclusions_change_result ? '#fde68a' : 'var(--border)'}`, background: e.exclusions_change_result ? '#fffbeb' : undefined, borderRadius: 8, padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <div style={{ border: `1px solid ${e.exclusions_change_result ? 'var(--warning-200)' : 'var(--border)'}`, background: e.exclusions_change_result ? 'var(--warning-50)' : undefined, borderRadius: 8, padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
           <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
             <span style={{ ...small, fontWeight: 700 }}>{t('perf.excl.withoutTitle')}</span>
             <Chip tone={RESULT_TONE[e.without_exclusions.suggested]}>{t(`perf.result.${e.without_exclusions.suggested}`)}</Chip>
@@ -99,7 +99,7 @@ export default function EvaluationPanel({ projectId, run, evaluation, evaluation
               </li>
             ))}
           </ul>
-          {pendingAck && <span style={{ ...small, color: '#b45309', fontWeight: 600 }}>{t('perf.excl.needsAck')}</span>}
+          {pendingAck && <span style={{ ...small, color: 'var(--warning-700)', fontWeight: 600 }}>{t('perf.excl.needsAck')}</span>}
           {canAckNow && (
             <div>
               <button type="button" style={btn('primary', isPending)} disabled={isPending}
@@ -183,7 +183,7 @@ export default function EvaluationPanel({ projectId, run, evaluation, evaluation
         <div style={{ ...small, display: 'flex', flexDirection: 'column', gap: 2 }}>
           <span>{t('perf.eval.recordedBy', { who: who(run.result_by), when: localTime(run.result_at) })}</span>
           {run.result_reason && <span>{t('perf.eval.reason')}: {run.result_reason}</span>}
-          {action && <span>{t('perf.eval.action')}: <Link href={`/projects/${projectId}/daily/action/${action.id}`} style={{ color: 'var(--primary-600, #2563eb)' }}>{action.number}</Link></span>}
+          {action && <span>{t('perf.eval.action')}: <Link href={`/projects/${projectId}/daily/action/${action.id}`} style={{ color: 'var(--primary-700)' }}>{action.number}</Link></span>}
           {run.evaluation_hash && <span style={{ fontFamily: 'ui-monospace, monospace' }}>sha256 {run.evaluation_hash.slice(0, 16)}…</span>}
         </div>
       ) : canLead ? (

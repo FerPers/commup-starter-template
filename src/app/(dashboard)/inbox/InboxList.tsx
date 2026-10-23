@@ -149,7 +149,7 @@ export default function InboxList({
               disabled={isPending}
               style={{
                 padding: '7px 14px',
-                background: '#7c3aed',
+                background: 'var(--violet-600)',
                 border: 'none',
                 borderRadius: 8,
                 color: '#fff',
@@ -248,7 +248,7 @@ function InboxRow({
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
           {unread && (
-            <span style={{ width: 9, height: 9, borderRadius: 999, background: '#7c3aed', flexShrink: 0 }} />
+            <span style={{ width: 9, height: 9, borderRadius: 999, background: 'var(--violet-600)', flexShrink: 0 }} />
           )}
           <span style={{ fontSize: 14, fontWeight: unread ? 600 : 500, color: 'var(--text-strong)' }}>
             {n.title}
@@ -295,7 +295,7 @@ function InboxRow({
           {n.body}
         </p>
       )}
-      <span style={{ fontSize: 11, color: 'var(--gray-400)' }}>
+      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
         {when(n.created_at)}
       </span>
     </div>

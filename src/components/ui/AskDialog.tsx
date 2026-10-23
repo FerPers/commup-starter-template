@@ -77,7 +77,7 @@ export function useAskDialog(): {
   const valid = !pending?.input || text.trim().length >= min
   const fieldStyle: React.CSSProperties = {
     width: '100%', padding: '10px 12px', fontSize: 16, borderRadius: 8, border: '1px solid var(--border)',
-    background: 'var(--surface, #fff)', color: 'var(--text-strong)', boxSizing: 'border-box',
+    background: 'var(--surface, var(--card-bg))', color: 'var(--text-strong)', boxSizing: 'border-box',
   }
 
   // Si la acción es «Cancelar» (cancelar una acción, una TQ…), el botón que cierra dice «Volver» para no repetir.
@@ -99,7 +99,7 @@ export function useAskDialog(): {
             {pending.choices.map((c, i) => (
               <label key={i} style={{
                 display: 'flex', gap: 10, alignItems: 'flex-start', padding: '10px 12px', borderRadius: 8, cursor: 'pointer', fontSize: 'var(--text-sm)',
-                border: `1px solid ${choice === i ? 'var(--primary-500, #6366f1)' : 'var(--border)'}`,
+                border: `1px solid ${choice === i ? 'var(--primary-500)' : 'var(--border)'}`,
               }}>
                 <input type="radio" name="ask-choice" checked={choice === i} style={{ marginTop: 3 }}
                   onChange={() => { setChoice(i); setText(c) }} />

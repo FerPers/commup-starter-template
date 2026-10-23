@@ -10,7 +10,7 @@ import { PunchImpactAndGuide } from '@/components/punch/PunchCategoryGuide'
 import type { PunchImpact } from '@/lib/punches/category-guide'
 import type { TagContext } from '@/lib/create/tag-context'
 import { PUNCH_CATEGORY_CFG as CATEGORY_CFG } from '@/lib/constants/status-colors'
-import { ink } from '@/lib/theme'
+import { ink, alpha } from '@/lib/theme'
 
 // N3b: el formulario de alta de punch en su página (lo que antes era la ventana de la lista y del tag).
 
@@ -78,7 +78,7 @@ export default function NewPunchForm({ project, initialTag, assignees, back }: P
   return (
     <form onSubmit={submit} style={{ padding: 32, maxWidth: 720, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div>
-        <Link href={cancelHref} style={{ fontSize: 13, color: 'var(--primary-600)', textDecoration: 'none' }}>
+        <Link href={cancelHref} style={{ fontSize: 13, color: 'var(--primary-700)', textDecoration: 'none' }}>
           ← {back ? t('create.back') : t('create.backToList')}
         </Link>
         <h1 style={{ fontSize: 26, fontWeight: 700, color: 'var(--text-strong)', margin: '8px 0 0' }}>{t('create.modalTitle')}</h1>
@@ -130,8 +130,8 @@ export default function NewPunchForm({ project, initialTag, assignees, back }: P
               return (
                 <button key={c} type="button" aria-pressed={active} onClick={() => setCategory(c)} style={{
                   flex: 1, padding: '10px 8px', minHeight: 44, borderRadius: 8, fontSize: 12, fontWeight: 700, fontFamily: 'inherit',
-                  background: active ? cfg.bg : 'var(--card-bg)', color: active ? cfg.color : 'var(--text-muted)',
-                  border: `1px solid ${active ? cfg.color + '60' : 'var(--border)'}`, cursor: 'pointer',
+                  background: active ? cfg.bg : 'var(--card-bg)', color: ink(active ? cfg.color : 'var(--text-muted)'),
+                  border: `1px solid ${active ? alpha(cfg.color, 38) : 'var(--border)'}`, cursor: 'pointer',
                 }}>
                   {cfg.label}
                 </button>
@@ -181,7 +181,7 @@ export default function NewPunchForm({ project, initialTag, assignees, back }: P
           </Link>
           <button type="submit" disabled={!canSubmit} style={{
             padding: '10px 18px', minHeight: 44, borderRadius: 8, fontSize: 13, fontWeight: 600, border: 'none', fontFamily: 'inherit',
-            background: canSubmit ? 'var(--primary-500)' : 'var(--gray-100)', color: canSubmit ? '#fff' : 'var(--gray-400)',
+            background: canSubmit ? 'var(--primary-600)' : 'var(--gray-100)', color: canSubmit ? '#fff' : 'var(--text-muted)',
             cursor: canSubmit ? 'pointer' : 'default',
           }}>
             {isPending ? t('create.submitting') : t('create.submit')}
@@ -193,9 +193,9 @@ export default function NewPunchForm({ project, initialTag, assignees, back }: P
   )
 }
 
-const labelStyle: React.CSSProperties = { fontSize: 12, fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: 6 }
+const labelStyle: React.CSSProperties = { fontSize: 12, fontWeight: 600, color: 'var(--text-body)', display: 'block', marginBottom: 6 }
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '9px 11px', border: '1px solid var(--border)', borderRadius: 8, fontSize: 13, fontFamily: 'inherit',
   boxSizing: 'border-box', background: 'var(--card-bg)', color: 'var(--text-strong)', minHeight: 40,
 }
-const linkBtn: React.CSSProperties = { background: 'none', border: 'none', color: 'var(--primary-600)', cursor: 'pointer', fontSize: 12, fontWeight: 600, padding: '6px 4px', fontFamily: 'inherit' }
+const linkBtn: React.CSSProperties = { background: 'none', border: 'none', color: 'var(--primary-700)', cursor: 'pointer', fontSize: 12, fontWeight: 600, padding: '6px 4px', fontFamily: 'inherit' }

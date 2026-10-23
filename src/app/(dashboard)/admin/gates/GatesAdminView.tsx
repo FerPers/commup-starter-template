@@ -49,9 +49,9 @@ const input: React.CSSProperties = {
 const btn = (primary = false): React.CSSProperties => ({
   padding: '6px 12px', borderRadius: 8, fontSize: 'var(--text-sm)', fontWeight: 600, cursor: 'pointer',
   border: primary ? 'none' : '1px solid var(--border)',
-  background: primary ? 'var(--primary-500)' : 'transparent', color: primary ? '#fff' : 'var(--text-strong)',
+  background: primary ? 'var(--primary-600)' : 'transparent', color: primary ? '#fff' : 'var(--text-strong)',
 })
-const linkBtn: React.CSSProperties = { background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontSize: 'var(--text-sm)', color: 'var(--danger-500)' }
+const linkBtn: React.CSSProperties = { background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontSize: 'var(--text-sm)', color: 'var(--danger-700)' }
 
 export default function GatesAdminView({ gates, criteria, phases, weights, policy, nonDispensable }: {
   gates: Gate[]; criteria: Crit[]; phases: Phase[]; weights?: React.ReactNode; policy: GatePolicy
@@ -102,7 +102,7 @@ export default function GatesAdminView({ gates, criteria, phases, weights, polic
       </div>
 
       {error && (
-        <div role="alert" style={{ padding: '10px 14px', background: 'var(--danger-50)', border: '1px solid #fecaca', borderRadius: 8, color: 'var(--danger-700)', fontSize: 'var(--text-sm)' }}>
+        <div role="alert" style={{ padding: '10px 14px', background: 'var(--danger-50)', border: '1px solid var(--danger-200)', borderRadius: 8, color: 'var(--danger-700)', fontSize: 'var(--text-sm)' }}>
           {error}
         </div>
       )}
@@ -161,9 +161,9 @@ export default function GatesAdminView({ gates, criteria, phases, weights, polic
         </div>
       </section>
 
-      {!startup && <div role="alert" style={{ ...small, padding: '10px 14px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8, color: '#b45309' }}>{t('noStartupGate')}</div>}
+      {!startup && <div role="alert" style={{ ...small, padding: '10px 14px', background: 'var(--warning-50)', border: '1px solid var(--warning-200)', borderRadius: 8, color: 'var(--warning-700)' }}>{t('noStartupGate')}</div>}
       {perfBeforeStartup.length > 0 && (
-        <div role="alert" style={{ ...small, padding: '10px 14px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8, color: '#b45309' }}>
+        <div role="alert" style={{ ...small, padding: '10px 14px', background: 'var(--warning-50)', border: '1px solid var(--warning-200)', borderRadius: 8, color: 'var(--warning-700)' }}>
           {t('perfBeforeStartup', { gates: perfBeforeStartup.map(g => g.code).join(', '), startup: startup?.code ?? '' })}
         </div>
       )}
@@ -191,7 +191,7 @@ export default function GatesAdminView({ gates, criteria, phases, weights, polic
                 <button type="button" style={btn()} disabled={isPending} onClick={() => act(() => updateGate(g.id, { isActive: !g.is_active }))}>
                   {g.is_active ? t('deactivate') : t('activate')}
                 </button>
-                <button type="button" style={{ ...btn(), color: 'var(--danger-500)' }} disabled={isPending}
+                <button type="button" style={{ ...btn(), color: 'var(--danger-700)' }} disabled={isPending}
                   onClick={async () => { if (await confirm({ message: t('confirmDelete', { code: g.code }), confirmLabel: t('delete'), danger: true })) act(() => deleteGate(g.id)) }}>
                   {t('delete')}
                 </button>

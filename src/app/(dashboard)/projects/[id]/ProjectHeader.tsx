@@ -8,15 +8,16 @@ import { updateProject, deleteProject, removeProjectClientLogo, uploadProjectCli
 import { DEFAULT_TIMEZONE, TIMEZONE_OPTIONS } from '@/lib/time/zone'
 import type { ProjectStatus } from '@/types/database'
 import { DialogSurface } from '@/components/ui/dialog-a11y'
+import { alpha, ink } from '@/lib/theme'
 
 const STATUS_OPTIONS: readonly ProjectStatus[] = ['planning', 'active', 'on_hold', 'completed', 'cancelled']
 
 const STATUS_STYLE: Record<string, { color: string }> = {
-  planning:  { color: '#6366f1' },
-  active:    { color: '#10b981' },
-  on_hold:   { color: '#f59e0b' },
-  completed: { color: '#3b82f6' },
-  cancelled: { color: 'var(--gray-400)' },
+  planning:  { color: 'var(--indigo-700)' },
+  active:    { color: 'var(--success-700)' },
+  on_hold:   { color: 'var(--warning-700)' },
+  completed: { color: 'var(--primary-700)' },
+  cancelled: { color: 'var(--text-muted)' },
 }
 
 interface ProjectData {
@@ -170,7 +171,7 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete, ca
               width: '56px', height: '56px', borderRadius: '14px',
               background: '#3b82f615', border: '1px solid #3b82f625',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '12px', fontWeight: 700, color: '#3b82f6', flexShrink: 0,
+              fontSize: '12px', fontWeight: 700, color: 'var(--primary-700)', flexShrink: 0,
             }}>
               {project.code.slice(0, 6)}
             </div>
@@ -181,8 +182,8 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete, ca
                 </h1>
                 <span style={{
                   padding: '3px 10px', borderRadius: '999px', fontSize: '12px', fontWeight: 600,
-                  background: `${statusStyle.color}18`, color: statusStyle.color,
-                  border: `1px solid ${statusStyle.color}30`,
+                  background: alpha(statusStyle.color, 9), color: ink(statusStyle.color),
+                  border: `1px solid ${alpha(statusStyle.color, 19)}`,
                 }}>
                   {statusLabel}
                 </span>
@@ -231,9 +232,9 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete, ca
             }}
           >
             {/* Modal header */}
-            <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid var(--gray-100)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h2 id={titleId} style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: 'var(--text-strong)' }}>{t('edit')}</h2>
-              <button onClick={() => setShowModal(false)} aria-label={t('close')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', fontSize: '20px', padding: 0 }}>×</button>
+              <button onClick={() => setShowModal(false)} aria-label={t('close')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '20px', padding: 0 }}>×</button>
             </div>
 
             {/* Form */}
@@ -263,7 +264,7 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete, ca
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                     {project.client_logo_url
                       // eslint-disable-next-line @next/next/no-img-element -- vista previa del logo del bucket público
-                      ? <img src={project.client_logo_url} alt={t('clientLogoAlt', { client: client || project.name })} style={{ height: 40, maxWidth: 140, objectFit: 'contain', border: '1px solid var(--border)', borderRadius: 6, padding: 4, background: '#ffffff' }} />
+                      ? <img src={project.client_logo_url} alt={t('clientLogoAlt', { client: client || project.name })} style={{ height: 40, maxWidth: 140, objectFit: 'contain', border: '1px solid var(--border)', borderRadius: 6, padding: 4, background: 'var(--card-bg)' }} />
                       : <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('clientLogoNone')}</span>}
                     <input ref={logoInput} type="file" accept="image/png,image/jpeg,image/webp" onChange={handleLogo} style={{ display: 'none' }} aria-label={t('f.clientLogo')} />
                     <button type="button" onClick={() => logoInput.current?.click()} disabled={isPending}
@@ -312,7 +313,7 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete, ca
               </Field>
 
               {error && (
-                <div style={{ padding: '10px 12px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '7px', fontSize: '13px', color: '#dc2626' }}>
+                <div style={{ padding: '10px 12px', background: 'var(--danger-50)', border: '1px solid var(--danger-200)', borderRadius: '7px', fontSize: '13px', color: 'var(--danger-700)' }}>
                   {error}
                 </div>
               )}
@@ -320,21 +321,21 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete, ca
 
             {/* Danger zone — owner only */}
             {canDelete && (
-              <div style={{ margin: '0 24px 4px', borderTop: '1px solid #fee2e2', paddingTop: '14px' }}>
+              <div style={{ margin: '0 24px 4px', borderTop: '1px solid var(--danger-100)', paddingTop: '14px' }}>
                 {!showDeleteConfirm ? (
                   <button
                     onClick={() => setShowDeleteConfirm(true)}
                     style={{
                       width: '100%', padding: '8px 12px', background: 'var(--card-bg)',
-                      border: '1px solid #fecaca', borderRadius: '7px',
-                      fontSize: '12px', color: '#dc2626', cursor: 'pointer', textAlign: 'left',
+                      border: '1px solid var(--danger-200)', borderRadius: '7px',
+                      fontSize: '12px', color: 'var(--danger-700)', cursor: 'pointer', textAlign: 'left',
                     }}
                   >
                     {t('delete')}
                   </button>
                 ) : (
-                  <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', padding: '12px' }}>
-                    <p style={{ margin: '0 0 10px', fontSize: '12px', color: '#991b1b', fontWeight: 500 }}>
+                  <div style={{ background: 'var(--danger-50)', border: '1px solid var(--danger-200)', borderRadius: '8px', padding: '12px' }}>
+                    <p style={{ margin: '0 0 10px', fontSize: '12px', color: 'var(--danger-800)', fontWeight: 500 }}>
                       {t.rich('deleteWarning', { strong: chunks => <strong>{chunks}</strong> })}
                     </p>
                     <div style={{ display: 'flex', gap: '8px' }}>
@@ -342,7 +343,7 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete, ca
                         onClick={handleDelete}
                         disabled={isPending}
                         style={{
-                          padding: '7px 14px', background: '#dc2626', color: '#fff',
+                          padding: '7px 14px', background: 'var(--danger-600)', color: '#fff',
                           border: 'none', borderRadius: '6px', fontSize: '12px',
                           fontWeight: 600, cursor: isPending ? 'not-allowed' : 'pointer',
                         }}
@@ -377,7 +378,7 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete, ca
                 onClick={handleSave}
                 disabled={isPending || !name.trim() || !code.trim()}
                 style={{
-                  padding: '9px 18px', background: isPending ? '#93c5fd' : '#3b82f6',
+                  padding: '9px 18px', background: isPending ? 'var(--primary-300)' : 'var(--primary-600)',
                   border: 'none', borderRadius: '8px', fontSize: '13px', color: '#fff',
                   cursor: isPending ? 'not-allowed' : 'pointer', fontWeight: 500,
                 }}

@@ -86,7 +86,7 @@ export default function RegistersView({ project, rows, activeKinds, canCreate }:
         {openByKind.map(({ k, n }) => (
           <button key={k} type="button" aria-pressed={kind === k} onClick={() => setKind(kind === k ? '' : k)}
             style={{ ...btn('outline'), padding: '5px 10px', fontSize: 'var(--text-xs)',
-              background: kind === k ? 'var(--primary-500)' : 'var(--card-bg)', color: kind === k ? '#fff' : 'var(--text-strong)',
+              background: kind === k ? 'var(--primary-600)' : 'var(--card-bg)', color: kind === k ? '#fff' : 'var(--text-strong)',
               opacity: activeKinds.includes(k) ? 1 : 0.5 }}>
             {t(`kind.${k}`)} · {n}
           </button>
@@ -127,7 +127,7 @@ export default function RegistersView({ project, rows, activeKinds, canCreate }:
                 </td>
                 <td style={td}>{r.title}</td>
                 <td style={{ ...td, ...small }}>{t(`kind.${r.kind}`)}</td>
-                <td style={td}>{r.system ?? <span style={{ color: 'var(--gray-400)' }}>—</span>}</td>
+                <td style={td}>{r.system ?? <span style={{ color: 'var(--text-muted)' }}>—</span>}</td>
                 <td style={{ ...td, ...small }}>{r.tags.slice(0, 3).join(', ')}{r.tags.length > 3 ? ` +${r.tags.length - 3}` : ''}</td>
                 <td style={td}><StatusChip kind={r.kind} status={r.status} /></td>
                 {/* Hora local del navegador: difiere del render del servidor (UTC, otro locale). */}

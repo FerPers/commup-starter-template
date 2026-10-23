@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useTranslations, useLocale } from 'next-intl'
+import { alpha, ink } from '@/lib/theme'
 import { Card, Badge } from '@/components/ui'
 
 export interface ProjectCardData {
@@ -41,7 +42,7 @@ export default function ProjectCard({ project, phases, inactive = false }: {
               width: 44, height: 44, borderRadius: 'var(--radius-md)', flexShrink: 0,
               background: 'var(--primary-50)', border: '1px solid var(--primary-200)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--primary-500)', letterSpacing: '0.02em',
+              fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--primary-700)', letterSpacing: '0.02em',
             }}>
               {project.code.slice(0, 6)}
             </div>
@@ -71,8 +72,8 @@ export default function ProjectCard({ project, phases, inactive = false }: {
           {phases.map(phase => (
             <div key={phase.id} title={phase.name} style={{
               padding: '3px 10px', borderRadius: 'var(--radius-pill)', fontSize: 'var(--text-xs)', fontWeight: 600,
-              background: `${phase.color}15`, color: phase.color,
-              border: `1px solid ${phase.color}30`,
+              background: alpha(phase.color, 8), color: ink(phase.color),
+              border: `1px solid ${alpha(phase.color, 19)}`,
             }}>
               {phase.code}
             </div>
@@ -84,14 +85,14 @@ export default function ProjectCard({ project, phases, inactive = false }: {
           <div style={{ display: 'flex', gap: 16, paddingTop: 12, borderTop: '1px solid var(--gray-100)' }}>
             {project.start_date && (
               <div>
-                <div style={{ fontSize: 10, color: 'var(--gray-400)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('card.start')}</div>
-                <div style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-600)', marginTop: 2 }}>{formatDate(project.start_date)}</div>
+                <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('card.start')}</div>
+                <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', marginTop: 2 }}>{formatDate(project.start_date)}</div>
               </div>
             )}
             {project.end_date && (
               <div>
-                <div style={{ fontSize: 10, color: 'var(--gray-400)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('card.target')}</div>
-                <div style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-600)', marginTop: 2 }}>{formatDate(project.end_date)}</div>
+                <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('card.target')}</div>
+                <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', marginTop: 2 }}>{formatDate(project.end_date)}</div>
               </div>
             )}
           </div>

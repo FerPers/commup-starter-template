@@ -64,7 +64,7 @@ export default function RevokeModal({
         </label>
 
         {revokeError && (
-          <p style={{ margin: 0, fontSize: 12, color: 'var(--danger-600)' }}>{revokeError}</p>
+          <p style={{ margin: 0, fontSize: 12, color: 'var(--danger-700)' }}>{revokeError}</p>
         )}
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>

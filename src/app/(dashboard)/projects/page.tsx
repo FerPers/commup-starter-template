@@ -131,7 +131,7 @@ export default async function ProjectsPage() {
       {/* Inactive projects */}
       {inactiveProjects.length > 0 && (
         <section>
-          <h2 style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>
+          <h2 style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>
             {t('inactive')} · {inactiveProjects.length}
           </h2>
           <ProjectGrid projects={inactiveProjects} phases={phases ?? []} inactive />

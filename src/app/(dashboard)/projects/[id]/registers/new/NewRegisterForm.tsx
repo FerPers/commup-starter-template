@@ -60,7 +60,7 @@ export default function NewRegisterForm({ project, kinds, initialKind, systems, 
         {linkTo && <p style={{ ...small, margin: '4px 0 0', fontWeight: 600 }}>{t('form.linkTo', { number: linkTo.number })}</p>}
       </div>
 
-      {error && <div role="alert" style={{ padding: '10px 14px', background: 'var(--danger-50)', border: '1px solid #fecaca', borderRadius: 8, color: 'var(--danger-700)', fontSize: 'var(--text-sm)' }}>{error}</div>}
+      {error && <div role="alert" style={{ padding: '10px 14px', background: 'var(--danger-50)', border: '1px solid var(--danger-200)', borderRadius: 8, color: 'var(--danger-700)', fontSize: 'var(--text-sm)' }}>{error}</div>}
 
       <section style={card} aria-label={t('form.type')}>
         <div style={{ ...label, marginBottom: 8 }}>{t('form.type')}</div>
@@ -68,7 +68,7 @@ export default function NewRegisterForm({ project, kinds, initialKind, systems, 
           {kinds.map(k => (
             <button key={k} type="button" role="radio" aria-checked={kind === k} aria-label={t(`kind.${k}`)} onClick={() => changeKind(k)}
               style={{ textAlign: 'left', padding: 12, borderRadius: 10, cursor: 'pointer',
-                border: kind === k ? '2px solid var(--primary-500)' : '1px solid var(--border)', background: kind === k ? '#eff6ff' : 'var(--card-bg)' }}>
+                border: kind === k ? '2px solid var(--primary-500)' : '1px solid var(--border)', background: kind === k ? 'var(--primary-50)' : 'var(--card-bg)' }}>
               <div style={{ fontWeight: 700, color: 'var(--text-strong)', fontSize: 'var(--text-sm)' }}>{t(`kind.${k}`)}</div>
               <div style={{ ...small, fontSize: 'var(--text-xs)', marginTop: 2 }}>{t(`kindHelp.${k}`)}</div>
             </button>

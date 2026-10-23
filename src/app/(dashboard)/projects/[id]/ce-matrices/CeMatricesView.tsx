@@ -62,7 +62,7 @@ export default function CeMatricesView({ project, matrices, systems, canEdit }: 
         </div>
         {canEdit && <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           <Link href={`/projects/${project.id}/ce-matrices/import`} style={{ padding: '9px 14px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--card-bg)', color: 'var(--text-strong)', fontSize: '13px', fontWeight: 600, textDecoration: 'none' }}>{tc('importAi')}</Link>
-          <button type="button" onClick={() => setOpen(v => !v)} style={{ padding: '9px 14px', borderRadius: '8px', border: 0, background: 'var(--primary-600, #2563eb)', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>{open ? tc('cancel') : tc('new')}</button>
+          <button type="button" onClick={() => setOpen(v => !v)} style={{ padding: '9px 14px', borderRadius: '8px', border: 0, background: 'var(--primary-600)', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>{open ? tc('cancel') : tc('new')}</button>
         </div>}
       </div>
 
@@ -78,8 +78,8 @@ export default function CeMatricesView({ project, matrices, systems, canEdit }: 
           </label>
           <label style={{ fontSize: '12px' }}>{tc('revision')}<input maxLength={30} style={field} value={form.revision} onChange={e => setForm({ ...form, revision: e.target.value })} placeholder="B" /></label>
           <label style={{ fontSize: '12px' }}>{tc('sourceDocument')}<input maxLength={200} style={field} value={form.sourceDocument} onChange={e => setForm({ ...form, sourceDocument: e.target.value })} placeholder={tc('sourcePlaceholder')} /></label>
-          <button type="submit" disabled={pending} style={{ padding: '9px 14px', borderRadius: '8px', border: 0, background: 'var(--primary-600, #2563eb)', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>{pending ? tc('creating') : tc('create')}</button>
-          {error && <p role="alert" style={{ gridColumn: '1 / -1', color: '#b91c1c', fontSize: '12px', margin: 0 }}>{error}</p>}
+          <button type="submit" disabled={pending} style={{ padding: '9px 14px', borderRadius: '8px', border: 0, background: 'var(--primary-600)', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>{pending ? tc('creating') : tc('create')}</button>
+          {error && <p role="alert" style={{ gridColumn: '1 / -1', color: 'var(--danger-700)', fontSize: '12px', margin: 0 }}>{error}</p>}
         </form>
       )}
 
@@ -103,7 +103,7 @@ export default function CeMatricesView({ project, matrices, systems, canEdit }: 
                 <td style={{ padding: '10px 12px', fontVariantNumeric: 'tabular-nums' }}>{m.causes}</td>
                 <td style={{ padding: '10px 12px', fontVariantNumeric: 'tabular-nums' }}>{m.effects}</td>
                 <td style={{ padding: '10px 12px', fontVariantNumeric: 'tabular-nums' }}>{m.links}</td>
-                <td style={{ padding: '10px 12px', color: m.gaps ? '#b45309' : 'var(--text-muted)', whiteSpace: 'nowrap' }}>{m.gaps ? tc('gaps', { n: m.gaps }) : '—'}</td>
+                <td style={{ padding: '10px 12px', color: m.gaps ? 'var(--warning-700)' : 'var(--text-muted)', whiteSpace: 'nowrap' }}>{m.gaps ? tc('gaps', { n: m.gaps }) : '—'}</td>
                 <td style={{ padding: '10px 12px', color: 'var(--text-muted)' }}>{SOURCES.includes(m.source) ? tc(`source.${m.source as 'manual'}`) : m.source}</td>
               </tr>
             ))}</tbody>

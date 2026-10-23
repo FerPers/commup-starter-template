@@ -20,16 +20,17 @@ import {
   type BuilderSection,
   type ItemFormValues,
 } from './template-builder-shared'
+import { alpha } from '@/lib/theme'
 
 function TypeBadge({ type }: { type: string }) {
   const t = useTranslations('ItrTemplates.builder')
   const def = ITEM_TYPE_DEFS.find(it => it.value === type)
   const label = def ? t(def.labelKey as Parameters<typeof t>[0]) : type
-  const color = def?.color ?? 'var(--gray-400)'
+  const color = def?.color ?? 'var(--text-muted)'
   return (
     <span style={{
       padding: '2px 8px', borderRadius: '999px', fontSize: '10px', fontWeight: 600,
-      background: `${color}18`, color, border: `1px solid ${color}30`,
+      background: alpha(color, 9), color, border: `1px solid ${alpha(color, 19)}`,
       whiteSpace: 'nowrap',
     }}>
       {label}
@@ -143,15 +144,15 @@ export default function TemplateSectionCard({
               autoFocus
               style={{ ...fieldInput, flex: 1, fontSize: '13px', fontWeight: 600 }}
             />
-            <button onClick={saveTitle} style={iconBtn('#3b82f6')}>✓</button>
-            <button onClick={() => setEditingTitle(false)} style={iconBtn('var(--gray-400)')}>✕</button>
+            <button onClick={saveTitle} style={iconBtn('var(--primary-600)')}>✓</button>
+            <button onClick={() => setEditingTitle(false)} style={iconBtn('var(--text-muted)')}>✕</button>
           </>
         ) : (
           <>
             <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-strong)', flex: 1 }}>
               {section.title}
             </span>
-            <span style={{ fontSize: '11px', color: 'var(--gray-400)', marginRight: '8px' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginRight: '8px' }}>
               {t('sectionItemCount', { count: section.items.length, plural: section.items.length !== 1 ? 's' : '' })}
             </span>
             {canEdit && (
@@ -170,12 +171,12 @@ export default function TemplateSectionCard({
                 >▼</button>
                 <button
                   onClick={() => { setEditingTitle(true); setTitleDraft(section.title) }}
-                  style={iconBtn('#3b82f6')}
+                  style={iconBtn('var(--primary-600)')}
                   title={t('tooltipRename')}
                 >✎</button>
                 <button
                   onClick={() => onDeleteSection(section.id, section.title)}
-                  style={iconBtn('#ef4444')}
+                  style={iconBtn('var(--danger-600)')}
                   title={t('tooltipDeleteSection')}
                 >✕</button>
               </>
@@ -187,7 +188,7 @@ export default function TemplateSectionCard({
       {/* Items */}
       <div style={{ padding: '8px 0' }}>
         {section.items.length === 0 && !addingItem && (
-          <p style={{ fontSize: '12px', color: 'var(--gray-400)', padding: '12px 18px', margin: 0 }}>
+          <p style={{ fontSize: '12px', color: 'var(--text-muted)', padding: '12px 18px', margin: 0 }}>
             {t('emptySectionHint')}
           </p>
         )}
@@ -212,7 +213,7 @@ export default function TemplateSectionCard({
                 gridTemplateColumns: '55px 1fr 100px 36px 36px 36px 80px',
                 gap: '8px',
                 padding: '9px 16px',
-                borderBottom: iIdx < section.items.length - 1 ? '1px solid #f8fafc' : 'none',
+                borderBottom: iIdx < section.items.length - 1 ? '1px solid var(--gray-50)' : 'none',
                 alignItems: 'center', fontSize: '12px',
               }}
             >
@@ -227,8 +228,8 @@ export default function TemplateSectionCard({
                 {item.condition_item_id && (() => {
                   const condItem = allItems.find(it => it.id === item.condition_item_id)
                   return condItem ? (
-                    <div style={{ fontSize: '10px', color: '#92400e', marginTop: '3px', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                      <span style={{ background: '#fef3c7', border: '1px solid #fde68a', borderRadius: '3px', padding: '0 4px' }}>
+                    <div style={{ fontSize: '10px', color: 'var(--warning-800)', marginTop: '3px', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                      <span style={{ background: 'var(--warning-100)', border: '1px solid var(--warning-200)', borderRadius: '3px', padding: '0 4px' }}>
                         {t('conditionBadgePrefix')} &ldquo;{condItem.item_number ?? condItem.description.slice(0, 25)}&rdquo; = {item.condition_value}
                       </span>
                     </div>
@@ -237,20 +238,20 @@ export default function TemplateSectionCard({
               </div>
               <TypeBadge type={item.item_type} />
               <span title={t('tooltipCritical')} style={{ textAlign: 'center', fontSize: '14px' }}>
-                {item.is_critical ? <span style={{ color: '#ef4444' }}>●</span> : <span style={{ color: 'var(--border)' }}>○</span>}
+                {item.is_critical ? <span style={{ color: 'var(--danger-700)' }}>●</span> : <span style={{ color: 'var(--border)' }}>○</span>}
               </span>
               <span title={t('tooltipRequired')} style={{ textAlign: 'center', fontSize: '14px' }}>
-                {item.is_required ? <span style={{ color: '#f59e0b' }}>●</span> : <span style={{ color: 'var(--border)' }}>○</span>}
+                {item.is_required ? <span style={{ color: 'var(--warning-700)' }}>●</span> : <span style={{ color: 'var(--border)' }}>○</span>}
               </span>
               <span title={t('tooltipPhoto')} style={{ textAlign: 'center', fontSize: '14px' }}>
-                {item.requires_photo ? <span style={{ color: '#3b82f6' }}>⊙</span> : <span style={{ color: 'var(--border)' }}>○</span>}
+                {item.requires_photo ? <span style={{ color: 'var(--primary-700)' }}>⊙</span> : <span style={{ color: 'var(--border)' }}>○</span>}
               </span>
               {canEdit ? (
                 <div style={{ display: 'flex', gap: '2px', justifyContent: 'flex-end' }}>
                   <button onClick={() => onMoveItem(item.id, section.id, 'up')} disabled={iIdx === 0} style={{ ...miniBtn, opacity: iIdx === 0 ? 0.3 : 1 }}>▲</button>
                   <button onClick={() => onMoveItem(item.id, section.id, 'down')} disabled={iIdx === section.items.length - 1} style={{ ...miniBtn, opacity: iIdx === section.items.length - 1 ? 0.3 : 1 }}>▼</button>
-                  <button onClick={() => setEditingItemId(item.id)} style={{ ...miniBtn, color: '#3b82f6' }}>✎</button>
-                  <button onClick={() => onDeleteItem(item.id, section.id)} style={{ ...miniBtn, color: '#ef4444' }}>✕</button>
+                  <button onClick={() => setEditingItemId(item.id)} style={{ ...miniBtn, color: 'var(--primary-700)' }}>✎</button>
+                  <button onClick={() => onDeleteItem(item.id, section.id)} style={{ ...miniBtn, color: 'var(--danger-700)' }}>✕</button>
                 </div>
               ) : <span />}
             </div>
@@ -277,11 +278,11 @@ export default function TemplateSectionCard({
             <button
               onClick={() => { setEditingItemId(null); setAddingItem(true) }}
               style={{
-                padding: '6px 14px', background: 'transparent', border: '1px dashed #cbd5e1',
+                padding: '6px 14px', background: 'transparent', border: '1px dashed var(--gray-300)',
                 borderRadius: '7px', fontSize: '12px', color: 'var(--text-muted)', cursor: 'pointer',
                 transition: 'all 0.15s',
               }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = '#3b82f6'; (e.currentTarget as HTMLElement).style.color = '#3b82f6' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--primary-500)'; (e.currentTarget as HTMLElement).style.color = 'var(--primary-700)' }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--gray-300)'; (e.currentTarget as HTMLElement).style.color = 'var(--text-muted)' }}
             >
               {t('btnAddItem')}

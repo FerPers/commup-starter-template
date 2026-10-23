@@ -90,7 +90,7 @@ export default function TqDetail({ project, opts, names, userId, role, events, a
           <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-strong)', margin: 0, whiteSpace: 'pre-wrap' }}>{item.response}</p>
           <p style={{ ...small, margin: '8px 0 0' }} suppressHydrationWarning>
             {t('tq.respondedBy', { who: item.responded_by_name ?? who(item.responded_by), when: when(item.responded_at) })}
-            {item.design_change && <> · <strong style={{ color: '#b45309' }}>{t('tq.designChange')}</strong>{item.moc_ref ? ` (${item.moc_ref})` : ''}</>}
+            {item.design_change && <> · <strong style={{ color: 'var(--warning-700)' }}>{t('tq.designChange')}</strong>{item.moc_ref ? ` (${item.moc_ref})` : ''}</>}
           </p>
           {status === 'issued' && <p style={{ ...small, margin: '6px 0 0' }}>{t('tq.reissued')}</p>}
         </section>

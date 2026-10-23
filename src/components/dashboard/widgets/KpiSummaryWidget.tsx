@@ -130,11 +130,11 @@ export default async function KpiSummaryWidget({ orgId }: { orgId: string }) {
         const delta: KpiDelta = { value: ago === undefined ? null : pct - ago, goodWhenUp: true }
         return <KpiCard key={phase.id} label={phase.name} value={`${pct}%`} color={phase.color} sub={`${approved} / ${total} ITRs`} progress={pct} delta={delta} />
       })}
-      <KpiCard label={t('kpi.punchesOpen')} value={String(openCount)} color="var(--danger-500)" sub={t('kpi.punchesOpenSub', { catA, catB })} danger delta={punchDelta} />
+      <KpiCard label={t('kpi.punchesOpen')} value={String(openCount)} color='var(--danger-700)' sub={t('kpi.punchesOpenSub', { catA, catB })} danger delta={punchDelta} />
       <KpiCard
         label={t('kpi.preservation')}
         value={String(overdue + upcoming)}
-        color={overdue > 0 ? 'var(--warning-500)' : '#8b5cf6'}
+        color={overdue > 0 ? 'var(--warning-700)' : 'var(--violet-700)'}
         sub={overdue > 0 ? t('kpi.preservationOverdue', { overdue, upcoming }) : t('kpi.preservationUpcoming', { upcoming })}
         danger={overdue > 0}
       />

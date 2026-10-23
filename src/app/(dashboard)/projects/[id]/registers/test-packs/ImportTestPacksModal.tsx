@@ -95,7 +95,7 @@ export default function ImportTestPacksModal({ projectId, packs, onClose }: {
             <strong style={{ color: 'var(--text-strong)' }}>{parsed.fileName}</strong>: {t('preview', { packs: parsed.packs.length, lines: parsed.lines.length })}
             {parsed.errors.length > 0 && (
               <>
-                <div style={{ marginTop: 8, color: '#b45309', fontWeight: 600 }}>{t('skipped', { count: parsed.errors.length })}</div>
+                <div style={{ marginTop: 8, color: 'var(--warning-700)', fontWeight: 600 }}>{t('skipped', { count: parsed.errors.length })}</div>
                 <ul style={{ margin: '4px 0 0', paddingLeft: 18, maxHeight: 160, overflowY: 'auto' }}>
                   {parsed.errors.map((x, i) => <li key={i}>{x}</li>)}
                 </ul>

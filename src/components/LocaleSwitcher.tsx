@@ -4,6 +4,7 @@ import { useTransition } from 'react'
 import { useLocale } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { setLocale } from '@/app/actions/locale'
+import { ink } from '@/lib/theme'
 
 export default function LocaleSwitcher({ variant = 'dark' }: { variant?: 'dark' | 'light' }) {
   const locale = useLocale()
@@ -30,9 +31,9 @@ export default function LocaleSwitcher({ variant = 'dark' }: { variant?: 'dark' 
     transition: 'color 0.15s',
   }
 
-  const activeColor = variant === 'dark' ? '#60a5fa' : '#1d4ed8'
-  const inactiveColor = variant === 'dark' ? '#94a3b8' : '#94a3b8'
-  const dividerColor = variant === 'dark' ? '#334155' : '#e2e8f0'
+  const activeColor = variant === 'dark' ? 'var(--primary-400)' : 'var(--primary-700)'
+  const inactiveColor = variant === 'dark' ? 'var(--gray-400)' : 'var(--gray-400)'
+  const dividerColor = variant === 'dark' ? 'var(--gray-700)' : 'var(--gray-200)'
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', opacity: isPending ? 0.5 : 1, transition: 'opacity 0.15s' }}>
@@ -40,18 +41,18 @@ export default function LocaleSwitcher({ variant = 'dark' }: { variant?: 'dark' 
         onClick={() => switchLocale('es')}
         style={{
           ...baseBtn,
-          color: locale === 'es' ? activeColor : inactiveColor,
+          color: ink(locale === 'es' ? activeColor : inactiveColor),
           cursor: locale === 'es' ? 'default' : 'pointer',
         }}
       >
         ES
       </button>
-      <span style={{ color: dividerColor, fontSize: '11px', userSelect: 'none' }}>|</span>
+      <span style={{ color: ink(dividerColor), fontSize: '11px', userSelect: 'none' }}>|</span>
       <button
         onClick={() => switchLocale('en')}
         style={{
           ...baseBtn,
-          color: locale === 'en' ? activeColor : inactiveColor,
+          color: ink(locale === 'en' ? activeColor : inactiveColor),
           cursor: locale === 'en' ? 'default' : 'pointer',
         }}
       >

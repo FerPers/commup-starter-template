@@ -8,6 +8,7 @@ import { updatePunchClassification } from '@/app/actions/punches'
 import { PUNCH_CATEGORY_CFG, PUNCH_STATUS_COLORS } from '@/lib/constants/status-colors'
 import { STARTUP_DISPOSITIONS, STARTUP_DISPOSITION_HELP, startupDispositionBlockers, type StartupDisposition } from '@/lib/punches/category-guide'
 import { punchDisplayStatus } from '@/lib/punches/verification'
+import { ink } from '@/lib/theme'
 
 // Pendientes abiertos del sistema y su disposición para el arranque (fase 4, §10.7 / libro 16.37).
 // Para enviar y aprobar el PSSR: todos con disposición y ninguno «cerrar antes del arranque» abierto
@@ -60,7 +61,7 @@ export default function PssrPunchDisposition({ projectId, systemCode, punches, e
 
       <div role="status" style={{
         padding: '10px 12px', borderRadius: '8px', marginBottom: '12px', fontSize: '12px', fontWeight: 600,
-        background: ok ? 'var(--success-50)' : '#fffbeb', border: `1px solid ${ok ? '#a7f3d0' : '#fde68a'}`, color: ok ? 'var(--success-700)' : '#92400e',
+        background: ok ? 'var(--success-50)' : 'var(--warning-50)', border: `1px solid ${ok ? 'var(--success-200)' : 'var(--warning-200)'}`, color: ok ? 'var(--success-700)' : 'var(--warning-800)',
       }}>
         {punches.length === 0 ? t('pssrNone') : ok ? t('pssrOk', { n: punches.length }) : t('pssrBlocked', { missing: missing.length, mustClose: mustClose.length })}
       </div>
@@ -83,18 +84,18 @@ export default function PssrPunchDisposition({ projectId, systemCode, punches, e
                 const st = PUNCH_STATUS_COLORS[ds] ?? PUNCH_STATUS_COLORS.open
                 const blocking = !p.startup_disposition || p.startup_disposition === 'close_before_startup'
                 return (
-                  <tr key={p.id} style={{ background: blocking ? '#fffbeb' : undefined }}>
+                  <tr key={p.id} style={{ background: blocking ? 'var(--warning-50)' : undefined }}>
                     <td style={{ ...td, whiteSpace: 'nowrap' }}>
                       <Link href={`/projects/${projectId}/punches/${p.id}`} style={{ fontFamily: 'ui-monospace, monospace', fontWeight: 700, color: 'inherit', textDecoration: 'none', display: 'block' }}>{p.punch_number}</Link>
-                      <span style={{ fontSize: '10px', fontWeight: 700, padding: '1px 6px', borderRadius: '4px', background: cat.bg, color: cat.color, border: `1px solid ${cat.border}` }}>{cat.label}</span>
+                      <span style={{ fontSize: '10px', fontWeight: 700, padding: '1px 6px', borderRadius: '4px', background: cat.bg, color: ink(cat.color), border: `1px solid ${cat.border}` }}>{cat.label}</span>
                     </td>
                     <td style={td}>
                       {p.description}
                       {p.tags && (
-                        <div><Link href={`/projects/${projectId}/tags/${p.tags.id}?tab=punches`} style={{ fontSize: '11px', color: '#3b82f6', textDecoration: 'none', fontFamily: 'ui-monospace, monospace' }}>{p.tags.tag_number} ↗</Link></div>
+                        <div><Link href={`/projects/${projectId}/tags/${p.tags.id}?tab=punches`} style={{ fontSize: '11px', color: 'var(--primary-700)', textDecoration: 'none', fontFamily: 'ui-monospace, monospace' }}>{p.tags.tag_number} ↗</Link></div>
                       )}
                     </td>
-                    <td style={td}><span style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '11px', fontWeight: 600, background: st.bg, color: st.color, whiteSpace: 'nowrap' }}>{tl(`punchStatus.${ds}`)}</span></td>
+                    <td style={td}><span style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '11px', fontWeight: 600, background: st.bg, color: ink(st.color), whiteSpace: 'nowrap' }}>{tl(`punchStatus.${ds}`)}</span></td>
                     <td style={{ ...td, minWidth: '220px' }}>
                       <select value={p.startup_disposition ?? ''} disabled={!editable || isPending} onChange={e => setDisposition(p.id, e.target.value)}
                         aria-label={`${t('dispositionLabel')} ${p.punch_number}`}

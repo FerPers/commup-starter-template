@@ -18,7 +18,7 @@ const KIND_LABEL = { utility: 'Utility', process: 'Proceso', other: 'Otro' } as 
 const small: React.CSSProperties = { fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }
 const btn = (primary: boolean): React.CSSProperties => ({
   padding: '7px 14px', borderRadius: 8, fontSize: 'var(--text-sm)', fontWeight: 600, cursor: 'pointer',
-  border: primary ? 'none' : '1px solid var(--border)', background: primary ? 'var(--primary-500)' : 'transparent',
+  border: primary ? 'none' : '1px solid var(--border)', background: primary ? 'var(--primary-600)' : 'transparent',
   color: primary ? '#fff' : 'var(--text-strong)',
 })
 
@@ -106,7 +106,7 @@ export default function ImportSystemsModal({ projectId, systems, edges, onClose 
             <strong style={{ color: 'var(--text-strong)' }}>{parsed.fileName}</strong>: {t('preview', { systems: parsed.systems.length, dependencies: parsed.dependencies.length })}
             {parsed.errors.length > 0 && (
               <>
-                <div style={{ marginTop: 8, color: '#b45309', fontWeight: 600 }}>{t('skipped', { count: parsed.errors.length })}</div>
+                <div style={{ marginTop: 8, color: 'var(--warning-700)', fontWeight: 600 }}>{t('skipped', { count: parsed.errors.length })}</div>
                 <ul style={{ margin: '4px 0 0', paddingLeft: 18, maxHeight: 160, overflowY: 'auto' }}>
                   {parsed.errors.map((x, i) => <li key={i}>{x}</li>)}
                 </ul>

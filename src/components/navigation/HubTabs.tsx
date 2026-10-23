@@ -21,7 +21,7 @@ export default function HubTabs({ title, tabs, current, aside }: { title: string
               style={{
                 minHeight: 44, padding: '0 14px', display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none',
                 fontSize: 'var(--text-sm)', fontWeight: active ? 700 : 500, color: active ? 'var(--text-strong)' : 'var(--text-muted)',
-                borderBottom: `3px solid ${active ? 'var(--brand-orange, #f2a541)' : 'transparent'}`, marginBottom: -1,
+                borderBottom: `3px solid ${active ? 'var(--brand-orange)' : 'transparent'}`, marginBottom: -1,
               }}>
               {tab.label}
               {tab.count != null && <span style={{ fontWeight: 500, color: 'var(--text-muted)' }}>{tab.count}</span>}

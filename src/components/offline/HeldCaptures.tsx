@@ -46,17 +46,17 @@ export default function HeldCaptures({ userId }: { userId: string }) {
   }
 
   return (
-    <div role="status" style={{ margin: '12px 16px 0', padding: '10px 14px', borderRadius: 8, background: '#fffbeb', border: '1px solid #fde68a', color: '#92400e', fontSize: 13 }}>
+    <div role="status" style={{ margin: '12px 16px 0', padding: '10px 14px', borderRadius: 8, background: 'var(--warning-50)', border: '1px solid var(--warning-200)', color: 'var(--warning-800)', fontSize: 13 }}>
       {counts.legacy > 0 && <div>{t('heldLegacy', { n: counts.legacy })}</div>}
       {counts.other > 0 && <div style={{ marginTop: counts.legacy > 0 ? 6 : 0 }}>{t('heldOther', { n: counts.other })}</div>}
-      {error && <div role="alert" style={{ marginTop: 6, color: '#b91c1c' }}>{error}</div>}
+      {error && <div role="alert" style={{ marginTop: 6, color: 'var(--danger-700)' }}>{error}</div>}
       <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
         {counts.legacy > 0 && (
-          <button type="button" onClick={claim} disabled={busy} style={{ padding: '5px 12px', borderRadius: 6, border: '1px solid #f59e0b', background: '#fef3c7', color: '#92400e', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>
+          <button type="button" onClick={claim} disabled={busy} style={{ padding: '5px 12px', borderRadius: 6, border: '1px solid var(--warning-500)', background: 'var(--warning-100)', color: 'var(--warning-800)', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>
             {t('claim')}
           </button>
         )}
-        <button type="button" onClick={discard} disabled={busy} style={{ padding: '5px 12px', borderRadius: 6, border: '1px solid #fecaca', background: 'var(--card-bg)', color: '#b91c1c', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>
+        <button type="button" onClick={discard} disabled={busy} style={{ padding: '5px 12px', borderRadius: 6, border: '1px solid var(--danger-200)', background: 'var(--card-bg)', color: 'var(--danger-700)', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>
           {t('discard')}
         </button>
       </div>

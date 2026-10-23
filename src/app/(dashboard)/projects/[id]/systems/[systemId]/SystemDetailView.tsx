@@ -75,7 +75,7 @@ const input: React.CSSProperties = {
 const btn = (variant: 'primary' | 'outline' | 'danger'): React.CSSProperties => ({
   padding: '7px 14px', borderRadius: 8, fontSize: 'var(--text-sm)', fontWeight: 600, cursor: 'pointer',
   border: variant === 'outline' ? '1px solid var(--border)' : 'none',
-  background: variant === 'primary' ? 'var(--primary-500)' : variant === 'danger' ? 'var(--danger-500)' : 'transparent',
+  background: variant === 'primary' ? 'var(--primary-600)' : variant === 'danger' ? 'var(--danger-600)' : 'transparent',
   color: variant === 'outline' ? 'var(--text-strong)' : '#fff',
 })
 
@@ -168,8 +168,8 @@ export default function SystemDetailView({ project, system, dependsOn, enables, 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {dialog}
-      {error && <div ref={alertRef} role="alert" style={{ padding: '10px 14px', background: 'var(--danger-50)', border: '1px solid #fecaca', borderRadius: 8, color: 'var(--danger-700)', fontSize: 'var(--text-sm)' }}>{error}</div>}
-      {saved && <div role="status" style={{ padding: '10px 14px', background: 'var(--success-50)', border: '1px solid #a7f3d0', borderRadius: 8, color: 'var(--success-700)', fontSize: 'var(--text-sm)' }}>{saved}</div>}
+      {error && <div ref={alertRef} role="alert" style={{ padding: '10px 14px', background: 'var(--danger-50)', border: '1px solid var(--danger-200)', borderRadius: 8, color: 'var(--danger-700)', fontSize: 'var(--text-sm)' }}>{error}</div>}
+      {saved && <div role="status" style={{ padding: '10px 14px', background: 'var(--success-50)', border: '1px solid var(--success-200)', borderRadius: 8, color: 'var(--success-700)', fontSize: 'var(--text-sm)' }}>{saved}</div>}
 
       {section === 'data' && <>
       <p style={{ ...small, margin: 0 }}>{t('detail.scope', { subsystems: system.subsystems, tags: system.tags })}</p>
@@ -223,7 +223,7 @@ export default function SystemDetailView({ project, system, dependsOn, enables, 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
           <h2 id="sys-limits" style={h2}>{t('detail.limits')}</h2>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-            <span style={{ ...small, fontWeight: 600, color: system.frozenAt ? '#1d4ed8' : 'var(--text-muted)' }}>
+            <span style={{ ...small, fontWeight: 600, color: system.frozenAt ? 'var(--primary-700)' : 'var(--text-muted)' }}>
               {system.frozenAt
                 ? `🔒 ${t('detail.frozenInfo', { who: system.frozenBy ?? t('detail.someone'), when: new Date(system.frozenAt).toLocaleString() })}`
                 : t('detail.notFrozen')}
@@ -248,7 +248,7 @@ export default function SystemDetailView({ project, system, dependsOn, enables, 
             <div style={{ ...label, marginBottom: 6 }}>{t('detail.history')}</div>
             <ul style={{ margin: 0, paddingLeft: 18, ...small, display: 'flex', flexDirection: 'column', gap: 2 }}>
               {events.map(e => (
-                <li key={e.id} style={{ color: e.action === 'boundary_changed_after_freeze' ? '#b45309' : undefined }}>
+                <li key={e.id} style={{ color: e.action === 'boundary_changed_after_freeze' ? 'var(--warning-700)' : undefined }}>
                   {new Date(e.created_at).toLocaleString()} — {eventText(e)}
                 </li>
               ))}
@@ -347,7 +347,7 @@ function DependencyList({ rows, projectId, canRemove, onRemove, pending, emptyTe
               <Link href={`/projects/${projectId}/systems/${d.other.id}`} style={{ color: 'inherit' }}>{d.other.code}</Link>
               {d.other.name && d.other.name !== d.other.code && <span style={{ fontWeight: 400, color: 'var(--text-muted)' }}> — {d.other.name}</span>}
               <span style={{ marginLeft: 8, fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--text-muted)' }}>{t(`kind.${d.kind}`)}</span>
-              {d.source !== 'manual' && <span style={{ marginLeft: 6, fontSize: 'var(--text-xs)', color: 'var(--gray-400)' }}>· {t(`source.${d.source}`)}</span>}
+              {d.source !== 'manual' && <span style={{ marginLeft: 6, fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>· {t(`source.${d.source}`)}</span>}
             </span>
             <span style={small}>{t(direction === 'dependsOn' ? 'detail.ruleDependsOn' : 'detail.ruleEnables', { required: d.required, blocked: d.blocked })}</span>
             {d.notes && <span style={{ ...small, fontStyle: 'italic' }}>{d.notes}</span>}

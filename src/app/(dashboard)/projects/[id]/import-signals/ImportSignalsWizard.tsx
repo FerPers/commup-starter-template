@@ -8,6 +8,7 @@ import { importSignals, type SignalRow, type SignalImportResult } from '@/app/ac
 import { pickBestSheet, detectHeaderRow, cellText } from '@/lib/excel/detect-header'
 import { SIGNAL_COLS } from '@/lib/excel/signal-columns'
 import { dedupeLast, mergeCounts, runBatches } from '@/lib/import/batches'
+import { alpha } from '@/lib/theme'
 import { pressable } from '@/lib/a11y/pressable'
 
 const SIGNAL_TYPES = ['AI', 'AO', 'DI', 'DO', 'PI', 'PO']
@@ -262,8 +263,8 @@ export default function ImportSignalsWizard({
         {SIGNAL_TYPES.map(t => (
           <span key={t} style={{
             padding: '3px 10px', borderRadius: '999px', fontSize: '12px', fontWeight: 600,
-            background: `${signalTypeColors[t]}18`, color: signalTypeColors[t],
-            border: `1px solid ${signalTypeColors[t]}30`,
+            background: alpha(signalTypeColors[t], 9), color: signalTypeColors[t],
+            border: `1px solid ${alpha(signalTypeColors[t], 19)}`,
           }}>
             {t} — {t === 'AI' ? 'Analog In' : t === 'AO' ? 'Analog Out' : t === 'DI' ? 'Digital In' : t === 'DO' ? 'Digital Out' : t === 'PI' ? 'Pulse In' : 'Pulse Out'}
           </span>
@@ -278,15 +279,15 @@ export default function ImportSignalsWizard({
           const active = step === s
           return (
             <div key={s} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              {i > 0 && <div style={{ width: '32px', height: '1px', background: done ? '#3b82f6' : 'var(--border)' }} />}
+              {i > 0 && <div style={{ width: '32px', height: '1px', background: done ? 'var(--primary-500)' : 'var(--border)' }} />}
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <div style={{
                   width: '24px', height: '24px', borderRadius: '50%', fontSize: '11px', fontWeight: 700,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  background: done || active ? '#3b82f6' : 'var(--gray-100)',
-                  color: done || active ? '#fff' : 'var(--gray-400)',
+                  background: done || active ? 'var(--primary-600)' : 'var(--gray-100)',
+                  color: done || active ? '#fff' : 'var(--text-muted)',
                 }}>{done ? '✓' : i + 1}</div>
-                <span style={{ fontSize: '13px', color: active ? 'var(--text-strong)' : 'var(--gray-400)', fontWeight: active ? 500 : 400 }}>{labels[i]}</span>
+                <span style={{ fontSize: '13px', color: active ? 'var(--text-strong)' : 'var(--text-muted)', fontWeight: active ? 500 : 400 }}>{labels[i]}</span>
               </div>
             </div>
           )
@@ -303,9 +304,9 @@ export default function ImportSignalsWizard({
             // G-12: la zona también se activa con Tab + Enter/Espacio (el input real está oculto).
             {...pressable(() => document.getElementById('sig-file-input')?.click())}
             style={{
-              border: `2px dashed ${dragging ? '#3b82f6' : 'var(--gray-300)'}`,
+              border: `2px dashed ${dragging ? 'var(--primary-500)' : 'var(--gray-300)'}`,
               borderRadius: '16px', padding: '64px 32px', textAlign: 'center',
-              background: dragging ? '#eff6ff' : 'var(--card-bg)', transition: 'all 0.15s', cursor: 'pointer',
+              background: dragging ? 'var(--primary-50)' : 'var(--card-bg)', transition: 'all 0.15s', cursor: 'pointer',
             }}
           >
             <div style={{ fontSize: '48px', marginBottom: '16px', opacity: 0.5 }}>📋</div>
@@ -313,7 +314,7 @@ export default function ImportSignalsWizard({
               {ts('drop')}
             </p>
             <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '8px' }}>{ts('orClick')}</p>
-            <p style={{ color: 'var(--gray-400)', fontSize: '12px' }}>.xlsx · .xls</p>
+            <p style={{ color: 'var(--text-muted)', fontSize: '12px' }}>.xlsx · .xls</p>
             <input id="sig-file-input" type="file" accept=".xlsx,.xls" onChange={handleFileInput} style={{ display: 'none' }} />
           </div>
 
@@ -327,22 +328,22 @@ export default function ImportSignalsWizard({
                 <span style={{
                   padding: '1px 5px', borderRadius: '4px', fontSize: '9px', fontWeight: 700,
                   background: item.req ? '#3b82f615' : 'var(--gray-50)',
-                  color: item.req ? '#3b82f6' : 'var(--gray-400)',
+                  color: item.req ? 'var(--primary-700)' : 'var(--text-muted)',
                   border: `1px solid ${item.req ? '#3b82f630' : 'var(--border)'}`,
                   flexShrink: 0, marginTop: '2px', whiteSpace: 'nowrap',
                 }}>{item.req ? 'REQ' : 'OPT'}</span>
                 <div>
                   <div style={{ fontSize: '11px', color: 'var(--text-strong)', fontWeight: 500, fontFamily: 'monospace' }}>{item.col}</div>
-                  <div style={{ fontSize: '10px', color: 'var(--gray-400)' }}>{item.desc}</div>
+                  <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{item.desc}</div>
                 </div>
               </div>
             ))}
-            <div style={{ marginTop: '10px', padding: '8px', background: '#f0fdf4', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
-              <p style={{ fontSize: '11px', color: '#166534', margin: 0 }}>
+            <div style={{ marginTop: '10px', padding: '8px', background: 'var(--success-50)', borderRadius: '8px', border: '1px solid var(--success-200)' }}>
+              <p style={{ fontSize: '11px', color: 'var(--success-800)', margin: 0 }}>
                 {ts('disciplines', { list: disciplines.map(d => d.code).join(', ') })}
               </p>
             </div>
-            <p style={{ fontSize: '11px', color: 'var(--gray-400)', margin: '10px 0 0' }}>
+            <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '10px 0 0' }}>
               {ts('headerHint')}
             </p>
           </div>
@@ -367,20 +368,20 @@ export default function ImportSignalsWizard({
           {(() => {
             const kept = PRESERVED.filter(k => !columns.includes(k)).map(k => ts(`kept.${k}`))
             return kept.length > 0 && (
-              <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '10px', padding: '12px 16px', marginBottom: '16px', fontSize: '12px', color: '#1e40af' }}>
+              <div style={{ background: 'var(--primary-50)', border: '1px solid var(--primary-200)', borderRadius: '10px', padding: '12px 16px', marginBottom: '16px', fontSize: '12px', color: 'var(--primary-800)' }}>
                 {ts.rich('keptNotice', { list: kept.join(', '), strong: c => <strong>{c}</strong> })}
               </div>
             )
           })()}
 
           {validationErrors.length > 0 && (
-            <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '10px', padding: '14px 16px', marginBottom: '16px' }}>
-              <p style={{ fontWeight: 600, color: '#dc2626', fontSize: '13px', marginBottom: '6px' }}>⚠ {ts('warningsN', { n: validationErrors.length })}</p>
+            <div style={{ background: 'var(--danger-50)', border: '1px solid var(--danger-200)', borderRadius: '10px', padding: '14px 16px', marginBottom: '16px' }}>
+              <p style={{ fontWeight: 600, color: 'var(--danger-700)', fontSize: '13px', marginBottom: '6px' }}>⚠ {ts('warningsN', { n: validationErrors.length })}</p>
               <ul style={{ margin: 0, paddingLeft: '16px' }}>
                 {validationErrors.slice(0, 8).map((e, i) => (
-                  <li key={i} style={{ fontSize: '12px', color: '#dc2626', marginBottom: '2px' }}>{e}</li>
+                  <li key={i} style={{ fontSize: '12px', color: 'var(--danger-700)', marginBottom: '2px' }}>{e}</li>
                 ))}
-                {validationErrors.length > 8 && <li style={{ fontSize: '12px', color: '#dc2626' }}>{ti('andMore', { n: validationErrors.length - 8 })}</li>}
+                {validationErrors.length > 8 && <li style={{ fontSize: '12px', color: 'var(--danger-700)' }}>{ti('andMore', { n: validationErrors.length - 8 })}</li>}
               </ul>
             </div>
           )}
@@ -401,15 +402,15 @@ export default function ImportSignalsWizard({
                     const badDisc = !disciplineCodes.has(row.discipline_code.toUpperCase())
                     const hasErr  = badType || badDisc
                     return (
-                      <tr key={i} style={{ borderBottom: '1px solid #f1f5f9', background: hasErr ? '#fef2f2' : 'var(--card-bg)' }}>
-                        <td style={{ padding: '8px 10px', color: 'var(--gray-400)' }}>{i + 2}</td>
+                      <tr key={i} style={{ borderBottom: '1px solid var(--gray-100)', background: hasErr ? 'var(--danger-50)' : 'var(--card-bg)' }}>
+                        <td style={{ padding: '8px 10px', color: 'var(--text-muted)' }}>{i + 2}</td>
                         <td style={{ padding: '8px 10px', fontWeight: 700, color: 'var(--text-strong)', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>{row.signal_tag}</td>
                         <td style={{ padding: '8px 10px', color: 'var(--text-muted)', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>{row.instrument_tag !== row.signal_tag ? row.instrument_tag : '='}</td>
                         <td style={{ padding: '8px 10px' }}>
                           <span style={{
                             padding: '2px 7px', borderRadius: '999px', fontSize: '10px', fontWeight: 700,
-                            background: badType ? '#fee2e2' : `${signalTypeColors[row.signal_type] ?? 'var(--gray-400)'}18`,
-                            color: badType ? '#dc2626' : signalTypeColors[row.signal_type] ?? 'var(--gray-400)',
+                            background: badType ? 'var(--danger-100)' : alpha(signalTypeColors[row.signal_type] ?? 'var(--gray-400)', 9),
+                            color: badType ? 'var(--danger-700)' : signalTypeColors[row.signal_type] ?? 'var(--text-muted)',
                           }}>{row.signal_type}</span>
                         </td>
                         <td style={{ padding: '8px 10px', color: 'var(--text-muted)', maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.description}</td>
@@ -432,14 +433,14 @@ export default function ImportSignalsWizard({
               </table>
             </div>
             {rows.length > 25 && (
-              <div style={{ padding: '10px 16px', background: 'var(--gray-50)', borderTop: '1px solid #f1f5f9', fontSize: '12px', color: 'var(--gray-400)', textAlign: 'center' }}>
+              <div style={{ padding: '10px 16px', background: 'var(--gray-50)', borderTop: '1px solid var(--gray-100)', fontSize: '12px', color: 'var(--text-muted)', textAlign: 'center' }}>
                 {ts('showing', { total: rows.length })}
               </div>
             )}
           </div>
 
           {importError && (
-            <div style={{ padding: '12px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', color: '#dc2626', fontSize: '13px', marginBottom: '16px' }}>{importError}</div>
+            <div style={{ padding: '12px', background: 'var(--danger-50)', border: '1px solid var(--danger-200)', borderRadius: '8px', color: 'var(--danger-700)', fontSize: '13px', marginBottom: '16px' }}>{importError}</div>
           )}
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
@@ -451,8 +452,8 @@ export default function ImportSignalsWizard({
               style={{
                 padding: '10px 24px', borderRadius: '8px', fontSize: '14px', fontWeight: 600, border: 'none',
                 cursor: loading || rows.length === 0 ? 'not-allowed' : 'pointer',
-                background: loading || rows.length === 0 ? 'var(--border)' : '#10b981',
-                color: loading || rows.length === 0 ? 'var(--gray-400)' : 'var(--card-bg)',
+                background: loading || rows.length === 0 ? 'var(--border)' : 'var(--success-500)',
+                color: loading || rows.length === 0 ? 'var(--text-muted)' : 'var(--card-bg)',
               }}>
               {loading ? (progress ? ti('importingProgress', { done: progress.done, total: progress.total }) : ti('importing')) : `✓ ${ts('importN', { n: rows.length })}`}
             </button>
@@ -468,59 +469,59 @@ export default function ImportSignalsWizard({
             {result.errors.length === 0 ? ti('done') : ts('doneWithWarnings')}
           </h2>
           <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', margin: '24px 0', flexWrap: 'wrap' }}>
-            <div style={{ padding: '16px 28px', background: '#f0fdf4', borderRadius: '12px', border: '1px solid #bbf7d0' }}>
-              <div style={{ fontSize: '32px', fontWeight: 700, color: '#10b981' }}>{result.imported}</div>
-              <div style={{ fontSize: '13px', color: '#166534' }}>{ts('new')}</div>
+            <div style={{ padding: '16px 28px', background: 'var(--success-50)', borderRadius: '12px', border: '1px solid var(--success-200)' }}>
+              <div style={{ fontSize: '32px', fontWeight: 700, color: 'var(--success-700)' }}>{result.imported}</div>
+              <div style={{ fontSize: '13px', color: 'var(--success-800)' }}>{ts('new')}</div>
             </div>
             {result.updated > 0 && (
-              <div style={{ padding: '16px 28px', background: '#eff6ff', borderRadius: '12px', border: '1px solid #bfdbfe' }}>
-                <div style={{ fontSize: '32px', fontWeight: 700, color: '#2563eb' }}>{result.updated}</div>
-                <div style={{ fontSize: '13px', color: '#1e40af' }}>{ts('updated')}</div>
+              <div style={{ padding: '16px 28px', background: 'var(--primary-50)', borderRadius: '12px', border: '1px solid var(--primary-200)' }}>
+                <div style={{ fontSize: '32px', fontWeight: 700, color: 'var(--primary-700)' }}>{result.updated}</div>
+                <div style={{ fontSize: '13px', color: 'var(--primary-800)' }}>{ts('updated')}</div>
               </div>
             )}
             {result.tagsCreated > 0 && (
-              <div style={{ padding: '16px 28px', background: '#f5f3ff', borderRadius: '12px', border: '1px solid #ddd6fe' }}>
-                <div style={{ fontSize: '32px', fontWeight: 700, color: '#7c3aed' }}>{result.tagsCreated}</div>
-                <div style={{ fontSize: '13px', color: '#5b21b6' }}>{ts('tagsCreated')}</div>
+              <div style={{ padding: '16px 28px', background: 'var(--violet-50)', borderRadius: '12px', border: '1px solid var(--violet-200)' }}>
+                <div style={{ fontSize: '32px', fontWeight: 700, color: 'var(--violet-700)' }}>{result.tagsCreated}</div>
+                <div style={{ fontSize: '13px', color: 'var(--violet-800)' }}>{ts('tagsCreated')}</div>
               </div>
             )}
             {result.loopsCreated > 0 && (
-              <div style={{ padding: '16px 28px', background: '#ecfeff', borderRadius: '12px', border: '1px solid #a5f3fc' }}>
-                <div style={{ fontSize: '32px', fontWeight: 700, color: '#0891b2' }}>{result.loopsCreated}</div>
-                <div style={{ fontSize: '13px', color: '#155e75' }}>{ts('loopsCreated')}</div>
+              <div style={{ padding: '16px 28px', background: 'var(--cyan-50)', borderRadius: '12px', border: '1px solid var(--cyan-200)' }}>
+                <div style={{ fontSize: '32px', fontWeight: 700, color: 'var(--cyan-700)' }}>{result.loopsCreated}</div>
+                <div style={{ fontSize: '13px', color: 'var(--cyan-800)' }}>{ts('loopsCreated')}</div>
               </div>
             )}
             {result.skipped > 0 && (
-              <div style={{ padding: '16px 28px', background: '#fef2f2', borderRadius: '12px', border: '1px solid #fecaca' }}>
-                <div style={{ fontSize: '32px', fontWeight: 700, color: '#ef4444' }}>{result.skipped}</div>
-                <div style={{ fontSize: '13px', color: '#dc2626' }}>{ts('skipped')}</div>
+              <div style={{ padding: '16px 28px', background: 'var(--danger-50)', borderRadius: '12px', border: '1px solid var(--danger-200)' }}>
+                <div style={{ fontSize: '32px', fontWeight: 700, color: 'var(--danger-700)' }}>{result.skipped}</div>
+                <div style={{ fontSize: '13px', color: 'var(--danger-700)' }}>{ts('skipped')}</div>
               </div>
             )}
           </div>
           {result.warnings.length > 0 && (
-            <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '10px', padding: '14px', marginBottom: '12px', textAlign: 'left' }}>
+            <div style={{ background: 'var(--warning-50)', border: '1px solid var(--warning-200)', borderRadius: '10px', padding: '14px', marginBottom: '12px', textAlign: 'left' }}>
               {result.warnings.map((w, i) => (
-                <div key={i} style={{ fontSize: '12px', color: '#92400e', marginBottom: '4px' }}>⚠ {w}</div>
+                <div key={i} style={{ fontSize: '12px', color: 'var(--warning-800)', marginBottom: '4px' }}>⚠ {w}</div>
               ))}
             </div>
           )}
           {result.errors.length > 0 && (
-            <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '10px', padding: '14px', marginBottom: '20px', textAlign: 'left' }}>
+            <div style={{ background: 'var(--danger-50)', border: '1px solid var(--danger-200)', borderRadius: '10px', padding: '14px', marginBottom: '20px', textAlign: 'left' }}>
               {result.errors.slice(0, 20).map((e, i) => (
-                <div key={i} style={{ fontSize: '12px', color: '#dc2626', marginBottom: '4px' }}>
+                <div key={i} style={{ fontSize: '12px', color: 'var(--danger-700)', marginBottom: '4px' }}>
                   {ts('rowLabel', { row: e.row })} · <strong>{e.tag}</strong>: {e.reason}
                 </div>
               ))}
-              {result.errors.length > 20 && <div style={{ fontSize: '12px', color: '#dc2626' }}>{ti('andMore', { n: result.errors.length - 20 })}</div>}
+              {result.errors.length > 20 && <div style={{ fontSize: '12px', color: 'var(--danger-700)' }}>{ti('andMore', { n: result.errors.length - 20 })}</div>}
               <button onClick={() => {
                 const ws = XLSX.utils.json_to_sheet(result.errors.map(e => ({ [ti('xlsx.row')]: e.row, [ts('col.signalTag')]: e.tag, [ti('xlsx.reason')]: e.reason })))
                 const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, ti('xlsx.sheet'))
                 XLSX.writeFile(wb, `${ti('xlsx.file')}-${(fileName ?? 'signals').replace(/\.[^.]+$/, '')}.xlsx`)
-              }} style={{ marginTop: '8px', padding: '6px 12px', fontSize: '12px', borderRadius: '6px', border: '1px solid #fecaca', background: 'var(--card-bg)', color: '#b91c1c', cursor: 'pointer' }}>⬇ {ti('downloadErrors')}</button>
+              }} style={{ marginTop: '8px', padding: '6px 12px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--danger-200)', background: 'var(--card-bg)', color: 'var(--danger-700)', cursor: 'pointer' }}>⬇ {ti('downloadErrors')}</button>
             </div>
           )}
           <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
-            <Link href={`/projects/${projectId}`} style={{ padding: '10px 24px', background: '#3b82f6', color: '#fff', borderRadius: '8px', fontSize: '14px', fontWeight: 500, textDecoration: 'none' }}>
+            <Link href={`/projects/${projectId}`} style={{ padding: '10px 24px', background: 'var(--primary-600)', color: '#fff', borderRadius: '8px', fontSize: '14px', fontWeight: 500, textDecoration: 'none' }}>
               {ts('viewProject')}
             </Link>
             <button onClick={() => { setStep('upload'); setRows([]); setValidationErrors([]); setResult(null) }}

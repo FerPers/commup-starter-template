@@ -8,6 +8,7 @@ import { useTranslations } from 'next-intl'
 import { bulkUpdateTagStatus } from '@/app/actions/bulk'
 import { Pagination } from '@/components/ui'
 import { useUrlFilters } from '@/lib/list/useUrlFilters'
+import { alpha, ink } from '@/lib/theme'
 import type { TagDisciplineCount } from '@/lib/list/tag-query'
 
 type Discipline = { id: string; code: string; name: string; color: string }
@@ -30,11 +31,11 @@ type Tag = {
 }
 
 const STATUS_COLORS: Record<string, { color: string; bg: string }> = {
-  not_started: { color: 'var(--text-muted)', bg: 'var(--gray-100)' },
-  in_progress:  { color: '#1d4ed8', bg: '#eff6ff' },
-  complete:     { color: '#047857', bg: '#ecfdf5' },
-  completed:    { color: '#047857', bg: '#ecfdf5' },
-  on_hold:      { color: '#b45309', bg: '#fffbeb' },
+  not_started: { color: 'var(--text-muted)',  bg: 'var(--gray-100)' },
+  in_progress: { color: 'var(--primary-700)', bg: 'var(--primary-50)' },
+  complete:    { color: 'var(--success-700)', bg: 'var(--success-50)' },
+  completed:   { color: 'var(--success-700)', bg: 'var(--success-50)' },
+  on_hold:     { color: 'var(--warning-700)', bg: 'var(--warning-50)' },
 }
 
 const TAG_STATUS_KEYS = ['not_started', 'in_progress', 'complete', 'on_hold'] as const
@@ -138,7 +139,7 @@ export default function TagsView({
             label={t('list.all')}
             count={scopeTotal}
             active={activeDiscipline === 'ALL'}
-            color="#3b82f6"
+            color='var(--primary-700)'
             onClick={() => url.set({ disc: null })}
           />
           {disciplines.map(d => (
@@ -163,9 +164,9 @@ export default function TagsView({
             style={{
               padding: '8px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 500,
               textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0,
-              background: activeDisc ? `${activeDisc.color}15` : '#eff6ff',
-              color: activeDisc ? activeDisc.color : '#3b82f6',
-              border: `1px solid ${activeDisc ? `${activeDisc.color}40` : '#bfdbfe'}`,
+              background: activeDisc ? alpha(activeDisc.color, 8) : 'var(--primary-50)',
+              color: activeDisc ? activeDisc.color : 'var(--primary-700)',
+              border: `1px solid ${activeDisc ? alpha(activeDisc.color, 25) : 'var(--primary-200)'}`,
             }}
           >
             {activeDiscipline !== 'ALL' ? t('list.importDisc', { disc: activeDiscipline }) : t('list.importTags')}
@@ -187,14 +188,14 @@ export default function TagsView({
 
       {/* Subsystem banner */}
       {subsystemName && (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', marginBottom: '12px', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '8px', fontSize: '13px', color: '#1d4ed8' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', marginBottom: '12px', background: 'var(--primary-50)', border: '1px solid var(--primary-200)', borderRadius: '8px', fontSize: '13px', color: 'var(--primary-700)' }}>
           <span>{t('list.filterBanner', { name: subsystemName, count: scopeTotal })}</span>
           <span style={{ display: 'flex', gap: '14px' }}>
             <a href={`/projects/${projectId}/tags/labels?subsystem=${encodeURIComponent(filters.subsystem)}`} target="_blank" rel="noopener"
-              style={{ color: '#1d4ed8', fontWeight: 600, textDecoration: 'none', fontSize: '12px' }}>
+              style={{ color: 'var(--primary-700)', fontWeight: 600, textDecoration: 'none', fontSize: '12px' }}>
               {t('list.qrLabels')}
             </a>
-            <Link href={`/projects/${projectId}/tags`} style={{ color: '#1d4ed8', fontWeight: 600, textDecoration: 'none', fontSize: '12px' }}>
+            <Link href={`/projects/${projectId}/tags`} style={{ color: 'var(--primary-700)', fontWeight: 600, textDecoration: 'none', fontSize: '12px' }}>
               {t('list.clearFilter')}
             </Link>
           </span>
@@ -203,8 +204,8 @@ export default function TagsView({
 
       {/* Bulk toolbar */}
       {selected.size > 0 && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', padding: '12px 16px', marginBottom: '12px', background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '10px' }}>
-          <span style={{ fontSize: '13px', fontWeight: 600, color: '#0369a1', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', padding: '12px 16px', marginBottom: '12px', background: 'var(--sky-50)', border: '1px solid var(--sky-200)', borderRadius: '10px' }}>
+          <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--sky-700)', flexShrink: 0 }}>
             {t('list.bulkSelected', { count: selected.size })}
           </span>
           <select
@@ -223,15 +224,15 @@ export default function TagsView({
             disabled={!bulkStatus || isPending}
             style={{
               padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, border: 'none',
-              background: bulkStatus && !isPending ? '#0369a1' : 'var(--border)',
-              color: bulkStatus && !isPending ? '#fff' : 'var(--gray-400)',
+              background: bulkStatus && !isPending ? 'var(--solid-sky-700)' : 'var(--border)',
+              color: bulkStatus && !isPending ? '#fff' : 'var(--text-muted)',
               cursor: bulkStatus && !isPending ? 'pointer' : 'default',
             }}
           >
             {t('list.bulkApply')}
           </button>
           <a href={`/projects/${projectId}/tags/labels?ids=${[...selected].slice(0, 400).join(',')}`} target="_blank" rel="noopener"
-            style={{ padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, border: '1px solid #bae6fd', background: 'var(--card-bg)', color: '#0369a1', textDecoration: 'none' }}>
+            style={{ padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, border: '1px solid var(--sky-200)', background: 'var(--card-bg)', color: 'var(--sky-700)', textDecoration: 'none' }}>
             {t('list.qrLabels')}
           </a>
           <button
@@ -241,13 +242,13 @@ export default function TagsView({
             {t('list.bulkDeselect')}
           </button>
           {bulkError && (
-            <span style={{ fontSize: '12px', color: '#ef4444', background: '#fee2e2', padding: '4px 10px', borderRadius: '5px' }}>{bulkError}</span>
+            <span style={{ fontSize: '12px', color: 'var(--danger-700)', background: 'var(--danger-100)', padding: '4px 10px', borderRadius: '5px' }}>{bulkError}</span>
           )}
         </div>
       )}
 
       {filtered.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '64px', color: 'var(--gray-400)', fontSize: '14px', background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)' }}>
+        <div style={{ textAlign: 'center', padding: '64px', color: 'var(--text-muted)', fontSize: '14px', background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)' }}>
           {t('list.emptyDisc')}
         </div>
       ) : (
@@ -261,7 +262,7 @@ export default function TagsView({
                     checked={allFilteredSelected}
                     onChange={toggleAll}
                     aria-label={allFilteredSelected ? t('list.bulkDeselect') : t('list.selectAll')}
-                    style={{ width: '15px', height: '15px', cursor: 'pointer', accentColor: '#3b82f6' }}
+                    style={{ width: '15px', height: '15px', cursor: 'pointer', accentColor: 'var(--primary-500)' }}
                   />
                 </th>
                 <Th>{t('list.colIndex')}</Th>
@@ -289,9 +290,9 @@ export default function TagsView({
                   <tr
                     key={tag.id}
                     onClick={() => router.push(`/projects/${projectId}/tags/${tag.id}`)}
-                    style={{ borderBottom: '1px solid #f1f5f9', transition: 'background 0.1s', cursor: 'pointer', background: isChecked ? '#eff6ff' : 'transparent' }}
+                    style={{ borderBottom: '1px solid var(--gray-100)', transition: 'background 0.1s', cursor: 'pointer', background: isChecked ? 'var(--primary-50)' : 'transparent' }}
                     onMouseEnter={e => { if (!isChecked) e.currentTarget.style.background = '#f8faff' }}
-                    onMouseLeave={e => { e.currentTarget.style.background = isChecked ? '#eff6ff' : 'transparent' }}
+                    onMouseLeave={e => { e.currentTarget.style.background = isChecked ? 'var(--primary-50)' : 'transparent' }}
                   >
                     <td style={{ padding: '12px 16px', width: '36px' }} onClick={e => { e.stopPropagation(); toggleRow(tag.id) }}>
                       <input
@@ -299,15 +300,15 @@ export default function TagsView({
                         checked={isChecked}
                         onChange={() => toggleRow(tag.id)}
                         onClick={e => e.stopPropagation()}
-                        style={{ width: '15px', height: '15px', cursor: 'pointer', accentColor: '#3b82f6' }}
+                        style={{ width: '15px', height: '15px', cursor: 'pointer', accentColor: 'var(--primary-500)' }}
                       />
                     </td>
                     <td style={tdStyle}>
-                      <span style={{ fontSize: '11px', color: 'var(--gray-300)' }}>{(page - 1) * pageSize + i + 1}</span>
+                      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{(page - 1) * pageSize + i + 1}</span>
                     </td>
                     <td style={tdStyle}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '10px', fontWeight: 700, background: `${d.color}18`, color: d.color, flexShrink: 0 }}>
+                        <span style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '10px', fontWeight: 700, background: alpha(d.color, 9), color: ink(d.color), flexShrink: 0 }}>
                           {d.code}
                         </span>
                         <span style={{ fontWeight: 600, fontSize: '13px', color: 'var(--text-strong)', fontFamily: 'ui-monospace, monospace' }}>
@@ -338,13 +339,13 @@ export default function TagsView({
                               rel="noopener noreferrer"
                               title={t('list.openPid')}
                               onClick={e => e.stopPropagation()}
-                              style={{ fontSize: '11px', color: '#2563eb', fontFamily: 'ui-monospace, monospace', background: '#eff6ff', padding: '2px 8px', borderRadius: '5px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                              style={{ fontSize: '11px', color: 'var(--primary-700)', fontFamily: 'ui-monospace, monospace', background: 'var(--primary-50)', padding: '2px 8px', borderRadius: '5px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                             >
                               {tag.pid_drawing}
                               <span style={{ opacity: 0.6, fontSize: '10px' }}>↗</span>
                             </a>
                           ) : (
-                            <span style={{ fontSize: '11px', color: '#2563eb', fontFamily: 'ui-monospace, monospace', background: '#eff6ff', padding: '2px 8px', borderRadius: '5px' }}>
+                            <span style={{ fontSize: '11px', color: 'var(--primary-700)', fontFamily: 'ui-monospace, monospace', background: 'var(--primary-50)', padding: '2px 8px', borderRadius: '5px' }}>
                               {tag.pid_drawing}
                             </span>
                           )
@@ -357,7 +358,7 @@ export default function TagsView({
                       <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{maker || '—'}</span>
                     </td>
                     <td style={tdStyle}>
-                      <span style={{ padding: '3px 9px', borderRadius: '999px', fontSize: '11px', fontWeight: 500, background: statusStyle.bg, color: statusStyle.color }}>
+                      <span style={{ padding: '3px 9px', borderRadius: '999px', fontSize: '11px', fontWeight: 500, background: statusStyle.bg, color: ink(statusStyle.color) }}>
                         {statusLabel}
                       </span>
                     </td>
@@ -381,14 +382,14 @@ function FilterTab({ label, count, active, color, onClick }: {
     <button onClick={onClick} style={{
       padding: '7px 14px', borderRadius: '8px', border: '1px solid',
       borderColor: active ? color : 'var(--border)',
-      background: active ? `${color}15` : 'var(--card-bg)',
+      background: active ? alpha(color, 8) : 'var(--card-bg)',
       color: active ? color : 'var(--text-muted)',
       fontSize: '13px', fontWeight: active ? 600 : 400,
       cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
       transition: 'all 0.15s',
     }}>
       {label}
-      <span style={{ padding: '1px 7px', borderRadius: '999px', fontSize: '11px', fontWeight: 700, background: active ? color : 'var(--gray-100)', color: active ? '#fff' : 'var(--text-muted)' }}>
+      <span style={{ padding: '1px 7px', borderRadius: '999px', fontSize: '11px', fontWeight: 700, background: active ? color : 'var(--gray-100)', color: active ? 'var(--on-ink)' : 'var(--text-muted)' }}>
         {count}
       </span>
     </button>
@@ -397,7 +398,7 @@ function FilterTab({ label, count, active, color, onClick }: {
 
 function Th({ children }: { children: React.ReactNode }) {
   return (
-    <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: '11px', fontWeight: 600, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>
+    <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>
       {children}
     </th>
   )

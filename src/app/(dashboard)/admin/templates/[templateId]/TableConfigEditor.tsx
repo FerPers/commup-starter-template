@@ -69,8 +69,8 @@ export default function TableConfigEditor({ value, onChange }: { value: TableCon
   }
 
   return (
-    <div style={{ padding: '12px 14px', background: '#ecfeff', border: '1px solid #a5f3fc', borderRadius: '8px', marginBottom: '12px' }}>
-      <div style={{ fontSize: '11px', fontWeight: 700, color: '#155e75', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '8px' }}>{t('title')}</div>
+    <div style={{ padding: '12px 14px', background: 'var(--cyan-50)', border: '1px solid var(--cyan-200)', borderRadius: '8px', marginBottom: '12px' }}>
+      <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--cyan-800)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '8px' }}>{t('title')}</div>
 
       <label style={{ ...fieldLabel, marginBottom: '10px' }}>{t('preset')}
         <select style={small} value="" onChange={e => { const preset = TABLE_PRESETS.find(p => p.id === e.target.value); if (preset) onChange(structuredClone(preset.config)) }}>
@@ -105,11 +105,11 @@ export default function TableConfigEditor({ value, onChange }: { value: TableCon
         )}
       </div>
 
-      <div style={{ fontSize: '12px', fontWeight: 600, color: '#155e75', margin: '4px 0 6px' }}>{t('columns', { n: config.columns.length, max: TABLE_MAX_COLUMNS })}</div>
+      <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--cyan-800)', margin: '4px 0 6px' }}>{t('columns', { n: config.columns.length, max: TABLE_MAX_COLUMNS })}</div>
       {config.columns.map((column, index) => {
         const numeric = column.type === 'number'
         return (
-          <div key={column.key} style={{ marginBottom: '8px', paddingBottom: column.type === 'computed' || column.type === 'result' ? '6px' : 0, borderBottom: column.type === 'computed' || column.type === 'result' ? '1px dashed #a5f3fc' : 'none' }}>
+          <div key={column.key} style={{ marginBottom: '8px', paddingBottom: column.type === 'computed' || column.type === 'result' ? '6px' : 0, borderBottom: column.type === 'computed' || column.type === 'result' ? '1px dashed var(--cyan-200)' : 'none' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 130px 70px 1fr 70px 70px auto auto', gap: '6px', alignItems: 'end' }}>
               <label style={fieldLabel}>{t('label')}<input style={small} value={column.label} onChange={e => setColumn(index, { label: e.target.value })} /></label>
               <label style={fieldLabel}>{t('type')}
@@ -181,10 +181,10 @@ export default function TableConfigEditor({ value, onChange }: { value: TableCon
           </div>
         )
       })}
-      <button type="button" disabled={config.columns.length >= TABLE_MAX_COLUMNS} onClick={() => set({ columns: [...config.columns, { key: nextKey(config.columns), label: '', type: 'number', unit: null, options: null, min: null, max: null, required: true }] })} style={{ padding: '6px 12px', border: '1px dashed #67e8f9', borderRadius: '6px', background: 'var(--card-bg)', fontSize: '12px', color: '#0e7490', cursor: 'pointer' }}>{t('addColumn')}</button>
+      <button type="button" disabled={config.columns.length >= TABLE_MAX_COLUMNS} onClick={() => set({ columns: [...config.columns, { key: nextKey(config.columns), label: '', type: 'number', unit: null, options: null, min: null, max: null, required: true }] })} style={{ padding: '6px 12px', border: '1px dashed var(--cyan-300)', borderRadius: '6px', background: 'var(--card-bg)', fontSize: '12px', color: 'var(--cyan-700)', cursor: 'pointer' }}>{t('addColumn')}</button>
 
       {config.rows.mode === 'variable' && (
-        <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px solid #a5f3fc' }}>
+        <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px solid var(--cyan-200)' }}>
           <label style={{ ...fieldLabel, flexDirection: 'row', gap: '6px', alignItems: 'center', display: 'flex' }}>
             <input type="checkbox" checked={!!config.stability}
               onChange={e => set({ stability: e.target.checked ? { column: [...numberCols, ...computedCols][0]?.key ?? '', last_n: 3, min: null, max: null } : null })} />
@@ -205,8 +205,8 @@ export default function TableConfigEditor({ value, onChange }: { value: TableCon
         </div>
       )}
 
-      {issue && <p role="status" style={{ fontSize: '12px', color: '#b45309', fontWeight: 600, margin: '10px 0 0' }}>{t('missing', { issue })}</p>}
-      <p style={{ fontSize: '11px', color: '#155e75', margin: '8px 0 0' }}>
+      {issue && <p role="status" style={{ fontSize: '12px', color: 'var(--warning-700)', fontWeight: 600, margin: '10px 0 0' }}>{t('missing', { issue })}</p>}
+      <p style={{ fontSize: '11px', color: 'var(--cyan-800)', margin: '8px 0 0' }}>
         {t('footer')}
       </p>
     </div>

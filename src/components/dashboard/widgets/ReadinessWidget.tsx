@@ -19,7 +19,7 @@ export default async function ReadinessWidget({ orgId }: { orgId: string }) {
 
   const th: React.CSSProperties = { padding: '8px 12px', textAlign: 'right', fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap' }
   const td: React.CSSProperties = { padding: '10px 12px', textAlign: 'right', fontSize: 'var(--text-sm)', fontWeight: 600 }
-  const n = (v: number, color: string) => <span style={{ color: v > 0 ? color : 'var(--gray-400)' }}>{v}</span>
+  const n = (v: number, color: string) => <span style={{ color: v > 0 ? color : 'var(--text-muted)' }}>{v}</span>
 
   return (
     <Card padding="md">
@@ -70,9 +70,9 @@ export default async function ReadinessWidget({ orgId }: { orgId: string }) {
                       <td style={td}>{(p.weighted * 100).toFixed(1)} %</td>
                       <td style={td}><Link href={`/projects/${p.id}/readiness?blocked=1`} style={{ textDecoration: 'none' }}>{n(p.counts.regressed + p.counts.blocked, 'var(--danger-700)')}</Link></td>
                       <td style={td}><Link href={`/projects/${p.id}/readiness?state=ready`} style={{ textDecoration: 'none' }}>{n(p.counts.ready, 'var(--success-700)')}</Link></td>
-                      <td style={td}><Link href={`/projects/${p.id}/readiness?state=signing`} style={{ textDecoration: 'none' }}>{n(p.counts.signing, '#1d4ed8')}</Link></td>
+                      <td style={td}><Link href={`/projects/${p.id}/readiness?state=signing`} style={{ textDecoration: 'none' }}>{n(p.counts.signing, 'var(--primary-700)')}</Link></td>
                       <td style={td}><Link href={dailyTabHref(p.id, 'constraints')} style={{ textDecoration: 'none' }}>{n(p.constraintsN4, 'var(--danger-700)')}</Link></td>
-                      <td style={td}><Link href={`/projects/${p.id}/readiness?committed=7`} style={{ textDecoration: 'none' }}>{n(p.commitmentsSoon, '#b45309')}</Link></td>
+                      <td style={td}><Link href={`/projects/${p.id}/readiness?committed=7`} style={{ textDecoration: 'none' }}>{n(p.commitmentsSoon, 'var(--warning-700)')}</Link></td>
                     </>
                   )}
                 </tr>

@@ -54,7 +54,7 @@ export default function ProjectSwitcher({ currentId, projectNames }: { currentId
   const item = (id: string, name: string) => (
     <Link key={id} href={`/projects/${id}`} onClick={() => setOpen(false)}
       style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px', fontSize: 13, color: 'var(--text-strong)', textDecoration: 'none',
-        background: id === currentId ? 'var(--primary-50, #eef2ff)' : 'transparent' }}>
+        background: id === currentId ? 'var(--primary-50)' : 'transparent' }}>
       <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</span>
       {id === currentId && <Check size={14} aria-hidden="true" />}
     </Link>
@@ -70,11 +70,11 @@ export default function ProjectSwitcher({ currentId, projectNames }: { currentId
       </button>
       {open && (
         <div role="dialog" aria-label={t('switchProject')}
-          style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, width: 280, zIndex: 50, background: 'var(--card-bg, #fff)', color: 'var(--text-strong)',
+          style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, width: 280, zIndex: 50, background: 'var(--card-bg, var(--card-bg))', color: 'var(--text-strong)',
             border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', boxShadow: '0 12px 32px rgba(15,23,42,0.18)', overflow: 'hidden' }}>
           <div style={{ padding: 10, borderBottom: '1px solid var(--border)' }}>
             <input type="search" autoFocus value={q} onChange={e => setQ(e.target.value)} placeholder={t('searchProject')} aria-label={t('searchProject')}
-              style={{ width: '100%', boxSizing: 'border-box', height: 36, border: '1px solid var(--border)', borderRadius: 8, padding: '0 10px', fontSize: 13, background: 'var(--card-bg, #fff)', color: 'var(--text-strong)' }} />
+              style={{ width: '100%', boxSizing: 'border-box', height: 36, border: '1px solid var(--border)', borderRadius: 8, padding: '0 10px', fontSize: 13, background: 'var(--card-bg, var(--card-bg))', color: 'var(--text-strong)' }} />
           </div>
           <div style={{ maxHeight: 320, overflowY: 'auto' }}>
             {!needle && recent.length > 0 && (
@@ -86,7 +86,7 @@ export default function ProjectSwitcher({ currentId, projectNames }: { currentId
             <div style={{ padding: '8px 12px 2px', fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t('allProjects')} ({matches.length})</div>
             {matches.slice(0, MAX_LISTED).map(([id, name]) => item(id, name))}
           </div>
-          <Link href="/projects" onClick={() => setOpen(false)} style={{ display: 'block', padding: '10px 12px', borderTop: '1px solid var(--border)', fontSize: 13, fontWeight: 600, color: 'var(--primary-600, #4f46e5)', textDecoration: 'none' }}>
+          <Link href="/projects" onClick={() => setOpen(false)} style={{ display: 'block', padding: '10px 12px', borderTop: '1px solid var(--border)', fontSize: 13, fontWeight: 600, color: 'var(--primary-700)', textDecoration: 'none' }}>
             {t('seeAllProjects')}
           </Link>
         </div>

@@ -21,7 +21,7 @@ const card: React.CSSProperties = { background: 'var(--card-bg)', border: '1px s
 const small: React.CSSProperties = { fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }
 const th: React.CSSProperties = { padding: '10px 16px', textAlign: 'left', fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap' }
 const td: React.CSSProperties = { padding: '12px 16px', fontSize: 'var(--text-sm)', color: 'var(--text-strong)', verticalAlign: 'top' }
-const linkStyle: React.CSSProperties = { color: 'var(--primary-600, #2563eb)', textDecoration: 'none', fontWeight: 600 }
+const linkStyle: React.CSSProperties = { color: 'var(--primary-700)', textDecoration: 'none', fontWeight: 600 }
 const chipLink: React.CSSProperties = { textDecoration: 'none', padding: '6px 10px', borderRadius: 8, background: 'var(--gray-50)', border: '1px solid var(--border)', color: 'var(--text-strong)', fontSize: 'var(--text-sm)', whiteSpace: 'nowrap' }
 
 export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -152,7 +152,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
           [t('info.start'), fmtDate(project.start_date)], [t('info.target'), fmtDate(project.end_date)],
         ].map(([label, value]) => (
           <div key={label} style={{ flex: '1 1 160px', padding: '12px 18px' }}>
-            <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>{label}</div>
+            <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>{label}</div>
             <div style={{ fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--text-strong)' }}>{value}</div>
           </div>
         ))}
@@ -170,7 +170,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
           <div style={{ fontSize: 26, fontWeight: 700, color: 'var(--text-strong)' }}>{t('kpi.gates', { done: readiness.done, total: readiness.total })}</div>
           <div style={small}>{t('kpi.readinessPct', { pct: (readiness.pct * 100).toFixed(1) })}</div>
         </div>
-        <Link href={`${base}/readiness?blocked=1`} style={{ ...card, padding: '14px 18px', textDecoration: 'none', borderColor: blockedNow > 0 ? '#f3c9c3' : 'var(--border)' }}>
+        <Link href={`${base}/readiness?blocked=1`} style={{ ...card, padding: '14px 18px', textDecoration: 'none', borderColor: blockedNow > 0 ? 'var(--danger-200)' : 'var(--border)' }}>
           <div style={{ ...small, fontWeight: 600 }}>{t('kpi.today')}</div>
           <div style={{ fontSize: 26, fontWeight: 700, color: blockedNow > 0 ? 'var(--danger-700)' : 'var(--success-700)' }}>{t('kpi.blocked', { count: blockedNow })}</div>
           <div style={small}>{t('kpi.todayDetail', { sign: toSignNow, regressed: regressedNow })}</div>
@@ -263,7 +263,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                         </span>
                       ))}
                       {(pendingTransfers ?? 0) > 0 && (
-                        <span style={{ padding: '4px 10px', borderRadius: 999, background: '#f5f3ff', color: '#5b21b6', fontSize: 'var(--text-sm)', fontWeight: 600 }}>
+                        <span style={{ padding: '4px 10px', borderRadius: 999, background: 'var(--violet-50)', color: 'var(--violet-800)', fontSize: 'var(--text-sm)', fontWeight: 600 }}>
                           {t('board.transfersToSign', { count: pendingTransfers ?? 0 })}
                         </span>
                       )}

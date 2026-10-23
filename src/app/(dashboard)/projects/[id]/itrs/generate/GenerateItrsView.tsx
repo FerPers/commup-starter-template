@@ -13,7 +13,7 @@ type Member = { user_id: string; role: string; full_name: string }
 type ScopeMode = 'project' | 'systems' | 'subsystems'
 
 const card: React.CSSProperties = { background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 12, padding: '18px 20px', marginBottom: 16 }
-const label: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: 'var(--gray-500)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 10px' }
+const label: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 10px' }
 const sel: React.CSSProperties = { padding: '6px 8px', border: '1px solid var(--border)', borderRadius: 6, fontSize: 13, background: 'var(--card-bg)', minWidth: 170 }
 
 /**
@@ -77,10 +77,10 @@ export default function GenerateItrsView({ projectId, projectName, phases, syste
 
   return (
     <div style={{ padding: 32, maxWidth: 1000 }}>
-      <Link href={`/projects/${projectId}/itrs`} style={{ fontSize: 12, color: 'var(--gray-400)', textDecoration: 'none' }}>← {projectName} · ITRs</Link>
+      <Link href={`/projects/${projectId}/itrs`} style={{ fontSize: 12, color: 'var(--text-muted)', textDecoration: 'none' }}>← {projectName} · ITRs</Link>
       <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-strong)', margin: '8px 0 4px' }}>{t('title')}</h1>
       <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '0 0 20px', maxWidth: 720 }}>
-        {t.rich('intro', { matrix: chunks => <Link href="/admin/templates/matrix" style={{ color: 'var(--primary-500)' }}>{chunks}</Link> })}
+        {t.rich('intro', { matrix: chunks => <Link href="/admin/templates/matrix" style={{ color: 'var(--primary-700)' }}>{chunks}</Link> })}
       </p>
 
       {/* 1 — Alcance */}
@@ -114,12 +114,12 @@ export default function GenerateItrsView({ projectId, projectName, phases, syste
           </div>
         )}
         <button type="button" onClick={() => { void preview() }} disabled={!canPreview}
-          style={{ marginTop: 14, padding: '8px 16px', borderRadius: 8, border: '1px solid var(--primary-500)', background: canPreview ? 'var(--primary-500)' : 'var(--gray-200)', color: '#fff', fontWeight: 600, fontSize: 13, cursor: canPreview ? 'pointer' : 'not-allowed' }}>
+          style={{ marginTop: 14, padding: '8px 16px', borderRadius: 8, border: '1px solid var(--primary-500)', background: canPreview ? 'var(--primary-600)' : 'var(--gray-200)', color: '#fff', fontWeight: 600, fontSize: 13, cursor: canPreview ? 'pointer' : 'not-allowed' }}>
           {busy === 'preview' ? t('previewing') : t('preview')}
         </button>
       </section>
 
-      {error && <div role="alert" style={{ ...card, background: '#fef2f2', borderColor: '#fecaca', color: '#991b1b', fontSize: 13 }}>{error}</div>}
+      {error && <div role="alert" style={{ ...card, background: 'var(--danger-50)', borderColor: 'var(--danger-200)', color: 'var(--danger-800)', fontSize: 13 }}>{error}</div>}
 
       {summary && (
         <>
@@ -127,12 +127,12 @@ export default function GenerateItrsView({ projectId, projectName, phases, syste
           <section style={card}>
             <p style={label}>{t('step2')}</p>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 10, marginBottom: 14 }}>
-              <Stat n={summary.create} label={t('stat.create')} tone="#047857" />
+              <Stat n={summary.create} label={t('stat.create')} tone="var(--success-700)" />
               <Stat n={summary.exists} label={t('stat.exists')} />
               <Stat n={summary.tags} label={t('stat.tags')} />
-              <Stat n={summary.no_equipment_type} label={t('stat.noType')} tone={summary.no_equipment_type ? '#b45309' : undefined} />
-              <Stat n={summary.no_rule} label={t('stat.noRule')} tone={summary.no_rule ? '#b45309' : undefined} />
-              <Stat n={summary.no_subsystem} label={t('stat.noSubsystem')} tone={summary.no_subsystem ? '#b91c1c' : undefined} />
+              <Stat n={summary.no_equipment_type} label={t('stat.noType')} tone={summary.no_equipment_type ? 'var(--warning-700)' : undefined} />
+              <Stat n={summary.no_rule} label={t('stat.noRule')} tone={summary.no_rule ? 'var(--warning-700)' : undefined} />
+              <Stat n={summary.no_subsystem} label={t('stat.noSubsystem')} tone={summary.no_subsystem ? 'var(--danger-700)' : undefined} />
               {summary.out_of_scope > 0 && <Stat n={summary.out_of_scope} label={t('stat.outOfScope')} />}
             </div>
             {(['no_equipment_type', 'no_rule', 'no_subsystem'] as const).map(k => summary.samples[k].length > 0 && (
@@ -143,12 +143,12 @@ export default function GenerateItrsView({ projectId, projectName, phases, syste
             {summary.samples.out_of_scope.length > 0 && (
               <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '4px 0' }}>
                 <strong>{t('sample.out_of_scope')}</strong> {summary.samples.out_of_scope.join(', ')}{summary.samples.out_of_scope.length >= 20 ? '…' : ''}{' '}
-                <Link href={`/projects/${projectId}/scope`} style={{ color: 'var(--primary-600, #2563eb)', fontWeight: 600 }}>{t('scopeLink')}</Link>
+                <Link href={`/projects/${projectId}/scope`} style={{ color: 'var(--primary-700)', fontWeight: 600 }}>{t('scopeLink')}</Link>
               </p>
             )}
             {summary.by_template.length > 0 && (
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, marginTop: 10 }}>
-                <thead><tr style={{ textAlign: 'left', color: 'var(--gray-500)' }}><th style={{ padding: 6 }}>{t('col.template')}</th><th style={{ padding: 6 }}>{t('col.create')}</th><th style={{ padding: 6 }}>{t('col.exists')}</th></tr></thead>
+                <thead><tr style={{ textAlign: 'left', color: 'var(--text-muted)' }}><th style={{ padding: 6 }}>{t('col.template')}</th><th style={{ padding: 6 }}>{t('col.create')}</th><th style={{ padding: 6 }}>{t('col.exists')}</th></tr></thead>
                 <tbody>
                   {summary.by_template.filter(tp => tp.create + tp.exists > 0).map(tp => (
                     <tr key={tp.code} style={{ borderTop: '1px solid var(--gray-100)' }}>
@@ -186,17 +186,17 @@ export default function GenerateItrsView({ projectId, projectName, phases, syste
                 )
               })}
               <button type="button" onClick={() => { void run() }} disabled={busy !== null || !!progress?.done}
-                style={{ marginTop: 14, padding: '9px 18px', borderRadius: 8, border: '1px solid #047857', background: '#047857', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+                style={{ marginTop: 14, padding: '9px 18px', borderRadius: 8, border: '1px solid var(--success-700)', background: 'var(--solid-success-700)', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
                 {busy === 'run' ? t('running') : t('run', { n: summary.create })}
               </button>
               {progress && (
                 <div style={{ marginTop: 12 }}>
                   <div style={{ height: 8, background: 'var(--gray-100)', borderRadius: 999, overflow: 'hidden' }}>
-                    <div style={{ width: `${progress.total ? Math.round((progress.created / progress.total) * 100) : 100}%`, height: '100%', background: '#047857' }} />
+                    <div style={{ width: `${progress.total ? Math.round((progress.created / progress.total) * 100) : 100}%`, height: '100%', background: 'var(--solid-success-700)' }} />
                   </div>
                   <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '6px 0 0' }}>
                     {progress.done ? t('done', { n: progress.created }) : t('progress', { created: progress.created, total: progress.total })}
-                    {progress.done && <> · <Link href={`/projects/${projectId}/itrs?assignee=none`} style={{ color: 'var(--primary-500)' }}>{t('seeUnassigned')}</Link> · <Link href={`/projects/${projectId}/itrs`} style={{ color: 'var(--primary-500)' }}>{t('seeAll')}</Link></>}
+                    {progress.done && <> · <Link href={`/projects/${projectId}/itrs?assignee=none`} style={{ color: 'var(--primary-700)' }}>{t('seeUnassigned')}</Link> · <Link href={`/projects/${projectId}/itrs`} style={{ color: 'var(--primary-700)' }}>{t('seeAll')}</Link></>}
                   </p>
                 </div>
               )}

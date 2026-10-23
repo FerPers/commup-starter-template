@@ -29,7 +29,7 @@ export function EmptyState({ icon, title, description, action, style }: EmptySta
           width: 56, height: 56,
           borderRadius: 'var(--radius-pill)',
           background: 'var(--gray-100)',
-          color: 'var(--gray-500)',
+          color: 'var(--text-muted)',
         }}>
           {icon}
         </div>

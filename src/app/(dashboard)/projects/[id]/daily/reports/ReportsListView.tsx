@@ -87,7 +87,7 @@ export default function ReportsListView({ project, reports, areas, canCreate }: 
                 <td style={td}><Chip tone={TONE[r.status]}>{t(`report.status.${r.status}`)}</Chip></td>
                 <td style={{ ...td, ...small }}>{r.issuedAt ? `${r.issuedBy ?? '—'} · ${formatInZone(r.issuedAt, project.timezone, locale)}` : '—'}</td>
                 <td style={{ ...td, whiteSpace: 'nowrap' }}>
-                  <a href={`/projects/${project.id}/daily/reports/${r.id}/pdf`} target="_blank" rel="noopener" style={{ fontSize: 'var(--text-sm)', color: 'var(--primary-600, #2563eb)' }}>PDF</a>
+                  <a href={`/projects/${project.id}/daily/reports/${r.id}/pdf`} target="_blank" rel="noopener" style={{ fontSize: 'var(--text-sm)', color: 'var(--primary-700)' }}>PDF</a>
                 </td>
               </tr>
             ))}

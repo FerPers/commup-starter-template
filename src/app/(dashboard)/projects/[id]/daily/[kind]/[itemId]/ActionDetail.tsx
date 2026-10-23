@@ -73,7 +73,7 @@ export default function ActionDetail({ project, opts, names, userId, role, event
       </Header>
       <p style={{ ...small, margin: '-8px 0 0' }}>
         {t(`source.${item.source_kind}`)}{item.source_ref ? ` · ${item.source_ref}` : ''}
-        {origin && <> · {origin.href ? <Link href={origin.href} style={{ color: 'var(--primary-600, #2563eb)' }}>{origin.label}</Link> : origin.label}</>}
+        {origin && <> · {origin.href ? <Link href={origin.href} style={{ color: 'var(--primary-700)' }}>{origin.label}</Link> : origin.label}</>}
       </p>
 
       <Messages error={error} saved={saved} />
@@ -90,8 +90,8 @@ export default function ActionDetail({ project, opts, names, userId, role, event
 
         {editable && (
           <div style={{ borderTop: '1px solid var(--border)', marginTop: 14, paddingTop: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {(status === 'open' || status === 'in_progress') && needsEvidence && <div style={{ ...small, color: '#b45309' }}>{t('action.needsEvidence')}</div>}
-            {sameCloser && <div style={{ ...small, color: '#b45309' }}>{t('action.otherPerson')}</div>}
+            {(status === 'open' || status === 'in_progress') && needsEvidence && <div style={{ ...small, color: 'var(--warning-700)' }}>{t('action.needsEvidence')}</div>}
+            {sameCloser && <div style={{ ...small, color: 'var(--warning-700)' }}>{t('action.otherPerson')}</div>}
             <textarea rows={2} style={{ ...input, maxWidth: 640 }} value={comment} onChange={e => setComment(e.target.value)}
               placeholder={status === 'done' ? t('action.verifyPlaceholder') : t('action.closePlaceholder')} />
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>

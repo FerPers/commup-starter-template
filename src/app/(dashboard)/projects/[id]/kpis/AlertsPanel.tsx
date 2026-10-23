@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl'
 import type { ProjectAlert, AlertSeverity } from '@/app/actions/alerts'
+import { alpha, ink } from '@/lib/theme'
 
 // ── Severity config ─────────────────────────────────────────────────────────
 
@@ -9,16 +10,16 @@ const SEVERITY_CFG: Record<AlertSeverity, {
   border: string; bg: string; icon: string; iconColor: string; textColor: string
 }> = {
   critical: {
-    border: '#fca5a5', bg: '#fef2f2',
-    icon: '⛔', iconColor: '#dc2626', textColor: '#7f1d1d',
+    border: 'var(--danger-300)', bg: 'var(--danger-50)',
+    icon: '⛔', iconColor: 'var(--danger-700)', textColor: 'var(--danger-900)',
   },
   warning: {
-    border: '#fcd34d', bg: '#fffbeb',
-    icon: '⚠️', iconColor: '#d97706', textColor: '#78350f',
+    border: 'var(--warning-300)', bg: 'var(--warning-50)',
+    icon: '⚠️', iconColor: 'var(--warning-700)', textColor: 'var(--warning-900)',
   },
   info: {
-    border: '#93c5fd', bg: '#eff6ff',
-    icon: 'ℹ', iconColor: '#2563eb', textColor: '#1e3a8a',
+    border: 'var(--primary-300)', bg: 'var(--primary-50)',
+    icon: 'ℹ', iconColor: 'var(--primary-700)', textColor: 'var(--primary-900)',
   },
 }
 
@@ -55,10 +56,10 @@ export default function AlertsPanel({ alerts }: Props) {
 
             {/* Text */}
             <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: cfg.textColor }}>
+              <p style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: ink(cfg.textColor) }}>
                 {t(`${alert.type}.title`)}
               </p>
-              <p style={{ margin: '2px 0 0', fontSize: '12px', color: cfg.textColor, opacity: 0.8 }}>
+              <p style={{ margin: '2px 0 0', fontSize: '12px', color: ink(cfg.textColor), opacity: 0.8 }}>
                 {t(`${alert.type}.desc`, { value: alert.value })}
               </p>
             </div>
@@ -66,7 +67,7 @@ export default function AlertsPanel({ alerts }: Props) {
             {/* Severity badge */}
             <span style={{
               padding: '2px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: 700,
-              background: `${cfg.border}60`, color: cfg.textColor,
+              background: alpha(cfg.border, 38), color: ink(cfg.textColor),
               flexShrink: 0, alignSelf: 'center', textTransform: 'uppercase', letterSpacing: '0.05em',
             }}>
               {t(`severity.${alert.severity}`)}

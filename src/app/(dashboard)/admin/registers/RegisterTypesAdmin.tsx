@@ -40,7 +40,7 @@ export default function RegisterTypesAdmin({ types, gates }: { types: TypeRow[];
         <h1 style={{ fontSize: 28, fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>{t('admin.title')}</h1>
         <p style={{ ...small, margin: '4px 0 0', maxWidth: 720 }}>{t('admin.subtitle')}</p>
       </div>
-      {error && <div role="alert" style={{ padding: '10px 14px', background: 'var(--danger-50)', border: '1px solid #fecaca', borderRadius: 8, color: 'var(--danger-700)', fontSize: 'var(--text-sm)' }}>{error}</div>}
+      {error && <div role="alert" style={{ padding: '10px 14px', background: 'var(--danger-50)', border: '1px solid var(--danger-200)', borderRadius: 8, color: 'var(--danger-700)', fontSize: 'var(--text-sm)' }}>{error}</div>}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {rows.map(row => (
           <section key={row.id} style={{ ...card, display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center', opacity: row.is_active ? 1 : 0.65 }}

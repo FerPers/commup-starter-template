@@ -132,7 +132,7 @@ export default function ImportMatrixModal({ onClose }: { onClose: () => void }) 
             <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>{t('pickHint')}</div>
           </label>
 
-          {error && <div style={{ padding: '10px 14px', background: '#fee2e2', border: '1px solid #fca5a5', borderRadius: 8, color: '#dc2626', fontSize: 13 }}>{error}</div>}
+          {error && <div style={{ padding: '10px 14px', background: 'var(--danger-100)', border: '1px solid var(--danger-300)', borderRadius: 8, color: 'var(--danger-700)', fontSize: 13 }}>{error}</div>}
 
           {rows.length > 0 && !result && (
             <>
@@ -145,7 +145,7 @@ export default function ImportMatrixModal({ onClose }: { onClose: () => void }) 
                   <thead><tr style={{ background: 'var(--gray-50)' }}>{[t('col.type'), 'ITR', t('col.required'), t('col.condition')].map(h => <th key={h} style={{ padding: '6px 10px', textAlign: 'left', color: 'var(--text-muted)', fontWeight: 600 }}>{h}</th>)}</tr></thead>
                   <tbody>
                     {rows.slice(0, 40).map((r, i) => (
-                      <tr key={i} style={{ borderTop: '1px solid #f1f5f9' }}>
+                      <tr key={i} style={{ borderTop: '1px solid var(--gray-100)' }}>
                         <td style={{ padding: '5px 10px', fontFamily: 'ui-monospace, monospace', fontWeight: 700 }}>{r.equipment_type_code}</td>
                         <td style={{ padding: '5px 10px', fontFamily: 'ui-monospace, monospace' }}>{r.template_code}</td>
                         <td style={{ padding: '5px 10px' }}>{r.required === false ? t('no') : t('yes')}</td>
@@ -154,19 +154,19 @@ export default function ImportMatrixModal({ onClose }: { onClose: () => void }) 
                     ))}
                   </tbody>
                 </table>
-                {rows.length > 40 && <div style={{ padding: '6px 10px', fontSize: 11, color: 'var(--gray-400)' }}>{t('showing', { n: 40, total: rows.length })}</div>}
+                {rows.length > 40 && <div style={{ padding: '6px 10px', fontSize: 11, color: 'var(--text-muted)' }}>{t('showing', { n: 40, total: rows.length })}</div>}
               </div>
-              <button onClick={handleImport} disabled={loading} style={{ alignSelf: 'flex-end', padding: '9px 18px', background: '#10b981', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: loading ? 'wait' : 'pointer' }}>
+              <button onClick={handleImport} disabled={loading} style={{ alignSelf: 'flex-end', padding: '9px 18px', background: 'var(--success-500)', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: loading ? 'wait' : 'pointer' }}>
                 {loading ? t('importing') : t('import', { n: rows.length })}
               </button>
             </>
           )}
 
           {result && (
-            <div style={{ padding: '12px 14px', background: '#ecfdf5', border: '1px solid #6ee7b7', borderRadius: 8, fontSize: 13, color: '#065f46' }}>
+            <div style={{ padding: '12px 14px', background: 'var(--success-50)', border: '1px solid var(--success-300)', borderRadius: 8, fontSize: 13, color: 'var(--success-800)' }}>
               <div>{t('result', { imported: result.imported, updated: result.updated, skipped: result.skipped })}</div>
               {result.errors.length > 0 && (
-                <div style={{ marginTop: 8, color: '#991b1b' }}>
+                <div style={{ marginTop: 8, color: 'var(--danger-800)' }}>
                   {result.errors.slice(0, 8).map((e, i) => <div key={i}>{t('rowError', { row: e.row, reason: e.reason })}</div>)}
                   {result.errors.length > 8 && <div>{t('more', { n: result.errors.length - 8 })}</div>}
                 </div>

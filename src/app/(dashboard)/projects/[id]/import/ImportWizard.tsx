@@ -10,6 +10,7 @@ import { detectTagType } from '@/lib/tag-types'
 import { parseCriticality, parseSilLevel } from '@/lib/tags/criticality'
 import { detectEquipmentTypeCode } from '@/lib/equipment-types'
 import { pickBestSheet, detectHeaderRow, cellText, type ColumnKeywords } from '@/lib/excel/detect-header'
+import { alpha, ink } from '@/lib/theme'
 import { pressable } from '@/lib/a11y/pressable'
 
 // ── Column keyword mapping ──────────────────────────────────────
@@ -269,7 +270,7 @@ export default function ImportWizard({
             {disciplinePrefill && (
               <span style={{
                 padding: '3px 10px', borderRadius: '6px', fontSize: '14px', fontWeight: 700,
-                background: `${disciplinePrefill.color}18`, color: disciplinePrefill.color,
+                background: alpha(disciplinePrefill.color, 9), color: ink(disciplinePrefill.color),
               }}>
                 {disciplinePrefill.code} — {disciplinePrefill.name}
               </span>
@@ -294,18 +295,18 @@ export default function ImportWizard({
           const active = step === s
           return (
             <div key={s} style={{ display: 'flex', alignItems: 'center' }}>
-              {i > 0 && <div style={{ width: '40px', height: '1px', background: (done || active) ? '#3b82f6' : 'var(--border)' }} />}
+              {i > 0 && <div style={{ width: '40px', height: '1px', background: (done || active) ? 'var(--primary-500)' : 'var(--border)' }} />}
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <div style={{
                   width: '26px', height: '26px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: '12px', fontWeight: 600,
-                  background: done ? '#3b82f6' : active ? '#eff6ff' : 'var(--gray-100)',
-                  color:      done ? 'var(--card-bg)'   : active ? '#3b82f6' : 'var(--gray-400)',
-                  border: active ? '2px solid #3b82f6' : '2px solid transparent',
+                  background: done ? 'var(--primary-600)' : active ? 'var(--primary-50)' : 'var(--gray-100)',
+                  color:      done ? 'var(--card-bg)'   : active ? 'var(--primary-700)' : 'var(--text-muted)',
+                  border: active ? '2px solid var(--primary-500)' : '2px solid transparent',
                 }}>
                   {done ? '✓' : i + 1}
                 </div>
-                <span style={{ fontSize: '13px', color: active ? '#1e40af' : 'var(--gray-400)', fontWeight: active ? 500 : 400 }}>{labels[i]}</span>
+                <span style={{ fontSize: '13px', color: active ? 'var(--primary-800)' : 'var(--text-muted)', fontWeight: active ? 500 : 400 }}>{labels[i]}</span>
               </div>
             </div>
           )
@@ -330,8 +331,8 @@ export default function ImportWizard({
                     style={{
                       padding: '5px 14px', borderRadius: '7px', border: '1px solid',
                       borderColor: manualDiscipline === d.code ? d.color : 'var(--border)',
-                      background: manualDiscipline === d.code ? `${d.color}15` : 'var(--card-bg)',
-                      color: manualDiscipline === d.code ? d.color : 'var(--text-muted)',
+                      background: manualDiscipline === d.code ? alpha(d.color, 8) : 'var(--card-bg)',
+                      color: ink(manualDiscipline === d.code ? d.color : 'var(--text-muted)'),
                       fontSize: '12px', fontWeight: manualDiscipline === d.code ? 700 : 400,
                       cursor: 'pointer',
                     }}
@@ -341,7 +342,7 @@ export default function ImportWizard({
                 ))}
               </div>
               {!manualDiscipline && (
-                <span style={{ fontSize: '11px', color: '#f59e0b', whiteSpace: 'nowrap' }}>{ti('pickDiscipline')}</span>
+                <span style={{ fontSize: '11px', color: 'var(--warning-700)', whiteSpace: 'nowrap' }}>{ti('pickDiscipline')}</span>
               )}
             </div>
           )}
@@ -353,22 +354,22 @@ export default function ImportWizard({
             // G-12: la zona también se activa con Tab + Enter/Espacio (el input real está oculto).
             {...pressable(() => document.getElementById('file-input')?.click())}
             style={{
-              border: `2px dashed ${dragging ? '#3b82f6' : 'var(--gray-300)'}`,
+              border: `2px dashed ${dragging ? 'var(--primary-500)' : 'var(--gray-300)'}`,
               borderRadius: '14px', padding: '56px 32px', textAlign: 'center',
-              background: dragging ? '#eff6ff' : 'var(--card-bg)',
+              background: dragging ? 'var(--primary-50)' : 'var(--card-bg)',
               cursor: 'pointer', transition: 'all 0.2s',
             }}
           >
             <div style={{ fontSize: '36px', marginBottom: '12px', opacity: 0.4 }}>⊞</div>
             <p style={{ fontSize: '15px', fontWeight: 500, color: 'var(--text-muted)', margin: '0 0 6px' }}>{ti('drop')}</p>
-            <p style={{ fontSize: '13px', color: 'var(--gray-400)', margin: '0 0 20px' }}>{ti('orClick')}</p>
+            <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 20px' }}>{ti('orClick')}</p>
             <input id="file-input" type="file" accept=".xlsx,.xls" onChange={onFileChange} style={{ display: 'none' }} />
-            <span style={{ padding: '8px 20px', background: '#3b82f6', color: '#fff', borderRadius: '8px', fontSize: '13px', fontWeight: 500, pointerEvents: 'none' }}>
+            <span style={{ padding: '8px 20px', background: 'var(--primary-600)', color: '#fff', borderRadius: '8px', fontSize: '13px', fontWeight: 500, pointerEvents: 'none' }}>
               {ti('selectFile')}
             </span>
             {parseWarnings.length > 0 && (
-              <div style={{ marginTop: '20px', padding: '12px', background: '#fef3c7', borderRadius: '8px', textAlign: 'left' }}>
-                {parseWarnings.map((w, i) => <p key={i} style={{ fontSize: '12px', color: '#92400e', margin: '2px 0' }}>⚠ {w}</p>)}
+              <div style={{ marginTop: '20px', padding: '12px', background: 'var(--warning-100)', borderRadius: '8px', textAlign: 'left' }}>
+                {parseWarnings.map((w, i) => <p key={i} style={{ fontSize: '12px', color: 'var(--warning-800)', margin: '2px 0' }}>⚠ {w}</p>)}
               </div>
             )}
           </div>
@@ -396,12 +397,12 @@ export default function ImportWizard({
               { key: 'MOUNTING TYPICAL / TIPICO',req: false, note: ti('colNote.mounting') },
             ].map(col => (
               <div key={col.key} style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', marginBottom: '10px' }}>
-                <span style={{ padding: '1px 5px', borderRadius: '4px', fontSize: '9px', fontWeight: 700, flexShrink: 0, marginTop: '2px', background: col.req ? '#fee2e2' : 'var(--gray-100)', color: col.req ? '#dc2626' : 'var(--text-muted)' }}>
+                <span style={{ padding: '1px 5px', borderRadius: '4px', fontSize: '9px', fontWeight: 700, flexShrink: 0, marginTop: '2px', background: col.req ? 'var(--danger-100)' : 'var(--gray-100)', color: col.req ? 'var(--danger-700)' : 'var(--text-muted)' }}>
                   {col.req ? 'REQ' : 'OPT'}
                 </span>
                 <div>
                   <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', fontFamily: 'monospace' }}>{col.key}</div>
-                  <div style={{ fontSize: '11px', color: 'var(--gray-400)' }}>{col.note}</div>
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{col.note}</div>
                 </div>
               </div>
             ))}
@@ -410,12 +411,12 @@ export default function ImportWizard({
                 <div style={{ borderTop: '1px solid var(--border)', margin: '12px 0' }} />
                 <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{ti('availableDisciplines')}</p>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                  {disciplines.map(d => <span key={d.code} style={{ padding: '2px 8px', borderRadius: '5px', fontSize: '11px', fontWeight: 700, background: `${d.color}18`, color: d.color }}>{d.code}</span>)}
+                  {disciplines.map(d => <span key={d.code} style={{ padding: '2px 8px', borderRadius: '5px', fontSize: '11px', fontWeight: 700, background: alpha(d.color, 9), color: ink(d.color) }}>{d.code}</span>)}
                 </div>
               </>
             )}
             <div style={{ borderTop: '1px solid var(--border)', marginTop: '14px', paddingTop: '12px' }}>
-              <p style={{ fontSize: '11px', color: 'var(--gray-400)', margin: 0 }}>
+              <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: 0 }}>
                 {ti('headerHint')}
               </p>
             </div>
@@ -429,44 +430,44 @@ export default function ImportWizard({
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
             <div style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
               <strong style={{ color: 'var(--text-strong)' }}>{fileName}</strong>
-              <span style={{ margin: '0 8px', color: 'var(--gray-300)' }}>·</span>
-              <span style={{ color: '#10b981', fontWeight: 500 }}>{ti('valid', { n: validRows.length })}</span>
-              {invalidRows.length > 0 && <span style={{ color: '#ef4444', fontWeight: 500, marginLeft: '8px' }}>{ti('skippedN', { n: invalidRows.length })}</span>}
+              <span style={{ margin: '0 8px', color: 'var(--text-muted)' }}>·</span>
+              <span style={{ color: 'var(--success-700)', fontWeight: 500 }}>{ti('valid', { n: validRows.length })}</span>
+              {invalidRows.length > 0 && <span style={{ color: 'var(--danger-700)', fontWeight: 500, marginLeft: '8px' }}>{ti('skippedN', { n: invalidRows.length })}</span>}
             </div>
             <button onClick={() => { setStep('upload'); setRows([]); setFileName(null); setExistingTags(null) }} style={{ fontSize: '13px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>← {ti('changeFile')}</button>
           </div>
 
           {parseWarnings.length > 0 && (
-            <div style={{ padding: '12px 16px', background: '#fef3c7', borderRadius: '10px', marginBottom: '14px', border: '1px solid #fde68a' }}>
-              {parseWarnings.map((w, i) => <p key={i} style={{ fontSize: '13px', color: '#92400e', margin: '2px 0' }}>⚠ {w}</p>)}
+            <div style={{ padding: '12px 16px', background: 'var(--warning-100)', borderRadius: '10px', marginBottom: '14px', border: '1px solid var(--warning-200)' }}>
+              {parseWarnings.map((w, i) => <p key={i} style={{ fontSize: '13px', color: 'var(--warning-800)', margin: '2px 0' }}>⚠ {w}</p>)}
             </div>
           )}
 
           {/* S07 (D9): qué cambia, campo por campo, antes de aplicar */}
           {existingTags && existingTags.size > 0 && (
-            <div style={{ padding: '12px 16px', background: '#eff6ff', borderRadius: '10px', marginBottom: '14px', border: '1px solid #bfdbfe' }}>
-              <p style={{ fontSize: '13px', color: '#1e40af', margin: 0 }}>
+            <div style={{ padding: '12px 16px', background: 'var(--primary-50)', borderRadius: '10px', marginBottom: '14px', border: '1px solid var(--primary-200)' }}>
+              <p style={{ fontSize: '13px', color: 'var(--primary-800)', margin: 0 }}>
                 {ti.rich('existing', { n: existingTags.size, total: rows.length, strong: c => <strong>{c}</strong> })}
               </p>
               {!preview ? (
-                <p style={{ fontSize: '12px', color: '#1e40af', margin: '6px 0 0' }}>{ti('computing')}</p>
+                <p style={{ fontSize: '12px', color: 'var(--primary-800)', margin: '6px 0 0' }}>{ti('computing')}</p>
               ) : (
                 <>
-                  <p style={{ fontSize: '12px', color: '#1e40af', margin: '6px 0 0' }}>
+                  <p style={{ fontSize: '12px', color: 'var(--primary-800)', margin: '6px 0 0' }}>
                     {ti('diffSummary', { added: preview.newTags, changed: preview.updatedTags, same: preview.unchangedTags })}
                   </p>
                   {Object.keys(preview.fieldChanges).length > 0 && (
-                    <ul style={{ margin: '6px 0 0', paddingLeft: '18px', fontSize: '12px', color: '#1e3a8a' }}>
+                    <ul style={{ margin: '6px 0 0', paddingLeft: '18px', fontSize: '12px', color: 'var(--primary-900)' }}>
                       {Object.entries(preview.fieldChanges).sort((a, b) => b[1] - a[1]).map(([field, n]) => (
                         <li key={field}>{FIELD_KEYS.includes(field) ? ti(`field.${field as 'description'}`) : field}: {ti('changesIn', { n })}</li>
                       ))}
                     </ul>
                   )}
                   {preview.moves.some(m => m.blocked) && (
-                    <p style={{ fontSize: '12px', color: '#b45309', margin: '6px 0 0' }}>
+                    <p style={{ fontSize: '12px', color: 'var(--warning-700)', margin: '6px 0 0' }}>
                       ⚠ {ti.rich('blockedMoves', { n: preview.moves.filter(m => m.blocked).length, strong: c => <strong>{c}</strong> })} ({preview.moves.filter(m => m.blocked).slice(0, 5).map((m, n) => (
                         <span key={m.tag}>{n > 0 && ', '}{m.tagId
-                          ? <Link href={`/projects/${projectId}/tags/${m.tagId}`} target="_blank" rel="noopener noreferrer" style={{ color: '#b45309' }}>{m.tag}</Link>
+                          ? <Link href={`/projects/${projectId}/tags/${m.tagId}`} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--warning-700)' }}>{m.tag}</Link>
                           : m.tag}</span>
                       ))}{preview.moves.filter(m => m.blocked).length > 5 ? '…' : ''}). {ti('blockedMovesHint')}
                     </p>
@@ -493,28 +494,28 @@ export default function ImportWizard({
                   const manualD = disciplines.find(x => x.code.toUpperCase() === manualDiscipline)
                   const dColor = d?.color ?? (disciplinePrefill?.color ?? manualD?.color ?? 'var(--gray-400)')
                   return (
-                    <tr key={i} style={{ borderBottom: '1px solid #f1f5f9', background: isInvalid ? '#fff5f5' : undefined }}>
-                      <td style={tdStyle}><span style={{ color: 'var(--gray-300)' }}>{i + 1}</span></td>
+                    <tr key={i} style={{ borderBottom: '1px solid var(--gray-100)', background: isInvalid ? 'var(--danger-50)' : undefined }}>
+                      <td style={tdStyle}><span style={{ color: 'var(--text-muted)' }}>{i + 1}</span></td>
                       <td style={tdStyle}>
                         <span style={{ fontWeight: 600, color: 'var(--text-strong)', fontFamily: 'monospace' }}>{row.tag_number}</span>
                         {existingTags?.has(row.tag_number.trim()) && (
-                          <span style={{ marginLeft: '6px', padding: '1px 6px', borderRadius: '4px', fontSize: '9px', fontWeight: 700, background: '#eff6ff', color: '#1e40af', border: '1px solid #bfdbfe', verticalAlign: 'middle' }}>{ti('exists')}</span>
+                          <span style={{ marginLeft: '6px', padding: '1px 6px', borderRadius: '4px', fontSize: '9px', fontWeight: 700, background: 'var(--primary-50)', color: 'var(--primary-800)', border: '1px solid var(--primary-200)', verticalAlign: 'middle' }}>{ti('exists')}</span>
                         )}
                       </td>
                       <td style={tdStyle}><span style={{ color: 'var(--text-muted)' }}>{row.description || '—'}</span></td>
                       <td style={tdStyle}>{(() => {
                         // Tipo explícito del Excel (columna TIPO EQUIPO) o detectado por prefijo ISA
                         if (row.equipment_type_code) {
-                          return <span style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '10px', fontWeight: 600, background: '#eff6ff', color: '#1e40af', border: '1px solid #bfdbfe', whiteSpace: 'nowrap' }}>{row.equipment_type_code}</span>
+                          return <span style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '10px', fontWeight: 600, background: 'var(--primary-50)', color: 'var(--primary-800)', border: '1px solid var(--primary-200)', whiteSpace: 'nowrap' }}>{row.equipment_type_code}</span>
                         }
                         const t = detectTagType(row.tag_number)
                         const code = detectEquipmentTypeCode(row.tag_number)
                         return t
-                          ? <span title={ti('detectedByPrefix')} style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '10px', fontWeight: 600, background: '#f0fdf4', color: '#15803d', border: '1px solid #bbf7d0', whiteSpace: 'nowrap' }}>{t.typeName}{code ? ` (${code})` : ''}</span>
-                          : <span style={{ fontSize: '11px', color: 'var(--gray-300)' }}>—</span>
+                          ? <span title={ti('detectedByPrefix')} style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '10px', fontWeight: 600, background: 'var(--success-50)', color: 'var(--success-700)', border: '1px solid var(--success-200)', whiteSpace: 'nowrap' }}>{t.typeName}{code ? ` (${code})` : ''}</span>
+                          : <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>—</span>
                       })()}</td>
                       <td style={tdStyle}>
-                        <span style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '10px', fontWeight: 700, background: `${dColor}18`, color: isInvalid ? '#ef4444' : dColor }}>
+                        <span style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '10px', fontWeight: 700, background: alpha(dColor, 9), color: isInvalid ? 'var(--danger-700)' : dColor }}>
                           {row.discipline_code || '?'}
                         </span>
                       </td>
@@ -526,18 +527,18 @@ export default function ImportWizard({
                 })}
               </tbody>
             </table>
-            {rows.length > 30 && <div style={{ padding: '10px 16px', fontSize: '12px', color: 'var(--gray-400)', borderTop: '1px solid #f1f5f9' }}>{ti('showing', { total: rows.length })}</div>}
+            {rows.length > 30 && <div style={{ padding: '10px 16px', fontSize: '12px', color: 'var(--text-muted)', borderTop: '1px solid var(--gray-100)' }}>{ti('showing', { total: rows.length })}</div>}
           </div>
 
           {importError && (
-            <div style={{ padding: '12px 16px', background: '#fef2f2', borderRadius: '10px', border: '1px solid #fca5a5', marginBottom: '16px' }}>
-              <p style={{ fontSize: '13px', color: '#dc2626', margin: 0 }}>{importError}</p>
+            <div style={{ padding: '12px 16px', background: 'var(--danger-50)', borderRadius: '10px', border: '1px solid var(--danger-300)', marginBottom: '16px' }}>
+              <p style={{ fontSize: '13px', color: 'var(--danger-700)', margin: 0 }}>{importError}</p>
             </div>
           )}
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
             <Link href={`/projects/${projectId}/tags`} style={{ padding: '10px 20px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none', display: 'flex', alignItems: 'center' }}>{ti('cancel')}</Link>
-            <button onClick={handleImport} disabled={loading || validRows.length === 0} style={{ padding: '10px 24px', background: '#10b981', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 500, cursor: loading ? 'wait' : 'pointer', opacity: validRows.length === 0 ? 0.5 : 1 }}>
+            <button onClick={handleImport} disabled={loading || validRows.length === 0} style={{ padding: '10px 24px', background: 'var(--success-500)', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 500, cursor: loading ? 'wait' : 'pointer', opacity: validRows.length === 0 ? 0.5 : 1 }}>
               {loading ? (progress ? ti('importingProgress', { done: progress.done, total: progress.total }) : ti('importing')) : `✓ ${ti('importN', { n: validRows.length })}`}
             </button>
           </div>
@@ -550,39 +551,39 @@ export default function ImportWizard({
           <div style={{ fontSize: '52px', marginBottom: '12px' }}>{result.errors.length === 0 ? '✅' : '⚠️'}</div>
           <h2 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 24px' }}>{ti('done')}</h2>
           <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', marginBottom: '32px', flexWrap: 'wrap' }}>
-            <div style={{ padding: '20px 32px', background: '#ecfdf5', borderRadius: '12px', border: '1px solid #a7f3d0' }}>
-              <div style={{ fontSize: '32px', fontWeight: 700, color: '#10b981' }}>{result.imported}</div>
-              <div style={{ fontSize: '13px', color: '#059669', marginTop: '4px' }}>{ti('new')}</div>
+            <div style={{ padding: '20px 32px', background: 'var(--success-50)', borderRadius: '12px', border: '1px solid var(--success-200)' }}>
+              <div style={{ fontSize: '32px', fontWeight: 700, color: 'var(--success-700)' }}>{result.imported}</div>
+              <div style={{ fontSize: '13px', color: 'var(--success-700)', marginTop: '4px' }}>{ti('new')}</div>
             </div>
             {result.updated > 0 && (
-              <div style={{ padding: '20px 32px', background: '#eff6ff', borderRadius: '12px', border: '1px solid #bfdbfe' }}>
-                <div style={{ fontSize: '32px', fontWeight: 700, color: '#2563eb' }}>{result.updated}</div>
-                <div style={{ fontSize: '13px', color: '#1e40af', marginTop: '4px' }}>{ti('updated')}</div>
+              <div style={{ padding: '20px 32px', background: 'var(--primary-50)', borderRadius: '12px', border: '1px solid var(--primary-200)' }}>
+                <div style={{ fontSize: '32px', fontWeight: 700, color: 'var(--primary-700)' }}>{result.updated}</div>
+                <div style={{ fontSize: '13px', color: 'var(--primary-800)', marginTop: '4px' }}>{ti('updated')}</div>
               </div>
             )}
             {result.skipped > 0 && (
-              <div style={{ padding: '20px 32px', background: '#fef3c7', borderRadius: '12px', border: '1px solid #fde68a' }}>
-                <div style={{ fontSize: '32px', fontWeight: 700, color: '#d97706' }}>{result.skipped}</div>
-                <div style={{ fontSize: '13px', color: '#b45309', marginTop: '4px' }}>{ti('skipped')}</div>
+              <div style={{ padding: '20px 32px', background: 'var(--warning-100)', borderRadius: '12px', border: '1px solid var(--warning-200)' }}>
+                <div style={{ fontSize: '32px', fontWeight: 700, color: 'var(--warning-700)' }}>{result.skipped}</div>
+                <div style={{ fontSize: '13px', color: 'var(--warning-700)', marginTop: '4px' }}>{ti('skipped')}</div>
               </div>
             )}
           </div>
           {result.warnings.length > 0 && (
-            <div style={{ textAlign: 'left', background: '#fef3c7', borderRadius: '10px', padding: '16px', marginBottom: '24px', border: '1px solid #fde68a' }}>
-              <p style={{ fontSize: '12px', fontWeight: 600, color: '#92400e', margin: '0 0 8px' }}>{ti('warnings')}</p>
-              {result.warnings.map((w, i) => <p key={i} style={{ fontSize: '12px', color: '#92400e', margin: '2px 0' }}>⚠ {w}</p>)}
+            <div style={{ textAlign: 'left', background: 'var(--warning-100)', borderRadius: '10px', padding: '16px', marginBottom: '24px', border: '1px solid var(--warning-200)' }}>
+              <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--warning-800)', margin: '0 0 8px' }}>{ti('warnings')}</p>
+              {result.warnings.map((w, i) => <p key={i} style={{ fontSize: '12px', color: 'var(--warning-800)', margin: '2px 0' }}>⚠ {w}</p>)}
             </div>
           )}
           {result.errors.length > 0 && (
-            <div style={{ textAlign: 'left', background: '#fef2f2', borderRadius: '10px', padding: '16px', marginBottom: '24px', border: '1px solid #fca5a5' }}>
-              <p style={{ fontSize: '12px', fontWeight: 600, color: '#dc2626', margin: '0 0 8px' }}>{ti('errors')}</p>
-              {result.errors.slice(0, 10).map((e, i) => <p key={i} style={{ fontSize: '12px', color: '#991b1b', margin: '2px 0', fontFamily: 'monospace' }}>{ti('errorRow', { row: e.row, tag: e.tag })} {e.reason}</p>)}
-              {result.errors.length > 10 && <p style={{ fontSize: '12px', color: '#991b1b', margin: '6px 0 0' }}>{ti('andMore', { n: result.errors.length - 10 })}</p>}
-              <button onClick={() => downloadErrors(result.errors, fileName, ti)} style={{ marginTop: '8px', padding: '6px 12px', fontSize: '12px', borderRadius: '6px', border: '1px solid #fca5a5', background: 'var(--card-bg)', color: '#b91c1c', cursor: 'pointer' }}>⬇ {ti('downloadErrors')}</button>
+            <div style={{ textAlign: 'left', background: 'var(--danger-50)', borderRadius: '10px', padding: '16px', marginBottom: '24px', border: '1px solid var(--danger-300)' }}>
+              <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--danger-700)', margin: '0 0 8px' }}>{ti('errors')}</p>
+              {result.errors.slice(0, 10).map((e, i) => <p key={i} style={{ fontSize: '12px', color: 'var(--danger-800)', margin: '2px 0', fontFamily: 'monospace' }}>{ti('errorRow', { row: e.row, tag: e.tag })} {e.reason}</p>)}
+              {result.errors.length > 10 && <p style={{ fontSize: '12px', color: 'var(--danger-800)', margin: '6px 0 0' }}>{ti('andMore', { n: result.errors.length - 10 })}</p>}
+              <button onClick={() => downloadErrors(result.errors, fileName, ti)} style={{ marginTop: '8px', padding: '6px 12px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--danger-300)', background: 'var(--card-bg)', color: 'var(--danger-700)', cursor: 'pointer' }}>⬇ {ti('downloadErrors')}</button>
             </div>
           )}
           <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-            <Link href={`/projects/${projectId}/tags`} style={{ padding: '10px 22px', background: '#3b82f6', color: '#fff', borderRadius: '8px', fontSize: '13px', fontWeight: 500, textDecoration: 'none' }}>{ti('viewTags')} →</Link>
+            <Link href={`/projects/${projectId}/tags`} style={{ padding: '10px 22px', background: 'var(--primary-600)', color: '#fff', borderRadius: '8px', fontSize: '13px', fontWeight: 500, textDecoration: 'none' }}>{ti('viewTags')} →</Link>
             <button onClick={() => { setStep('upload'); setRows([]); setFileName(null); setExistingTags(null); setResult(null) }} style={{ padding: '10px 22px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)', cursor: 'pointer' }}>{ti('importMore')}</button>
           </div>
         </div>
@@ -608,6 +609,6 @@ function downloadErrors(errors: ImportResult['errors'], fileName: string | null,
 }
 
 function Th({ children }: { children: React.ReactNode }) {
-  return <th style={{ padding: '10px 14px', textAlign: 'left', fontSize: '11px', fontWeight: 600, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>{children}</th>
+  return <th style={{ padding: '10px 14px', textAlign: 'left', fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>{children}</th>
 }
 const tdStyle: React.CSSProperties = { padding: '10px 14px', verticalAlign: 'middle' }

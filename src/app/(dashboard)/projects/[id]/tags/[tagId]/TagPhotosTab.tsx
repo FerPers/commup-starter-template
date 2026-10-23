@@ -4,13 +4,14 @@ import { useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { ClipboardCheck, Flag, Wrench } from 'lucide-react'
 import type { ConsolidatedTagPhoto, TagPhotoSource } from '@/lib/tag-photos'
+import { ink } from '@/lib/theme'
 
 const NON_PREVIEWABLE_EXT = ['heic', 'heif']
 
 const SOURCE_CFG: Record<TagPhotoSource, { color: string; bg: string; border: string; icon: typeof ClipboardCheck }> = {
-  itr:          { color: 'var(--primary-500)', bg: 'var(--primary-50)', border: 'var(--primary-200)', icon: ClipboardCheck },
-  punch:        { color: 'var(--orange-600)', bg: 'var(--orange-50)', border: 'var(--orange-200)', icon: Flag },
-  preservation: { color: 'var(--success-600)', bg: 'var(--success-50)', border: 'var(--success-200)', icon: Wrench },
+  itr:          { color: 'var(--primary-700)', bg: 'var(--primary-50)', border: 'var(--primary-200)', icon: ClipboardCheck },
+  punch:        { color: 'var(--orange-700)',  bg: 'var(--orange-50)',  border: 'var(--orange-200)',  icon: Flag },
+  preservation: { color: 'var(--success-700)', bg: 'var(--success-50)', border: 'var(--success-200)', icon: Wrench },
 }
 
 interface Props {
@@ -34,10 +35,10 @@ export default function TagPhotosTab({ photos }: Props) {
     return (
       <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)' }}>
         <div style={{ fontSize: 32, marginBottom: 12 }}>📷</div>
-        <p style={{ fontSize: 15, fontWeight: 600, color: 'var(--gray-700)', margin: '0 0 6px' }}>
+        <p style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-body)', margin: '0 0 6px' }}>
           {t('emptyTitle')}
         </p>
-        <p style={{ fontSize: 13, color: 'var(--gray-400)', margin: 0 }}>
+        <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>
           {t('emptyMsg')}
         </p>
       </div>
@@ -104,7 +105,7 @@ function FilterPill({
         borderRadius: 999,
         fontSize: 11,
         background: active ? 'rgba(0,0,0,0.08)' : 'var(--gray-100)',
-        color: active ? (cfg?.color ?? '#fff') : 'var(--gray-400)',
+        color: active ? (cfg?.color ?? '#fff') : 'var(--text-muted)',
       }}>
         {count}
       </span>
@@ -156,7 +157,7 @@ function PhotoCard({ photo }: { photo: ConsolidatedTagPhoto }) {
         style={{
           display: 'flex', alignItems: 'center', gap: 6,
           padding: '6px 8px',
-          background: cfg.bg, color: cfg.color,
+          background: cfg.bg, color: ink(cfg.color),
           borderTop: `1px solid ${cfg.border}`,
           fontSize: 11, fontWeight: 600,
           textDecoration: 'none',

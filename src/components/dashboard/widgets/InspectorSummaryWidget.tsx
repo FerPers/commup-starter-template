@@ -33,9 +33,9 @@ export default async function InspectorSummaryWidget({ userId }: { userId: strin
 
   return (
     <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-      <SummaryPill count={activeItrs.length} label={t('inspector.pillItrs')} color="var(--primary-500)" />
-      <SummaryPill count={punchCount ?? 0} label={t('inspector.pillPunches')} color="var(--danger-500)" />
-      <SummaryPill count={inProgress} label={t('inspector.pillProgress')} color="var(--success-500)" />
+      <SummaryPill count={activeItrs.length} label={t('inspector.pillItrs')} color='var(--primary-700)' />
+      <SummaryPill count={punchCount ?? 0} label={t('inspector.pillPunches')} color='var(--danger-700)' />
+      <SummaryPill count={inProgress} label={t('inspector.pillProgress')} color='var(--success-700)' />
     </div>
   )
 }

@@ -19,7 +19,7 @@ import { CE_ACTIONS, CE_VOTINGS, type CeAction, type CeVoting } from '@/lib/ce/m
 type Meta = { code: string; title: string; systemId: string; revision: string; sourceDocument: string; fileName: string }
 
 const field = { width: '100%', padding: '6px 8px', border: '1px solid var(--border)', borderRadius: '6px', background: 'var(--card-bg)', color: 'var(--text-strong)', fontSize: '12px', boxSizing: 'border-box' } as const
-const primary = { padding: '9px 14px', borderRadius: '8px', border: 0, background: 'var(--primary-600, #2563eb)', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' } as const
+const primary = { padding: '9px 14px', borderRadius: '8px', border: 0, background: 'var(--primary-600)', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' } as const
 const amber = '#fffbeb'
 
 export default function ImportCeWizard({ project, systems, aiReady }: {
@@ -132,7 +132,7 @@ export default function ImportCeWizard({ project, systems, aiReady }: {
       <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 16px', maxWidth: '760px' }}>
         {ti.rich('intro', { strong: c => <strong>{c}</strong> })}
       </p>
-      {!aiReady && <p role="alert" style={{ color: '#b45309', fontSize: '13px' }}>{ti('aiOff')}</p>}
+      {!aiReady && <p role="alert" style={{ color: 'var(--warning-700)', fontSize: '13px' }}>{ti('aiOff')}</p>}
 
       {!review && (
         <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '12px', padding: '16px', display: 'grid', gap: '12px', maxWidth: '640px' }}>
@@ -154,7 +154,7 @@ export default function ImportCeWizard({ project, systems, aiReady }: {
           </div>
         </div>
       )}
-      {error && <p role="alert" style={{ color: '#b91c1c', fontSize: '13px' }}>{error}</p>}
+      {error && <p role="alert" style={{ color: 'var(--danger-700)', fontSize: '13px' }}>{error}</p>}
 
       {review && meta && (
         <>
@@ -174,7 +174,7 @@ export default function ImportCeWizard({ project, systems, aiReady }: {
             {ti('summary', { causes: review.causes.length, effects: review.effects.length, links: review.links.length, doubts })}
           </p>
           {review.warnings.length > 0 && (
-            <ul style={{ fontSize: '12px', color: '#92400e', background: amber, border: '1px solid #fde68a', borderRadius: '8px', padding: '8px 12px 8px 28px', margin: '0 0 12px' }}>
+            <ul style={{ fontSize: '12px', color: 'var(--warning-800)', background: amber, border: '1px solid var(--warning-200)', borderRadius: '8px', padding: '8px 12px 8px 28px', margin: '0 0 12px' }}>
               {review.warnings.map((w, i) => <li key={i}>{w}</li>)}
             </ul>
           )}
@@ -196,7 +196,7 @@ export default function ImportCeWizard({ project, systems, aiReady }: {
                         <option value="">—</option>{CE_VOTINGS.map(v => <option key={v} value={v}>{tc(`votingOpt.${v}`)}</option>)}
                       </select>
                     </td>
-                    <td style={{ padding: '4px' }}><button type="button" aria-label={ti('aria.removeCause', { code: c.code })} onClick={() => removeRow('causes', c.key)} style={{ border: 0, background: 'none', cursor: 'pointer', color: '#b91c1c' }}>×</button></td>
+                    <td style={{ padding: '4px' }}><button type="button" aria-label={ti('aria.removeCause', { code: c.code })} onClick={() => removeRow('causes', c.key)} style={{ border: 0, background: 'none', cursor: 'pointer', color: 'var(--danger-700)' }}>×</button></td>
                   </tr>
                 ))}</tbody>
               </table>
@@ -216,7 +216,7 @@ export default function ImportCeWizard({ project, systems, aiReady }: {
                         {CE_ACTIONS.map(a => <option key={a} value={a}>{tc(`action.${a}`)}</option>)}
                       </select>
                     </td>
-                    <td style={{ padding: '4px' }}><button type="button" aria-label={ti('aria.removeEffect', { code: e.code })} onClick={() => removeRow('effects', e.key)} style={{ border: 0, background: 'none', cursor: 'pointer', color: '#b91c1c' }}>×</button></td>
+                    <td style={{ padding: '4px' }}><button type="button" aria-label={ti('aria.removeEffect', { code: e.code })} onClick={() => removeRow('effects', e.key)} style={{ border: 0, background: 'none', cursor: 'pointer', color: 'var(--danger-700)' }}>×</button></td>
                   </tr>
                 ))}</tbody>
               </table>
@@ -239,7 +239,7 @@ export default function ImportCeWizard({ project, systems, aiReady }: {
                     return (
                       <td key={e.key} onClick={() => cycle(c.key, e.key)} aria-label={`${c.code} × ${e.code}: ${link ? (link.delay ? `T${link.delay}s` : 'X') : tc('noLink')}`}
                         style={{ width: '44px', minWidth: '44px', height: '30px', textAlign: 'center', border: '1px solid var(--border)', cursor: 'pointer', fontWeight: 700,
-                          background: link?.uncertain ? '#fde68a' : link ? (link.delay ? '#fef3c7' : '#dcfce7') : undefined, color: link?.delay ? '#92400e' : '#166534' }}>
+                          background: link?.uncertain ? 'var(--warning-200)' : link ? (link.delay ? 'var(--warning-100)' : 'var(--success-100)') : undefined, color: link?.delay ? 'var(--warning-800)' : 'var(--success-800)' }}>
                         {link ? (link.delay ? `T${link.delay}s` : 'X') : ''}
                       </td>
                     )
@@ -249,7 +249,7 @@ export default function ImportCeWizard({ project, systems, aiReady }: {
             </table>
           </section>
 
-          {errors.length > 0 && <ul role="alert" style={{ color: '#b91c1c', fontSize: '12px', margin: '12px 0 0' }}>{errors.map(e => <li key={e}>{e}</li>)}</ul>}
+          {errors.length > 0 && <ul role="alert" style={{ color: 'var(--danger-700)', fontSize: '12px', margin: '12px 0 0' }}>{errors.map(e => <li key={e}>{e}</li>)}</ul>}
           <div style={{ display: 'flex', gap: '8px', marginTop: '14px', flexWrap: 'wrap' }}>
             <button type="button" style={primary} disabled={saving || errors.length > 0 || !meta.code.trim() || !meta.title.trim()} onClick={save}>{saving ? ti('creating') : ti('create')}</button>
             <button type="button" onClick={async () => { if (await confirm({ message: ti('discardConfirm'), confirmLabel: ti('discard'), danger: true })) { setReview(null); setMeta(null) } }} style={{ padding: '9px 14px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--card-bg)', cursor: 'pointer', fontSize: '13px' }}>{ti('discard')}</button>

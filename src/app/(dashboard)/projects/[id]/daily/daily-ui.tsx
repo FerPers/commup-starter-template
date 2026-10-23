@@ -21,12 +21,12 @@ export type SystemOpt = { id: string; code: string; name: string }
 type Tone = 'muted' | 'blue' | 'amber' | 'violet' | 'green' | 'red' | 'struck'
 const TONE: Record<Tone, { bg: string; fg: string; border: string }> = {
   muted:  { bg: 'var(--gray-50)',    fg: 'var(--text-muted)',  border: 'var(--border)' },
-  blue:   { bg: '#eff6ff',           fg: '#1d4ed8',            border: '#93c5fd' },
-  amber:  { bg: '#fffbeb',           fg: '#b45309',            border: '#fcd34d' },
-  violet: { bg: '#f5f3ff',           fg: '#6d28d9',            border: '#c4b5fd' },
-  green:  { bg: 'var(--success-50)', fg: 'var(--success-700)', border: '#a7f3d0' },
-  red:    { bg: 'var(--danger-50)',  fg: 'var(--danger-700)',  border: '#fecaca' },
-  struck: { bg: 'var(--gray-50)',    fg: 'var(--gray-400)',    border: 'var(--border)' },
+  blue:   { bg: 'var(--primary-50)', fg: 'var(--primary-700)', border: 'var(--primary-200)' },
+  amber:  { bg: 'var(--warning-50)', fg: 'var(--warning-700)', border: 'var(--warning-200)' },
+  violet: { bg: 'var(--violet-50)',  fg: 'var(--violet-700)',  border: 'var(--violet-200)' },
+  green:  { bg: 'var(--success-50)', fg: 'var(--success-700)', border: 'var(--success-200)' },
+  red:    { bg: 'var(--danger-50)',  fg: 'var(--danger-700)',  border: 'var(--danger-200)' },
+  struck: { bg: 'var(--gray-50)',    fg: 'var(--text-muted)',  border: 'var(--border)' },
 }
 
 /** Color por estado, común a las 4 entidades. */
@@ -202,7 +202,7 @@ export function Evidence({ projectId, kind, entityId, attachments, names, canAdd
         {attachments.map(a => (
           <li key={a.id} style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', fontSize: 'var(--text-sm)' }}>
             <button type="button" onClick={() => open(a.file_path)} disabled={isPending}
-              style={{ background: 'none', border: 'none', padding: 0, color: 'var(--primary-600, #2563eb)', cursor: 'pointer', fontWeight: 600, fontSize: 'var(--text-sm)' }}>
+              style={{ background: 'none', border: 'none', padding: 0, color: 'var(--primary-700)', cursor: 'pointer', fontWeight: 600, fontSize: 'var(--text-sm)' }}>
               📎 {a.file_name}
             </button>
             <span style={small} suppressHydrationWarning>{(a.uploaded_by ? names[a.uploaded_by] : undefined) ?? t('someone')} · {new Date(a.created_at).toLocaleString()}</span>
@@ -239,7 +239,7 @@ export function DailyTabs({ projectId, active, counts, subtitle, actions }: {
         current={active}
         aside={(
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-            <Link href={`/projects/${projectId}/planning/lookahead`} style={{ ...small, textDecoration: 'none', color: 'var(--primary-600, #2563eb)', fontWeight: 600 }}>{t('tab.lookahead')} →</Link>
+            <Link href={`/projects/${projectId}/planning/lookahead`} style={{ ...small, textDecoration: 'none', color: 'var(--primary-700)', fontWeight: 600 }}>{t('tab.lookahead')} →</Link>
             {actions}
           </div>
         )}

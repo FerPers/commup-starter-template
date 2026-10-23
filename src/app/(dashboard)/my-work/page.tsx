@@ -19,7 +19,7 @@ import type { OrgMemberRole } from '@/types/database'
 import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
 import { DEFAULT_TIMEZONE, latestPossibleToday } from '@/lib/time/zone'
 import { projectTodayFn } from '@/lib/time/project-zones'
-import { ink } from '@/lib/theme'
+import { ink, alpha } from '@/lib/theme'
 
 export const dynamic = 'force-dynamic'
 
@@ -338,10 +338,10 @@ export default async function MyWorkPage({ searchParams }: { searchParams: Promi
 
   const catTag = (c: PunchRow['category']) => {
     const cat = CATEGORY_CFG[c]
-    return <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 'var(--radius-sm)', background: cat.bg, color: cat.color, border: `1px solid ${cat.border}` }}>{cat.label}</span>
+    return <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 'var(--radius-sm)', background: cat.bg, color: ink(cat.color), border: `1px solid ${cat.border}` }}>{cat.label}</span>
   }
   const itrHref = (itr: NonNullable<AssignmentRow['itrs']>) => `/projects/${itr.project_id}/tags/${itr.tags?.id}/itrs/${itr.id}`
-  const verifyPill = <Pill tone="info" style={{ background: 'var(--violet-50)', color: 'var(--violet-600)' }}>{t('due.verify')}</Pill>
+  const verifyPill = <Pill tone="info" style={{ background: 'var(--violet-50)', color: 'var(--violet-700)' }}>{t('due.verify')}</Pill>
   const readinessQueue = (sec: typeof READINESS_SECTIONS[number]) => {
     const rows = readinessOf(sec.queue)
     return {
@@ -388,7 +388,7 @@ export default async function MyWorkPage({ searchParams }: { searchParams: Promi
         <Row key={p.id} href={`/projects/${p.project_id}/punches/${p.id}`} stripe={CATEGORY_CFG[p.category].color}
           code={p.punch_number} tag={catTag(p.category)}
           what={`${p.description}${p.tags?.tag_number ? ` · ${p.tags.tag_number}` : ''}`} project={p.projects?.code}
-          right={p.target_date ? duePill(p.target_date, p.project_id) : <Pill tone={p.status === 'in_progress' ? 'info' : 'neutral'} style={{ background: pStyle.bg, color: pStyle.color }}>{t(`punchStatus.${p.status}`)}</Pill>} />
+          right={p.target_date ? duePill(p.target_date, p.project_id) : <Pill tone={p.status === 'in_progress' ? 'info' : 'neutral'} style={{ background: pStyle.bg, color: ink(pStyle.color) }}>{t(`punchStatus.${p.status}`)}</Pill>} />
       )
     }) },
     punches_verify: { more: '/punch-list?status=in_progress', rows: verifyRows.map(p => (
@@ -506,11 +506,11 @@ export default async function MyWorkPage({ searchParams }: { searchParams: Promi
 
 type Tone = 'danger' | 'warning' | 'info' | 'success' | 'neutral'
 const TONE: Record<Tone, { bg: string; fg: string }> = {
-  danger:  { bg: 'var(--danger-50)',  fg: 'var(--danger-500)' },
-  warning: { bg: 'var(--warning-50)', fg: 'var(--warning-600)' },
-  info:    { bg: 'var(--primary-50)', fg: 'var(--primary-500)' },
-  success: { bg: 'var(--success-50)', fg: 'var(--success-500)' },
-  neutral: { bg: 'var(--gray-100)',   fg: 'var(--gray-500)' },
+  danger:  { bg: 'var(--danger-50)',  fg: 'var(--danger-700)' },
+  warning: { bg: 'var(--warning-50)', fg: 'var(--warning-700)' },
+  info:    { bg: 'var(--primary-50)', fg: 'var(--primary-700)' },
+  success: { bg: 'var(--success-50)', fg: 'var(--success-700)' },
+  neutral: { bg: 'var(--gray-100)',   fg: 'var(--text-muted)' },
 }
 
 function Pill({ tone, children, style }: { tone: Tone; children: React.ReactNode; style?: React.CSSProperties }) {
@@ -529,12 +529,12 @@ function Row({ href, stripe, code, phase, tag, what, project, right }: {
       <div style={{ padding: '10px 14px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderLeft: `3px solid ${stripe}`, borderRadius: 'var(--radius-md)', display: 'flex', flexWrap: 'wrap', gap: '6px 12px', alignItems: 'center' }}>
         <div style={{ minWidth: 0, flex: '1 1 160px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2, flexWrap: 'wrap' }}>
-            {phase && <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 'var(--radius-sm)', background: `${phase.color}18`, color: ink(phase.color) }}>{phase.code}</span>}
+            {phase && <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 'var(--radius-sm)', background: alpha(phase.color, 9), color: ink(phase.color) }}>{phase.code}</span>}
             {tag}
             <span style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--text-strong)', fontFamily: 'ui-monospace, monospace' }}>{code}</span>
             {project && <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--accent-700)', background: 'var(--accent-50)', padding: '1px 6px', borderRadius: 'var(--radius-sm)', fontFamily: 'ui-monospace, monospace' }}>{project}</span>}
           </div>
-          <div style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-700)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{what}</div>
+          <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-body)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{what}</div>
         </div>
         {right}
       </div>

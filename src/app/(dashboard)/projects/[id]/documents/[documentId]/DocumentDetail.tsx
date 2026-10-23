@@ -132,7 +132,7 @@ export default function DocumentDetail({ project, doc, revisions, usage, systems
         </div>
         {/* N2d: pines copiados de la revisión anterior que falta confirmar en el plano nuevo */}
         {doc.docType === 'pid' && current && (pidPins[current.id]?.review ?? 0) > 0 && (
-          <div role="status" style={{ marginTop: 10, padding: '10px 14px', borderRadius: 10, background: '#fff8ec', border: '1px solid #f6d7a7', fontSize: 'var(--text-sm)', color: '#7c4a03' }}>
+          <div role="status" style={{ marginTop: 10, padding: '10px 14px', borderRadius: 10, background: 'var(--warning-50)', border: '1px solid var(--warning-200)', fontSize: 'var(--text-sm)', color: 'var(--warning-800)' }}>
             {t('pid.reviewBanner', { count: pidPins[current.id].review, rev: current.rev })}{' '}
             <Link href={`/projects/${project.id}/documents/${doc.id}/viewer`} style={{ ...linkStyle, fontWeight: 600 }}>{t('pid.reviewPins')}</Link>
           </div>

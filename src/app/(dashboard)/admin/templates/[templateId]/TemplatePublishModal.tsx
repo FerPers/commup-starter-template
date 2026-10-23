@@ -34,7 +34,7 @@ export default function TemplatePublishModal({
         <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 6px' }}>
           {mode === 'create' ? t('createRevisionDesc', { version }) : t('activateRevisionDesc', { version })}
         </p>
-        <p style={{ fontSize: '12px', color: 'var(--gray-400)', margin: '0 0 22px' }}>
+        <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 22px' }}>
           {t('revisionNote')}
         </p>
         <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
@@ -47,7 +47,7 @@ export default function TemplatePublishModal({
           <button
             onClick={onConfirm}
             disabled={isPending}
-            style={{ padding: '8px 20px', background: '#1e40af', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, color: '#fff', cursor: isPending ? 'not-allowed' : 'pointer', opacity: isPending ? 0.7 : 1 }}
+            style={{ padding: '8px 20px', background: 'var(--solid-primary-800)', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, color: '#fff', cursor: isPending ? 'not-allowed' : 'pointer', opacity: isPending ? 0.7 : 1 }}
           >
             {isPending ? t('btnSaving') : mode === 'create' ? t('btnCreateRevisionConfirm', { version }) : t('btnActivateRevisionConfirm', { version })}
           </button>

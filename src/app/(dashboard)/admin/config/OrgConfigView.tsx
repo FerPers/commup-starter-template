@@ -10,6 +10,7 @@ import {
 } from '@/app/actions/config'
 import { DEFAULT_ITR_GLOSSARY } from '@/lib/constants/itr-glossary'
 import { EQUIPMENT_CATEGORIES } from '@/lib/equipment-types'
+import { alpha, ink } from '@/lib/theme'
 import { useToast } from '@/components/ui/Toast'
 
 type Org = { id: string; name: string; logo_url: string | null }
@@ -72,12 +73,12 @@ function PhaseRow({ phase, onSave, onDelete, isPending }: {
 
   if (!editing) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderBottom: '1px solid #f1f5f9' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderBottom: '1px solid var(--gray-100)' }}>
         <div style={{ width: 12, height: 12, borderRadius: '50%', background: phase.color, flexShrink: 0 }} />
-        <span style={{ fontSize: '13px', fontWeight: 700, color: phase.color, minWidth: '32px' }}>{phase.code}</span>
+        <span style={{ fontSize: '13px', fontWeight: 700, color: ink(phase.color), minWidth: '32px' }}>{phase.code}</span>
         <span style={{ fontSize: '14px', color: 'var(--text-strong)', flex: 1 }}>{phase.name}</span>
-        <span style={{ fontSize: '12px', color: '#94a3b8' }}>{phase.certificate_name ?? '—'}</span>
-        {phase.itr_client_signature && <span title={t('phases.clientSignsHint')} style={{ fontSize: '11px', fontWeight: 600, color: '#7c3aed', background: '#f5f3ff', border: '1px solid #ddd6fe', borderRadius: '999px', padding: '1px 8px' }}>{t('phases.clientSignsChip')}</span>}
+        <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{phase.certificate_name ?? '—'}</span>
+        {phase.itr_client_signature && <span title={t('phases.clientSignsHint')} style={{ fontSize: '11px', fontWeight: 600, color: 'var(--violet-700)', background: 'var(--violet-50)', border: '1px solid var(--violet-200)', borderRadius: '999px', padding: '1px 8px' }}>{t('phases.clientSignsChip')}</span>}
         <div style={{ display: 'flex', gap: '6px' }}>
           <button onClick={() => setEditing(true)} disabled={isPending} style={btnOutline}>{t('phases.edit')}</button>
           <button onClick={onDelete} disabled={isPending} style={btnDanger}>{t('phases.delete')}</button>
@@ -87,7 +88,7 @@ function PhaseRow({ phase, onSave, onDelete, isPending }: {
   }
 
   return (
-    <div style={{ padding: '14px 16px', borderBottom: '1px solid #f1f5f9', background: '#fafbfc' }}>
+    <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--gray-100)', background: 'var(--gray-50)' }}>
       <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '10px' }}>
         <input value={code} onChange={e => setCode(e.target.value)} placeholder={t('phases.codePh')} maxLength={8}
           style={{ ...inputStyle, width: '80px' }} />
@@ -98,8 +99,8 @@ function PhaseRow({ phase, onSave, onDelete, isPending }: {
       </div>
       <ColorPicker value={color} onChange={setColor} />
       {/* S04 (D4): los ITR de esta fase exigen además la firma del cliente (se congela al crear cada ITR). */}
-      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '10px', fontSize: '13px', color: 'var(--gray-700)', cursor: 'pointer' }}>
-        <input type="checkbox" checked={clientSigns} onChange={e => setClientSigns(e.target.checked)} style={{ accentColor: '#7c3aed' }} />
+      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '10px', fontSize: '13px', color: 'var(--text-body)', cursor: 'pointer' }}>
+        <input type="checkbox" checked={clientSigns} onChange={e => setClientSigns(e.target.checked)} style={{ accentColor: 'var(--violet-600)' }} />
         {t('phases.clientSigns')}
       </label>
       <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '4px 0 0 22px' }}>{t('phases.clientSignsHint')}</p>
@@ -133,10 +134,10 @@ function DisciplineRow({ disc, onSave, onDelete, isPending }: {
 
   if (!editing) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderBottom: '1px solid #f1f5f9' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderBottom: '1px solid var(--gray-100)' }}>
         <span style={{
           padding: '3px 10px', borderRadius: '999px', fontSize: '12px', fontWeight: 600,
-          background: `${disc.color}18`, color: disc.color, border: `1px solid ${disc.color}30`,
+          background: alpha(disc.color, 9), color: ink(disc.color), border: `1px solid ${alpha(disc.color, 19)}`,
         }}>
           {disc.code}
         </span>
@@ -150,7 +151,7 @@ function DisciplineRow({ disc, onSave, onDelete, isPending }: {
   }
 
   return (
-    <div style={{ padding: '14px 16px', borderBottom: '1px solid #f1f5f9', background: '#fafbfc' }}>
+    <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--gray-100)', background: 'var(--gray-50)' }}>
       <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '10px' }}>
         <input value={code} onChange={e => setCode(e.target.value)} placeholder={t('disciplines.codePh')} maxLength={10}
           style={{ ...inputStyle, width: '120px' }} />
@@ -190,7 +191,7 @@ function EquipmentTypeRow({ eqt, onSave, onDelete, onFlags, isPending }: {
 
   if (!editing) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '9px 16px', borderBottom: '1px solid #f1f5f9' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '9px 16px', borderBottom: '1px solid var(--gray-100)' }}>
         <span style={{
           minWidth: '56px', textAlign: 'center', padding: '2px 8px', borderRadius: '6px', fontSize: '12px', fontWeight: 700,
           fontFamily: 'ui-monospace, monospace', background: 'var(--gray-100)', color: 'var(--text-strong)',
@@ -217,7 +218,7 @@ function EquipmentTypeRow({ eqt, onSave, onDelete, onFlags, isPending }: {
   }
 
   return (
-    <div style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9', background: '#fafbfc' }}>
+    <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--gray-100)', background: 'var(--gray-50)' }}>
       <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '10px' }}>
         <input value={code} onChange={e => setCode(e.target.value)} placeholder={t('equipmentTypes.codePh')} maxLength={12}
           style={{ ...inputStyle, width: '110px' }} />
@@ -283,10 +284,10 @@ export default function OrgConfigView({
   const [catBValue, setCatBValue] = useState(String(initialCatBLimit ?? 3))
   const [catBMsg, setCatBMsg] = useState<string | null>(null)
 
-  const [newPhase, setNewPhase] = useState({ code: '', name: '', color: '#3b82f6', certName: '' })
+  const [newPhase, setNewPhase] = useState({ code: '', name: '', color: 'var(--primary-700)', certName: '' })
   const [showNewPhase, setShowNewPhase] = useState(false)
 
-  const [newDisc, setNewDisc] = useState({ code: '', name: '', color: '#10b981' })
+  const [newDisc, setNewDisc] = useState({ code: '', name: '', color: 'var(--success-700)' })
 
   const [showNewEqt, setShowNewEqt] = useState(false)
 
@@ -357,7 +358,7 @@ export default function OrgConfigView({
       </div>
 
       {error && (
-        <div style={{ marginBottom: '20px', padding: '12px 16px', background: '#fee2e2', border: '1px solid #fca5a5', borderRadius: '8px', color: '#dc2626', fontSize: '13px' }}>
+        <div style={{ marginBottom: '20px', padding: '12px 16px', background: 'var(--danger-100)', border: '1px solid var(--danger-300)', borderRadius: '8px', color: 'var(--danger-700)', fontSize: '13px' }}>
           {error}
         </div>
       )}
@@ -372,14 +373,14 @@ export default function OrgConfigView({
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
               <div style={{
                 width: 72, height: 72, borderRadius: '12px',
-                border: '2px dashed #e2e8f0', background: 'var(--gray-50)',
+                border: '2px dashed var(--gray-200)', background: 'var(--gray-50)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 overflow: 'hidden', flexShrink: 0,
               }}>
                 {orgLogoUrl
                   // eslint-disable-next-line @next/next/no-img-element -- Supabase Storage signed URL, no optimization benefit on Workers
                   ? <img src={orgLogoUrl} alt={t('org.logoAlt')} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-                  : <span style={{ fontSize: '24px', color: '#cbd5e1' }}>◈</span>
+                  : <span style={{ fontSize: '24px', color: 'var(--text-muted)' }}>◈</span>
                 }
               </div>
               <button
@@ -416,7 +417,7 @@ export default function OrgConfigView({
                   {isPending ? t('org.saving') : t('org.save')}
                 </button>
                 {orgSaveMsg && (
-                  <span style={{ fontSize: '12px', color: '#10b981' }}>{orgSaveMsg}</span>
+                  <span style={{ fontSize: '12px', color: 'var(--success-700)' }}>{orgSaveMsg}</span>
                 )}
               </div>
             </div>
@@ -440,10 +441,10 @@ export default function OrgConfigView({
             </div>
             <label style={{
               display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: isOwner ? 'pointer' : 'not-allowed',
-              fontSize: '13px', fontWeight: 600, color: isCatalog ? '#10b981' : 'var(--text-muted)',
+              fontSize: '13px', fontWeight: 600, color: isCatalog ? 'var(--success-700)' : 'var(--text-muted)',
               padding: '6px 12px', borderRadius: '999px',
-              border: `1px solid ${isCatalog ? '#a7f3d0' : 'var(--border)'}`,
-              background: isCatalog ? '#ecfdf5' : 'var(--card-bg)',
+              border: `1px solid ${isCatalog ? 'var(--success-200)' : 'var(--border)'}`,
+              background: isCatalog ? 'var(--success-50)' : 'var(--card-bg)',
               opacity: isOwner ? 1 : 0.6, whiteSpace: 'nowrap',
             }}>
               <input
@@ -462,7 +463,7 @@ export default function OrgConfigView({
             </p>
           )}
           {catalogMsg && (
-            <p style={{ fontSize: '12px', color: '#10b981', margin: '8px 0 0' }}>{catalogMsg}</p>
+            <p style={{ fontSize: '12px', color: 'var(--success-700)', margin: '8px 0 0' }}>{catalogMsg}</p>
           )}
 
           {/* ── Glosario de traducción ITR ── */}
@@ -490,7 +491,7 @@ export default function OrgConfigView({
                 {t('org.glossary.save')}
               </button>
               <button onClick={() => setGlossary(DEFAULT_ITR_GLOSSARY)} style={btnOutline}>{t('org.glossary.loadDefault')}</button>
-              {glossaryMsg && <span style={{ fontSize: '12px', color: '#10b981' }}>{glossaryMsg}</span>}
+              {glossaryMsg && <span style={{ fontSize: '12px', color: 'var(--success-700)' }}>{glossaryMsg}</span>}
             </div>
           </div>
 
@@ -528,7 +529,7 @@ export default function OrgConfigView({
               >
                 {t('org.catB.save')}
               </button>
-              {catBMsg && <span style={{ fontSize: '12px', color: '#10b981' }}>{catBMsg}</span>}
+              {catBMsg && <span style={{ fontSize: '12px', color: 'var(--success-700)' }}>{catBMsg}</span>}
             </div>
           </div>
         </div>
@@ -541,7 +542,7 @@ export default function OrgConfigView({
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
             <div>
               <h2 style={cardTitle}>{t('phases.title')}</h2>
-              <p style={{ fontSize: '12px', color: '#94a3b8', margin: '2px 0 0' }}>
+              <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '2px 0 0' }}>
                 {t('phases.subtitle', { count: initialPhases.length })}
               </p>
             </div>
@@ -551,7 +552,7 @@ export default function OrgConfigView({
           </div>
 
           {showNewPhase && (
-            <div style={{ padding: '14px 16px', background: '#f0f9ff', borderRadius: '10px', border: '1px solid #bae6fd', marginBottom: '12px' }}>
+            <div style={{ padding: '14px 16px', background: 'var(--sky-50)', borderRadius: '10px', border: '1px solid var(--sky-200)', marginBottom: '12px' }}>
               <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '10px' }}>
                 <input value={newPhase.code} onChange={e => setNewPhase(p => ({ ...p, code: e.target.value }))}
                   placeholder={t('phases.codePh')} maxLength={8} style={{ ...inputStyle, width: '90px' }} />
@@ -566,7 +567,7 @@ export default function OrgConfigView({
                   disabled={isPending || !newPhase.code.trim() || !newPhase.name.trim()}
                   onClick={() => act(async () => {
                     const res = await createPhase({ code: newPhase.code, name: newPhase.name, color: newPhase.color, certificateName: newPhase.certName })
-                    if (!res.error) { setNewPhase({ code: '', name: '', color: '#3b82f6', certName: '' }); setShowNewPhase(false) }
+                    if (!res.error) { setNewPhase({ code: '', name: '', color: 'var(--primary-700)', certName: '' }); setShowNewPhase(false) }
                     return res
                   })}
                   style={btnPrimary}
@@ -578,9 +579,9 @@ export default function OrgConfigView({
             </div>
           )}
 
-          <div style={{ border: '1px solid #f1f5f9', borderRadius: '10px', overflow: 'hidden' }}>
+          <div style={{ border: '1px solid var(--gray-100)', borderRadius: '10px', overflow: 'hidden' }}>
             {initialPhases.length === 0 ? (
-              <div style={{ padding: '24px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>
+              <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
                 {t('phases.empty')}
               </div>
             ) : (
@@ -602,7 +603,7 @@ export default function OrgConfigView({
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
             <div>
               <h2 style={cardTitle}>{t('disciplines.title')}</h2>
-              <p style={{ fontSize: '12px', color: '#94a3b8', margin: '2px 0 0' }}>
+              <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '2px 0 0' }}>
                 {t('disciplines.subtitle', { count: initialDisciplines.length })}
               </p>
             </div>
@@ -612,7 +613,7 @@ export default function OrgConfigView({
           </div>
 
           {showNewDisc && (
-            <div style={{ padding: '14px 16px', background: '#f0fdf4', borderRadius: '10px', border: '1px solid #bbf7d0', marginBottom: '12px' }}>
+            <div style={{ padding: '14px 16px', background: 'var(--success-50)', borderRadius: '10px', border: '1px solid var(--success-200)', marginBottom: '12px' }}>
               <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '10px' }}>
                 <input value={newDisc.code} onChange={e => setNewDisc(d => ({ ...d, code: e.target.value }))}
                   placeholder={t('disciplines.codePh')} maxLength={10} style={{ ...inputStyle, width: '130px' }} />
@@ -625,7 +626,7 @@ export default function OrgConfigView({
                   disabled={isPending || !newDisc.code.trim() || !newDisc.name.trim()}
                   onClick={() => act(async () => {
                     const res = await createDiscipline(newDisc)
-                    if (!res.error) { setNewDisc({ code: '', name: '', color: '#10b981' }); setShowNewDisc(false) }
+                    if (!res.error) { setNewDisc({ code: '', name: '', color: 'var(--success-700)' }); setShowNewDisc(false) }
                     return res
                   })}
                   style={btnPrimary}
@@ -637,9 +638,9 @@ export default function OrgConfigView({
             </div>
           )}
 
-          <div style={{ border: '1px solid #f1f5f9', borderRadius: '10px', overflow: 'hidden' }}>
+          <div style={{ border: '1px solid var(--gray-100)', borderRadius: '10px', overflow: 'hidden' }}>
             {initialDisciplines.length === 0 ? (
-              <div style={{ padding: '24px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>
+              <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
                 {t('disciplines.empty')}
               </div>
             ) : (
@@ -661,7 +662,7 @@ export default function OrgConfigView({
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', gap: '8px', flexWrap: 'wrap' }}>
             <div>
               <h2 style={cardTitle}>{t('equipmentTypes.title')}</h2>
-              <p style={{ fontSize: '12px', color: '#94a3b8', margin: '2px 0 0' }}>
+              <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '2px 0 0' }}>
                 {t('equipmentTypes.subtitle', { count: initialEquipmentTypes.length })}
               </p>
             </div>
@@ -684,10 +685,10 @@ export default function OrgConfigView({
             </div>
           </div>
           <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 12px' }}>{t('equipmentTypes.help')}</p>
-          {seedMsg && <p style={{ fontSize: '12px', color: '#10b981', margin: '0 0 10px' }}>{seedMsg}</p>}
+          {seedMsg && <p style={{ fontSize: '12px', color: 'var(--success-700)', margin: '0 0 10px' }}>{seedMsg}</p>}
 
           {showNewEqt && (
-            <div style={{ padding: '14px 16px', background: '#f0fdf4', borderRadius: '10px', border: '1px solid #bbf7d0', marginBottom: '12px' }}>
+            <div style={{ padding: '14px 16px', background: 'var(--success-50)', borderRadius: '10px', border: '1px solid var(--success-200)', marginBottom: '12px' }}>
               <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '10px' }}>
                 <input value={newEqt.code} onChange={e => setNewEqt(d => ({ ...d, code: e.target.value }))}
                   placeholder={t('equipmentTypes.codePh')} maxLength={12} style={{ ...inputStyle, width: '110px' }} />
@@ -715,15 +716,15 @@ export default function OrgConfigView({
             </div>
           )}
 
-          <div style={{ border: '1px solid #f1f5f9', borderRadius: '10px', overflow: 'hidden' }}>
+          <div style={{ border: '1px solid var(--gray-100)', borderRadius: '10px', overflow: 'hidden' }}>
             {initialEquipmentTypes.length === 0 ? (
-              <div style={{ padding: '24px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>
+              <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
                 {t('equipmentTypes.empty')}
               </div>
             ) : (
               [...new Set(initialEquipmentTypes.map(e => e.category ?? ''))].map(cat => (
                 <div key={cat || '__none'}>
-                  <div style={{ padding: '6px 16px', background: 'var(--gray-50)', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #f1f5f9' }}>
+                  <div style={{ padding: '6px 16px', background: 'var(--gray-50)', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid var(--gray-100)' }}>
                     {cat || t('equipmentTypes.noCategory')}
                   </div>
                   {initialEquipmentTypes.filter(e => (e.category ?? '') === cat).map(eqt => (
@@ -783,7 +784,7 @@ function ExportSection({ projects, t }: { projects: Project[]; t: (key: string) 
   return (
     <div style={{ ...cardStyle, marginTop: '24px' }}>
       <h2 style={{ ...cardTitle, marginBottom: '4px' }}>{t('export.title')}</h2>
-      <p style={{ fontSize: '12px', color: '#94a3b8', margin: '0 0 16px' }}>
+      <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 16px' }}>
         {t('export.subtitle')}
       </p>
       <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
@@ -800,7 +801,7 @@ function ExportSection({ projects, t }: { projects: Project[]; t: (key: string) 
         <button
           onClick={handleExport}
           disabled={exporting || !selectedProject}
-          style={{ ...btnPrimary, background: '#10b981', opacity: exporting || !selectedProject ? 0.6 : 1 }}
+          style={{ ...btnPrimary, background: 'var(--success-500)', opacity: exporting || !selectedProject ? 0.6 : 1 }}
         >
           {exporting ? t('export.exporting') : t('export.btn')}
         </button>
@@ -826,7 +827,7 @@ const inputStyle: React.CSSProperties = {
 }
 
 const btnPrimary: React.CSSProperties = {
-  padding: '7px 14px', background: '#3b82f6', color: 'white',
+  padding: '7px 14px', background: 'var(--primary-600)', color: 'white',
   border: 'none', borderRadius: '7px', fontSize: '12px', fontWeight: 500, cursor: 'pointer',
 }
 
@@ -836,6 +837,6 @@ const btnOutline: React.CSSProperties = {
 }
 
 const btnDanger: React.CSSProperties = {
-  padding: '7px 12px', background: 'transparent', border: '1px solid #fca5a5',
-  borderRadius: '7px', fontSize: '12px', color: '#ef4444', cursor: 'pointer',
+  padding: '7px 12px', background: 'transparent', border: '1px solid var(--danger-300)',
+  borderRadius: '7px', fontSize: '12px', color: 'var(--danger-700)', cursor: 'pointer',
 }

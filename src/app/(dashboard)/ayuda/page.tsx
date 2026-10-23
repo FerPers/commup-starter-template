@@ -61,7 +61,7 @@ export default async function HelpPage({ searchParams }: { searchParams: Promise
         <article style={{ minWidth: 0 }}>
           <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 12, padding: 'clamp(16px, 3vw, 28px)' }}>
             {current.parent && (
-              <Link href={href(current.parent) ?? '/ayuda'} style={{ fontSize: 12, color: 'var(--primary-600)', textDecoration: 'none' }}>
+              <Link href={href(current.parent) ?? '/ayuda'} style={{ fontSize: 12, color: 'var(--primary-700)', textDecoration: 'none' }}>
                 {label(current.parent)}
               </Link>
             )}
@@ -70,13 +70,13 @@ export default async function HelpPage({ searchParams }: { searchParams: Promise
             <div className="help-content" dangerouslySetInnerHTML={{ __html: renderSection(current, href) }} />
             {children.length > 0 && (
               <ul style={{ margin: '16px 0 0', paddingLeft: 18 }}>
-                {children.map(c => <li key={c.id} style={{ margin: '4px 0' }}><Link href={href(c.id) ?? '/ayuda'} style={{ color: 'var(--primary-600)' }}>{label(c.id)}</Link></li>)}
+                {children.map(c => <li key={c.id} style={{ margin: '4px 0' }}><Link href={href(c.id) ?? '/ayuda'} style={{ color: 'var(--primary-700)' }}>{label(c.id)}</Link></li>)}
               </ul>
             )}
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginTop: 12, flexWrap: 'wrap', fontSize: 13 }}>
-            {prev ? <Link href={href(prev.id) ?? '/ayuda'} style={{ color: 'var(--primary-600)', textDecoration: 'none' }}>← {label(prev.id)}</Link> : <span />}
-            {next && <Link href={href(next.id) ?? '/ayuda'} style={{ color: 'var(--primary-600)', textDecoration: 'none' }}>{label(next.id)} →</Link>}
+            {prev ? <Link href={href(prev.id) ?? '/ayuda'} style={{ color: 'var(--primary-700)', textDecoration: 'none' }}>← {label(prev.id)}</Link> : <span />}
+            {next && <Link href={href(next.id) ?? '/ayuda'} style={{ color: 'var(--primary-700)', textDecoration: 'none' }}>{label(next.id)} →</Link>}
           </div>
           <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 16 }}>{t('pageHelpHint')}</p>
         </article>

@@ -8,6 +8,7 @@ import {
   proposeTranslations, saveTranslations,
   type TranslationReview, type TranslationItem, type TranslationFlag,
 } from '@/app/actions/itr-translations'
+import { ink } from '@/lib/theme'
 
 // ── Revisión de traducción ES de una plantilla ITR ──────────────────────────
 // Inglés y español lado a lado. La IA propone (faltantes / marcados / todo);
@@ -16,11 +17,11 @@ import {
 // de la IA sin tocar, que se guarda como 'ai' para poder auditarlo después.
 
 const FLAG_STYLE: Record<TranslationFlag, { bg: string; color: string }> = {
-  empty:            { bg: '#fee2e2', color: '#991b1b' },
-  identical:        { bg: '#fef3c7', color: '#92400e' },
-  anglicism:        { bg: '#fef3c7', color: '#92400e' },
-  en_is_spanish:    { bg: '#e0e7ff', color: '#3730a3' },
-  not_translatable: { bg: 'var(--gray-100)', color: 'var(--text-muted)' },
+  empty:            { bg: 'var(--danger-100)',  color: 'var(--danger-800)' },
+  identical:        { bg: 'var(--warning-100)', color: 'var(--warning-800)' },
+  anglicism:        { bg: 'var(--warning-100)', color: 'var(--warning-800)' },
+  en_is_spanish:    { bg: 'var(--indigo-100)',  color: 'var(--indigo-800)' },
+  not_translatable: { bg: 'var(--gray-100)',    color: 'var(--text-muted)' },
 }
 
 type Draft = { es: string; touched: boolean; fromAi: boolean }
@@ -108,7 +109,7 @@ export default function TranslationsView({ initial, aiEnabled }: { initial: Tran
             value={titleEs}
             onChange={e => { setTitleEs(e.target.value); setTitleFromAi(false) }}
             placeholder={t('titleEsPlaceholder')}
-            style={{ ...input, width: '100%', marginTop: '4px', background: titleFromAi ? '#faf5ff' : 'var(--card-bg)' }}
+            style={{ ...input, width: '100%', marginTop: '4px', background: titleFromAi ? 'var(--accent-50)' : 'var(--card-bg)' }}
           />
         </div>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -127,13 +128,13 @@ export default function TranslationsView({ initial, aiEnabled }: { initial: Tran
         </div>
       </div>
 
-      {!aiEnabled && <div style={note('#fffbeb', '#fde68a', '#92400e')}>{t('aiOffNote')}</div>}
-      {error && <div style={note('#fef2f2', '#fecaca', '#dc2626')}>{error}</div>}
-      {msg && <div style={note('#ecfdf5', '#6ee7b7', '#065f46')}>{msg}</div>}
+      {!aiEnabled && <div style={note('var(--warning-50)', 'var(--warning-200)', 'var(--warning-800)')}>{t('aiOffNote')}</div>}
+      {error && <div style={note('var(--danger-50)', 'var(--danger-200)', 'var(--danger-700)')}>{error}</div>}
+      {msg && <div style={note('var(--success-50)', 'var(--success-300)', 'var(--success-800)')}>{msg}</div>}
 
       <div style={{ display: 'flex', gap: '8px', alignItems: 'center', margin: '4px 0 12px', flexWrap: 'wrap' }}>
         {([['flagged', t('filter.flagged', { n: stats.empty + stats.flagged })], ['empty', t('filter.empty', { n: stats.empty })], ['ai', t('filter.ai', { n: stats.ai })], ['all', t('filter.all', { n: initial.items.length })]] as const).map(([f, label]) => (
-          <button key={f} onClick={() => setFilter(f)} style={{ ...chip, background: filter === f ? '#0B1D3A' : 'var(--card-bg)', color: filter === f ? '#fff' : 'var(--text-muted)' }}>{label}</button>
+          <button key={f} onClick={() => setFilter(f)} style={{ ...chip, background: filter === f ? 'var(--brand-navy-dark)' : 'var(--card-bg)', color: filter === f ? '#fff' : 'var(--text-muted)' }}>{label}</button>
         ))}
         <span style={{ marginLeft: 'auto', fontSize: '12px', color: 'var(--text-muted)' }}>{t('counts', { n: visible.length, total: stats.total })}</span>
       </div>
@@ -162,8 +163,8 @@ function Row({ item, draft, first, onChange, onMarkReviewed }: { item: Translati
       {first && (
         <div style={{ gridColumn: '1 / -1', padding: '6px 10px', background: 'var(--gray-50)', fontSize: '11px', fontWeight: 700, color: 'var(--text-strong)', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>{item.section_title}</div>
       )}
-      <div style={{ display: 'grid', gridTemplateColumns: '56px 1fr 1fr 150px', borderBottom: '1px solid #f1f5f9', alignItems: 'stretch' }}>
-        <div style={{ padding: '8px 10px', fontSize: '12px', color: 'var(--gray-400)', fontFamily: 'ui-monospace, monospace' }}>{item.item_number ?? ''}</div>
+      <div style={{ display: 'grid', gridTemplateColumns: '56px 1fr 1fr 150px', borderBottom: '1px solid var(--gray-100)', alignItems: 'stretch' }}>
+        <div style={{ padding: '8px 10px', fontSize: '12px', color: 'var(--text-muted)', fontFamily: 'ui-monospace, monospace' }}>{item.item_number ?? ''}</div>
         <div style={{ padding: '8px 10px', fontSize: '13px', color: 'var(--text-strong)', whiteSpace: 'pre-wrap' }}>{item.description}</div>
         <div style={{ padding: '6px 8px' }}>
           <textarea
@@ -171,14 +172,14 @@ function Row({ item, draft, first, onChange, onMarkReviewed }: { item: Translati
             onChange={e => onChange(e.target.value)}
             disabled={nt}
             rows={Math.max(1, Math.min(4, Math.ceil((draft.es.length || 20) / 60)))}
-            style={{ ...input, width: '100%', resize: 'vertical', fontSize: '13px', background: nt ? 'var(--gray-50)' : draft.fromAi ? '#faf5ff' : draft.touched ? '#f0fdf4' : 'var(--card-bg)' }}
+            style={{ ...input, width: '100%', resize: 'vertical', fontSize: '13px', background: nt ? 'var(--gray-50)' : draft.fromAi ? 'var(--accent-50)' : draft.touched ? 'var(--success-50)' : 'var(--card-bg)' }}
           />
         </div>
         <div style={{ padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-start' }}>
-          {item.flags.map(f => <span key={f} style={{ padding: '1px 7px', borderRadius: '999px', fontSize: '10px', fontWeight: 700, background: FLAG_STYLE[f].bg, color: FLAG_STYLE[f].color, whiteSpace: 'nowrap' }}>{t(`flag.${f}`)}</span>)}
-          {item.source === 'ai' && !draft.touched && !draft.fromAi && <span style={{ padding: '1px 7px', borderRadius: '999px', fontSize: '10px', fontWeight: 700, background: '#ede9fe', color: '#5b21b6' }}>{t('aiUnreviewed')}</span>}
+          {item.flags.map(f => <span key={f} style={{ padding: '1px 7px', borderRadius: '999px', fontSize: '10px', fontWeight: 700, background: FLAG_STYLE[f].bg, color: ink(FLAG_STYLE[f].color), whiteSpace: 'nowrap' }}>{t(`flag.${f}`)}</span>)}
+          {item.source === 'ai' && !draft.touched && !draft.fromAi && <span style={{ padding: '1px 7px', borderRadius: '999px', fontSize: '10px', fontWeight: 700, background: 'var(--violet-100)', color: 'var(--violet-800)' }}>{t('aiUnreviewed')}</span>}
           {(draft.fromAi || (item.source === 'ai' && !draft.touched)) && !nt && (
-            <button onClick={onMarkReviewed} style={{ fontSize: '11px', fontWeight: 600, color: '#166534', background: '#dcfce7', border: '1px solid #bbf7d0', borderRadius: '5px', padding: '2px 8px', cursor: 'pointer' }}>{t('accept')}</button>
+            <button onClick={onMarkReviewed} style={{ fontSize: '11px', fontWeight: 600, color: 'var(--success-800)', background: 'var(--success-100)', border: '1px solid var(--success-200)', borderRadius: '5px', padding: '2px 8px', cursor: 'pointer' }}>{t('accept')}</button>
           )}
         </div>
       </div>

@@ -129,7 +129,7 @@ export default async function SystemDrawingsTab({ projectId, systemId, data, los
                       </td>
                       <td style={td}><span style={{ padding: '3px 9px', borderRadius: 999, fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', ...chip.style }}>{chip.text}</span></td>
                       <td style={{ ...td, paddingRight: 18, textAlign: 'right', whiteSpace: 'nowrap' }}>
-                        <Link href={viewer(s.document_id)} style={{ fontWeight: 600, color: 'var(--primary-600)', textDecoration: 'none' }}>
+                        <Link href={viewer(s.document_id)} style={{ fontWeight: 600, color: 'var(--primary-700)', textDecoration: 'none' }}>
                           {s.markups === 0 && canEdit ? t('drawLimits') : t('openOnSheet')} ›
                         </Link>
                       </td>
@@ -147,7 +147,7 @@ export default async function SystemDrawingsTab({ projectId, systemId, data, los
                     <td style={{ ...td, color: 'var(--text-muted)' }}>—</td>
                     <td style={{ ...td, color: 'var(--text-muted)' }}>—</td>
                     <td style={{ ...td, paddingRight: 18, textAlign: 'right', whiteSpace: 'nowrap' }}>
-                      <Link href={`/projects/${projectId}/documents?type=pid`} style={{ fontWeight: 600, color: 'var(--primary-600)', textDecoration: 'none' }}>{t('loadDocument')} ›</Link>
+                      <Link href={`/projects/${projectId}/documents?type=pid`} style={{ fontWeight: 600, color: 'var(--primary-700)', textDecoration: 'none' }}>{t('loadDocument')} ›</Link>
                     </td>
                   </tr>
                 ))}

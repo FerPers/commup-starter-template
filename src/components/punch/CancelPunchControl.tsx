@@ -41,12 +41,12 @@ export default function CancelPunchControl({ punch, projectId, tagId, userId, ro
   }
 
   return (
-    <div style={{ flexBasis: '100%', padding: '10px 12px', border: '1px solid #fecaca', borderRadius: '8px', background: '#fef2f2' }}>
-      <label htmlFor={`${uid}-reason`} style={{ fontSize: '12px', fontWeight: 600, color: '#7f1d1d', display: 'block', marginBottom: '6px' }}>{t('reasonLabel')}</label>
+    <div style={{ flexBasis: '100%', padding: '10px 12px', border: '1px solid var(--danger-200)', borderRadius: '8px', background: 'var(--danger-50)' }}>
+      <label htmlFor={`${uid}-reason`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--danger-900)', display: 'block', marginBottom: '6px' }}>{t('reasonLabel')}</label>
       <textarea id={`${uid}-reason`} rows={2} value={reason} onChange={e => setReason(e.target.value)} placeholder={t('reasonPlaceholder')}
-        style={{ width: '100%', boxSizing: 'border-box', padding: '8px 10px', border: '1px solid #fecaca', borderRadius: '6px', fontSize: '13px', fontFamily: 'inherit', resize: 'vertical' }} />
-      <p style={{ fontSize: '11px', color: '#991b1b', margin: '4px 0 8px' }}>{t('hint')}</p>
-      {error && <p role="alert" style={{ fontSize: '12px', color: '#b91c1c', margin: '0 0 8px' }}>{error}</p>}
+        style={{ width: '100%', boxSizing: 'border-box', padding: '8px 10px', border: '1px solid var(--danger-200)', borderRadius: '6px', fontSize: '13px', fontFamily: 'inherit', resize: 'vertical' }} />
+      <p style={{ fontSize: '11px', color: 'var(--danger-800)', margin: '4px 0 8px' }}>{t('hint')}</p>
+      {error && <p role="alert" style={{ fontSize: '12px', color: 'var(--danger-700)', margin: '0 0 8px' }}>{error}</p>}
       <div style={{ display: 'flex', gap: '8px' }}>
         <button disabled={!ok || isPending}
           onClick={() => startTransition(async () => {
@@ -55,7 +55,7 @@ export default function CancelPunchControl({ punch, projectId, tagId, userId, ro
             if (res.error) { setError(res.error); return }
             setOpen(false); setReason(''); onDone()
           })}
-          style={{ ...btn, background: ok && !isPending ? '#b91c1c' : '#fca5a5', color: '#fff', border: 'none', cursor: ok && !isPending ? 'pointer' : 'not-allowed' }}>
+          style={{ ...btn, background: ok && !isPending ? 'var(--solid-danger-700)' : 'var(--danger-300)', color: '#fff', border: 'none', cursor: ok && !isPending ? 'pointer' : 'not-allowed' }}>
           {isPending ? t('cancelling') : t('confirm')}
         </button>
         <button onClick={() => { setOpen(false); setError(null) }} style={{ ...btn, background: 'var(--card-bg)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>{t('back')}</button>

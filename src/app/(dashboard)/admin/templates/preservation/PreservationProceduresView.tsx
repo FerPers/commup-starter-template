@@ -12,6 +12,7 @@ import BackupDocumentView from '@/components/templates/BackupDocumentView'
 import ImportProcedureFromOrgModal from './ImportProcedureFromOrgModal'
 import { useAskDialog } from '@/components/ui/AskDialog'
 import { DialogSurface } from '@/components/ui/dialog-a11y'
+import { alpha, ink, fill } from '@/lib/theme'
 import { useToast } from '@/components/ui/Toast'
 
 interface Discipline { id: string; code: string; name: string; color: string }
@@ -152,7 +153,7 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
               onClick={() => setActiveDisc(d.code)}
               style={{
                 padding: '6px 14px', borderRadius: '20px', fontSize: '13px', fontWeight: 500, cursor: 'pointer', border: 'none',
-                background: activeDisc === d.code ? d.color : 'var(--gray-100)',
+                background: activeDisc === d.code ? fill(d.color) : 'var(--gray-100)',
                 color: activeDisc === d.code ? '#fff' : 'var(--text-muted)',
               }}
             >
@@ -176,7 +177,7 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
             <button
               onClick={() => setShowModal(true)}
               style={{
-                padding: '8px 18px', borderRadius: '8px', background: '#3b82f6', color: 'white',
+                padding: '8px 18px', borderRadius: '8px', background: 'var(--primary-600)', color: 'white',
                 fontWeight: 600, fontSize: '14px', cursor: 'pointer', border: 'none',
                 display: 'flex', alignItems: 'center', gap: '6px',
               }}
@@ -253,22 +254,22 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                   <span style={{
                     padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600,
-                    background: freqColor + '20', color: freqColor,
+                    background: alpha(freqColor, 13), color: ink(freqColor),
                   }}>
                     {freqLabel(proc.frequency)} · {proc.interval_days}d
                   </span>
                   {proc.disciplines && (
                     <span style={{
                       padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600,
-                      background: proc.disciplines.color + '20', color: proc.disciplines.color,
+                      background: alpha(proc.disciplines.color, 13), color: ink(proc.disciplines.color),
                     }}>
                       {proc.disciplines.code}
                     </span>
                   )}
                   <span style={{
                     padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600,
-                    background: itemCount > 0 ? '#f0fdf4' : '#fef9c3',
-                    color: itemCount > 0 ? '#16a34a' : '#854d0e',
+                    background: itemCount > 0 ? 'var(--success-50)' : 'var(--warning-100)',
+                    color: itemCount > 0 ? 'var(--success-700)' : 'var(--warning-800)',
                   }}>
                     {t('items', { n: itemCount })}
                   </span>
@@ -299,8 +300,8 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
                     disabled={isPending}
                     title={t('previewHint')}
                     style={{
-                      padding: '4px 10px', borderRadius: '6px', background: '#eff6ff', color: '#1e40af',
-                      border: '1px solid #bfdbfe', fontWeight: 600, fontSize: '11px', cursor: 'pointer',
+                      padding: '4px 10px', borderRadius: '6px', background: 'var(--primary-50)', color: 'var(--primary-800)',
+                      border: '1px solid var(--primary-200)', fontWeight: 600, fontSize: '11px', cursor: 'pointer',
                       whiteSpace: 'nowrap', flexShrink: 0,
                     }}
                   >
@@ -314,9 +315,9 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
       )}
 
       {previewError && (
-        <div style={{ marginTop: '12px', background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', padding: '10px 14px', borderRadius: '8px', fontSize: '13px' }}>
+        <div style={{ marginTop: '12px', background: 'var(--danger-50)', border: '1px solid var(--danger-200)', color: 'var(--danger-700)', padding: '10px 14px', borderRadius: '8px', fontSize: '13px' }}>
           {previewError}
-          <button onClick={() => setPreviewError(null)} aria-label={tA11y('close')} style={{ marginLeft: '12px', background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontWeight: 700 }}>✕</button>
+          <button onClick={() => setPreviewError(null)} aria-label={tA11y('close')} style={{ marginLeft: '12px', background: 'none', border: 'none', color: 'var(--danger-700)', cursor: 'pointer', fontWeight: 700 }}>✕</button>
         </div>
       )}
 
@@ -346,7 +347,7 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
             </div>
 
             {formError && (
-              <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', padding: '10px 14px', borderRadius: '8px', fontSize: '13px', marginBottom: '16px' }}>
+              <div style={{ background: 'var(--danger-50)', border: '1px solid var(--danger-200)', color: 'var(--danger-700)', padding: '10px 14px', borderRadius: '8px', fontSize: '13px', marginBottom: '16px' }}>
                 {formError}
               </div>
             )}
@@ -460,7 +461,7 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
               <button
                 onClick={handleCreate}
                 disabled={isPending}
-                style={{ padding: '9px 20px', borderRadius: '8px', background: '#3b82f6', color: 'white', fontWeight: 600, fontSize: '14px', cursor: isPending ? 'wait' : 'pointer', border: 'none', opacity: isPending ? 0.7 : 1 }}
+                style={{ padding: '9px 20px', borderRadius: '8px', background: 'var(--primary-600)', color: 'white', fontWeight: 600, fontSize: '14px', cursor: isPending ? 'wait' : 'pointer', border: 'none', opacity: isPending ? 0.7 : 1 }}
               >
                 {isPending ? t('creating') : t('create')}
               </button>

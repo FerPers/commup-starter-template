@@ -125,14 +125,14 @@ export type MatrixGate = {
 }
 
 export const GATE_STATUS_STYLE: Record<GateStatus, { bg: string; fg: string; border: string; icon: string }> = {
-  pending_signatures:       { bg: '#eff6ff',           fg: '#1d4ed8',           border: '#93c5fd', icon: '✎' },
-  approved:                 { bg: '#059669',           fg: '#ffffff',           border: '#059669', icon: '✓' },
-  approved_with_conditions: { bg: '#059669',           fg: '#ffffff',           border: '#f59e0b', icon: '✓!' },
-  approved_needs_review:    { bg: '#059669',           fg: '#ffffff',           border: '#f59e0b', icon: '✓?' },
-  regressed:                { bg: 'var(--danger-50)',  fg: 'var(--danger-700)', border: '#ef4444', icon: '↺' },
-  ready:                    { bg: 'var(--success-50)', fg: 'var(--success-700)', border: '#a7f3d0', icon: '●' },
-  ready_with_conditions:    { bg: '#fffbeb',           fg: '#b45309',           border: '#fde68a', icon: '◐' },
-  not_ready:                { bg: 'var(--danger-50)',  fg: 'var(--danger-700)', border: '#fecaca', icon: '○' },
+  pending_signatures:       { bg: 'var(--primary-50)',  fg: 'var(--primary-700)', border: 'var(--primary-300)', icon: '✎' },
+  approved:                 { bg: 'var(--success-600)', fg: '#ffffff',            border: 'var(--success-600)', icon: '✓' },
+  approved_with_conditions: { bg: 'var(--success-600)', fg: '#ffffff',            border: 'var(--warning-500)', icon: '✓!' },
+  approved_needs_review:    { bg: 'var(--success-600)', fg: '#ffffff',            border: 'var(--warning-500)', icon: '✓?' },
+  regressed:                { bg: 'var(--danger-50)',   fg: 'var(--danger-700)',  border: 'var(--danger-500)',  icon: '↺' },
+  ready:                    { bg: 'var(--success-50)',  fg: 'var(--success-700)', border: 'var(--success-200)', icon: '●' },
+  ready_with_conditions:    { bg: 'var(--warning-50)',  fg: 'var(--warning-700)', border: 'var(--warning-200)', icon: '◐' },
+  not_ready:                { bg: 'var(--danger-50)',   fg: 'var(--danger-700)',  border: 'var(--danger-200)',  icon: '○' },
 }
 
 export const isApproved = (s: GateStatus) =>

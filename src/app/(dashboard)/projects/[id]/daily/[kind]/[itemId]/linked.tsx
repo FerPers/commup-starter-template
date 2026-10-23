@@ -112,7 +112,7 @@ export function Header({ projectId, kind, number, title, status, children }: {
   const tab = dailyTabForKind(kind)
   return (
     <div>
-      <Link href={dailyTabHref(projectId, tab)} style={{ fontSize: 'var(--text-sm)', color: 'var(--primary-600, #2563eb)', textDecoration: 'none', fontWeight: 500 }}>
+      <Link href={dailyTabHref(projectId, tab)} style={{ fontSize: 'var(--text-sm)', color: 'var(--primary-700)', textDecoration: 'none', fontWeight: 500 }}>
         ← {t('title')} · {t(`tab.${tab}`)}
       </Link>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginTop: 8 }}>

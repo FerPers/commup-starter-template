@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl'
 import { assignEquipmentType, classifyTagTypes, previewTagTypeGroups, rejectTagTypeProposal } from '@/app/actions/tag-types'
 import { TYPE_CHANGE_REASON_MIN, codeList, needsReason, type TagTypePreview } from '@/lib/tags/type-change'
 import { cleanTypeCode, type CatalogType, type FreeSource, type TypeGroup } from '@/lib/tags/type-signature'
+import { ink } from '@/lib/theme'
 
 type AiMeta = { proposalId: string; confidence: number; reason: string }
 export type GroupProposal =
@@ -239,7 +240,7 @@ function GroupCard({ g, choice, overridden, preview, doneCount, catalog, byId, c
         <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
           <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('proposal.label')}</span>
           <strong style={{ fontSize: 14, color: 'var(--text-strong)' }}>{label ?? t('proposal.empty')}</strong>
-          <span style={{ fontSize: 12, fontWeight: 600, color: sourceColor }}>{source}</span>
+          <span style={{ fontSize: 12, fontWeight: 600, color: ink(sourceColor) }}>{source}</span>
           {aiReason && <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{aiReason}</span>}
         </div>
 

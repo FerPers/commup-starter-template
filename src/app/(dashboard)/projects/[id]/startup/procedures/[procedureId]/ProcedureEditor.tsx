@@ -244,7 +244,7 @@ function StepsEditor({ projectId, steps, editable, setStep, move, add, remove }:
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 6 }}>
       {steps.map((s, i) => (
-        <div key={i} style={{ border: `1px solid ${s.is_hold_point ? '#fcd34d' : 'var(--border)'}`, background: s.is_hold_point ? '#fffbeb' : 'transparent', borderRadius: 8, padding: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div key={i} style={{ border: `1px solid ${s.is_hold_point ? 'var(--warning-300)' : 'var(--border)'}`, background: s.is_hold_point ? 'var(--warning-50)' : 'transparent', borderRadius: 8, padding: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <strong style={{ fontFamily: 'ui-monospace, monospace' }}>{i + 1}</strong>
             <input aria-label={t('step.action')} placeholder={t('step.action')} style={{ ...input, flex: 1 }} value={s.action} disabled={!editable} onChange={e => setStep(i, { action: e.target.value })} />

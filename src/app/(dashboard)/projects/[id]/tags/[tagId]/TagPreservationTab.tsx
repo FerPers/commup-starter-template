@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { assignPreservationPlan, updatePlanStatus } from '@/app/actions/preservation'
 import { DialogSurface, useToast } from '@/components/ui'
+import { alpha, ink } from '@/lib/theme'
 
 // ── Types ──────────────────────────────────────────────────────
 
@@ -57,9 +58,9 @@ const FREQ_KEYS = ['daily', 'weekly', 'biweekly', 'monthly', 'quarterly'] as con
 const PLAN_STATUS_KEYS = ['active', 'suspended', 'completed'] as const
 
 const STATUS_CFG: Record<(typeof PLAN_STATUS_KEYS)[number], { color: string; bg: string }> = {
-  active:    { color: 'var(--success-600)', bg: 'var(--success-50)' },
-  suspended: { color: 'var(--warning-600)', bg: 'var(--warning-50)' },
-  completed: { color: 'var(--text-muted)', bg: 'var(--gray-50)' },
+  active:    { color: 'var(--success-700)', bg: 'var(--success-50)' },
+  suspended: { color: 'var(--warning-700)', bg: 'var(--warning-50)' },
+  completed: { color: 'var(--text-muted)',  bg: 'var(--gray-50)' },
 }
 
 type Tx = (key: 'overdue' | 'dueToday' | 'dueIn' | 'next', values?: { n?: number; date?: string }) => string
@@ -70,10 +71,10 @@ function dueBadge(nextDue: string, tx: Tx): { label: string; color: string; bg: 
   const due = new Date(nextDue + 'T00:00:00')
   const diffDays = Math.ceil((due.getTime() - today.getTime()) / 86400000)
 
-  if (diffDays < 0)  return { label: tx('overdue', { n: Math.abs(diffDays) }),  color: 'var(--danger-600)', bg: 'var(--danger-50)' }
-  if (diffDays === 0) return { label: tx('dueToday'),                           color: 'var(--danger-600)', bg: 'var(--danger-50)' }
-  if (diffDays <= 7)  return { label: tx('dueIn', { n: diffDays }),             color: 'var(--warning-600)', bg: 'var(--warning-50)' }
-  return { label: tx('next', { date: nextDue }),                                 color: 'var(--success-600)', bg: 'var(--success-50)' }
+  if (diffDays < 0)  return { label: tx('overdue', { n: Math.abs(diffDays) }),  color: 'var(--danger-700)', bg: 'var(--danger-50)' }
+  if (diffDays === 0) return { label: tx('dueToday'),                           color: 'var(--danger-700)', bg: 'var(--danger-50)' }
+  if (diffDays <= 7)  return { label: tx('dueIn', { n: diffDays }),             color: 'var(--warning-700)', bg: 'var(--warning-50)' }
+  return { label: tx('next', { date: nextDue }),                                 color: 'var(--success-700)', bg: 'var(--success-50)' }
 }
 
 const DEFAULT_FORM = { procedureId: '', startDate: '', responsibleUserId: '' }
@@ -137,15 +138,15 @@ export default function TagPreservationTab({ tagId, projectId, plans, procedures
         {canEdit && procedures.length > 0 && (
           <button
             onClick={() => setShowModal(true)}
-            style={{ padding: '7px 16px', borderRadius: '8px', background: 'var(--primary-500)', color: '#fff', fontWeight: 600, fontSize: '13px', cursor: 'pointer', border: 'none' }}
+            style={{ padding: '7px 16px', borderRadius: '8px', background: 'var(--primary-600)', color: '#fff', fontWeight: 600, fontSize: '13px', cursor: 'pointer', border: 'none' }}
           >
             {tx('assignPlanBtn')}
           </button>
         )}
         {canEdit && procedures.length === 0 && (
-          <span style={{ fontSize: '12px', color: 'var(--gray-400)' }}>
+          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
             {tx.rich('createProcedures', {
-              link: c => <Link href="/admin/templates/preservation" style={{ color: 'var(--primary-500)' }}>{c}</Link>,
+              link: c => <Link href="/admin/templates/preservation" style={{ color: 'var(--primary-700)' }}>{c}</Link>,
             })}
           </span>
         )}
@@ -154,14 +155,14 @@ export default function TagPreservationTab({ tagId, projectId, plans, procedures
       {/* Plans list */}
       {plans.length === 0 ? (
         <div style={{
-          background: 'var(--gray-50)', border: '2px dashed #e2e8f0', borderRadius: '10px',
+          background: 'var(--gray-50)', border: '2px dashed var(--gray-200)', borderRadius: '10px',
           padding: '36px', textAlign: 'center',
         }}>
           <div style={{ fontSize: '28px', marginBottom: '10px' }}>◉</div>
-          <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--gray-700)', marginBottom: '6px' }}>
+          <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-body)', marginBottom: '6px' }}>
             {tx('emptyTitle')}
           </div>
-          <div style={{ fontSize: '13px', color: 'var(--gray-400)' }}>
+          <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
             {tx('emptyHint')}
           </div>
         </div>
@@ -186,13 +187,13 @@ export default function TagPreservationTab({ tagId, projectId, plans, procedures
                       <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-strong)' }}>
                         {proc?.code} — {proc?.title}
                       </span>
-                      <span style={{ padding: '2px 8px', borderRadius: '10px', fontSize: '11px', fontWeight: 600, background: st.bg, color: st.color }}>
+                      <span style={{ padding: '2px 8px', borderRadius: '10px', fontSize: '11px', fontWeight: 600, background: st.bg, color: ink(st.color) }}>
                         {tp(`planStatus.${statusKey}`)}
                       </span>
                     </div>
                     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                       {proc?.disciplines && (
-                        <span style={{ padding: '2px 8px', borderRadius: '10px', fontSize: '11px', fontWeight: 600, background: proc.disciplines.color + '20', color: proc.disciplines.color }}>
+                        <span style={{ padding: '2px 8px', borderRadius: '10px', fontSize: '11px', fontWeight: 600, background: alpha(proc.disciplines.color, 13), color: ink(proc.disciplines.color) }}>
                           {proc.disciplines.code}
                         </span>
                       )}
@@ -207,24 +208,24 @@ export default function TagPreservationTab({ tagId, projectId, plans, procedures
                     </div>
                   </div>
                   <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                    <div style={{ padding: '4px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, background: due.bg, color: due.color, marginBottom: '4px' }}>
+                    <div style={{ padding: '4px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, background: due.bg, color: ink(due.color), marginBottom: '4px' }}>
                       {due.label}
                     </div>
-                    <div style={{ fontSize: '11px', color: 'var(--gray-400)' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                       {tx('start', { date: plan.start_date })}
                     </div>
                     {plan.last_performed_date && (
-                      <div style={{ fontSize: '11px', color: 'var(--gray-400)' }}>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                         {tx('last', { date: plan.last_performed_date })}
                       </div>
                     )}
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', borderTop: '1px solid #f1f5f9', paddingTop: '10px' }}>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', borderTop: '1px solid var(--gray-100)', paddingTop: '10px' }}>
                   <button
                     onClick={() => router.push(`/projects/${projectId}/tags/${tagId}/preservation/${plan.id}`)}
-                    style={{ padding: '6px 14px', borderRadius: '7px', background: 'var(--primary-500)', color: '#fff', fontWeight: 600, fontSize: '12px', cursor: 'pointer', border: 'none' }}
+                    style={{ padding: '6px 14px', borderRadius: '7px', background: 'var(--primary-600)', color: '#fff', fontWeight: 600, fontSize: '12px', cursor: 'pointer', border: 'none' }}
                   >
                     {tx('execute')}
                   </button>
@@ -232,7 +233,7 @@ export default function TagPreservationTab({ tagId, projectId, plans, procedures
                     <button
                       onClick={() => handleStatusChange(plan.id, 'suspended')}
                       disabled={isPending}
-                      style={{ padding: '6px 14px', borderRadius: '7px', background: 'var(--warning-50)', color: 'var(--warning-600)', fontWeight: 600, fontSize: '12px', cursor: 'pointer', border: 'none' }}
+                      style={{ padding: '6px 14px', borderRadius: '7px', background: 'var(--warning-50)', color: 'var(--warning-700)', fontWeight: 600, fontSize: '12px', cursor: 'pointer', border: 'none' }}
                     >
                       {tx('suspend')}
                     </button>
@@ -241,7 +242,7 @@ export default function TagPreservationTab({ tagId, projectId, plans, procedures
                     <button
                       onClick={() => handleStatusChange(plan.id, 'active')}
                       disabled={isPending}
-                      style={{ padding: '6px 14px', borderRadius: '7px', background: 'var(--success-50)', color: 'var(--success-600)', fontWeight: 600, fontSize: '12px', cursor: 'pointer', border: 'none' }}
+                      style={{ padding: '6px 14px', borderRadius: '7px', background: 'var(--success-50)', color: 'var(--success-700)', fontWeight: 600, fontSize: '12px', cursor: 'pointer', border: 'none' }}
                     >
                       {tx('reactivate')}
                     </button>
@@ -268,18 +269,18 @@ export default function TagPreservationTab({ tagId, projectId, plans, procedures
           <DialogSurface onClose={closeModal} labelledBy={modalTitleId} style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '460px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '22px' }}>
               <h2 id={modalTitleId} style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>{tx('modalTitle')}</h2>
-              <button onClick={closeModal} aria-label={tx('close')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', color: 'var(--gray-400)' }}>✕</button>
+              <button onClick={closeModal} aria-label={tx('close')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', color: 'var(--text-muted)' }}>✕</button>
             </div>
 
             {formError && (
-              <div style={{ background: 'var(--danger-50)', border: '1px solid var(--danger-200)', color: 'var(--danger-600)', padding: '9px 13px', borderRadius: '8px', fontSize: '13px', marginBottom: '14px' }}>
+              <div style={{ background: 'var(--danger-50)', border: '1px solid var(--danger-200)', color: 'var(--danger-700)', padding: '9px 13px', borderRadius: '8px', fontSize: '13px', marginBottom: '14px' }}>
                 {formError}
               </div>
             )}
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
-                <label htmlFor={`${modalTitleId}-procedure`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '5px' }}>{tx('fieldProcedure')}</label>
+                <label htmlFor={`${modalTitleId}-procedure`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-body)', display: 'block', marginBottom: '5px' }}>{tx('fieldProcedure')}</label>
                 <select
                   id={`${modalTitleId}-procedure`}
                   value={form.procedureId}
@@ -296,7 +297,7 @@ export default function TagPreservationTab({ tagId, projectId, plans, procedures
               </div>
 
               <div>
-                <label htmlFor={`${modalTitleId}-start`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '5px' }}>
+                <label htmlFor={`${modalTitleId}-start`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-body)', display: 'block', marginBottom: '5px' }}>
                   {tx('fieldStartDate')}
                 </label>
                 <input
@@ -306,13 +307,13 @@ export default function TagPreservationTab({ tagId, projectId, plans, procedures
                   onChange={e => setForm(f => ({ ...f, startDate: e.target.value }))}
                   style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--gray-300)', borderRadius: '8px', fontSize: '13px', boxSizing: 'border-box' }}
                 />
-                <div style={{ fontSize: '11px', color: 'var(--gray-400)', marginTop: '4px' }}>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
                   {tx('startDateHint')}
                 </div>
               </div>
 
               <div>
-                <label htmlFor={`${modalTitleId}-responsible`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '5px' }}>{tx('fieldResponsible')}</label>
+                <label htmlFor={`${modalTitleId}-responsible`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-body)', display: 'block', marginBottom: '5px' }}>{tx('fieldResponsible')}</label>
                 <select
                   id={`${modalTitleId}-responsible`}
                   value={form.responsibleUserId}
@@ -339,7 +340,7 @@ export default function TagPreservationTab({ tagId, projectId, plans, procedures
               <button
                 onClick={handleAssign}
                 disabled={isPending}
-                style={{ padding: '8px 18px', borderRadius: '8px', background: 'var(--primary-500)', color: '#fff', fontWeight: 600, fontSize: '13px', cursor: isPending ? 'wait' : 'pointer', border: 'none', opacity: isPending ? 0.7 : 1 }}
+                style={{ padding: '8px 18px', borderRadius: '8px', background: 'var(--primary-600)', color: '#fff', fontWeight: 600, fontSize: '13px', cursor: isPending ? 'wait' : 'pointer', border: 'none', opacity: isPending ? 0.7 : 1 }}
               >
                 {isPending ? tx('assigning') : tx('assignPlan')}
               </button>

@@ -206,15 +206,15 @@ export default function ImportFromOrgModal({ onClose }: { onClose: () => void })
 
           {error && (
             <div style={{
-              padding: '10px 14px', background: '#fee2e2', border: '1px solid #fca5a5',
-              borderRadius: 8, color: '#dc2626', fontSize: 13, marginBottom: 12,
+              padding: '10px 14px', background: 'var(--danger-100)', border: '1px solid var(--danger-300)',
+              borderRadius: 8, color: 'var(--danger-700)', fontSize: 13, marginBottom: 12,
             }}>{error}</div>
           )}
 
           {success && (
             <div style={{
-              padding: '10px 14px', background: '#ecfdf5', border: '1px solid #6ee7b7',
-              borderRadius: 8, color: '#059669', fontSize: 13, marginBottom: 12,
+              padding: '10px 14px', background: 'var(--success-50)', border: '1px solid var(--success-300)',
+              borderRadius: 8, color: 'var(--success-700)', fontSize: 13, marginBottom: 12,
             }}>{success}</div>
           )}
 
@@ -223,12 +223,12 @@ export default function ImportFromOrgModal({ onClose }: { onClose: () => void })
             return (
             <div key={orgId} style={{ marginBottom: 20 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, margin: '0 0 8px' }}>
-                <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   {list[0].sourceOrgName}
                   {list[0].sourceOrgIsCatalog && (
                     <span style={{
                       fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 999,
-                      background: '#ecfdf5', color: '#059669', border: '1px solid #6ee7b7',
+                      background: 'var(--success-50)', color: 'var(--success-700)', border: '1px solid var(--success-300)',
                       letterSpacing: '0.04em',
                     }}>
                       {ti('publicCatalog')}
@@ -241,7 +241,7 @@ export default function ImportFromOrgModal({ onClose }: { onClose: () => void })
                   title={ti('importAllHint')}
                   style={{
                     padding: '6px 12px', fontSize: 12, fontWeight: 600,
-                    background: 'var(--card-bg)', color: '#2563eb', border: '1px solid #bfdbfe', borderRadius: 6,
+                    background: 'var(--card-bg)', color: 'var(--primary-700)', border: '1px solid var(--primary-200)', borderRadius: 6,
                     cursor: isPending || pending.length === 0 ? 'default' : 'pointer',
                     opacity: (isPending && bulkOrgId !== orgId) || pending.length === 0 ? 0.5 : 1,
                     whiteSpace: 'nowrap',
@@ -275,7 +275,7 @@ export default function ImportFromOrgModal({ onClose }: { onClose: () => void })
                       disabled={isPending || t.localState === 'same'}
                       style={{
                         padding: '7px 14px', fontSize: 12, fontWeight: 500,
-                        background: t.localState === 'same' ? 'var(--gray-200, #e5e7eb)' : t.localState === 'outdated' ? '#d97706' : '#3b82f6',
+                        background: t.localState === 'same' ? 'var(--gray-200)' : t.localState === 'outdated' ? 'var(--warning-600)' : 'var(--primary-500)',
                         color: t.localState === 'same' ? 'var(--text-muted)' : 'white', border: 'none', borderRadius: 6,
                         cursor: isPending || t.localState === 'same' ? 'default' : 'pointer',
                         opacity: isPending && importingId !== t.id ? 0.6 : 1,
@@ -299,9 +299,9 @@ export default function ImportFromOrgModal({ onClose }: { onClose: () => void })
 function StateBadge({ t }: { t: ImportableTemplate }) {
   const ti = useTranslations('TemplateImport')
   const style = { fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 999, letterSpacing: '0.04em', whiteSpace: 'nowrap' as const }
-  if (t.localState === 'new') return <span style={{ ...style, background: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe' }}>{ti('badgeNew')}</span>
-  if (t.localState === 'outdated') return <span style={{ ...style, background: '#fffbeb', color: '#b45309', border: '1px solid #fde68a' }} title={ti('badgeOutdatedHint')}>{ti('badgeOutdated', { v: t.localVersion ?? '' })}</span>
-  return <span style={{ ...style, background: '#ecfdf5', color: '#059669', border: '1px solid #6ee7b7' }}>{ti('badgeSame', { v: t.localVersion ?? '' })}</span>
+  if (t.localState === 'new') return <span style={{ ...style, background: 'var(--primary-50)', color: 'var(--primary-700)', border: '1px solid var(--primary-200)' }}>{ti('badgeNew')}</span>
+  if (t.localState === 'outdated') return <span style={{ ...style, background: 'var(--warning-50)', color: 'var(--warning-700)', border: '1px solid var(--warning-200)' }} title={ti('badgeOutdatedHint')}>{ti('badgeOutdated', { v: t.localVersion ?? '' })}</span>
+  return <span style={{ ...style, background: 'var(--success-50)', color: 'var(--success-700)', border: '1px solid var(--success-300)' }}>{ti('badgeSame', { v: t.localVersion ?? '' })}</span>
 }
 
 function describeBulk(r: BulkCloneResult, ti: (key: string, values?: Record<string, number>) => string): string {

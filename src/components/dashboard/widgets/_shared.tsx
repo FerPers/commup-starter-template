@@ -1,31 +1,32 @@
 import type { ReactNode, CSSProperties } from 'react'
 import { useTranslations } from 'next-intl'
+import { alpha, ink } from '@/lib/theme'
 import { Card } from '@/components/ui'
 
 export const ITR_STYLE: Record<string, { color: string; bg: string }> = {
-  not_started: { color: 'var(--gray-500)', bg: 'var(--gray-100)' },
-  in_progress: { color: 'var(--primary-500)', bg: 'var(--primary-50)' },
-  completed: { color: 'var(--success-500)', bg: 'var(--success-50)' },
-  approved: { color: '#7c3aed', bg: '#f5f3ff' },
-  rejected: { color: 'var(--danger-500)', bg: 'var(--danger-50)' },
+  not_started: { color: 'var(--text-muted)', bg: 'var(--gray-100)' },
+  in_progress: { color: 'var(--primary-700)', bg: 'var(--primary-50)' },
+  completed: { color: 'var(--success-700)', bg: 'var(--success-50)' },
+  approved: { color: 'var(--violet-700)', bg: 'var(--violet-50)' },
+  rejected: { color: 'var(--danger-700)', bg: 'var(--danger-50)' },
 }
 
 export const PUNCH_STYLE: Record<string, { color: string; bg: string }> = {
-  open: { color: 'var(--danger-500)', bg: 'var(--danger-50)' },
-  in_progress: { color: 'var(--primary-500)', bg: 'var(--primary-50)' },
-  closed: { color: 'var(--success-500)', bg: 'var(--success-50)' },
-  cancelled: { color: 'var(--gray-500)', bg: 'var(--gray-100)' },
+  open: { color: 'var(--danger-700)', bg: 'var(--danger-50)' },
+  in_progress: { color: 'var(--primary-700)', bg: 'var(--primary-50)' },
+  closed: { color: 'var(--success-700)', bg: 'var(--success-50)' },
+  cancelled: { color: 'var(--text-muted)', bg: 'var(--gray-100)' },
 }
 
 export const CATEGORY_CFG = {
-  A: { label: 'Cat A', color: 'var(--danger-500)', bg: 'var(--danger-50)', border: '#fecaca' },
-  B: { label: 'Cat B', color: 'var(--warning-500)', bg: 'var(--warning-50)', border: '#fde68a' },
-  C: { label: 'Cat C', color: 'var(--gray-500)', bg: 'var(--gray-50)', border: 'var(--border)' },
+  A: { label: 'Cat A', color: 'var(--danger-700)', bg: 'var(--danger-50)', border: 'var(--danger-200)' },
+  B: { label: 'Cat B', color: 'var(--warning-700)', bg: 'var(--warning-50)', border: 'var(--warning-200)' },
+  C: { label: 'Cat C', color: 'var(--text-muted)', bg: 'var(--gray-50)', border: 'var(--border)' },
 }
 
 export function SummaryPill({ count, label, color }: { count: number; label: string; color: string }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px', background: 'var(--card-bg)', borderRadius: 'var(--radius-pill)', border: `1px solid ${color}30`, boxShadow: 'var(--shadow-sm)' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px', background: 'var(--card-bg)', borderRadius: 'var(--radius-pill)', border: `1px solid ${alpha(color, 19)}`, boxShadow: 'var(--shadow-sm)' }}>
       <span style={{ fontSize: 'var(--text-md)', fontWeight: 700, color }}>{count}</span>
       <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>{label}</span>
     </div>
@@ -43,7 +44,7 @@ export function TaskSection({ title, count, children, emptyText, style }: {
       </div>
       {count === 0 ? (
         <div style={{ padding: '32px 20px', textAlign: 'center' }}>
-          <p style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-400)', margin: 0 }}>{emptyText}</p>
+          <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', margin: 0 }}>{emptyText}</p>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 16px' }}>
@@ -64,13 +65,13 @@ function DeltaChip({ delta }: { delta: KpiDelta }) {
   const t = useTranslations('A11y')
   if (delta.value === null) {
     return (
-      <span title={t('deltaNoHistory')} style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--gray-400)', background: 'var(--gray-100)', padding: '2px 8px', borderRadius: 'var(--radius-pill)' }}>—</span>
+      <span title={t('deltaNoHistory')} style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--text-muted)', background: 'var(--gray-100)', padding: '2px 8px', borderRadius: 'var(--radius-pill)' }}>—</span>
     )
   }
   const up = delta.value > 0
   const flat = delta.value === 0
   const good = flat ? null : (up === delta.goodWhenUp)
-  const color = flat ? 'var(--gray-500)' : good ? 'var(--success-500)' : 'var(--danger-500)'
+  const color = flat ? 'var(--text-muted)' : good ? 'var(--success-500)' : 'var(--danger-500)'
   const bg = flat ? 'var(--gray-100)' : good ? 'var(--success-50)' : 'var(--danger-50)'
   const arrow = flat ? '＝' : up ? '▲' : '▼'
   const num = Math.abs(delta.value)
@@ -92,7 +93,7 @@ export function KpiCard({ label, value, color, sub, danger = false, progress = 0
         {value}
         {delta ? <DeltaChip delta={delta} /> : null}
       </p>
-      <p style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-400)' }}>{sub}</p>
+      <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>{sub}</p>
       <div style={{ marginTop: 12, height: 6, background: 'var(--gray-100)', borderRadius: 3, overflow: 'hidden' }}>
         <div style={{ width: `${progress}%`, height: '100%', background: color, borderRadius: 3 }} />
       </div>
@@ -121,7 +122,7 @@ export function ProjectRow({ project, phases, noMetaText, activeText }: {
       </div>
       <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
         {phases.slice(0, 4).map(phase => (
-          <div key={phase.id} title={phase.name} style={{ width: 28, height: 28, borderRadius: '50%', background: `${phase.color}20`, border: `2px solid ${phase.color}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 'var(--text-xs)', fontWeight: 700, color: phase.color }}>
+          <div key={phase.id} title={phase.name} style={{ width: 28, height: 28, borderRadius: '50%', background: alpha(phase.color, 13), border: `2px solid ${alpha(phase.color, 25)}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 'var(--text-xs)', fontWeight: 700, color: ink(phase.color) }}>
             {phase.code}
           </div>
         ))}

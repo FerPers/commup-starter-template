@@ -53,13 +53,13 @@ export default function PrepareOffline({ urls }: { urls: string[] }) {
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 16, padding: '10px 14px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', background: 'var(--card-bg)' }}>
-      <div style={{ flex: 1, minWidth: 200, fontSize: 'var(--text-sm)', color: 'var(--gray-700)' }}>
+      <div style={{ flex: 1, minWidth: 200, fontSize: 'var(--text-sm)', color: 'var(--text-body)' }}>
         {state === 'done' && result
           ? t('prepared', { ok: result.ok, failed: result.failed })
           : t('prepareHint', { n: list.length })}
       </div>
       <button type="button" onClick={() => { void prepare() }} disabled={state === 'busy' || !online}
-        style={{ padding: '7px 14px', borderRadius: 8, border: '1px solid var(--primary-500)', background: 'var(--primary-500)', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+        style={{ padding: '7px 14px', borderRadius: 8, border: '1px solid var(--primary-500)', background: 'var(--primary-600)', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
         {state === 'busy' ? t('preparing') : t('prepare')}
       </button>
     </div>
@@ -79,7 +79,7 @@ export function OfflineReadyChip({ url }: { url: string }) {
   }, [url])
   if (!ready) return null
   return (
-    <span title={t('readyTitle')} style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 'var(--radius-sm)', background: '#ecfdf5', color: '#047857' }}>
+    <span title={t('readyTitle')} style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 'var(--radius-sm)', background: 'var(--success-50)', color: 'var(--success-700)' }}>
       {t('ready')}
     </span>
   )

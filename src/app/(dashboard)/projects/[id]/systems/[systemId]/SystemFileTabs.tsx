@@ -33,7 +33,7 @@ type ProjectRef = { id: string; code: string; name: string; timezone: string | n
 const card: React.CSSProperties = { background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 12, padding: 20 }
 const small: React.CSSProperties = { fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }
 const h2: React.CSSProperties = { fontSize: 17, fontWeight: 700, color: 'var(--text-strong)', margin: 0 }
-const linkStyle: React.CSSProperties = { fontSize: 'var(--text-sm)', color: 'var(--primary-600, #2563eb)', textDecoration: 'none', fontWeight: 500 }
+const linkStyle: React.CSSProperties = { fontSize: 'var(--text-sm)', color: 'var(--primary-700)', textDecoration: 'none', fontWeight: 500 }
 const kpiLabel: React.CSSProperties = { fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--text-muted)' }
 const kpiValue: React.CSSProperties = { fontSize: 22, fontWeight: 700, color: 'var(--text-strong)' }
 
@@ -136,7 +136,7 @@ export function SystemFileShell({ project, system, tab, summary, ownership, perf
               style={{
                 minHeight: 44, padding: '0 14px', display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none',
                 fontSize: 'var(--text-sm)', fontWeight: active ? 700 : 500, color: active ? 'var(--text-strong)' : 'var(--text-muted)',
-                borderBottom: `3px solid ${active ? 'var(--brand-orange, #f2a541)' : 'transparent'}`, marginBottom: -1,
+                borderBottom: `3px solid ${active ? 'var(--brand-orange)' : 'transparent'}`, marginBottom: -1,
               }}>
               {t(`file.tab.${k}`)}
               {!!badge && <span style={{ borderRadius: 999, padding: '0 7px', fontSize: 'var(--text-xs)', fontWeight: 700, background: 'var(--gray-100)', color: 'var(--text-strong)' }}>{badge}</span>}
@@ -238,7 +238,7 @@ export function SystemStartupTab({ project, systemId, milestones }: {
           {MILESTONES.map(m => {
             const ev = milestones.find(x => x.milestone === m)
             return (
-              <div key={m} style={{ padding: 10, borderRadius: 8, border: '1px solid var(--border)', background: ev?.status === 'witnessed' ? 'var(--success-50)' : ev ? '#fffbeb' : 'transparent' }}>
+              <div key={m} style={{ padding: 10, borderRadius: 8, border: '1px solid var(--border)', background: ev?.status === 'witnessed' ? 'var(--success-50)' : ev ? 'var(--warning-50)' : 'transparent' }}>
                 <div style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--text-muted)' }}>{t(`milestones.${m}`)}</div>
                 <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-strong)' }}>
                   {ev ? <Link href={`/projects/${project.id}/startup/events/${ev.id}`} style={{ color: 'inherit' }}>{ev.status === 'witnessed' ? '✓ ' : '⏳ '}{formatInZone(ev.occurredAt, project.timezone, locale, false)}</Link> : '—'}

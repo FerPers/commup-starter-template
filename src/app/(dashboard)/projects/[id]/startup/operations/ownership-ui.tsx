@@ -11,10 +11,10 @@ export const STAGE_TONE: Record<OwnershipStage, 'muted' | 'blue' | 'violet' | 'g
 }
 export const LEVEL_COLOR: Record<number, { bg: string; fg: string }> = {
   0: { bg: 'var(--gray-50)', fg: 'var(--text-muted)' },
-  1: { bg: '#eff6ff', fg: '#1d4ed8' },
-  2: { bg: '#e0f2fe', fg: '#0369a1' },
+  1: { bg: 'var(--primary-50)', fg: 'var(--primary-700)' },
+  2: { bg: 'var(--sky-100)', fg: 'var(--sky-700)' },
   3: { bg: 'var(--success-50)', fg: 'var(--success-700)' },
-  4: { bg: '#ecfdf5', fg: '#047857' },
+  4: { bg: 'var(--success-50)', fg: 'var(--success-700)' },
 }
 
 export function StageChip({ stage }: { stage: OwnershipStage }) {
@@ -71,7 +71,7 @@ export function Checklist({ items, exceptions, renderException }: {
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-strong)' }}>{t(`ops.check.${it.key}`)}</div>
               <div style={small}>{detail(it)}</div>
-              {exc && <div style={{ ...small, marginTop: 4, color: '#b45309' }}>{t('ops.exception')}: {exc.justification}</div>}
+              {exc && <div style={{ ...small, marginTop: 4, color: 'var(--warning-700)' }}>{t('ops.exception')}: {exc.justification}</div>}
               {!it.ok && renderException?.(it.key)}
             </div>
           </li>

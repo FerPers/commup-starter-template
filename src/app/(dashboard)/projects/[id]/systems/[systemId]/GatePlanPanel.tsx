@@ -20,7 +20,7 @@ const inputStyle: React.CSSProperties = {
 }
 const btn = (primary: boolean, disabled: boolean): React.CSSProperties => ({
   padding: '5px 12px', borderRadius: 8, fontSize: 'var(--text-xs)', fontWeight: 600, cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.5 : 1,
-  border: primary ? 'none' : '1px solid var(--border)', background: primary ? 'var(--primary-500)' : 'transparent', color: primary ? '#fff' : 'var(--text-strong)',
+  border: primary ? 'none' : '1px solid var(--border)', background: primary ? 'var(--primary-600)' : 'transparent', color: primary ? '#fff' : 'var(--text-strong)',
 })
 
 export default function GatePlanPanel({ projectId, systemId, gateId, progress, plan, events, names, canEdit, canCommit, settled }: {
@@ -104,7 +104,7 @@ export default function GatePlanPanel({ projectId, systemId, gateId, progress, p
 
       {events.length > 0 && (
         <div>
-          <button type="button" onClick={() => setShowHistory(!showHistory)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--primary-600, #2563eb)' }}>
+          <button type="button" onClick={() => setShowHistory(!showHistory)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--primary-700)' }}>
             {showHistory ? t('plan.hideHistory') : t('plan.showHistory', { n: events.length })}
           </button>
           {showHistory && (

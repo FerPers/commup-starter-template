@@ -108,7 +108,7 @@ export default function TagEditForm({ tag, projectId, onCancel, canDelete }: {
       {error && (
         <div style={{
           padding: '10px 14px', background: 'var(--danger-50)', border: '1px solid var(--danger-200)',
-          borderRadius: '8px', fontSize: '13px', color: 'var(--danger-600)',
+          borderRadius: '8px', fontSize: '13px', color: 'var(--danger-700)',
         }}>
           {error}
         </div>
@@ -206,11 +206,11 @@ export default function TagEditForm({ tag, projectId, onCancel, canDelete }: {
         {/* Instrument-only fields */}
         {isInst && (
           <>
-            <div style={{ margin: '20px 0 14px', paddingTop: '16px', borderTop: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            <div style={{ margin: '20px 0 14px', paddingTop: '16px', borderTop: '1px solid var(--gray-100)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                 {t('edit.sectionInstrumentation')}
               </span>
-              <span style={{ fontSize: '11px', color: 'var(--gray-300)' }}>{t('edit.instrSubtitle')}</span>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{t('edit.instrSubtitle')}</span>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px' }}>
 
@@ -281,7 +281,7 @@ export default function TagEditForm({ tag, projectId, onCancel, canDelete }: {
           onClick={handleSave}
           disabled={isPending}
           style={{
-            padding: '9px 20px', background: isPending ? 'var(--primary-300)' : 'var(--primary-500)', border: 'none',
+            padding: '9px 20px', background: isPending ? 'var(--primary-300)' : 'var(--primary-600)', border: 'none',
             borderRadius: '8px', fontSize: '13px', fontWeight: 600, color: '#fff',
             cursor: isPending ? 'not-allowed' : 'pointer',
           }}
@@ -299,7 +299,7 @@ export default function TagEditForm({ tag, projectId, onCancel, canDelete }: {
               style={{
                 width: '100%', padding: '8px 12px', background: 'var(--card-bg)',
                 border: '1px solid var(--danger-200)', borderRadius: '7px',
-                fontSize: '12px', color: 'var(--danger-600)', cursor: 'pointer', textAlign: 'left',
+                fontSize: '12px', color: 'var(--danger-700)', cursor: 'pointer', textAlign: 'left',
               }}
             >
               {t('edit.deleteBtn')}
@@ -351,7 +351,7 @@ function FormField({ label, children, style }: { label: string; children: React.
   const fieldAt = items.findIndex(c => isValidElement(c) && typeof c.type === 'string' && FIELD_TAGS.has(c.type))
   const linked = fieldAt >= 0
   const content = items.map((c, i) => (i === fieldAt && isValidElement<{ id?: string }>(c) ? cloneElement(c, { id }) : c))
-  const labelStyle: React.CSSProperties = { display: 'block', fontSize: '11px', fontWeight: 600, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '5px' }
+  const labelStyle: React.CSSProperties = { display: 'block', fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '5px' }
   return (
     <div style={style}>
       {linked

@@ -236,7 +236,7 @@ export default function UserMenu({
                   </button>
                 )
               })}
-              {error && <p style={{ margin: '6px 10px', fontSize: 12, color: 'var(--danger-500)' }}>{error}</p>}
+              {error && <p style={{ margin: '6px 10px', fontSize: 12, color: 'var(--danger-700)' }}>{error}</p>}
             </>
           )}
 
@@ -267,7 +267,7 @@ export default function UserMenu({
             type="button"
             role="menuitem"
             onClick={handleLogout}
-            style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', background: 'transparent', border: 'none', borderRadius: 6, fontSize: 13, color: 'var(--danger-500)', cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit' }}
+            style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', background: 'transparent', border: 'none', borderRadius: 6, fontSize: 13, color: 'var(--danger-700)', cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit' }}
           >
             <LogOut size={15} aria-hidden="true" />
             {t('logout')}
@@ -283,7 +283,7 @@ export default function UserMenu({
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p style={{ margin: '8px 10px 4px', fontSize: 11, fontWeight: 600, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+    <p style={{ margin: '8px 10px 4px', fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
       {children}
     </p>
   )

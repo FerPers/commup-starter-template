@@ -292,12 +292,12 @@ export default function PidCanvas({
           file={fileUrl}
           onLoadSuccess={({ numPages }) => onNumPages(numPages)}
           loading={
-            <div style={{ width: `${pageWidth * scale}px`, height: '600px', background: 'var(--card-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--gray-400)' }}>
+            <div style={{ width: `${pageWidth * scale}px`, height: '600px', background: 'var(--card-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
               {t('viewer.pdfLoading')}
             </div>
           }
           error={
-            <div style={{ width: `${pageWidth}px`, padding: '40px', background: 'var(--card-bg)', color: 'var(--danger-500)', borderRadius: '8px' }}>
+            <div style={{ width: `${pageWidth}px`, padding: '40px', background: 'var(--card-bg)', color: 'var(--danger-700)', borderRadius: '8px' }}>
               {t('viewer.pdfError')}
             </div>
           }

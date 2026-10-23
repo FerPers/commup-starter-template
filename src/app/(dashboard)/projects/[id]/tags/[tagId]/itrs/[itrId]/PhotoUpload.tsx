@@ -93,9 +93,9 @@ export default function PhotoUpload({
       {shown.length > 0 && (
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '8px' }}>
           {shown.map(att => (
-            <div key={att.id} style={{ position: 'relative', width: isDocument ? 'auto' : '72px', minWidth: isDocument ? '120px' : undefined, maxWidth: isDocument ? '220px' : undefined, height: isDocument ? 'auto' : '72px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border)', flexShrink: 0, background: isDocument ? '#ecfeff' : undefined }}>
+            <div key={att.id} style={{ position: 'relative', width: isDocument ? 'auto' : '72px', minWidth: isDocument ? '120px' : undefined, maxWidth: isDocument ? '220px' : undefined, height: isDocument ? 'auto' : '72px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border)', flexShrink: 0, background: isDocument ? 'var(--cyan-50)' : undefined }}>
               {isDocument
-                ? <a href={att.signed_url ?? undefined} target="_blank" rel="noopener noreferrer" title={t('upload.openDocument')} style={{ display: 'block', padding: '10px 26px 10px 10px', fontSize: '12px', color: '#0e7490', textDecoration: 'none', wordBreak: 'break-all' }}>
+                ? <a href={att.signed_url ?? undefined} target="_blank" rel="noopener noreferrer" title={t('upload.openDocument')} style={{ display: 'block', padding: '10px 26px 10px 10px', fontSize: '12px', color: 'var(--cyan-700)', textDecoration: 'none', wordBreak: 'break-all' }}>
                     📄 {att.file_url.split('/').pop() ?? t('upload.documentAlt')}
                   </a>
                 : att.signed_url
@@ -130,14 +130,14 @@ export default function PhotoUpload({
         <button
           onClick={() => fileInputRef.current?.click()}
           disabled={uploading}
-          style={{ padding: '7px 14px', background: uploading ? 'var(--primary-50)' : 'var(--success-50)', border: '1px dashed var(--success-300)', borderRadius: '7px', fontSize: '12px', color: uploading ? 'var(--primary-500)' : 'var(--success-700)', cursor: uploading ? 'default' : 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
+          style={{ padding: '7px 14px', background: uploading ? 'var(--primary-50)' : 'var(--success-50)', border: '1px dashed var(--success-300)', borderRadius: '7px', fontSize: '12px', color: uploading ? 'var(--primary-700)' : 'var(--success-700)', cursor: uploading ? 'default' : 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
         >
           {uploading ? t('upload.uploading') : isDocument ? t('upload.addDocument') : t('upload.addPhoto')}
         </button>
       )}
 
       {uploadError && (
-        <p style={{ fontSize: '11px', color: 'var(--danger-500)', margin: '4px 0 0' }}>{uploadError}</p>
+        <p style={{ fontSize: '11px', color: 'var(--danger-700)', margin: '4px 0 0' }}>{uploadError}</p>
       )}
       {/* G-17: el aviso dura mientras alguna foto del ítem siga en la bandeja (antes quedaba tras subirla). */}
       {queuedHint && shown.some(att => att.pending) && (

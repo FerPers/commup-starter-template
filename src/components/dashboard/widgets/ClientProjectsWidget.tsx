@@ -21,7 +21,7 @@ export default async function ClientProjectsWidget({ orgId }: { orgId: string })
       <Card padding="md">
         <h3 style={{ fontSize: 'var(--text-md)', fontWeight: 600, color: 'var(--text-strong)', marginBottom: 16 }}>{t('clientView.projectsTitle')}</h3>
         {items.length === 0 ? (
-          <p style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-400)', textAlign: 'center', padding: '24px 0' }}>{t('clientView.noProjects')}</p>
+          <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', textAlign: 'center', padding: '24px 0' }}>{t('clientView.noProjects')}</p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {items.map(p => (
@@ -36,9 +36,9 @@ export default async function ClientProjectsWidget({ orgId }: { orgId: string })
           </div>
         )}
       </Card>
-      <p style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-400)', marginTop: 16, textAlign: 'center' }}>
+      <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginTop: 16, textAlign: 'center' }}>
         {t.rich('clientView.viewItrs', {
-          link: (chunks) => <Link href="/itrs" style={{ color: 'var(--primary-500)', textDecoration: 'none' }}>{chunks}</Link>
+          link: (chunks) => <Link href="/itrs" style={{ color: 'var(--primary-700)', textDecoration: 'none' }}>{chunks}</Link>
         })}
       </p>
     </>

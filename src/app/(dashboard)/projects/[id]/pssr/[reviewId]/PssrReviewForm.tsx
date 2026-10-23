@@ -196,21 +196,21 @@ export default function PssrReviewForm({
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
             <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>{t('review.progressLabel')}</span>
-            <span style={{ fontSize: '12px', fontWeight: 700, color: localPct === 100 ? 'var(--success-500)' : 'var(--text-strong)' }}>
+            <span style={{ fontSize: '12px', fontWeight: 700, color: localPct === 100 ? 'var(--success-700)' : 'var(--text-strong)' }}>
               {t('review.progressCount', { resolved: localResolved, total: totalItems })}
             </span>
           </div>
           <div style={{ height: '8px', background: 'var(--gray-100)', borderRadius: '4px', overflow: 'hidden' }}>
             <div style={{
               height: '100%', borderRadius: '4px',
-              background: localPct === 100 ? '#10b981' : '#f59e0b',
+              background: localPct === 100 ? 'var(--success-500)' : 'var(--warning-500)',
               width: `${localPct}%`, transition: 'width 0.3s ease',
             }} />
           </div>
         </div>
         <span style={{
           fontSize: '20px', fontWeight: 800,
-          color: localPct === 100 ? '#10b981' : '#f59e0b', minWidth: '48px', textAlign: 'right',
+          color: localPct === 100 ? 'var(--success-700)' : 'var(--warning-700)', minWidth: '48px', textAlign: 'right',
         }}>
           {localPct}%
         </span>
@@ -219,8 +219,8 @@ export default function PssrReviewForm({
       {/* Action error/success ────────────────────────────────── */}
       {actionError && (
         <div style={{
-          padding: '12px 16px', borderRadius: '10px', background: '#fef2f2',
-          border: '1px solid #fecaca', color: '#dc2626', fontSize: '13px', fontWeight: 500,
+          padding: '12px 16px', borderRadius: '10px', background: 'var(--danger-50)',
+          border: '1px solid var(--danger-200)', color: 'var(--danger-700)', fontSize: '13px', fontWeight: 500,
           marginBottom: '16px',
         }}>
           {actionError}
@@ -228,8 +228,8 @@ export default function PssrReviewForm({
       )}
       {actionSuccess && (
         <div style={{
-          padding: '12px 16px', borderRadius: '10px', background: '#ecfdf5',
-          border: '1px solid #a7f3d0', color: '#065f46', fontSize: '13px', fontWeight: 500,
+          padding: '12px 16px', borderRadius: '10px', background: 'var(--success-50)',
+          border: '1px solid var(--success-200)', color: 'var(--success-800)', fontSize: '13px', fontWeight: 500,
           marginBottom: '16px',
         }}>
           {actionSuccess}
@@ -237,7 +237,7 @@ export default function PssrReviewForm({
       )}
 
       {review.status === 'rejected' && review.rejected_reason && (
-        <div role="status" style={{ padding: '12px 16px', borderRadius: '10px', background: '#fffbeb', border: '1px solid #fde68a', color: '#92400e', fontSize: '13px', marginBottom: '16px' }}>
+        <div role="status" style={{ padding: '12px 16px', borderRadius: '10px', background: 'var(--warning-50)', border: '1px solid var(--warning-200)', color: 'var(--warning-800)', fontSize: '13px', marginBottom: '16px' }}>
           {t('review.rejectedReason', { reason: review.rejected_reason })}
         </div>
       )}
@@ -261,7 +261,7 @@ export default function PssrReviewForm({
           background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)',
           padding: '20px 24px', marginBottom: '20px',
         }}>
-          <label htmlFor={notesId} style={{ fontSize: '13px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '8px' }}>
+          <label htmlFor={notesId} style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-body)', display: 'block', marginBottom: '8px' }}>
             {t('review.notesLabel')}
           </label>
           <textarea

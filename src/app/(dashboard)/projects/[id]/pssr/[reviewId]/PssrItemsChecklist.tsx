@@ -8,6 +8,7 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { catColor, type ItemAction, type ItemStatus, type ReviewItem } from './pssr-review-shared'
+import { ink } from '@/lib/theme'
 
 export default function PssrItemsChecklist({
   projectId,
@@ -90,15 +91,15 @@ export default function PssrItemsChecklist({
             >
               <span style={{
                 display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%',
-                background: catDone ? '#10b981' : catColor(category), flexShrink: 0,
+                background: catDone ? 'var(--success-500)' : catColor(category), flexShrink: 0,
               }} />
               <span style={{ fontWeight: 700, fontSize: '12px', color: 'var(--text-strong)', textTransform: 'uppercase', letterSpacing: '0.06em', flex: 1 }}>
                 {category}
               </span>
-              <span style={{ fontSize: '11px', color: 'var(--gray-400)' }}>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                 {catResolved}/{catItems.length}
               </span>
-              <span style={{ color: 'var(--gray-400)', fontSize: '14px', marginLeft: '4px' }}>
+              <span style={{ color: 'var(--text-muted)', fontSize: '14px', marginLeft: '4px' }}>
                 {isExpanded ? '▾' : '▸'}
               </span>
             </button>
@@ -107,29 +108,29 @@ export default function PssrItemsChecklist({
             {isExpanded && catItems.map(item => {
               const isItemExpanded = expandedItems.has(item.id)
               const statusColors = {
-                pending: { bg: 'var(--gray-100)', color: 'var(--text-muted)', border: 'var(--border)' },
-                si:      { bg: '#ecfdf5', color: '#10b981', border: '#a7f3d0' },
-                no:      { bg: '#fee2e2', color: '#ef4444', border: '#fecaca' },
-                na:      { bg: 'var(--gray-50)', color: 'var(--gray-400)', border: 'var(--border)' },
+                pending: { bg: 'var(--gray-100)',   color: 'var(--text-muted)',  border: 'var(--border)' },
+                si:      { bg: 'var(--success-50)', color: 'var(--success-700)', border: 'var(--success-200)' },
+                no:      { bg: 'var(--danger-100)', color: 'var(--danger-700)',  border: 'var(--danger-200)' },
+                na:      { bg: 'var(--gray-50)',    color: 'var(--text-muted)',  border: 'var(--border)' },
               }
               const sc = statusColors[item.status]
 
               return (
                 <div key={item.id} style={{
-                  borderTop: '1px solid #f1f5f9',
+                  borderTop: '1px solid var(--gray-100)',
                   borderLeft: `4px solid ${sc.border}`,
-                  background: item.status === 'si' ? '#fafffe' : item.status === 'no' ? '#fffafa' : 'var(--card-bg)',
+                  background: item.status === 'si' ? 'var(--success-50)' : item.status === 'no' ? 'var(--danger-50)' : 'var(--card-bg)',
                 }}>
                   {/* Item row */}
                   <div style={{ padding: '14px 20px', display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
                     {/* Order */}
-                    <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--gray-300)', paddingTop: '2px', flexShrink: 0, minWidth: '22px' }}>
+                    <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', paddingTop: '2px', flexShrink: 0, minWidth: '22px' }}>
                       {item.item_order}
                     </span>
 
                     {/* Content */}
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontWeight: 600, fontSize: '13px', color: 'var(--gray-700)', marginBottom: '3px' }}>
+                      <div style={{ fontWeight: 600, fontSize: '13px', color: 'var(--text-body)', marginBottom: '3px' }}>
                         {item.element}
                       </div>
                       <div style={{ fontSize: '13px', color: 'var(--text-muted)', lineHeight: 1.5 }}>
@@ -137,12 +138,12 @@ export default function PssrItemsChecklist({
                       </div>
                       {itemActions[item.id] && (
                         <Link href={`/projects/${projectId}/daily/action/${itemActions[item.id].id}`}
-                          style={{ display: 'inline-block', marginTop: 4, fontSize: '11px', fontWeight: 700, color: '#7c3aed', textDecoration: 'none' }}>
+                          style={{ display: 'inline-block', marginTop: 4, fontSize: '11px', fontWeight: 700, color: 'var(--violet-700)', textDecoration: 'none' }}>
                           ⚑ {t('review.itemAction', { number: itemActions[item.id].number, status: t(`review.itemActionStatus.${itemActions[item.id].status}`) })}
                         </Link>
                       )}
                       {item.notes_hint && (
-                        <div style={{ fontSize: '11px', color: 'var(--gray-400)', marginTop: '4px', fontStyle: 'italic' }}>
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', fontStyle: 'italic' }}>
                           💡 {item.notes_hint}
                         </div>
                       )}
@@ -153,7 +154,7 @@ export default function PssrItemsChecklist({
                           onClick={() => toggleItem(item.id)}
                           style={{
                             background: 'none', border: 'none', padding: '4px 0 0', cursor: 'pointer',
-                            fontSize: '11px', color: '#3b82f6', fontWeight: 600,
+                            fontSize: '11px', color: 'var(--primary-700)', fontWeight: 600,
                           }}
                         >
                           {isItemExpanded ? t('review.itemHideDetails') : t('review.itemShowDetails')}
@@ -219,7 +220,7 @@ export default function PssrItemsChecklist({
                               border: '1.5px solid',
                               borderColor: item.status === s ? sc.border : 'var(--border)',
                               background: item.status === s ? sc.bg : 'var(--card-bg)',
-                              color: item.status === s ? sc.color : 'var(--gray-400)',
+                              color: ink(item.status === s ? sc.color : 'var(--text-muted)'),
                               cursor: 'pointer', transition: 'all 0.1s',
                               textTransform: 'uppercase',
                             }}
@@ -233,7 +234,7 @@ export default function PssrItemsChecklist({
                     {readonly && (
                       <span style={{
                         padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 700,
-                        background: sc.bg, color: sc.color, border: `1px solid ${sc.border}`,
+                        background: sc.bg, color: ink(sc.color), border: `1px solid ${sc.border}`,
                         flexShrink: 0, textTransform: 'uppercase',
                       }}>
                         {item.status === 'si' ? t('review.yes') : item.status === 'no' ? t('review.no') : item.status === 'na' ? t('review.na') : '—'}

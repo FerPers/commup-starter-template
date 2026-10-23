@@ -36,7 +36,7 @@ export default function TagDocsTab({ tag, pidSignedUrl, pidDocId, projectId }: {
               }}>
                 {tag.pid_drawing}
               </div>
-              <div style={{ fontSize: '11px', color: 'var(--gray-400)', marginTop: '2px' }}>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
                 {pidSignedUrl ? t('docs.docAvailable') : t('docs.docNotUploaded')}
               </div>
             </div>
@@ -48,7 +48,7 @@ export default function TagDocsTab({ tag, pidSignedUrl, pidDocId, projectId }: {
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
-                  padding: '7px 16px', background: 'var(--success-50)', color: 'var(--success-600)',
+                  padding: '7px 16px', background: 'var(--success-50)', color: 'var(--success-700)',
                   border: '1px solid var(--success-200)', borderRadius: '7px',
                   fontSize: '12px', fontWeight: 500, textDecoration: 'none',
                 }}
@@ -67,7 +67,7 @@ export default function TagDocsTab({ tag, pidSignedUrl, pidDocId, projectId }: {
               <a
                 href={`/projects/${projectId}/documents/${pidDocId}/viewer?tag=${tag.id}`}
                 style={{
-                  padding: '7px 16px', background: 'var(--primary-50)', color: 'var(--primary-600)',
+                  padding: '7px 16px', background: 'var(--primary-50)', color: 'var(--primary-700)',
                   border: '1px solid var(--primary-200)', borderRadius: '7px',
                   fontSize: '12px', fontWeight: 500, textDecoration: 'none',
                 }}
@@ -92,7 +92,7 @@ function EmptyTab({ icon, title, message }: { icon: string; title: string; messa
     }}>
       <div style={{ fontSize: '32px', marginBottom: '12px', opacity: 0.25 }}>{icon}</div>
       <p style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-muted)', margin: '0 0 6px' }}>{title}</p>
-      <p style={{ fontSize: '13px', color: 'var(--gray-400)', margin: 0, maxWidth: '360px', lineHeight: '1.5' }}>{message}</p>
+      <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0, maxWidth: '360px', lineHeight: '1.5' }}>{message}</p>
     </div>
   )
 }

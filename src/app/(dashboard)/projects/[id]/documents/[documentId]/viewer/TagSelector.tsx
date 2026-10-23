@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useTransition } from 'react'
 import { useTranslations } from 'next-intl'
 import { searchPidTags } from '@/app/actions/tag-search'
 import type { TagItem } from './types'
+import { ink } from '@/lib/theme'
 
 // P1: búsqueda en el servidor por páginas de 30 (antes la página cargaba todos los tags del proyecto).
 
@@ -11,7 +12,7 @@ function DisciplineChip({ discipline }: { discipline: TagItem['discipline'] }) {
   return (
     <span style={{
       padding: '1px 5px', borderRadius: '4px', fontSize: '10px', fontWeight: 700,
-      background: `color-mix(in srgb, ${discipline.color} 10%, transparent)`, color: discipline.color, flexShrink: 0,
+      background: `color-mix(in srgb, ${discipline.color} 10%, transparent)`, color: ink(discipline.color), flexShrink: 0,
     }}>
       {discipline.code}
     </span>
@@ -72,7 +73,7 @@ export default function TagSelector({
           background: 'var(--card-bg)', border: '1px solid var(--border)',
           borderRadius: '7px', fontSize: '12px',
           display: 'flex', alignItems: 'center', minWidth: '200px',
-          color: value ? 'var(--text-strong)' : 'var(--gray-400)',
+          color: value ? 'var(--text-strong)' : 'var(--text-muted)',
         }}
       >
         <button
@@ -99,7 +100,7 @@ export default function TagSelector({
             type="button"
             onClick={() => { onChange(null); setQuery('') }}
             aria-label={t('viewer.tagClear')}
-            style={{ alignSelf: 'stretch', marginLeft: '6px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', fontSize: '14px', padding: '0 10px 0 0' }}
+            style={{ alignSelf: 'stretch', marginLeft: '6px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '14px', padding: '0 10px 0 0' }}
           >×</button>
         )}
       </div>
@@ -126,7 +127,7 @@ export default function TagSelector({
           </div>
           <div style={{ maxHeight: '240px', overflowY: 'auto' }} aria-busy={searching}>
             {hits.length === 0 ? (
-              <div style={{ padding: '12px', fontSize: '12px', color: 'var(--gray-400)', textAlign: 'center' }}>
+              <div style={{ padding: '12px', fontSize: '12px', color: 'var(--text-muted)', textAlign: 'center' }}>
                 {searching ? t('viewer.tagSearching') : t('viewer.tagSearchEmpty')}
               </div>
             ) : hits.map(item => (
@@ -151,7 +152,7 @@ export default function TagSelector({
             {hasMore && hits.length > 0 && (
               <button type="button" disabled={searching} onClick={() => load(query, hits.length)}
                 style={{ width: '100%', padding: '8px', border: 'none', borderTop: '1px solid var(--border)', background: 'transparent',
-                  color: 'var(--primary-600)', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
+                  color: 'var(--primary-700)', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
                 {searching ? t('viewer.tagSearching') : t('viewer.tagLoadMore')}
               </button>
             )}

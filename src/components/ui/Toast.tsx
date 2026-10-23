@@ -31,7 +31,7 @@ const VARIANT: Record<ToastVariant, { bg: string; fg: string; border: string }> 
   warning: { bg: 'var(--warning-50)', fg: 'var(--warning-700)', border: 'var(--warning-500)' },
   danger:  { bg: 'var(--danger-50)',  fg: 'var(--danger-700)',  border: 'var(--danger-500)' },
   info:    { bg: 'var(--primary-50)', fg: 'var(--primary-700)', border: 'var(--primary-500)' },
-  neutral: { bg: 'var(--gray-100)',   fg: 'var(--gray-700)',    border: 'var(--gray-400)' },
+  neutral: { bg: 'var(--gray-100)',   fg: 'var(--text-body)',   border: 'var(--gray-400)' },
 };
 
 export function ToastProvider({ children }: { children: ReactNode }) {

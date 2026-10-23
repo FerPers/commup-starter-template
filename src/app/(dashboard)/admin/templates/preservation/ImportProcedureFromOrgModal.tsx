@@ -101,26 +101,26 @@ export default function ImportProcedureFromOrgModal({ onClose }: { onClose: () =
 
           {error && (
             <div style={{
-              padding: '10px 14px', background: '#fee2e2', border: '1px solid #fca5a5',
-              borderRadius: 8, color: '#dc2626', fontSize: 13, marginBottom: 12,
+              padding: '10px 14px', background: 'var(--danger-100)', border: '1px solid var(--danger-300)',
+              borderRadius: 8, color: 'var(--danger-700)', fontSize: 13, marginBottom: 12,
             }}>{error}</div>
           )}
 
           {success && (
             <div style={{
-              padding: '10px 14px', background: '#ecfdf5', border: '1px solid #6ee7b7',
-              borderRadius: 8, color: '#059669', fontSize: 13, marginBottom: 12,
+              padding: '10px 14px', background: 'var(--success-50)', border: '1px solid var(--success-300)',
+              borderRadius: 8, color: 'var(--success-700)', fontSize: 13, marginBottom: 12,
             }}>{success}</div>
           )}
 
           {Array.from(byOrg.entries()).map(([orgId, list]) => (
             <div key={orgId} style={{ marginBottom: 20 }}>
-              <p style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 700, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <p style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 {list[0].sourceOrgName}
                 {list[0].sourceOrgIsCatalog && (
                   <span style={{
                     fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 999,
-                    background: '#ecfdf5', color: '#059669', border: '1px solid #6ee7b7',
+                    background: 'var(--success-50)', color: 'var(--success-700)', border: '1px solid var(--success-300)',
                     letterSpacing: '0.04em',
                   }}>
                     {ti('publicCatalog')}
@@ -150,7 +150,7 @@ export default function ImportProcedureFromOrgModal({ onClose }: { onClose: () =
                       disabled={isPending && importingId === p.id}
                       style={{
                         padding: '7px 14px', fontSize: 12, fontWeight: 500,
-                        background: '#3b82f6', color: 'white', border: 'none', borderRadius: 6,
+                        background: 'var(--primary-600)', color: 'white', border: 'none', borderRadius: 6,
                         cursor: isPending && importingId === p.id ? 'wait' : 'pointer',
                         opacity: isPending && importingId === p.id ? 0.6 : 1,
                         flexShrink: 0,

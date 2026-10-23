@@ -68,7 +68,7 @@ const th: React.CSSProperties = {
 }
 const td: React.CSSProperties = { padding: '10px 12px', borderBottom: '1px solid var(--border)', fontSize: 'var(--text-sm)', verticalAlign: 'top' }
 const mono: React.CSSProperties = { fontWeight: 700, color: 'var(--text-strong)', textDecoration: 'none', fontFamily: 'ui-monospace, monospace' }
-const dash = <span style={{ color: 'var(--gray-400)' }}>—</span>
+const dash = <span style={{ color: 'var(--text-muted)' }}>—</span>
 
 export default function DailyView({ project, tab, counts, actions, constraints, tqs, decisions, names, userId, canCreate, canCreateTq, canDecide }: Props) {
   const t = useTranslations('Daily')
@@ -236,7 +236,7 @@ export default function DailyView({ project, tab, counts, actions, constraints, 
                 {tqRows.map(x => (
                   <tr key={x.id}>
                     <td style={{ ...td, whiteSpace: 'nowrap' }}><Link href={href('tq', x.id)} style={mono}>{x.number}</Link></td>
-                    <td style={td}>{x.subject}{x.design_change && <span style={{ ...small, marginLeft: 6, color: '#b45309' }}>· {t('tq.designChange')}</span>}</td>
+                    <td style={td}>{x.subject}{x.design_change && <span style={{ ...small, marginLeft: 6, color: 'var(--warning-700)' }}>· {t('tq.designChange')}</span>}</td>
                     <td style={{ ...td, ...small }}>{t(`addressee.${x.addressed_to}`)}{x.addressed_to_name ? ` · ${x.addressed_to_name}` : ''}</td>
                     <td style={td}>{x.discipline ?? dash}</td>
                     <td style={td}>{x.system ?? dash}</td>

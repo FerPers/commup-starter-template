@@ -84,7 +84,7 @@ export default function HandoverView({ project, handover: h, isOpener, canReceiv
     <div style={{ padding: 32, maxWidth: 1100, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
       {dialog}
       <div>
-        <Link href={`/projects/${project.id}/daily/handovers`} style={{ fontSize: 'var(--text-sm)', color: 'var(--primary-600, #2563eb)', textDecoration: 'none', fontWeight: 500 }}>← {t('tab.handovers')}</Link>
+        <Link href={`/projects/${project.id}/daily/handovers`} style={{ fontSize: 'var(--text-sm)', color: 'var(--primary-700)', textDecoration: 'none', fontWeight: 500 }}>← {t('tab.handovers')}</Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginTop: 8 }}>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--text-strong)', margin: 0, fontFamily: 'ui-monospace, monospace' }}>{h.number}</h1>
           <Chip tone={TONE[h.status]}>{t(`handover.status.${h.status}`)}</Chip>

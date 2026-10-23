@@ -690,7 +690,7 @@ export default function PidViewer({
             <button type="button" onClick={undo} disabled={isPending} style={bigBtn}>{t('markups.undo')}</button>
             <button type="button" onClick={resetDrawing} disabled={!draft.length} style={{ ...bigBtn, opacity: draft.length ? 1 : 0.5 }}>{t('viewer.cancel')}</button>
             <button type="button" onClick={finishDraft} disabled={isPending || draft.length < 2}
-              style={{ ...bigBtn, minWidth: 160, border: 0, fontWeight: 700, background: draft.length >= 2 ? 'var(--primary-700)' : 'var(--gray-200)', color: draft.length >= 2 ? '#ffffff' : 'var(--gray-500)' }}>
+              style={{ ...bigBtn, minWidth: 160, border: 0, fontWeight: 700, background: draft.length >= 2 ? 'var(--solid-primary-700)' : 'var(--gray-200)', color: draft.length >= 2 ? '#ffffff' : 'var(--text-muted)' }}>
               {t('markups.finishSegment')}
             </button>
           </div>
@@ -878,7 +878,7 @@ export default function PidViewer({
                 onClick={() => handleDeleteHotspot(selectedHotspot.id)}
                 disabled={isPending}
                 style={{
-                  padding: '8px 16px', background: 'var(--danger-50)', color: 'var(--danger-600)',
+                  padding: '8px 16px', background: 'var(--danger-50)', color: 'var(--danger-700)',
                   border: '1px solid var(--danger-200)', borderRadius: '8px', fontSize: '12px', cursor: 'pointer', fontWeight: 500,
                 }}
               >

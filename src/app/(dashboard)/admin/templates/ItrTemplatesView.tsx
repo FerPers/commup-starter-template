@@ -10,6 +10,7 @@ import ImportFromOrgModal from './ImportFromOrgModal'
 import { listTranslationGaps, translateTemplateMissing } from '@/app/actions/itr-translations'
 import { useAskDialog } from '@/components/ui/AskDialog'
 import { DialogSurface } from '@/components/ui/dialog-a11y'
+import { alpha, ink, fill } from '@/lib/theme'
 import { useToast } from '@/components/ui/Toast'
 
 interface Discipline { id: string; code: string; name: string; color: string }
@@ -156,9 +157,9 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
                 style={{
                   padding: '6px 14px', borderRadius: '999px', fontSize: '12px', fontWeight: 500,
                   border: '1px solid', cursor: 'pointer',
-                  background: isActive ? d.color : `${d.color}12`,
-                  color: isActive ? 'white' : d.color,
-                  borderColor: `${d.color}40`,
+                  background: isActive ? fill(d.color) : alpha(d.color, 7),
+                  color: isActive ? 'white' : ink(d.color),
+                  borderColor: alpha(d.color, 25),
                 }}
               >
                 {d.code} ({count})
@@ -172,9 +173,9 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
             <button
               onClick={() => router.push('/admin/templates/backup')}
               style={{
-                padding: '9px 18px', background: '#fef3c7', color: '#a16207',
+                padding: '9px 18px', background: 'var(--warning-100)', color: 'var(--warning-700)',
                 borderRadius: '8px', fontSize: '13px', fontWeight: 500,
-                border: '1px solid #fde68a', cursor: 'pointer',
+                border: '1px solid var(--warning-200)', cursor: 'pointer',
               }}
               title={t('backupHint')}
             >
@@ -184,9 +185,9 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
               onClick={translateAllMissing}
               disabled={!!trProgress && trProgress.done < trProgress.total}
               style={{
-                padding: '9px 18px', background: 'var(--card-bg)', color: '#6d28d9',
+                padding: '9px 18px', background: 'var(--card-bg)', color: 'var(--violet-700)',
                 borderRadius: '8px', fontSize: '13px', fontWeight: 500,
-                border: '1px solid #ddd6fe', cursor: 'pointer',
+                border: '1px solid var(--violet-200)', cursor: 'pointer',
               }}
               title={t('tr.hint')}
             >
@@ -195,9 +196,9 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
             <button
               onClick={() => router.push('/admin/templates/matrix')}
               style={{
-                padding: '9px 18px', background: '#f5f3ff', color: '#6d28d9',
+                padding: '9px 18px', background: 'var(--violet-50)', color: 'var(--violet-700)',
                 borderRadius: '8px', fontSize: '13px', fontWeight: 500,
-                border: '1px solid #ddd6fe', cursor: 'pointer',
+                border: '1px solid var(--violet-200)', cursor: 'pointer',
               }}
               title={t('matrixHint')}
             >
@@ -206,9 +207,9 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
             <button
               onClick={() => setShowImportFromOrg(true)}
               style={{
-                padding: '9px 18px', background: '#eff6ff', color: '#2563eb',
+                padding: '9px 18px', background: 'var(--primary-50)', color: 'var(--primary-700)',
                 borderRadius: '8px', fontSize: '13px', fontWeight: 500,
-                border: '1px solid #bfdbfe', cursor: 'pointer',
+                border: '1px solid var(--primary-200)', cursor: 'pointer',
               }}
             >
               {t('importFromOrg')}
@@ -216,9 +217,9 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
             <button
               onClick={() => setShowBulkImport(true)}
               style={{
-                padding: '9px 18px', background: '#f0fdf4', color: '#16a34a',
+                padding: '9px 18px', background: 'var(--success-50)', color: 'var(--success-700)',
                 borderRadius: '8px', fontSize: '13px', fontWeight: 500,
-                border: '1px solid #bbf7d0', cursor: 'pointer',
+                border: '1px solid var(--success-200)', cursor: 'pointer',
               }}
             >
               {t('importCatalog')}
@@ -226,7 +227,7 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
             <button
               onClick={() => setShowModal(true)}
               style={{
-                padding: '9px 18px', background: '#3b82f6', color: 'white',
+                padding: '9px 18px', background: 'var(--primary-600)', color: 'white',
                 borderRadius: '8px', fontSize: '13px', fontWeight: 500,
                 border: 'none', cursor: 'pointer',
               }}
@@ -254,7 +255,7 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
             <button
               onClick={() => setShowModal(true)}
               style={{
-                padding: '10px 22px', background: '#3b82f6', color: 'white',
+                padding: '10px 22px', background: 'var(--primary-600)', color: 'white',
                 borderRadius: '8px', fontSize: '13px', fontWeight: 500, border: 'none', cursor: 'pointer',
               }}
             >
@@ -269,14 +270,14 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
         <div style={{ background: 'var(--card-bg)', borderRadius: '14px', border: '1px solid var(--border)', overflow: 'hidden' }}>
 
       {trProgress && (
-        <div style={{ padding: '12px 14px', background: '#faf5ff', border: '1px solid #ddd6fe', borderRadius: '8px', marginBottom: '14px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#5b21b6', fontWeight: 600, marginBottom: '6px' }}>
+        <div style={{ padding: '12px 14px', background: 'var(--accent-50)', border: '1px solid var(--violet-200)', borderRadius: '8px', marginBottom: '14px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'var(--violet-800)', fontWeight: 600, marginBottom: '6px' }}>
             <span>{trProgress.total > 0 && trProgress.done < trProgress.total ? 'Traduciendo…' : 'Traducción'}</span>
             {trProgress.total > 0 && <span>{trProgress.done} / {trProgress.total} plantillas · {trProgress.items} ítems</span>}
           </div>
           {trProgress.total > 0 && (
-            <div style={{ height: '6px', background: '#ede9fe', borderRadius: '3px', overflow: 'hidden' }}>
-              <div style={{ width: `${Math.round((trProgress.done / trProgress.total) * 100)}%`, height: '100%', background: '#7c3aed', transition: 'width .3s' }} />
+            <div style={{ height: '6px', background: 'var(--violet-100)', borderRadius: '3px', overflow: 'hidden' }}>
+              <div style={{ width: `${Math.round((trProgress.done / trProgress.total) * 100)}%`, height: '100%', background: 'var(--violet-600)', transition: 'width .3s' }} />
             </div>
           )}
           <div style={{ marginTop: '8px', fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'ui-monospace, monospace' }}>
@@ -352,7 +353,7 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
                   <span style={{
                     display: 'inline-flex', alignItems: 'center', gap: '5px',
                     padding: '3px 8px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
-                    background: `${disc.color}15`, color: disc.color, width: 'fit-content',
+                    background: alpha(disc.color, 8), color: ink(disc.color), width: 'fit-content',
                   }}>
                     {disc.code}
                   </span>
@@ -362,7 +363,7 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
                 {phase ? (
                   <span style={{
                     padding: '3px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 600,
-                    background: `${phase.color}18`, color: phase.color, width: 'fit-content',
+                    background: alpha(phase.color, 9), color: ink(phase.color), width: 'fit-content',
                   }}>
                     {phase.code}
                   </span>
@@ -382,7 +383,7 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
                   <span style={{
                     padding: '2px 8px', borderRadius: '999px', fontSize: '10px', fontWeight: 600,
                     background: tmpl.is_active ? '#10b98115' : '#94a3b815',
-                    color: tmpl.is_active ? '#10b981' : '#94a3b8',
+                    color: tmpl.is_active ? 'var(--success-700)' : 'var(--text-muted)',
                     border: `1px solid ${tmpl.is_active ? '#10b98130' : 'var(--border)'}`,
                   }}>
                     {tmpl.is_active ? t('status.active') : t('status.inactive')}
@@ -397,7 +398,7 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
                         justifyContent: 'center', borderRadius: '6px', border: 'none',
                         background: 'transparent', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '14px',
                       }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.12)'; (e.currentTarget as HTMLElement).style.color = 'var(--danger-500)' }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.12)'; (e.currentTarget as HTMLElement).style.color = 'var(--danger-700)' }}
                       onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text-muted)' }}
                     >
                       ✕
@@ -434,7 +435,7 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
               {/* Phase + Discipline row */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <label style={labelStyle}>
-                  {t('modal.labelPhase')} <span style={{ color: '#ef4444' }}>*</span>
+                  {t('modal.labelPhase')} <span style={{ color: 'var(--danger-700)' }}>*</span>
                   <select
                     value={form.phase_id}
                     onChange={e => setForm(f => ({ ...f, phase_id: e.target.value }))}
@@ -447,7 +448,7 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
                   </select>
                 </label>
                 <label style={labelStyle}>
-                  {t('modal.labelDiscipline')} <span style={{ color: '#ef4444' }}>*</span>
+                  {t('modal.labelDiscipline')} <span style={{ color: 'var(--danger-700)' }}>*</span>
                   <select
                     value={form.discipline_id}
                     onChange={e => setForm(f => ({ ...f, discipline_id: e.target.value }))}
@@ -463,7 +464,7 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
 
               {/* Code */}
               <label style={labelStyle}>
-                {t('modal.labelCode')} <span style={{ color: '#ef4444' }}>*</span>
+                {t('modal.labelCode')} <span style={{ color: 'var(--danger-700)' }}>*</span>
                 <input
                   value={form.code}
                   onChange={e => setForm(f => ({ ...f, code: e.target.value.toUpperCase() }))}
@@ -475,7 +476,7 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
 
               {/* Title */}
               <label style={labelStyle}>
-                {t('modal.labelTitle')} <span style={{ color: '#ef4444' }}>*</span>
+                {t('modal.labelTitle')} <span style={{ color: 'var(--danger-700)' }}>*</span>
                 <input
                   value={form.title}
                   onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
@@ -497,7 +498,7 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
             </div>
 
             {formError && (
-              <p style={{ fontSize: '13px', color: '#ef4444', margin: '16px 0 0', padding: '10px 14px', background: '#fee2e2', borderRadius: '8px' }}>
+              <p style={{ fontSize: '13px', color: 'var(--danger-700)', margin: '16px 0 0', padding: '10px 14px', background: 'var(--danger-100)', borderRadius: '8px' }}>
                 {formError}
               </p>
             )}
@@ -516,7 +517,7 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
                 onClick={handleCreate}
                 disabled={isPending}
                 style={{
-                  padding: '9px 20px', background: isPending ? '#93c5fd' : '#3b82f6', color: 'white',
+                  padding: '9px 20px', background: isPending ? 'var(--primary-300)' : 'var(--primary-600)', color: 'white',
                   borderRadius: '8px', fontSize: '13px', fontWeight: 500, border: 'none',
                   cursor: isPending ? 'not-allowed' : 'pointer',
                 }}

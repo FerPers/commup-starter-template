@@ -3,6 +3,7 @@
 
 import type { ItemPayload } from '@/app/actions/itr-templates'
 import type { ItrItemType } from '@/types/database'
+import { alpha } from '@/lib/theme'
 import type { Json } from '@/types/supabase.generated'
 
 // ── Types ──────────────────────────────────────────────────────
@@ -84,17 +85,17 @@ export const DEFAULT_ITEM: ItemFormValues = {
 // ── Item type catalog (labels se resuelven con i18n en cada consumidor) ──
 
 export const ITEM_TYPE_DEFS: ReadonlyArray<{ value: ItrItemType; labelKey: string; color: string }> = [
-  { value: 'checkbox',    labelKey: 'itemTypeCheckbox',    color: '#3b82f6' },
-  { value: 'yes_no',      labelKey: 'itemTypeYesNo',       color: '#10b981' },
-  { value: 'number',      labelKey: 'itemTypeNumber',      color: '#f59e0b' },
-  { value: 'continuity', labelKey: 'itemTypeContinuity', color: '#0891b2' },
-  { value: 'table',       labelKey: 'itemTypeTable',       color: '#0e7490' },
-  { value: 'measurement', labelKey: 'itemTypeMeasurement', color: '#8b5cf6' },
+  { value: 'checkbox',    labelKey: 'itemTypeCheckbox',    color: 'var(--primary-700)' },
+  { value: 'yes_no',      labelKey: 'itemTypeYesNo',       color: 'var(--success-700)' },
+  { value: 'number',      labelKey: 'itemTypeNumber',      color: 'var(--warning-700)' },
+  { value: 'continuity', labelKey: 'itemTypeContinuity', color: 'var(--cyan-700)' },
+  { value: 'table',       labelKey: 'itemTypeTable',       color: 'var(--cyan-700)' },
+  { value: 'measurement', labelKey: 'itemTypeMeasurement', color: 'var(--violet-700)' },
   { value: 'text',        labelKey: 'itemTypeText',        color: 'var(--text-muted)' },
-  { value: 'select',      labelKey: 'itemTypeSelect',      color: '#14b8a6' },
-  { value: 'photo',       labelKey: 'itemTypePhoto',       color: '#ec4899' },
-  { value: 'signature',   labelKey: 'itemTypeSignature',   color: '#6366f1' },
-  { value: 'date',        labelKey: 'itemTypeDate',        color: '#f97316' },
+  { value: 'select',      labelKey: 'itemTypeSelect',      color: 'var(--teal-500)' },
+  { value: 'photo',       labelKey: 'itemTypePhoto',       color: 'var(--pink-500)' },
+  { value: 'signature',   labelKey: 'itemTypeSignature',   color: 'var(--indigo-700)' },
+  { value: 'date',        labelKey: 'itemTypeDate',        color: 'var(--orange-700)' },
 ]
 
 // ── Helpers ────────────────────────────────────────────────────
@@ -130,7 +131,7 @@ export function dateStamp() {
 
 export const fieldLabel: React.CSSProperties = {
   display: 'flex', flexDirection: 'column', gap: '5px',
-  fontSize: '11px', fontWeight: 600, color: 'var(--gray-700)', textTransform: 'uppercase', letterSpacing: '0.04em',
+  fontSize: '11px', fontWeight: 600, color: 'var(--text-body)', textTransform: 'uppercase', letterSpacing: '0.04em',
 }
 
 export const fieldInput: React.CSSProperties = {
@@ -142,14 +143,14 @@ export const fieldInput: React.CSSProperties = {
 export function iconBtn(color: string): React.CSSProperties {
   return {
     width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-    borderRadius: '6px', border: 'none', background: `${color}12`, color,
+    borderRadius: '6px', border: 'none', background: alpha(color, 7), color,
     cursor: 'pointer', fontSize: '12px', fontWeight: 700, flexShrink: 0,
   }
 }
 
 export const miniBtn: React.CSSProperties = {
   width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-  borderRadius: '4px', border: 'none', background: 'transparent', color: 'var(--gray-400)',
+  borderRadius: '4px', border: 'none', background: 'transparent', color: 'var(--text-muted)',
   cursor: 'pointer', fontSize: '10px', padding: 0,
 }
 

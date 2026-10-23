@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 import { Search } from 'lucide-react'
 import { Button, Input, Select, EmptyState } from '@/components/ui'
+import { alpha, ink } from '@/lib/theme'
 
 const PAGE_SIZE = 50
 
@@ -23,10 +24,10 @@ type Certificate = {
 }
 
 const STATUS_STYLE = {
-  pending:   { color: 'var(--gray-500)',    bg: 'var(--gray-100)' },
-  in_review: { color: 'var(--primary-500)', bg: 'var(--primary-50)' },
-  issued:    { color: 'var(--success-500)', bg: 'var(--success-50)' },
-  rejected:  { color: 'var(--danger-500)',  bg: 'var(--danger-50)' },
+  pending:   { color: 'var(--text-muted)',  bg: 'var(--gray-100)' },
+  in_review: { color: 'var(--primary-700)', bg: 'var(--primary-50)' },
+  issued:    { color: 'var(--success-700)', bg: 'var(--success-50)' },
+  rejected:  { color: 'var(--danger-700)',  bg: 'var(--danger-50)' },
 } as const
 
 const GRID = '100px 130px 1fr 1fr 80px 100px 90px'
@@ -117,11 +118,11 @@ export default function CertificatesGlobal({
                 padding: '14px 16px', borderRadius: 'var(--radius-md)',
                 cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit',
                 background: active ? style.bg : 'var(--card-bg)',
-                border: `1px solid ${active ? `${style.color}40` : 'var(--border)'}`,
+                border: `1px solid ${active ? alpha(style.color, 25) : 'var(--border)'}`,
                 transition: 'background 0.15s, border-color 0.15s',
               }}
             >
-              <div style={{ fontSize: 22, fontWeight: 700, color: style.color }}>{count}</div>
+              <div style={{ fontSize: 22, fontWeight: 700, color: ink(style.color) }}>{count}</div>
               <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginTop: 2 }}>{summaryLabels[key]}</div>
             </button>
           )
@@ -157,7 +158,7 @@ export default function CertificatesGlobal({
             {tC('clearFilters')}
           </Button>
         )}
-        <span style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-400)', marginLeft: 'auto' }}>
+        <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginLeft: 'auto' }}>
           {t('filters.count', { filtered: filtered.length, total: certificates.length })}
         </span>
       </div>
@@ -196,7 +197,7 @@ export default function CertificatesGlobal({
                     <a
                       href={`/projects/${proj.id}/certificates`}
                       title={proj.name}
-                      style={{ fontSize: 10, fontWeight: 700, color: 'var(--primary-500)', background: 'var(--primary-50)', padding: '2px 7px', borderRadius: 'var(--radius-sm)', textDecoration: 'none', display: 'inline-block', maxWidth: 94, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                      style={{ fontSize: 10, fontWeight: 700, color: 'var(--primary-700)', background: 'var(--primary-50)', padding: '2px 7px', borderRadius: 'var(--radius-sm)', textDecoration: 'none', display: 'inline-block', maxWidth: 94, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                     >
                       {proj.code}
                     </a>
@@ -209,7 +210,7 @@ export default function CertificatesGlobal({
                 </div>
 
                 {/* Título */}
-                <div style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-700)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-body)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {cert.title}
                 </div>
 
@@ -226,7 +227,7 @@ export default function CertificatesGlobal({
                 {/* Fase */}
                 <div>
                   {phase && (
-                    <span style={{ padding: '2px 7px', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)', fontWeight: 700, background: `${phase.color}18`, color: phase.color }}>
+                    <span style={{ padding: '2px 7px', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)', fontWeight: 700, background: alpha(phase.color, 9), color: ink(phase.color) }}>
                       {phase.code}
                     </span>
                   )}
@@ -238,7 +239,7 @@ export default function CertificatesGlobal({
                 </div>
 
                 {/* Estado */}
-                <span style={{ padding: '3px 8px', borderRadius: 'var(--radius-sm)', fontSize: 10, fontWeight: 600, background: st.bg, color: st.color, whiteSpace: 'nowrap' }}>
+                <span style={{ padding: '3px 8px', borderRadius: 'var(--radius-sm)', fontSize: 10, fontWeight: 600, background: st.bg, color: ink(st.color), whiteSpace: 'nowrap' }}>
                   {statusLabels[cert.status]}
                 </span>
               </div>

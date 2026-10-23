@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl'
 import { Card, EmptyState } from '@/components/ui'
+import { alpha, ink } from '@/lib/theme'
 
 const PROJECT_STATUS_COLOR: Record<string, string> = {
   planning:  '#6366f1',
@@ -89,10 +90,10 @@ export default function KpiGlobal({ projectKpis }: { projectKpis: ProjectKpi[] }
           </div>
 
           <div style={{ display: 'flex', gap: 28, flexWrap: 'wrap' }}>
-            <Stat value={totalCatA} color="var(--danger-500)"  label={t('org.catA')} />
-            <Stat value={totalCatB} color="var(--warning-500)" label={t('org.catB')} />
-            <Stat value={totalCerts} color="var(--success-500)" label={t('org.issuedCerts')} />
-            <Stat value={projectKpis.filter(p => p.status === 'active').length} color="var(--primary-500)" label={t('org.activeProjects')} />
+            <Stat value={totalCatA} color='var(--danger-700)'  label={t('org.catA')} />
+            <Stat value={totalCatB} color='var(--warning-700)' label={t('org.catB')} />
+            <Stat value={totalCerts} color='var(--success-700)' label={t('org.issuedCerts')} />
+            <Stat value={projectKpis.filter(p => p.status === 'active').length} color='var(--primary-700)' label={t('org.activeProjects')} />
           </div>
         </div>
       </Card>
@@ -121,7 +122,7 @@ export default function KpiGlobal({ projectKpis }: { projectKpis: ProjectKpi[] }
                       width: 42, height: 42, borderRadius: 'var(--radius-md)',
                       background: 'var(--primary-50)', border: '1px solid var(--primary-200)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 10, fontWeight: 700, color: 'var(--primary-500)', flexShrink: 0,
+                      fontSize: 10, fontWeight: 700, color: 'var(--primary-700)', flexShrink: 0,
                     }}>
                       {p.code.slice(0, 6)}
                     </div>
@@ -135,7 +136,7 @@ export default function KpiGlobal({ projectKpis }: { projectKpis: ProjectKpi[] }
                   <span style={{
                     padding: '3px 9px', borderRadius: 'var(--radius-pill)',
                     fontSize: 'var(--text-xs)', fontWeight: 600,
-                    background: `${stColor}18`, color: stColor, border: `1px solid ${stColor}30`,
+                    background: alpha(stColor, 9), color: ink(stColor), border: `1px solid ${alpha(stColor, 19)}`,
                     whiteSpace: 'nowrap', flexShrink: 0,
                   }}>
                     {statusLabels[p.status] ?? p.status}
@@ -148,9 +149,9 @@ export default function KpiGlobal({ projectKpis }: { projectKpis: ProjectKpi[] }
                 {/* Stats row */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
                   <StatCell value={p.totalItrs}    color="var(--text-strong)"   bg="var(--gray-50)"    label={t('card.totalItrs')} />
-                  <StatCell value={p.approvedItrs} color="var(--success-500)"   bg="var(--success-50)" label={t('card.approved')} />
-                  <StatCell value={p.openCatA}     color={p.openCatA > 0 ? 'var(--danger-500)' : 'var(--text-muted)'}  bg={p.openCatA > 0 ? 'var(--danger-50)'  : 'var(--gray-50)'} label={t('card.catA')} />
-                  <StatCell value={p.openCatB}     color={p.openCatB > 0 ? 'var(--warning-500)' : 'var(--text-muted)'} bg={p.openCatB > 0 ? 'var(--warning-50)' : 'var(--gray-50)'} label={t('card.catB')} />
+                  <StatCell value={p.approvedItrs} color='var(--success-700)'   bg="var(--success-50)" label={t('card.approved')} />
+                  <StatCell value={p.openCatA}     color={p.openCatA > 0 ? 'var(--danger-700)' : 'var(--text-muted)'}  bg={p.openCatA > 0 ? 'var(--danger-50)'  : 'var(--gray-50)'} label={t('card.catA')} />
+                  <StatCell value={p.openCatB}     color={p.openCatB > 0 ? 'var(--warning-700)' : 'var(--text-muted)'} bg={p.openCatB > 0 ? 'var(--warning-50)' : 'var(--gray-50)'} label={t('card.catB')} />
                 </div>
 
                 {/* Footer */}
@@ -162,7 +163,7 @@ export default function KpiGlobal({ projectKpis }: { projectKpis: ProjectKpi[] }
                   </span>
                   <a
                     href={`/projects/${p.id}/kpis`}
-                    style={{ fontSize: 'var(--text-xs)', color: 'var(--primary-500)', textDecoration: 'none', fontWeight: 500 }}
+                    style={{ fontSize: 'var(--text-xs)', color: 'var(--primary-700)', textDecoration: 'none', fontWeight: 500 }}
                   >
                     {t('card.viewDetail')}
                   </a>

@@ -3,9 +3,9 @@ import type { DependencyKind, SystemType } from '@/lib/systems/dependencies'
 // Piezas visuales compartidas por la lista de sistemas y la ficha (sin dependencias pesadas).
 
 export const TYPE_STYLE: Record<SystemType, { bg: string; fg: string }> = {
-  process: { bg: '#eff6ff', fg: '#1d4ed8' },
-  utility: { bg: '#f0fdf4', fg: '#15803d' },
-  safety:  { bg: '#fef2f2', fg: '#b91c1c' },
+  process: { bg: 'var(--primary-50)', fg: 'var(--primary-700)' },
+  utility: { bg: 'var(--success-50)', fg: 'var(--success-700)' },
+  safety:  { bg: 'var(--danger-50)',  fg: 'var(--danger-700)' },
 }
 export const KIND_LETTER: Record<DependencyKind, string> = { utility: 'U', process: 'P', other: 'O' }
 

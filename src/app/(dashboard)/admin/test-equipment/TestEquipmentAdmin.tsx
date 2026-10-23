@@ -48,7 +48,7 @@ const th: React.CSSProperties = { textAlign: 'left', padding: '10px 12px', ...la
 const td: React.CSSProperties = { padding: '10px 12px', borderBottom: '1px solid var(--border)', fontSize: 'var(--text-sm)', verticalAlign: 'top' }
 const btn = (primary: boolean, disabled = false): React.CSSProperties => ({
   padding: '7px 14px', borderRadius: 8, fontSize: 'var(--text-sm)', fontWeight: 600, cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.5 : 1,
-  border: primary ? 'none' : '1px solid var(--border)', background: primary ? 'var(--primary-500)' : 'var(--card-bg)', color: primary ? '#fff' : 'var(--text-strong)',
+  border: primary ? 'none' : '1px solid var(--border)', background: primary ? 'var(--primary-600)' : 'var(--card-bg)', color: primary ? '#fff' : 'var(--text-strong)',
 })
 
 type Form = {
@@ -137,12 +137,12 @@ export default function TestEquipmentAdmin({ orgId, rows, canDelete, companies =
         {kpis.map(k => (
           <div key={k.key} style={{ ...card, padding: 16 }}>
             <div style={label}>{t(`kpi.${k.key}`)}</div>
-            <div style={{ fontSize: 26, fontWeight: 700, color: k.key === 'expired' && k.n ? 'var(--danger-700)' : k.key === 'expiring' && k.n ? '#b45309' : 'var(--text-strong)', marginTop: 4 }}>{k.n}</div>
+            <div style={{ fontSize: 26, fontWeight: 700, color: k.key === 'expired' && k.n ? 'var(--danger-700)' : k.key === 'expiring' && k.n ? 'var(--warning-700)' : 'var(--text-strong)', marginTop: 4 }}>{k.n}</div>
           </div>
         ))}
       </div>
 
-      {error && <div role="alert" style={{ padding: '10px 14px', background: 'var(--danger-50)', border: '1px solid #fecaca', borderRadius: 8, color: 'var(--danger-700)', fontSize: 'var(--text-sm)' }}>{error}</div>}
+      {error && <div role="alert" style={{ padding: '10px 14px', background: 'var(--danger-50)', border: '1px solid var(--danger-200)', borderRadius: 8, color: 'var(--danger-700)', fontSize: 'var(--text-sm)' }}>{error}</div>}
 
       {f && (
         <section style={{ ...card, display: 'flex', flexDirection: 'column', gap: 12 }} aria-label={f.id ? t('edit') : t('new')}>
@@ -203,7 +203,7 @@ export default function TestEquipmentAdmin({ orgId, rows, canDelete, companies =
                   {r.certificate_number}
                   <div>
                     {r.certificate_path
-                      ? <button type="button" onClick={() => openCert(r.certificate_path!)} style={{ background: 'none', border: 'none', padding: 0, color: 'var(--primary-600, #2563eb)', cursor: 'pointer', fontSize: 'var(--text-xs)' }}>{t('viewCert')}</button>
+                      ? <button type="button" onClick={() => openCert(r.certificate_path!)} style={{ background: 'none', border: 'none', padding: 0, color: 'var(--primary-700)', cursor: 'pointer', fontSize: 'var(--text-xs)' }}>{t('viewCert')}</button>
                       : <span style={{ ...small, fontSize: 'var(--text-xs)' }}>{t('noCert')}</span>}
                   </div>
                 </td>

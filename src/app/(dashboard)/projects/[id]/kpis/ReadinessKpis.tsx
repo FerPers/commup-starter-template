@@ -82,7 +82,7 @@ export default function ReadinessKpis({ projectId, livePct, liveGates, snapshots
     <section style={{ padding: '0 32px 32px', display: 'flex', flexDirection: 'column', gap: 14 }} aria-labelledby="readiness-kpis">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
         <h2 id="readiness-kpis" style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>{t('title')}</h2>
-        <Link href={`/projects/${projectId}/planning/lookahead`} style={{ fontSize: 'var(--text-sm)', color: 'var(--primary-600, #2563eb)', textDecoration: 'none', fontWeight: 600 }}>{t('lookahead')}</Link>
+        <Link href={`/projects/${projectId}/planning/lookahead`} style={{ fontSize: 'var(--text-sm)', color: 'var(--primary-700)', textDecoration: 'none', fontWeight: 600 }}>{t('lookahead')}</Link>
       </div>
       <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', margin: 0 }}>
         {last ? t('asOf', { date: last.snapshot_date }) : t('noSnapshot')} {t('later')}
@@ -107,8 +107,8 @@ export default function ReadinessKpis({ projectId, livePct, liveGates, snapshots
               <XAxis dataKey="date" tick={{ fontSize: 11 }} />
               <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} unit="%" />
               <Tooltip formatter={(v, name) => [`${String(v)} %`, name === 'plan' ? t('plan') : t('weighted')]} />
-              <Line type="monotone" dataKey="pct" stroke="var(--primary-500, #2563eb)" strokeWidth={2} dot={false} connectNulls />
-              {hasPlan && <Line type="stepAfter" dataKey="plan" stroke="var(--text-muted, #64748b)" strokeDasharray="5 4" strokeWidth={1.5} dot={false} connectNulls />}
+              <Line type="monotone" dataKey="pct" stroke="var(--primary-500)" strokeWidth={2} dot={false} connectNulls />
+              {hasPlan && <Line type="stepAfter" dataKey="plan" stroke="var(--text-muted, var(--gray-500))" strokeDasharray="5 4" strokeWidth={1.5} dot={false} connectNulls />}
             </LineChart>
           </ResponsiveContainer>
         )}

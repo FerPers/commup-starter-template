@@ -48,7 +48,7 @@ const th: React.CSSProperties = {
 const td: React.CSSProperties = { padding: '10px 12px', borderBottom: '1px solid var(--border)', fontSize: 'var(--text-sm)', verticalAlign: 'top' }
 const tab = (active: boolean): React.CSSProperties => ({
   padding: '7px 14px', borderRadius: 8, fontSize: 'var(--text-sm)', fontWeight: 600, cursor: 'pointer',
-  border: '1px solid var(--border)', background: active ? 'var(--primary-500)' : 'var(--card-bg)', color: active ? '#fff' : 'var(--text-strong)',
+  border: '1px solid var(--border)', background: active ? 'var(--primary-600)' : 'var(--card-bg)', color: active ? '#fff' : 'var(--text-strong)',
 })
 
 export default function SystemsView({ project, systems, edges, canEdit }: Props) {
@@ -84,7 +84,7 @@ export default function SystemsView({ project, systems, edges, canEdit }: Props)
   return (
     <div style={{ padding: 32, maxWidth: 1400, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div>
-        <Link href={`/projects/${project.id}`} style={{ ...small, textDecoration: 'none', color: 'var(--primary-600, #2563eb)', fontWeight: 500 }}>← {project.code} · {project.name}</Link>
+        <Link href={`/projects/${project.id}`} style={{ ...small, textDecoration: 'none', color: 'var(--primary-700)', fontWeight: 500 }}>← {project.code} · {project.name}</Link>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 12, flexWrap: 'wrap', marginTop: 8 }}>
           <div>
             <h1 style={{ fontSize: 28, fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>{t('title')}</h1>
@@ -142,7 +142,7 @@ export default function SystemsView({ project, systems, edges, canEdit }: Props)
       {systems.length === 0 ? (
         <div style={{ ...card, ...small, padding: 32, textAlign: 'center' }}>
           {t('empty')}{' '}
-          <Link href={`/projects/${project.id}/import`} style={{ color: 'var(--primary-600, #2563eb)' }}>{t('emptyLink')}</Link>
+          <Link href={`/projects/${project.id}/import`} style={{ color: 'var(--primary-700)' }}>{t('emptyLink')}</Link>
         </div>
       ) : view === 'list' ? (
         <div style={{ ...card, overflowX: 'auto' }}>
@@ -168,12 +168,12 @@ export default function SystemsView({ project, systems, edges, canEdit }: Props)
                     <td style={td}>
                       <Link href={`/projects/${project.id}/systems/${s.id}`} style={{ fontWeight: 600, color: 'var(--text-strong)', textDecoration: 'none' }}>{s.code}</Link>
                       {s.name !== s.code && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>{s.name}</div>}
-                      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--gray-400)' }}>{t('subsystems', { count: s.subsystems })}</div>
+                      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>{t('subsystems', { count: s.subsystems })}</div>
                     </td>
-                    <td style={td}>{s.system_type ? <TypeChip type={s.system_type} label={t(`type.${s.system_type}`)} /> : <span style={{ color: 'var(--gray-400)' }}>—</span>}</td>
-                    <td style={{ ...td, fontWeight: 600 }}>{s.priority ? `P${s.priority}` : <span style={{ color: 'var(--gray-400)' }}>—</span>}</td>
+                    <td style={td}>{s.system_type ? <TypeChip type={s.system_type} label={t(`type.${s.system_type}`)} /> : <span style={{ color: 'var(--text-muted)' }}>—</span>}</td>
+                    <td style={{ ...td, fontWeight: 600 }}>{s.priority ? `P${s.priority}` : <span style={{ color: 'var(--text-muted)' }}>—</span>}</td>
                     <td style={td}>
-                      {providers.length === 0 ? <span style={{ color: 'var(--gray-400)' }}>—</span> : (
+                      {providers.length === 0 ? <span style={{ color: 'var(--text-muted)' }}>—</span> : (
                         <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                           {providers.map(e => (
                             <span key={e.id} title={t('edgeTitle', { required: e.required, blocked: e.blocked })}
@@ -186,10 +186,10 @@ export default function SystemsView({ project, systems, edges, canEdit }: Props)
                     </td>
                     <td style={td}>
                       {enables > 0
-                        ? <span style={{ fontWeight: 600, color: '#15803d' }}>{t('enablesCount', { count: enables })}</span>
-                        : <span style={{ color: 'var(--gray-400)' }}>—</span>}
+                        ? <span style={{ fontWeight: 600, color: 'var(--success-700)' }}>{t('enablesCount', { count: enables })}</span>
+                        : <span style={{ color: 'var(--text-muted)' }}>—</span>}
                     </td>
-                    <td style={td}>{s.frozen ? <span style={{ fontWeight: 600, color: '#1d4ed8' }}>🔒 {t('frozen')}</span> : <span style={{ color: 'var(--gray-400)' }}>{t('open')}</span>}</td>
+                    <td style={td}>{s.frozen ? <span style={{ fontWeight: 600, color: 'var(--primary-700)' }}>🔒 {t('frozen')}</span> : <span style={{ color: 'var(--text-muted)' }}>{t('open')}</span>}</td>
                   </tr>
                 )
               })}
@@ -247,7 +247,7 @@ function DependencyMatrix({ projectId, systems, edges }: { projectId: string; sy
                   <td key={c.id} style={{ ...td, textAlign: 'center', minWidth: 64 }}
                     title={es.map(e => `${t(`kind.${e.kind}`)}: ${t('edgeTitle', { required: e.required, blocked: e.blocked })}`).join('\n') || undefined}>
                     {es.map(e => (
-                      <div key={e.id} style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: e.kind === 'utility' ? '#15803d' : e.kind === 'process' ? '#1d4ed8' : 'var(--text-muted)' }}>
+                      <div key={e.id} style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: e.kind === 'utility' ? 'var(--success-700)' : e.kind === 'process' ? 'var(--primary-700)' : 'var(--text-muted)' }}>
                         {KIND_LETTER[e.kind]} <span style={{ fontWeight: 500, color: 'var(--text-muted)' }}>{e.required}→{e.blocked}</span>
                       </div>
                     ))}

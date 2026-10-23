@@ -9,7 +9,7 @@ import AddToWorkPlanModal, { type ModalItr } from '@/components/AddToWorkPlanMod
 import type { TagItr, ItrTemplate, OrgMember } from './TagDetail'
 import { ITR_STATUS_COLORS } from '@/lib/constants/status-colors'
 import { assignmentIssue, normalizeRequired, requiredForTemplate } from '@/lib/itr/signatures'
-import { ink } from '@/lib/theme'
+import { ink, alpha } from '@/lib/theme'
 import { DialogSurface, useAskDialog, useToast } from '@/components/ui'
 
 // ── Status config ────────────────────────────────────────────────────
@@ -151,7 +151,7 @@ export default function TagItrTab({
           <div style={{ display: 'flex', gap: '8px' }}>
             <button
               onClick={() => setShowAssign(true)}
-              style={{ padding: '8px 16px', background: 'var(--primary-500)', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
+              style={{ padding: '8px 16px', background: 'var(--primary-600)', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
             >
               + {t('assign')}
             </button>
@@ -177,7 +177,7 @@ export default function TagItrTab({
               >
                 {/* Phase badge */}
                 {phase && (
-                  <span style={{ padding: '3px 9px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, background: `${phase.color}18`, color: ink(phase.color), whiteSpace: 'nowrap' }}>
+                  <span style={{ padding: '3px 9px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, background: alpha(phase.color, 9), color: ink(phase.color), whiteSpace: 'nowrap' }}>
                     {phase.code}
                   </span>
                 )}
@@ -196,14 +196,14 @@ export default function TagItrTab({
 
                 {/* Progress bar */}
                 <div style={{ width: '80px' }}>
-                  <div style={{ fontSize: '10px', color: 'var(--gray-400)', marginBottom: '3px', textAlign: 'right' }}>{itr.progress_pct}%</div>
+                  <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginBottom: '3px', textAlign: 'right' }}>{itr.progress_pct}%</div>
                   <div style={{ height: '5px', background: 'var(--gray-100)', borderRadius: '3px', overflow: 'hidden' }}>
                     <div style={{ height: '100%', width: `${itr.progress_pct}%`, background: itr.progress_pct >= 100 ? 'var(--success-500)' : 'var(--primary-500)', borderRadius: '3px', transition: 'width 0.3s' }} />
                   </div>
                 </div>
 
                 {/* Status pill */}
-                <span style={{ padding: '3px 9px', borderRadius: '6px', fontSize: '11px', fontWeight: 600, background: st.bg, color: st.color, whiteSpace: 'nowrap' }}>
+                <span style={{ padding: '3px 9px', borderRadius: '6px', fontSize: '11px', fontWeight: 600, background: st.bg, color: ink(st.color), whiteSpace: 'nowrap' }}>
                   {stLabel}
                 </span>
 
@@ -212,7 +212,7 @@ export default function TagItrTab({
                   {normalizeRequired(itr.required_signatures).map(role => {
                     const signed = itr.itr_signatures.some(s => s.role === role)
                     return (
-                      <span key={role} style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', background: signed ? 'var(--success-50)' : 'var(--gray-50)', color: signed ? 'var(--success-500)' : 'var(--gray-300)', border: `1px solid ${signed ? 'var(--success-200)' : 'var(--border)'}`, fontWeight: 600 }}>
+                      <span key={role} style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', background: signed ? 'var(--success-50)' : 'var(--gray-50)', color: signed ? 'var(--success-700)' : 'var(--text-muted)', border: `1px solid ${signed ? 'var(--success-200)' : 'var(--border)'}`, fontWeight: 600 }}>
                         {(SIGN_ROLES as readonly string[]).includes(role) ? t(`sign.${role as SignRoleKey}`) : role}
                       </span>
                     )
@@ -230,7 +230,7 @@ export default function TagItrTab({
                 <div style={{ display: 'flex', gap: '6px' }}>
                   <a
                     href={`/projects/${projectId}/tags/${tagId}/itrs/${itr.id}`}
-                    style={{ padding: '6px 12px', background: 'var(--gray-50)', border: '1px solid var(--border)', borderRadius: '6px', fontSize: '12px', color: 'var(--gray-700)', textDecoration: 'none', fontWeight: 500, whiteSpace: 'nowrap' }}
+                    style={{ padding: '6px 12px', background: 'var(--gray-50)', border: '1px solid var(--border)', borderRadius: '6px', fontSize: '12px', color: 'var(--text-body)', textDecoration: 'none', fontWeight: 500, whiteSpace: 'nowrap' }}
                   >
                     {t('open')} →
                   </a>
@@ -242,7 +242,7 @@ export default function TagItrTab({
                         tagNumber: tagNumber,
                         defaultAssignedTo: executor?.user_id,
                       })}
-                      style={{ padding: '6px 10px', background: 'var(--success-50)', border: '1px solid var(--success-200)', borderRadius: '6px', fontSize: '11px', color: 'var(--success-600)', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                      style={{ padding: '6px 10px', background: 'var(--success-50)', border: '1px solid var(--success-200)', borderRadius: '6px', fontSize: '11px', color: 'var(--success-700)', cursor: 'pointer', whiteSpace: 'nowrap' }}
                       title={t('addToPlan')}
                     >
                       + {t('plan')}
@@ -252,7 +252,7 @@ export default function TagItrTab({
                     <button
                       onClick={() => handleDelete(itr.id)}
                       disabled={isPending}
-                      style={{ padding: '6px 10px', background: 'var(--card-bg)', border: '1px solid var(--danger-200)', borderRadius: '6px', fontSize: '12px', color: 'var(--danger-500)', cursor: 'pointer' }}
+                      style={{ padding: '6px 10px', background: 'var(--card-bg)', border: '1px solid var(--danger-200)', borderRadius: '6px', fontSize: '12px', color: 'var(--danger-700)', cursor: 'pointer' }}
                       aria-label={t('delete')}
                     >
                       ✕
@@ -286,7 +286,7 @@ export default function TagItrTab({
           <DialogSurface onClose={() => setShowAssign(false)} labelledBy={assignTitleId} style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '480px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '22px' }}>
               <h2 id={assignTitleId} style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>{t('assign')}</h2>
-              <button onClick={() => setShowAssign(false)} aria-label={t('close')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', fontSize: '18px' }}>✕</button>
+              <button onClick={() => setShowAssign(false)} aria-label={t('close')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '18px' }}>✕</button>
             </div>
 
             {templates.length === 0 ? (
@@ -415,12 +415,12 @@ export default function TagItrTab({
                 )}
 
                 {assignError && (
-                  <p style={{ fontSize: '12px', color: 'var(--danger-500)', padding: '8px 12px', background: 'var(--danger-100)', borderRadius: '6px', margin: 0 }}>
+                  <p style={{ fontSize: '12px', color: 'var(--danger-700)', padding: '8px 12px', background: 'var(--danger-100)', borderRadius: '6px', margin: 0 }}>
                     {assignError}
                   </p>
                 )}
 
-                <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', paddingTop: '8px', borderTop: '1px solid #f1f5f9' }}>
+                <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', paddingTop: '8px', borderTop: '1px solid var(--gray-100)' }}>
                   <button
                     onClick={() => setShowAssign(false)}
                     style={{ padding: '9px 16px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)', cursor: 'pointer' }}
@@ -430,7 +430,7 @@ export default function TagItrTab({
                   <button
                     onClick={handleAssign}
                     disabled={!selectedTemplate || !selectedInspector || !!formError || isPending}
-                    style={{ padding: '9px 20px', background: !selectedTemplate || !selectedInspector || formError || isPending ? 'var(--primary-300)' : 'var(--primary-500)', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: !selectedTemplate || !selectedInspector || formError || isPending ? 'not-allowed' : 'pointer' }}
+                    style={{ padding: '9px 20px', background: !selectedTemplate || !selectedInspector || formError || isPending ? 'var(--primary-300)' : 'var(--primary-600)', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: !selectedTemplate || !selectedInspector || formError || isPending ? 'not-allowed' : 'pointer' }}
                   >
                     {isPending ? t('assigning') : `${t('assignShort')} →`}
                   </button>
@@ -445,7 +445,7 @@ export default function TagItrTab({
 }
 
 const labelStyle: React.CSSProperties = {
-  display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', marginBottom: '6px',
+  display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-body)', marginBottom: '6px',
 }
 const selStyle: React.CSSProperties = {
   width: '100%', padding: '9px 12px', border: '1px solid var(--border)', borderRadius: '8px',

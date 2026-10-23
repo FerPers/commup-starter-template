@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import { AUDIT_ENTITY_TYPES } from '@/lib/constants/domain-events'
 import { pressable } from '@/lib/a11y/pressable'
+import { alpha, ink } from '@/lib/theme'
 
 type LogEntry = {
   id: string
@@ -181,7 +182,7 @@ export default function AuditLogView({
         </div>
 
         {logs.length === 0 ? (
-          <div style={{ padding: '40px', textAlign: 'center', color: 'var(--gray-400)', fontSize: '14px' }}>
+          <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '14px' }}>
             {t('empty')}
           </div>
         ) : (
@@ -194,7 +195,7 @@ export default function AuditLogView({
             })
 
             return (
-              <div key={log.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+              <div key={log.id} style={{ borderBottom: '1px solid var(--gray-100)' }}>
                 <div
                   style={{
                     display: 'grid', gridTemplateColumns: '180px 1fr 120px 120px 36px',
@@ -218,13 +219,13 @@ export default function AuditLogView({
                   <span>
                     <span style={{
                       padding: '2px 8px', borderRadius: '999px',
-                      background: `${actionColor}18`, color: actionColor,
-                      fontSize: '11px', fontWeight: 600, border: `1px solid ${actionColor}30`,
+                      background: alpha(actionColor, 9), color: ink(actionColor),
+                      fontSize: '11px', fontWeight: 600, border: `1px solid ${alpha(actionColor, 19)}`,
                     }}>
                       {log.action}
                     </span>
                   </span>
-                  <span style={{ textAlign: 'center', color: 'var(--gray-400)', fontSize: '14px' }}>
+                  <span style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '14px' }}>
                     {log.payload ? (isExpanded ? '▲' : '▼') : ''}
                   </span>
                 </div>
@@ -289,7 +290,7 @@ const inputStyle: React.CSSProperties = {
 }
 
 const btnPrimary: React.CSSProperties = {
-  padding: '7px 14px', background: '#3b82f6', color: '#fff',
+  padding: '7px 14px', background: 'var(--primary-600)', color: '#fff',
   border: 'none', borderRadius: '7px', fontSize: '12px', fontWeight: 500, cursor: 'pointer',
 }
 

@@ -110,7 +110,7 @@ export default async function SkylinePage({ params, searchParams }: {
                 {sky.columns.map(c => (
                   <div key={c.start} aria-current={c.isCurrent ? 'date' : undefined} style={{
                     padding: '6px 0 10px', textAlign: 'center', fontSize: 'var(--text-xs)',
-                    fontWeight: c.isCurrent ? 700 : 400, color: c.isCurrent ? 'var(--primary)' : 'var(--text-muted)',
+                    fontWeight: c.isCurrent ? 700 : 400, color: c.isCurrent ? 'var(--primary-700)' : 'var(--text-muted)',
                   }}>{label(c.start)}</div>
                 ))}
               </div>
@@ -134,7 +134,7 @@ export default async function SkylinePage({ params, searchParams }: {
 }
 
 const TONE: Record<SkylineTone, React.CSSProperties> = {
-  approved: { background: 'var(--success-700)', color: '#ffffff', border: '1px solid var(--success-700)' },
+  approved: { background: 'var(--solid-success-700)', color: '#ffffff', border: '1px solid var(--solid-success-700)' },
   // Fondos 50–200: el tema contraste oscurece solo 300–900 (texto), así que el fondo claro + texto 800/900 lee en los tres.
   mid: { background: 'var(--warning-200)', color: 'var(--warning-900)', border: '1px solid var(--warning-400)' },
   low: { background: 'var(--danger-50)', color: 'var(--danger-800)', border: '1px solid var(--danger-200)' },

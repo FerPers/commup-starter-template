@@ -110,8 +110,8 @@ export default function TransferView({ project, transfer: tr, pkg, names, canSig
       <section style={{ ...card, display: 'flex', flexDirection: 'column', gap: 10 }}>
         <h2 style={{ margin: 0, fontSize: 16 }}>{t('ops.signatures')}</h2>
         {mustAck && (
-          <fieldset style={{ border: '1px solid #fde68a', background: '#fffbeb', borderRadius: 8, padding: '10px 12px', margin: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <legend style={{ ...small, fontWeight: 700, color: '#b45309', padding: '0 4px' }}>{t('ops.ackTitle')}</legend>
+          <fieldset style={{ border: '1px solid var(--warning-200)', background: 'var(--warning-50)', borderRadius: 8, padding: '10px 12px', margin: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <legend style={{ ...small, fontWeight: 700, color: 'var(--warning-700)', padding: '0 4px' }}>{t('ops.ackTitle')}</legend>
             {tr.exceptions.map(e => (
               <label key={e.key} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 'var(--text-sm)' }}>
                 <input type="checkbox" checked={ack.has(e.key)} disabled={isPending} style={{ marginTop: 3 }}
@@ -126,7 +126,7 @@ export default function TransferView({ project, transfer: tr, pkg, names, canSig
             <div>
               <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>{t(`capacity.${s.cap}`)}</div>
               <div suppressHydrationWarning style={small}>{s.by ? `${who(s.by)} · ${when(s.at)}` : t('ops.awaitingSignature')}</div>
-              {s.by && !!s.ack?.length && <div style={{ ...small, color: '#b45309' }}>{t('ops.acked', { n: s.ack.length })}</div>}
+              {s.by && !!s.ack?.length && <div style={{ ...small, color: 'var(--warning-700)' }}>{t('ops.acked', { n: s.ack.length })}</div>}
             </div>
             {!s.by && canSign.includes(s.cap) && (
               <button type="button" style={btn('primary', isPending || !allAcked)} disabled={isPending || !allAcked} title={allAcked ? undefined : t('ops.ackFirst')}

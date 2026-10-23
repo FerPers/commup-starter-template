@@ -64,13 +64,13 @@ export default function ItemRow({
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             {item.item_number && (
-              <span style={{ fontSize: '11px', fontFamily: 'ui-monospace, monospace', color: 'var(--gray-400)', minWidth: '28px' }}>{item.item_number}</span>
+              <span style={{ fontSize: '11px', fontFamily: 'ui-monospace, monospace', color: 'var(--text-muted)', minWidth: '28px' }}>{item.item_number}</span>
             )}
             <div style={{ display: 'flex', gap: '4px' }}>
               {item.is_critical && <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--danger-500)', display: 'inline-block', flexShrink: 0, marginTop: '3px' }} title={t('item.titleCritical')} />}
               {item.is_required && !item.is_critical && <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--warning-500)', display: 'inline-block', flexShrink: 0, marginTop: '3px' }} title={t('item.titleRequired')} />}
-              {item.requires_photo && <span style={{ fontSize: '10px', color: 'var(--primary-500)' }} title={t('item.titlePhoto')}>⊙</span>}
-              {item.requires_document && <span style={{ fontSize: '10px', color: '#0891b2' }} title={t('item.titleDocument')}>📄</span>}
+              {item.requires_photo && <span style={{ fontSize: '10px', color: 'var(--primary-700)' }} title={t('item.titlePhoto')}>⊙</span>}
+              {item.requires_document && <span style={{ fontSize: '10px', color: 'var(--cyan-700)' }} title={t('item.titleDocument')}>📄</span>}
             </div>
           </div>
           <p style={{ fontSize: '13px', color: 'var(--text-strong)', margin: '2px 0 0', lineHeight: '1.4' }}>{visibleDesc}</p>
@@ -115,7 +115,7 @@ export default function ItemRow({
                   isPassed: item.is_critical ? val : null,
                 })}
                 aria-pressed={response?.value_bool === val}
-                style={{ minHeight: '44px', minWidth: '56px', padding: '6px 14px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, border: '1.5px solid', borderColor: response?.value_bool === val ? (val ? 'var(--success-500)' : 'var(--danger-500)') : 'var(--border)', background: response?.value_bool === val ? (val ? 'var(--success-50)' : 'var(--danger-100)') : 'var(--card-bg)', color: response?.value_bool === val ? (val ? 'var(--success-500)' : 'var(--danger-500)') : 'var(--text-muted)', cursor: canEdit ? 'pointer' : 'default' }}
+                style={{ minHeight: '44px', minWidth: '56px', padding: '6px 14px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, border: '1.5px solid', borderColor: response?.value_bool === val ? (val ? 'var(--success-500)' : 'var(--danger-500)') : 'var(--border)', background: response?.value_bool === val ? (val ? 'var(--success-50)' : 'var(--danger-100)') : 'var(--card-bg)', color: response?.value_bool === val ? (val ? 'var(--success-700)' : 'var(--danger-700)') : 'var(--text-muted)', cursor: canEdit ? 'pointer' : 'default' }}
               >
                 {val ? t('item.yesBtn') : t('item.noBtn')}
               </button>
@@ -181,7 +181,7 @@ export default function ItemRow({
             {item.unit && <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{item.unit}</span>}
           </div>
           {(item.acceptance_min !== null || item.acceptance_max !== null) && (
-            <span style={{ fontSize: '11px', color: 'var(--gray-400)' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
               {item.acceptance_min !== null && item.acceptance_max !== null
                 ? t('item.criterionBoth', { min: item.acceptance_min, max: item.acceptance_max, unit: item.unit ?? '' })
                 : item.acceptance_min !== null
@@ -189,8 +189,8 @@ export default function ItemRow({
                 : t('item.criterionMax', { max: item.acceptance_max!, unit: item.unit ?? '' })}
             </span>
           )}
-          {isPassed === true && <span style={{ fontSize: '12px', color: 'var(--success-500)', fontWeight: 600 }}>{t('item.passed')}</span>}
-          {isPassed === false && <span style={{ fontSize: '12px', color: 'var(--danger-500)', fontWeight: 600 }}>{t('item.failed')}</span>}
+          {isPassed === true && <span style={{ fontSize: '12px', color: 'var(--success-700)', fontWeight: 600 }}>{t('item.passed')}</span>}
+          {isPassed === false && <span style={{ fontSize: '12px', color: 'var(--danger-700)', fontWeight: 600 }}>{t('item.failed')}</span>}
         </div>
       )}
 
@@ -277,7 +277,7 @@ export default function ItemRow({
             disabled={!canEdit}
             placeholder={t('item.remarksPlaceholder')}
             onBlur={e => onSave(item.id, { remarks: e.target.value || null })}
-            style={{ width: '100%', padding: '6px 10px', border: `1px solid ${answeredNo && !response?.remarks?.trim() ? 'var(--warning-300)' : '#f1f5f9'}`, borderRadius: '6px', fontSize: '12px', fontFamily: 'inherit', resize: 'none', boxSizing: 'border-box', color: 'var(--text-muted)' }}
+            style={{ width: '100%', padding: '6px 10px', border: `1px solid ${answeredNo && !response?.remarks?.trim() ? 'var(--warning-300)' : 'var(--gray-100)'}`, borderRadius: '6px', fontSize: '12px', fontFamily: 'inherit', resize: 'none', boxSizing: 'border-box', color: 'var(--text-muted)' }}
           />
           <div style={{ alignSelf: 'flex-end' }}>
             <MicAppend

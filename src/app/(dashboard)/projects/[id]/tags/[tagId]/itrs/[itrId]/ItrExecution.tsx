@@ -33,7 +33,7 @@ import { ITR_STATUS_COLORS } from '@/lib/constants/status-colors'
 import { ROLE_TIERS } from '@/lib/constants/roles'
 import { applyTheme, currentTheme, THEME_EVENT } from '@/lib/theme/client'
 import type { Theme } from '@/types/theme'
-import { ink } from '@/lib/theme'
+import { ink, alpha } from '@/lib/theme'
 
 export default function ItrExecution({
   itr,
@@ -338,7 +338,7 @@ export default function ItrExecution({
           <div style={{ flex: '1 1 240px', minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
               {phase && (
-                <span style={{ padding: '2px 8px', borderRadius: '5px', fontSize: '11px', fontWeight: 700, background: `${phase.color}18`, color: ink(phase.color) }}>
+                <span style={{ padding: '2px 8px', borderRadius: '5px', fontSize: '11px', fontWeight: 700, background: alpha(phase.color, 9), color: ink(phase.color) }}>
                   {phase.code}
                 </span>
               )}
@@ -357,7 +357,7 @@ export default function ItrExecution({
             {template && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{template.title}</span>
-                <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--primary-500)', background: 'var(--primary-50)', border: '1px solid var(--primary-200)', borderRadius: '999px', padding: '1px 6px' }}>
+                <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--primary-700)', background: 'var(--primary-50)', border: '1px solid var(--primary-200)', borderRadius: '999px', padding: '1px 6px' }}>
                   v{template.version}
                 </span>
               </div>
@@ -393,7 +393,7 @@ export default function ItrExecution({
                 </button>
               ))}
             </div>
-            <span style={{ padding: '4px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, background: st.bg, color: st.color, whiteSpace: 'nowrap' }}>
+            <span style={{ padding: '4px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, background: st.bg, color: ink(st.color), whiteSpace: 'nowrap' }}>
               {STATUS_LABELS[itr.status] ?? itr.status}
             </span>
           </div>
@@ -403,15 +403,15 @@ export default function ItrExecution({
         {tag && (
           <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: 'var(--text-muted)', flexWrap: 'wrap' }}>
             <span>
-              <strong style={{ color: 'var(--gray-700)' }}>{t('header.tagLabel')}</strong>{' '}
+              <strong style={{ color: 'var(--text-body)' }}>{t('header.tagLabel')}</strong>{' '}
               <span style={{ fontFamily: 'ui-monospace, monospace', color: ink(tag.disciplines?.color ?? 'var(--gray-700)') }}>{tag.tag_number}</span>
               {' — '}{tag.description}
             </span>
             {executor?.profiles?.full_name && (
-              <span><strong style={{ color: 'var(--gray-700)' }}>{t('header.inspectorLabel')}</strong> <PersonName name={executor.profiles.full_name} inactive={isInactiveMember(executor.user_id, memberIds)} /></span>
+              <span><strong style={{ color: 'var(--text-body)' }}>{t('header.inspectorLabel')}</strong> <PersonName name={executor.profiles.full_name} inactive={isInactiveMember(executor.user_id, memberIds)} /></span>
             )}
             {itr.scheduled_date && (
-              <span><strong style={{ color: 'var(--gray-700)' }}>{t('header.dateLabel')}</strong> {itr.scheduled_date}</span>
+              <span><strong style={{ color: 'var(--text-body)' }}>{t('header.dateLabel')}</strong> {itr.scheduled_date}</span>
             )}
           </div>
         )}
@@ -435,7 +435,7 @@ export default function ItrExecution({
           if (present.length === 0) return null
           return (
             <details style={{ marginTop: '10px', fontSize: '12px' }}>
-              <summary style={{ cursor: 'pointer', color: 'var(--gray-700)', fontWeight: 600 }}>{t('tagData.title', { count: present.length })}</summary>
+              <summary style={{ cursor: 'pointer', color: 'var(--text-body)', fontWeight: 600 }}>{t('tagData.title', { count: present.length })}</summary>
               <dl style={{ display: 'grid', gridTemplateColumns: 'max-content 1fr', columnGap: '12px', rowGap: '4px', margin: '8px 0 0', padding: '10px 12px', background: 'var(--gray-50)', border: '1px solid var(--border)', borderRadius: '8px' }}>
                 {present.map(([label, value]) => (
                   <Fragment key={label}>
@@ -444,14 +444,14 @@ export default function ItrExecution({
                   </Fragment>
                 ))}
               </dl>
-              <p style={{ margin: '6px 0 0', color: 'var(--gray-400)', fontSize: '11px' }}>{t('tagData.hint')}</p>
+              <p style={{ margin: '6px 0 0', color: 'var(--text-muted)', fontSize: '11px' }}>{t('tagData.hint')}</p>
             </details>
           )
         })()}
 
         {/* Progress bar */}
         <div style={{ marginTop: '14px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--gray-400)', marginBottom: '5px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', marginBottom: '5px' }}>
             <span>{t('header.progress')}</span>
             <span>{effectiveProgress}%</span>
           </div>
@@ -472,14 +472,14 @@ export default function ItrExecution({
                 <div style={{ padding: '7px 10px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: sig ? '4px' : 0 }}>
                     <span style={{ fontSize: '12px' }}>{sig?.pending ? '⏳' : sig ? '✓' : '○'}</span>
-                    <span style={{ fontSize: '11px', fontWeight: 600, color: sig?.pending ? 'var(--warning-700)' : sig ? 'var(--success-500)' : 'var(--gray-400)' }}>{t(`roles.${role}` as Parameters<typeof t>[0])}</span>
+                    <span style={{ fontSize: '11px', fontWeight: 600, color: sig?.pending ? 'var(--warning-700)' : sig ? 'var(--success-700)' : 'var(--text-muted)' }}>{t(`roles.${role}` as Parameters<typeof t>[0])}</span>
                   </div>
                   {sig && (
                     <>
-                      <div style={{ fontSize: '11px', color: 'var(--gray-700)', fontWeight: 500, marginLeft: '17px' }}>
+                      <div style={{ fontSize: '11px', color: 'var(--text-body)', fontWeight: 500, marginLeft: '17px' }}>
                         <PersonName name={sig.profiles?.full_name} inactive={isInactiveMember(sig.user_id, memberIds)} />{sig.signer_company ? ` · ${sig.signer_company}` : ''}
                       </div>
-                      <div style={{ fontSize: '10px', color: sig.pending ? 'var(--warning-700)' : 'var(--gray-400)', marginLeft: '17px', marginTop: '1px' }}>
+                      <div style={{ fontSize: '10px', color: sig.pending ? 'var(--warning-700)' : 'var(--text-muted)', marginLeft: '17px', marginTop: '1px' }}>
                         {sig.pending ? t('sync.pending') : `${signedDate} ${signedTime}`}
                       </div>
                     </>
@@ -541,7 +541,7 @@ export default function ItrExecution({
         {/* Critical blockers warning */}
         {criticalBlocked.length > 0 && (
           <div style={{ marginTop: '12px', padding: '10px 14px', background: 'var(--danger-100)', borderRadius: '8px', border: '1px solid var(--danger-200)' }}>
-            <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--danger-500)', margin: '0 0 4px' }}>
+            <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--danger-700)', margin: '0 0 4px' }}>
               {t('criticalBlocked', { count: criticalBlocked.length })}
             </p>
             {criticalBlocked.map(item => {
@@ -576,7 +576,7 @@ export default function ItrExecution({
         {sections.map(section => (
           <div key={section.id} style={{ marginTop: '20px' }}>
             <div style={{ padding: '10px 16px', background: 'var(--gray-50)', borderRadius: '8px', marginBottom: '8px', border: '1px solid var(--border)' }}>
-              <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--gray-700)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-body)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 {section.title}
               </span>
             </div>
@@ -648,7 +648,7 @@ export default function ItrExecution({
       />
 
       <div className="itr-footer" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'var(--card-bg)', borderTop: '1px solid var(--border)', padding: '10px 16px calc(10px + env(safe-area-inset-bottom, 0px))', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px 10px', zIndex: 100 }}>
-        <div className="itr-footer-status" role="status" style={{ fontSize: '11px', color: isOffline ? 'var(--warning-500)' : syncing ? 'var(--primary-500)' : isPending ? 'var(--primary-500)' : lastSaved ? 'var(--success-500)' : 'var(--gray-400)' }}>
+        <div className="itr-footer-status" role="status" style={{ fontSize: '11px', color: isOffline ? 'var(--warning-700)' : syncing ? 'var(--primary-700)' : isPending ? 'var(--primary-700)' : lastSaved ? 'var(--success-700)' : 'var(--text-muted)' }}>
           {isOffline && pendingCount > 0
             ? t('footer.offlineWithPending', { count: pendingCount })
             : isOffline
@@ -686,7 +686,7 @@ export default function ItrExecution({
             onClick={() => generalPhotoInputRef.current?.click()}
             disabled={!canCapture || generalUploading}
             title={generalUploadError ?? t('upload.addPhoto')}
-            style={{ ...footerBtn, background: generalUploading ? 'var(--primary-50)' : 'var(--success-50)', border: `1px solid ${generalUploadError ? 'var(--danger-300)' : 'var(--success-200)'}`, color: generalUploading ? 'var(--primary-500)' : 'var(--success-700)', cursor: canCapture && !generalUploading ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', gap: '5px' }}
+            style={{ ...footerBtn, background: generalUploading ? 'var(--primary-50)' : 'var(--success-50)', border: `1px solid ${generalUploadError ? 'var(--danger-300)' : 'var(--success-200)'}`, color: generalUploading ? 'var(--primary-700)' : 'var(--success-700)', cursor: canCapture && !generalUploading ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', gap: '5px' }}
           >
             {generalUploading ? '⏳' : '📷'} {(attachmentMap['general'] ?? []).length > 0 ? t('footer.btnPhotos', { count: (attachmentMap['general'] ?? []).length }) : t('footer.btnPhoto')}
           </button>
@@ -703,7 +703,7 @@ export default function ItrExecution({
                 onClick={() => setShowSignModal(true)}
                 disabled={!canSign}
                 title={signTooltip || undefined}
-                style={{ ...footerBtn, padding: '10px 20px', background: !canSign ? 'var(--gray-50)' : 'var(--violet-600)', color: !canSign ? 'var(--gray-400)' : 'var(--card-bg)', border: 'none', cursor: !canSign ? 'not-allowed' : 'pointer' }}
+                style={{ ...footerBtn, padding: '10px 20px', background: !canSign ? 'var(--gray-50)' : 'var(--violet-600)', color: !canSign ? 'var(--text-muted)' : 'var(--card-bg)', border: 'none', cursor: !canSign ? 'not-allowed' : 'pointer' }}
               >
                 {t('footer.btnSign')}
               </button>

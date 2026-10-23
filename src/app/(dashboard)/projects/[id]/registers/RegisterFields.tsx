@@ -27,14 +27,14 @@ export function RegisterFields({ kind, value, onChange, disabled, highlight }: {
       {registerType(kind).fields.map(f => {
         const v = value[f.key]
         const missing = highlight?.includes(f.key)
-        const style = { ...input, ...(missing ? { borderColor: '#f59e0b', boxShadow: '0 0 0 2px #fde68a' } : {}) }
+        const style = { ...input, ...(missing ? { borderColor: 'var(--warning-500)', boxShadow: '0 0 0 2px var(--warning-200)' } : {}) }
         const id = `reg-${f.key}`
         return (
           <div key={f.key} style={{ display: 'flex', flexDirection: 'column', gap: 4, gridColumn: f.type === 'textarea' ? '1 / -1' : undefined }}>
             <label htmlFor={id} style={label}>
               {t(`field.${f.key}`)}{f.unit ? ` (${f.unit})` : ''}
               {f.requiredFor && (
-                <span style={{ textTransform: 'none', letterSpacing: 0, fontWeight: 400, color: missing ? '#b45309' : 'var(--gray-400)' }}>
+                <span style={{ textTransform: 'none', letterSpacing: 0, fontWeight: 400, color: missing ? 'var(--warning-700)' : 'var(--text-muted)' }}>
                   {' · '}{t('form.requiredFor', { status: statusLabel(kind, f.requiredFor as RegisterStatus) })}
                 </span>
               )}
@@ -104,7 +104,7 @@ export function TagPicker({ projectId, kind, value, onChange, disabled }: {
                     {v.tag_number}
                     {!disabled && (
                       <button type="button" aria-label={`${t('form.remove')} ${v.tag_number}`} onClick={() => onChange(value.filter(x => !(x.tag_id === v.tag_id && x.role === v.role)))}
-                        style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--gray-400)', padding: 0, fontSize: 12 }}>✕</button>
+                        style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 0, fontSize: 12 }}>✕</button>
                     )}
                   </span>
                 ))}

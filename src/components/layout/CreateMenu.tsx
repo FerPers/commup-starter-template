@@ -120,7 +120,7 @@ export default function CreateMenu({ role, projects, hideOnTabbar }: { role: str
       onKeyDown={e => { if (e.key === 'Escape' && snap) { setSnap(null); triggerRef.current?.focus() } }}>
       <button ref={triggerRef} type="button" aria-haspopup="true" aria-expanded={!!snap} aria-label={t('open')} className="create-trigger"
         onClick={() => setSnap(s => s ? null : snapshot(pathname, projects))}
-        style={{ height: 36, padding: '0 12px', border: 'none', borderRadius: 8, background: 'var(--primary-500)', color: '#fff', fontSize: 'var(--text-sm)', fontWeight: 600,
+        style={{ height: 36, padding: '0 12px', border: 'none', borderRadius: 8, background: 'var(--primary-600)', color: '#fff', fontSize: 'var(--text-sm)', fontWeight: 600,
           display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontFamily: 'inherit' }}>
         <Plus size={16} aria-hidden="true" />
         <span className="create-trigger-label">{t('button')}</span>

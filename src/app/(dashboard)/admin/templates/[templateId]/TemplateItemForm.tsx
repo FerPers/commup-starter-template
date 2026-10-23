@@ -19,6 +19,7 @@ import {
   type BuilderItem,
   type ItemFormValues,
 } from './template-builder-shared'
+import { ink } from '@/lib/theme'
 
 export default function TemplateItemForm({
   initial,
@@ -54,11 +55,11 @@ export default function TemplateItemForm({
   const useBooleanValues = condType === 'yes_no' || condType === 'checkbox'
 
   const FLAGS = [
-    { key: 'is_critical',          label: t('flagCritical'),          color: '#ef4444' },
-    { key: 'is_required',          label: t('flagRequired'),          color: '#f59e0b' },
-    { key: 'requires_photo',       label: t('flagRequiresPhoto'),     color: '#3b82f6' },
-    { key: 'requires_document',    label: t('flagRequiresDocument'),  color: '#0891b2' },
-    { key: 'requires_measurement', label: t('flagRequiresMeasurement'), color: '#8b5cf6' },
+    { key: 'is_critical',          label: t('flagCritical'),          color: 'var(--danger-700)' },
+    { key: 'is_required',          label: t('flagRequired'),          color: 'var(--warning-700)' },
+    { key: 'requires_photo',       label: t('flagRequiresPhoto'),     color: 'var(--primary-700)' },
+    { key: 'requires_document',    label: t('flagRequiresDocument'),  color: 'var(--cyan-700)' },
+    { key: 'requires_measurement', label: t('flagRequiresMeasurement'), color: 'var(--violet-700)' },
   ] as const
 
   async function handleSave() {
@@ -118,7 +119,7 @@ export default function TemplateItemForm({
       </div>
 
       <label style={{ ...fieldLabel, marginBottom: '10px' }}>
-        {t('fieldDescriptionEn')} <span style={{ color: '#ef4444' }}>*</span>
+        {t('fieldDescriptionEn')} <span style={{ color: 'var(--danger-700)' }}>*</span>
         <input
           value={form.description}
           onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
@@ -139,7 +140,7 @@ export default function TemplateItemForm({
 
       {isSelect && (
         <label style={{ ...fieldLabel, marginBottom: '10px' }}>
-          {t('fieldSelectOptions')} <span style={{ color: '#ef4444' }}>*</span>
+          {t('fieldSelectOptions')} <span style={{ color: 'var(--danger-700)' }}>*</span>
           <input
             value={optionsText}
             onChange={e => {
@@ -226,14 +227,14 @@ export default function TemplateItemForm({
       {/* Flags */}
       <div style={{ display: 'flex', gap: '16px', marginBottom: '14px', flexWrap: 'wrap' }}>
         {FLAGS.filter(flag => (form.item_type !== 'continuity' && form.item_type !== 'table') || flag.key !== 'requires_measurement').map(flag => (
-          <label key={flag.key} style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: 500, color: 'var(--gray-700)' }}>
+          <label key={flag.key} style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: 500, color: 'var(--text-body)' }}>
             <input
               type="checkbox"
               checked={!!form[flag.key]}
               onChange={e => setForm(f => ({ ...f, [flag.key]: e.target.checked }))}
               style={{ accentColor: flag.color, width: '14px', height: '14px' }}
             />
-            <span style={{ color: (form[flag.key] as boolean) ? flag.color : 'var(--text-muted)' }}>{flag.label}</span>
+            <span style={{ color: ink((form[flag.key] as boolean) ? flag.color : 'var(--text-muted)') }}>{flag.label}</span>
           </label>
         ))}
       </div>
@@ -241,10 +242,10 @@ export default function TemplateItemForm({
       {/* Conditional logic */}
       {allItems.length > 0 && (
         <div style={{
-          padding: '12px 14px', background: '#fffbeb', border: '1px solid #fef3c7',
+          padding: '12px 14px', background: 'var(--warning-50)', border: '1px solid var(--warning-100)',
           borderRadius: '8px', marginBottom: '12px',
         }}>
-          <div style={{ fontSize: '11px', fontWeight: 700, color: '#92400e', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '8px' }}>
+          <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--warning-800)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '8px' }}>
             {t('conditionSectionLabel')}
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 160px', gap: '8px' }}>
@@ -297,7 +298,7 @@ export default function TemplateItemForm({
       )}
 
       {error && (
-        <p style={{ fontSize: '12px', color: '#ef4444', margin: '0 0 10px', padding: '8px 12px', background: '#fee2e2', borderRadius: '6px' }}>
+        <p style={{ fontSize: '12px', color: 'var(--danger-700)', margin: '0 0 10px', padding: '8px 12px', background: 'var(--danger-100)', borderRadius: '6px' }}>
           {error}
         </p>
       )}
@@ -307,7 +308,7 @@ export default function TemplateItemForm({
           onClick={handleSave}
           disabled={saving}
           style={{
-            padding: '7px 16px', background: '#3b82f6', color: '#fff',
+            padding: '7px 16px', background: 'var(--primary-600)', color: '#fff',
             borderRadius: '7px', fontSize: '12px', fontWeight: 500,
             border: 'none', cursor: saving ? 'not-allowed' : 'pointer',
             opacity: saving ? 0.6 : 1,

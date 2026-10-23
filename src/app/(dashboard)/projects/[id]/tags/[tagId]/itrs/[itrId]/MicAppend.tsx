@@ -92,7 +92,7 @@ export default function MicAppend({
         padding: '4px 8px', borderRadius: '6px', fontSize: '11px',
         border: '1px solid', borderColor: active ? 'var(--danger-500)' : 'var(--gray-300)',
         background: active ? 'var(--danger-100)' : 'var(--card-bg)',
-        color: active ? 'var(--danger-500)' : 'var(--text-muted)',
+        color: active ? 'var(--danger-700)' : 'var(--text-muted)',
         cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px',
       }}
     >

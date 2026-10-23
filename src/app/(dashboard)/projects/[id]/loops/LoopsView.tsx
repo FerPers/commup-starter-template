@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 import GenerateSourceItrsModal, { type GenerationMember, type GenerationTemplate } from '@/components/itr/GenerateSourceItrsModal'
 import type { SourceItrInfo } from '@/lib/itr/source-itrs-server'
+import { alpha, ink } from '@/lib/theme'
 
 const STATUS_COLORS: Record<string, string> = {
   not_started: 'var(--gray-400)',
@@ -111,7 +112,7 @@ export default function LoopsView({
       {canEdit && missing.length > 0 && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '12px', fontSize: '13px', color: 'var(--text-muted)' }}>
           {t('loops.missing', { n: missing.length })}
-          <button type="button" onClick={() => setGenerate(missing.map(l => ({ id: l.id, label: l.loop_number })))} style={{ padding: '7px 12px', borderRadius: '8px', border: 0, background: 'var(--primary-600, #2563eb)', color: '#fff', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>{t('loops.generateMissing', { n: missing.length })}</button>
+          <button type="button" onClick={() => setGenerate(missing.map(l => ({ id: l.id, label: l.loop_number })))} style={{ padding: '7px 12px', borderRadius: '8px', border: 0, background: 'var(--primary-600)', color: '#fff', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>{t('loops.generateMissing', { n: missing.length })}</button>
         </div>
       )}
 
@@ -147,7 +148,7 @@ export default function LoopsView({
         }}>
           <div style={{ fontSize: '40px', marginBottom: '12px', opacity: 0.3 }}>⟳</div>
           <p style={{ fontSize: '15px', fontWeight: 500, color: 'var(--text-strong)', margin: '0 0 6px' }}>{t('loops.emptyTitle')}</p>
-          <p style={{ fontSize: '13px', color: 'var(--gray-400)', margin: 0 }}>{t('loops.emptyDesc')}</p>
+          <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>{t('loops.emptyDesc')}</p>
         </div>
       ) : (
         <div style={{ background: 'var(--card-bg)', borderRadius: '14px', border: '1px solid var(--border)', overflow: 'hidden' }}>
@@ -167,7 +168,7 @@ export default function LoopsView({
               <tbody>
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={9} style={{ padding: '40px', textAlign: 'center', color: 'var(--gray-400)', fontSize: '13px' }}>
+                    <td colSpan={9} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
                       {t('noResults')}
                     </td>
                   </tr>
@@ -179,7 +180,7 @@ export default function LoopsView({
                     <tr
                       key={loop.id}
                       style={{
-                        borderBottom: '1px solid #f1f5f9',
+                        borderBottom: '1px solid var(--gray-100)',
                         background: i % 2 === 0 ? 'var(--card-bg)' : 'var(--gray-50)',
                         cursor: 'pointer',
                       }}
@@ -195,7 +196,7 @@ export default function LoopsView({
                         {sub ? (
                           <div>
                             <div style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-strong)' }}>{sub.code}</div>
-                            <div style={{ fontSize: '11px', color: 'var(--gray-400)' }}>{sub.systems.areas.code} › {sub.systems.code}</div>
+                            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{sub.systems.areas.code} › {sub.systems.code}</div>
                           </div>
                         ) : '—'}
                       </td>
@@ -203,7 +204,7 @@ export default function LoopsView({
                         {disc ? (
                           <span style={{
                             padding: '2px 8px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
-                            background: disc.color + '18', color: disc.color,
+                            background: alpha(disc.color, 9), color: ink(disc.color),
                           }}>
                             {disc.code}
                           </span>
@@ -214,7 +215,7 @@ export default function LoopsView({
                       </td>
                       <td style={{ padding: '10px 12px', color: 'var(--text-muted)' }}>
                         {loop.signals.length}
-                        {loop.signals.some(s => CHAIN.some(c => !s[c.key])) && <span title={t('loops.chainIncomplete')} style={{ color: '#b45309', marginLeft: '4px' }}>⚠</span>}
+                        {loop.signals.some(s => CHAIN.some(c => !s[c.key])) && <span title={t('loops.chainIncomplete')} style={{ color: 'var(--warning-700)', marginLeft: '4px' }}>⚠</span>}
                       </td>
                       <td style={{ padding: '10px 12px', whiteSpace: 'nowrap' }} onClick={e => e.stopPropagation()}>
                         <LoopItrCell info={loopItrs[loop.id]} projectId={projectId} />
@@ -222,12 +223,12 @@ export default function LoopsView({
                       <td style={{ padding: '10px 12px' }}>
                         <span style={{
                           padding: '2px 8px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
-                          background: statusColor + '18', color: statusColor,
+                          background: alpha(statusColor, 9), color: ink(statusColor),
                         }}>
                           {t(`status.${loop.status}` as Parameters<typeof t>[0])}
                         </span>
                       </td>
-                      <td style={{ padding: '10px 12px', color: 'var(--gray-400)', fontSize: '12px', textAlign: 'right' }}>
+                      <td style={{ padding: '10px 12px', color: 'var(--text-muted)', fontSize: '12px', textAlign: 'right' }}>
                         {selected?.id === loop.id ? '▲' : '▼'}
                       </td>
                     </tr>
@@ -244,7 +245,7 @@ export default function LoopsView({
                 <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-strong)' }}>
                   {selected.loop_number} — {t('loops.tagsInLoop')}
                 </span>
-                <button onClick={() => setSelected(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', fontSize: '16px' }}>✕</button>
+                <button onClick={() => setSelected(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '16px' }}>✕</button>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '12px', fontSize: '12px' }}>
                 <strong style={{ color: 'var(--text-strong)' }}>{t('loops.loopCheck')}</strong>
@@ -255,7 +256,7 @@ export default function LoopsView({
                   </button>
                 )}
               </div>
-              {selected.loop_tags.length === 0 && <p style={{ fontSize: '12px', color: 'var(--gray-400)', margin: 0 }}>{t('loops.noInstruments')}</p>}
+              {selected.loop_tags.length === 0 && <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: 0 }}>{t('loops.noInstruments')}</p>}
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 {selected.loop_tags.map(lt => lt.tags && (
                   <span key={lt.id} style={{
@@ -263,14 +264,14 @@ export default function LoopsView({
                     borderRadius: '6px', fontSize: '12px', fontFamily: 'monospace', color: 'var(--text-strong)',
                   }}>
                     {lt.tags.tag_number}
-                    {lt.role_in_loop && <span style={{ color: 'var(--gray-400)', marginLeft: '4px' }}>({lt.role_in_loop})</span>}
+                    {lt.role_in_loop && <span style={{ color: 'var(--text-muted)', marginLeft: '4px' }}>({lt.role_in_loop})</span>}
                   </span>
                 ))}
               </div>
 
               <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-strong)', margin: '18px 0 8px' }}>{t('loops.signalsChain')}</div>
               {selected.signals.length === 0 ? (
-                <p style={{ fontSize: '12px', color: 'var(--gray-400)', margin: 0 }}>{t('loops.noSignals')}</p>
+                <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: 0 }}>{t('loops.noSignals')}</p>
               ) : (
                 <div style={{ overflowX: 'auto' }}>
                   <table style={{ borderCollapse: 'collapse', fontSize: '12px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', minWidth: '100%' }}>
@@ -286,7 +287,7 @@ export default function LoopsView({
                         <td style={{ padding: '7px 10px', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>{sig.tags?.tag_number ?? '—'}</td>
                         {CHAIN.map(c => {
                           const v = sig[c.key] as string | null
-                          return <td key={c.key} style={{ padding: '7px 10px', whiteSpace: 'nowrap', color: v ? 'var(--text-strong)' : '#b45309' }}>{v ?? 'falta'}</td>
+                          return <td key={c.key} style={{ padding: '7px 10px', whiteSpace: 'nowrap', color: v ? 'var(--text-strong)' : 'var(--warning-700)' }}>{v ?? 'falta'}</td>
                         })}
                       </tr>
                     ))}</tbody>
@@ -296,7 +297,7 @@ export default function LoopsView({
             </div>
           )}
 
-          <div style={{ padding: '10px 16px', borderTop: '1px solid #f1f5f9', background: 'var(--gray-50)', fontSize: '12px', color: 'var(--gray-400)' }}>
+          <div style={{ padding: '10px 16px', borderTop: '1px solid var(--gray-100)', background: 'var(--gray-50)', fontSize: '12px', color: 'var(--text-muted)' }}>
             {t('showing', { filtered: filtered.length, total: loops.length })}
           </div>
         </div>
@@ -309,16 +310,16 @@ export default function LoopsView({
 /** Estado del ITR de loop check de un lazo: número (enlace), estado y aviso si la foto quedó desactualizada. */
 function LoopItrCell({ info, projectId }: { info: SourceItrInfo | undefined; projectId: string }) {
   const t = useTranslations('Signals')
-  if (!info) return <span style={{ color: 'var(--gray-400)', fontSize: '12px' }}>{t('loops.noItr')}</span>
+  if (!info) return <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>{t('loops.noItr')}</span>
   const results = Object.values(info.rows)
   const failed = results.filter(r => r === 'fail').length
   const passed = results.filter(r => r === 'pass').length
-  const color = info.status === 'approved' ? '#047857' : failed ? '#b91c1c' : 'var(--text-strong)'
+  const color = info.status === 'approved' ? 'var(--success-700)' : failed ? 'var(--danger-700)' : 'var(--text-strong)'
   return (
     <span style={{ fontSize: '12px', display: 'inline-flex', gap: '6px', alignItems: 'center' }}>
       <a href={info.tagId ? `/projects/${projectId}/tags/${info.tagId}/itrs/${info.id}` : '#'} style={{ fontFamily: 'monospace', fontWeight: 600, color }}>{info.itrNumber}</a>
       <span style={{ color: 'var(--text-muted)' }}>{ITR_STATUSES.includes(info.status) ? t(`loops.itrStatus.${info.status as 'approved'}`) : info.status} · {passed}/{results.length}{failed ? ` · ${failed} ✗` : ''}</span>
-      {info.outdated && <span title={t('loops.outdatedHint')} style={{ color: '#b45309', fontWeight: 600 }}>{t('loops.outdated')}</span>}
+      {info.outdated && <span title={t('loops.outdatedHint')} style={{ color: 'var(--warning-700)', fontWeight: 600 }}>{t('loops.outdated')}</span>}
     </span>
   )
 }

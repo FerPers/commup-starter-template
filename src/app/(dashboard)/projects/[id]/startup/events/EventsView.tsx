@@ -228,7 +228,7 @@ export default function EventsView({ project, systems, initialSystemId, initialO
                         <Link href={`${root}/events/${e.id}`} style={{ textDecoration: 'none' }}>
                           <Chip tone={EVENT_TONE[e.status]}>{e.status === 'witnessed' ? '✓' : '⏳'} {new Date(e.occurredAt).toLocaleDateString()}</Chip>
                         </Link>
-                      ) : <span style={{ color: 'var(--gray-400)' }}>—</span>}
+                      ) : <span style={{ color: 'var(--text-muted)' }}>—</span>}
                     </td>
                   )
                 })}

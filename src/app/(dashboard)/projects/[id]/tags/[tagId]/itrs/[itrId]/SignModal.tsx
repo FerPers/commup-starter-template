@@ -110,7 +110,7 @@ export default function SignModal({
 
         {/* Role selector */}
         <div role="group" aria-labelledby={`${titleId}-as`} style={{ marginBottom: '18px' }}>
-          <span id={`${titleId}-as`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '8px' }}>{t('signModal.signAs')}</span>
+          <span id={`${titleId}-as`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-body)', display: 'block', marginBottom: '8px' }}>{t('signModal.signAs')}</span>
           <div style={{ display: 'flex', gap: '8px' }}>
             {requiredRoles.map(role => {
               const alreadySigned = itrSignatures.some(s => s.role === role)
@@ -120,7 +120,7 @@ export default function SignModal({
                   onClick={() => allowedRoles.includes(role) && setSignRole(role)}
                   disabled={alreadySigned || !allowedRoles.includes(role)}
                   aria-pressed={signRole === role}
-                  style={{ flex: 1, padding: '10px 8px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, border: '2px solid', borderColor: signRole === role ? 'var(--violet-600)' : 'var(--border)', background: alreadySigned ? 'var(--gray-50)' : signRole === role ? 'var(--violet-50)' : 'var(--card-bg)', color: alreadySigned ? 'var(--gray-400)' : signRole === role ? 'var(--violet-600)' : 'var(--gray-700)', cursor: alreadySigned ? 'not-allowed' : 'pointer', textAlign: 'center' }}
+                  style={{ flex: 1, padding: '10px 8px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, border: '2px solid', borderColor: signRole === role ? 'var(--violet-600)' : 'var(--border)', background: alreadySigned ? 'var(--gray-50)' : signRole === role ? 'var(--violet-50)' : 'var(--card-bg)', color: alreadySigned ? 'var(--text-muted)' : signRole === role ? 'var(--violet-700)' : 'var(--text-body)', cursor: alreadySigned ? 'not-allowed' : 'pointer', textAlign: 'center' }}
                 >
                   {alreadySigned ? '✓ ' : ''}{t(`roles.${role}` as Parameters<typeof t>[0])}
                 </button>
@@ -132,7 +132,7 @@ export default function SignModal({
         {/* Canvas drawing pad */}
         <div style={{ marginBottom: '16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)' }}>{t('signModal.signatureLabel')}</span>
+            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-body)' }}>{t('signModal.signatureLabel')}</span>
             <button onClick={clearCanvas} style={{ fontSize: '11px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px' }}>
               {t('signModal.clearCanvas')}
             </button>
@@ -150,7 +150,7 @@ export default function SignModal({
             />
             {!hasDrawn && (
               <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-                <span style={{ fontSize: '13px', color: 'var(--gray-300)' }}>{t('signModal.placeholder')}</span>
+                <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{t('signModal.placeholder')}</span>
               </div>
             )}
           </div>
@@ -159,14 +159,14 @@ export default function SignModal({
         {/* Critical blocker warning */}
         {blocked && (
           <div style={{ padding: '10px 14px', background: 'var(--danger-100)', borderRadius: '8px', marginBottom: '16px' }}>
-            <p style={{ fontSize: '12px', color: 'var(--danger-500)', margin: 0, fontWeight: 600 }}>
+            <p style={{ fontSize: '12px', color: 'var(--danger-700)', margin: 0, fontWeight: 600 }}>
               {t('signModal.blockedMsg', { count: criticalBlocked.length })}
             </p>
           </div>
         )}
 
         {signError && (
-          <p style={{ fontSize: '12px', color: 'var(--danger-500)', padding: '8px 12px', background: 'var(--danger-100)', borderRadius: '6px', margin: '0 0 16px' }}>
+          <p style={{ fontSize: '12px', color: 'var(--danger-700)', padding: '8px 12px', background: 'var(--danger-100)', borderRadius: '6px', margin: '0 0 16px' }}>
             {signError}
           </p>
         )}

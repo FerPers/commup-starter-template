@@ -19,13 +19,13 @@ const th: React.CSSProperties = {
 const td: React.CSSProperties = { padding: '8px 10px', borderBottom: '1px solid var(--border)', fontSize: 'var(--text-sm)', verticalAlign: 'top' }
 const btn = (primary: boolean): React.CSSProperties => ({
   padding: '7px 14px', borderRadius: 8, fontSize: 'var(--text-sm)', fontWeight: 600, cursor: 'pointer',
-  border: primary ? 'none' : '1px solid var(--border)', background: primary ? 'var(--primary-500)' : 'transparent',
+  border: primary ? 'none' : '1px solid var(--border)', background: primary ? 'var(--primary-600)' : 'transparent',
   color: primary ? '#fff' : 'var(--text-strong)',
 })
 
 function Confidence({ value }: { value: number }) {
   const pct = Math.round(value * 100)
-  const color = pct >= 75 ? 'var(--success-700)' : pct >= 50 ? '#b45309' : 'var(--danger-700)'
+  const color = pct >= 75 ? 'var(--success-700)' : pct >= 50 ? 'var(--warning-700)' : 'var(--danger-700)'
   return <span style={{ fontWeight: 700, color }}>{pct}%</span>
 }
 
@@ -101,7 +101,7 @@ export default function AiSuggestionsModal({ projectId, onClose }: { projectId: 
         <p style={{ ...small, margin: 0, lineHeight: 1.5 }}>{t('ai.help')}</p>
         {loading && <div role="status" style={{ ...small, padding: 24, textAlign: 'center' }}>{t('ai.loading')}</div>}
         {error && <div role="alert" style={{ color: 'var(--danger-700)', fontSize: 'var(--text-sm)' }}>{error}</div>}
-        {truncated && <div style={{ ...small, color: '#b45309' }}>{t('ai.truncated')}</div>}
+        {truncated && <div style={{ ...small, color: 'var(--warning-700)' }}>{t('ai.truncated')}</div>}
 
         {result && (
           <div role="status" style={{ fontSize: 'var(--text-sm)' }}>
@@ -133,7 +133,7 @@ export default function AiSuggestionsModal({ projectId, onClose }: { projectId: 
                         <td style={td}><input type="checkbox" aria-label={t('ai.selectSystem', { code: a.system_code })} checked={attrOn.has(a.system_id)} onChange={() => toggle(attrOn, setAttrOn, a.system_id)} /></td>
                         <td style={td}>
                           <strong style={{ color: 'var(--text-strong)' }}>{a.system_code}</strong>
-                          {a.humanDecided && <div style={{ fontSize: 'var(--text-xs)', color: '#b45309' }}>{t('ai.humanDecided', { type: a.current.system_type ? t(`type.${a.current.system_type}`) : '—', priority: a.current.priority ? `P${a.current.priority}` : '—' })}</div>}
+                          {a.humanDecided && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--warning-700)' }}>{t('ai.humanDecided', { type: a.current.system_type ? t(`type.${a.current.system_type}`) : '—', priority: a.current.priority ? `P${a.current.priority}` : '—' })}</div>}
                         </td>
                         <td style={td}>
                           <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>

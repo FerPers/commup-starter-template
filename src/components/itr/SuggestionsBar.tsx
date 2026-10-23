@@ -45,8 +45,8 @@ export default function SuggestionsBar({ suggestions }: { suggestions: ItrSugges
     <div style={{ marginBottom: 16 }}>
       {error && (
         <div style={{
-          padding: 10, background: '#fef2f2', border: '1px solid #fecaca',
-          borderRadius: 6, color: '#991b1b', fontSize: 13, marginBottom: 10,
+          padding: 10, background: 'var(--danger-50)', border: '1px solid var(--danger-200)',
+          borderRadius: 6, color: 'var(--danger-800)', fontSize: 13, marginBottom: 10,
         }}>{error}</div>
       )}
       {items.map(s => (
@@ -54,20 +54,20 @@ export default function SuggestionsBar({ suggestions }: { suggestions: ItrSugges
           key={s.id}
           style={{
             display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px',
-            background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 8,
+            background: 'var(--primary-50)', border: '1px solid var(--primary-200)', borderRadius: 8,
             marginBottom: 8,
           }}
         >
           <div style={{
-            width: 28, height: 28, borderRadius: '50%', background: '#3b82f6',
+            width: 28, height: 28, borderRadius: '50%', background: 'var(--primary-600)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             color: 'white', fontWeight: 700, flexShrink: 0, fontSize: 14,
           }}>⚡</div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: '#1e3a8a' }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--primary-900)' }}>
               {t('title')}
             </div>
-            <div style={{ fontSize: 12, color: '#1e40af', marginTop: 2 }}>
+            <div style={{ fontSize: 12, color: 'var(--primary-800)', marginTop: 2 }}>
               {s.message ?? t('defaultMessage', {
                 tag: s.signal_tag ?? '—',
                 value: s.signal_value?.toFixed(3) ?? '—',
@@ -75,7 +75,7 @@ export default function SuggestionsBar({ suggestions }: { suggestions: ItrSugges
               })}
             </div>
             {s.expires_at && (
-              <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
                 {t('expiresAt')}: {new Date(s.expires_at).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' })}
               </div>
             )}
@@ -84,7 +84,7 @@ export default function SuggestionsBar({ suggestions }: { suggestions: ItrSugges
             onClick={() => handle(s.id, true)}
             disabled={isPending}
             style={{
-              padding: '6px 12px', background: '#3b82f6', color: 'white',
+              padding: '6px 12px', background: 'var(--primary-600)', color: 'white',
               border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer',
             }}
           >
@@ -94,8 +94,8 @@ export default function SuggestionsBar({ suggestions }: { suggestions: ItrSugges
             onClick={() => handle(s.id, false)}
             disabled={isPending}
             style={{
-              padding: '6px 12px', background: 'white', color: '#475569',
-              border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+              padding: '6px 12px', background: 'white', color: 'var(--text-secondary)',
+              border: '1px solid var(--gray-300)', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer',
             }}
           >
             {t('reject')}

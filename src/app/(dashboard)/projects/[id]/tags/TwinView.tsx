@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useLocale, useTranslations } from 'next-intl'
+import { alpha, ink } from '@/lib/theme'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -66,10 +67,10 @@ export type Tag360 = {
 
 type Sema = 'green' | 'yellow' | 'red' | 'grey'
 const SEMAFORO: Record<Sema, { color: string; bg: string; border: string; dot: string }> = {
-  green:  { color: '#059669', bg: '#ecfdf5', border: '#a7f3d0', dot: '#10b981' },
-  yellow: { color: '#b45309', bg: '#fffbeb', border: '#fde68a', dot: '#f59e0b' },
-  red:    { color: '#b91c1c', bg: '#fef2f2', border: '#fecaca', dot: '#ef4444' },
-  grey:   { color: 'var(--text-muted)', bg: 'var(--gray-50)', border: 'var(--border)', dot: '#94a3b8' },
+  green:  { color: 'var(--success-700)', bg: 'var(--success-50)', border: 'var(--success-200)', dot: 'var(--success-500)' },
+  yellow: { color: 'var(--warning-700)', bg: 'var(--warning-50)', border: 'var(--warning-200)', dot: 'var(--warning-500)' },
+  red:    { color: 'var(--danger-700)',  bg: 'var(--danger-50)',  border: 'var(--danger-200)',  dot: 'var(--danger-500)' },
+  grey:   { color: 'var(--text-muted)',  bg: 'var(--gray-50)',    border: 'var(--border)',      dot: 'var(--gray-400)' },
 }
 
 function SemaforoDot({ semaforo, size = 10 }: { semaforo: string; size?: number }) {
@@ -81,7 +82,7 @@ function SemaforoDot({ semaforo, size = 10 }: { semaforo: string; size?: number 
       borderRadius: '50%',
       background: s.dot,
       flexShrink: 0,
-      boxShadow: `0 0 0 2px ${s.dot}30`,
+      boxShadow: `0 0 0 2px ${alpha(s.dot, 19)}`,
     }} />
   )
 }
@@ -89,7 +90,7 @@ function SemaforoDot({ semaforo, size = 10 }: { semaforo: string; size?: number 
 // ── Mini progress bar ─────────────────────────────────────────────────────────
 
 function ProgressMini({ pct, semaforo }: { pct: number; semaforo: string }) {
-  const color = semaforo === 'green' ? '#10b981' : semaforo === 'yellow' ? '#f59e0b' : semaforo === 'red' ? '#ef4444' : '#cbd5e1'
+  const color = semaforo === 'green' ? 'var(--success-500)' : semaforo === 'yellow' ? 'var(--warning-500)' : semaforo === 'red' ? 'var(--danger-500)' : 'var(--text-muted)'
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
       <div style={{ flex: 1, height: '4px', background: 'var(--gray-100)', borderRadius: '999px', overflow: 'hidden' }}>
@@ -132,10 +133,10 @@ function TagCard({ tag, projectId, highlight }: { tag: Tag360; projectId: string
         display: 'flex',
         flexDirection: 'column',
         gap: '10px',
-        boxShadow: highlight ? `0 0 0 2px ${s.dot}20` : 'none',
+        boxShadow: highlight ? `0 0 0 2px ${alpha(s.dot, 13)}` : 'none',
       }}
       onMouseEnter={e => { e.currentTarget.style.boxShadow = `0 4px 12px rgba(0,0,0,0.08)`; e.currentTarget.style.transform = 'translateY(-1px)' }}
-      onMouseLeave={e => { e.currentTarget.style.boxShadow = highlight ? `0 0 0 2px ${s.dot}20` : 'none'; e.currentTarget.style.transform = 'none' }}
+      onMouseLeave={e => { e.currentTarget.style.boxShadow = highlight ? `0 0 0 2px ${alpha(s.dot, 13)}` : 'none'; e.currentTarget.style.transform = 'none' }}
     >
       {/* Header row */}
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
@@ -150,7 +151,7 @@ function TagCard({ tag, projectId, highlight }: { tag: Tag360; projectId: string
             </span>
             <span style={{
               padding: '1px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 700,
-              background: `${discColor}18`, color: discColor, flexShrink: 0,
+              background: alpha(discColor, 9), color: ink(discColor), flexShrink: 0,
             }}>
               {tag.discipline_code ?? '?'}
             </span>
@@ -166,7 +167,7 @@ function TagCard({ tag, projectId, highlight }: { tag: Tag360; projectId: string
       {/* ITR Progress */}
       {tag.itr_total > 0 && (
         <div>
-          <div style={{ fontSize: '10px', color: '#94a3b8', marginBottom: '3px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginBottom: '3px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
             ITRs {tag.itr_approved}/{tag.itr_total}
           </div>
           <ProgressMini pct={Number(tag.itr_pct)} semaforo={tag.itr_semaforo} />
@@ -176,28 +177,28 @@ function TagCard({ tag, projectId, highlight }: { tag: Tag360; projectId: string
       {/* Badges row */}
       <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
         {hasPunchA && (
-          <Badge label={`A:${tag.open_punches_a}`} color="#ef4444" bg="#fef2f2" title={tw('openCatA')} />
+          <Badge label={`A:${tag.open_punches_a}`} color='var(--danger-700)' bg="var(--danger-50)" title={tw('openCatA')} />
         )}
         {hasPunchB && (
-          <Badge label={`B:${tag.open_punches_b}`} color="#f59e0b" bg="#fffbeb" title={tw('openCatB')} />
+          <Badge label={`B:${tag.open_punches_b}`} color='var(--warning-700)' bg="var(--warning-50)" title={tw('openCatB')} />
         )}
         {hasCert && (
-          <Badge label={`✓${tag.certs_issued}`} color="#059669" bg="#ecfdf5" title={tw('certsIssued')} />
+          <Badge label={`✓${tag.certs_issued}`} color='var(--success-700)' bg="var(--success-50)" title={tw('certsIssued')} />
         )}
         {hasPreserv && (
-          <Badge label="🔧" color="#7c3aed" bg="#f5f3ff" title={tw('preservationActive')} />
+          <Badge label="🔧" color='var(--violet-700)' bg="var(--violet-50)" title={tw('preservationActive')} />
         )}
         {hasPid && (
-          <Badge label="P&ID" color="#0369a1" bg="#e0f2fe" title={tw('pins', { count: tag.pid_hotspot_count })} />
+          <Badge label="P&ID" color="var(--sky-700)" bg="var(--sky-100)" title={tw('pins', { count: tag.pid_hotspot_count })} />
         )}
         {tag.itr_total === 0 && (
-          <Badge label={tw('sema.grey')} color="#94a3b8" bg="#f8fafc" title={tw('noItrs')} />
+          <Badge label={tw('sema.grey')} color="var(--text-muted)" bg="var(--gray-50)" title={tw('noItrs')} />
         )}
       </div>
 
       {/* Preservation due */}
       {tag.preservation_next_due && (
-        <div style={{ fontSize: '10px', color: '#7c3aed', background: '#f5f3ff', padding: '3px 7px', borderRadius: '5px', display: 'inline-block' }}>
+        <div style={{ fontSize: '10px', color: 'var(--violet-700)', background: 'var(--violet-50)', padding: '3px 7px', borderRadius: '5px', display: 'inline-block' }}>
           ⏰ {new Date(tag.preservation_next_due).toLocaleDateString(locale, { day: '2-digit', month: 'short' })}
         </div>
       )}
@@ -257,14 +258,14 @@ function SubsystemPanel({
         <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', background: 'var(--border)', padding: '2px 7px', borderRadius: '4px' }}>
           {subsystemCode}
         </span>
-        <span style={{ fontSize: '13px', color: '#334155', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <span style={{ fontSize: '13px', color: 'var(--text-body)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {subsystemName}
         </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-          <span style={{ fontSize: '11px', color: '#94a3b8' }}>{tw('tags', { count: total })}</span>
-          {red > 0 && <span style={{ fontSize: '11px', fontWeight: 600, color: '#ef4444', background: '#fef2f2', padding: '1px 6px', borderRadius: '5px' }}>A:{red}</span>}
+          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{tw('tags', { count: total })}</span>
+          {red > 0 && <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--danger-700)', background: 'var(--danger-50)', padding: '1px 6px', borderRadius: '5px' }}>A:{red}</span>}
           <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{pct}%</span>
-          <span style={{ color: '#94a3b8', fontSize: '12px', transform: open ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s', display: 'inline-block' }}>›</span>
+          <span style={{ color: 'var(--text-muted)', fontSize: '12px', transform: open ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s', display: 'inline-block' }}>›</span>
         </div>
       </button>
 
@@ -286,7 +287,7 @@ function SubsystemPanel({
             />
           ))}
           {tags.length === 0 && (
-            <div style={{ padding: '24px', textAlign: 'center', color: '#94a3b8', fontSize: '13px', gridColumn: '1/-1' }}>
+            <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px', gridColumn: '1/-1' }}>
               {tw('emptySubsystem')}
             </div>
           )}
@@ -331,14 +332,14 @@ function SystemBlock({
             <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '14px', fontWeight: 700, color: 'var(--text-strong)' }}>
               {systemCode}
             </span>
-            <span style={{ fontSize: '14px', color: '#334155', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <span style={{ fontSize: '14px', color: 'var(--text-body)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {systemName}
             </span>
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
           {red > 0 && (
-            <span style={{ fontSize: '12px', fontWeight: 600, color: '#ef4444' }}>
+            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--danger-700)' }}>
               ⛔ {tw('blocked', { count: red })}
             </span>
           )}
@@ -379,15 +380,15 @@ function Legend() {
         </div>
       ))}
       <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-        <span style={{ padding: '1px 5px', borderRadius: '4px', fontSize: '10px', fontWeight: 600, background: '#fef2f2', color: '#ef4444' }}>A:N</span>
+        <span style={{ padding: '1px 5px', borderRadius: '4px', fontSize: '10px', fontWeight: 600, background: 'var(--danger-50)', color: 'var(--danger-700)' }}>A:N</span>
         {tw('legend.catA')}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-        <span style={{ padding: '1px 5px', borderRadius: '4px', fontSize: '10px', fontWeight: 600, background: '#fffbeb', color: '#f59e0b' }}>B:N</span>
+        <span style={{ padding: '1px 5px', borderRadius: '4px', fontSize: '10px', fontWeight: 600, background: 'var(--warning-50)', color: 'var(--warning-700)' }}>B:N</span>
         {tw('legend.catB')}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-        <span style={{ padding: '1px 5px', borderRadius: '4px', fontSize: '10px', fontWeight: 600, background: '#ecfdf5', color: '#059669' }}>✓N</span>
+        <span style={{ padding: '1px 5px', borderRadius: '4px', fontSize: '10px', fontWeight: 600, background: 'var(--success-50)', color: 'var(--success-700)' }}>✓N</span>
         {tw('legend.certs')}
       </div>
     </div>
@@ -415,14 +416,14 @@ function StatsBar({ tags }: { tags: Tag360[] }) {
       gap: '12px', padding: '16px', background: 'var(--card-bg)',
       border: '1px solid var(--border)', borderRadius: '12px', marginBottom: '24px',
     }}>
-      <Stat value={total} label={tw('stats.total')} color="#334155" />
-      <Stat value={`${itrPct}%`} label={tw('stats.itr')} color={itrPct === 100 ? '#059669' : '#3b82f6'} />
-      <Stat value={green}  label={tw('stats.green')} color="#059669" />
-      <Stat value={yellow} label={tw('stats.yellow')} color="#f59e0b" />
-      <Stat value={red}    label={tw('stats.red')}  color="#ef4444" />
-      <Stat value={grey}   label={tw('sema.grey')}    color="#94a3b8" />
-      <Stat value={punchA} label={tw('stats.punchA')}   color="#ef4444" />
-      <Stat value={punchB} label={tw('stats.punchB')}   color="#f59e0b" />
+      <Stat value={total} label={tw('stats.total')} color="var(--text-body)" />
+      <Stat value={`${itrPct}%`} label={tw('stats.itr')} color={itrPct === 100 ? 'var(--success-700)' : 'var(--primary-700)'} />
+      <Stat value={green}  label={tw('stats.green')} color='var(--success-700)' />
+      <Stat value={yellow} label={tw('stats.yellow')} color='var(--warning-700)' />
+      <Stat value={red}    label={tw('stats.red')}  color='var(--danger-700)' />
+      <Stat value={grey}   label={tw('sema.grey')}    color="var(--text-muted)" />
+      <Stat value={punchA} label={tw('stats.punchA')}   color='var(--danger-700)' />
+      <Stat value={punchB} label={tw('stats.punchB')}   color='var(--warning-700)' />
     </div>
   )
 }
@@ -431,7 +432,7 @@ function Stat({ value, label, color }: { value: string | number; label: string; 
   return (
     <div style={{ textAlign: 'center' }}>
       <div style={{ fontSize: '22px', fontWeight: 700, color, lineHeight: 1.1 }}>{value}</div>
-      <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>{label}</div>
+      <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>{label}</div>
     </div>
   )
 }
@@ -497,10 +498,10 @@ export default function TwinView({
 
   const semaOptions = [
     { key: 'ALL',    label: tw('filter.all'),   color: 'var(--text-muted)' },
-    { key: 'red',    label: tw('stats.red'),    color: '#ef4444' },
-    { key: 'yellow', label: tw('stats.yellow'), color: '#f59e0b' },
-    { key: 'green',  label: tw('stats.green'),  color: '#059669' },
-    { key: 'grey',   label: tw('sema.grey'),    color: '#94a3b8' },
+    { key: 'red',    label: tw('stats.red'),    color: 'var(--danger-700)' },
+    { key: 'yellow', label: tw('stats.yellow'), color: 'var(--warning-700)' },
+    { key: 'green',  label: tw('stats.green'),  color: 'var(--success-700)' },
+    { key: 'grey',   label: tw('sema.grey'),    color: 'var(--text-muted)' },
   ]
 
   return (
@@ -522,8 +523,8 @@ export default function TwinView({
                 style={{
                   padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: active ? 600 : 400,
                   border: `1px solid ${active ? opt.color : 'var(--border)'}`,
-                  background: active ? `${opt.color}15` : 'var(--card-bg)',
-                  color: active ? opt.color : 'var(--text-muted)',
+                  background: active ? alpha(opt.color, 8) : 'var(--card-bg)',
+                  color: ink(active ? opt.color : 'var(--text-muted)'),
                   cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px',
                 }}
               >
@@ -532,7 +533,7 @@ export default function TwinView({
                 <span style={{
                   padding: '0 5px', borderRadius: '999px', fontSize: '10px', fontWeight: 700,
                   background: active ? opt.color : 'var(--gray-100)',
-                  color: active ? 'white' : 'var(--text-muted)',
+                  color: active ? 'var(--on-ink)' : 'var(--text-muted)',
                 }}>
                   {count}
                 </span>
@@ -563,7 +564,7 @@ export default function TwinView({
 
       {/* System blocks */}
       {filteredSystems.length === 0 ? (
-        <div style={{ padding: '64px', textAlign: 'center', color: '#94a3b8', fontSize: '14px', background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)' }}>
+        <div style={{ padding: '64px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '14px', background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)' }}>
           {search || semaFilter !== 'ALL' ? tw('noResults') : tw('empty')}
         </div>
       ) : (

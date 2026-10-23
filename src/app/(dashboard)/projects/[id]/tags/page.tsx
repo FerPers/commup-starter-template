@@ -176,7 +176,7 @@ export default async function TagsPage({
           <p style={{ fontSize: '15px', fontWeight: 500, color: 'var(--text-muted)', margin: '0 0 6px' }}>
             {t('empty.title')}
           </p>
-          <p style={{ fontSize: '13px', color: '#94a3b8', margin: '0 0 20px' }}>
+          <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 20px' }}>
             {t('empty.hint')}
           </p>
           {canEdit && (
@@ -184,7 +184,7 @@ export default async function TagsPage({
               href={`/projects/${id}/import`}
               style={{
                 display: 'inline-block', padding: '10px 22px',
-                background: '#3b82f6', color: '#fff', borderRadius: '8px',
+                background: 'var(--primary-600)', color: '#fff', borderRadius: '8px',
                 fontSize: '13px', fontWeight: 500, textDecoration: 'none',
               }}
             >
@@ -224,7 +224,7 @@ function TagsHeader({ projectId, title, subtitle, canEdit, importLabel }: {
         <p style={{ fontSize: 14, color: 'var(--text-muted)', margin: '4px 0 0' }}>{subtitle}</p>
       </div>
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-        {canEdit && <Link href={`/projects/${projectId}/import`} style={{ ...btn, background: '#3b82f6', color: '#fff' }}>{importLabel}</Link>}
+        {canEdit && <Link href={`/projects/${projectId}/import`} style={{ ...btn, background: 'var(--primary-600)', color: '#fff' }}>{importLabel}</Link>}
       </div>
     </div>
   )

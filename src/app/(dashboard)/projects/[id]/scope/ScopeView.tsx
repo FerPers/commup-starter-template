@@ -173,7 +173,7 @@ export default function ScopeView({ projectId, projectCode, rows, history, canEd
             <p style={{ margin: 0, fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>{t('readOnly')}</p>
           )}
           <p style={{ margin: 0, fontSize: 'var(--text-xs)', color: 'var(--text-muted)', lineHeight: 1.45 }}>
-            {t('who')} <Link href={`/projects/${projectId}/itrs/generate`} style={{ color: 'var(--primary-600)' }}>{t('toGenerate')}</Link>
+            {t('who')} <Link href={`/projects/${projectId}/itrs/generate`} style={{ color: 'var(--primary-700)' }}>{t('toGenerate')}</Link>
           </p>
         </section>
       </div>

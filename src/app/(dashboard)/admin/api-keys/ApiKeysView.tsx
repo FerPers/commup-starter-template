@@ -7,6 +7,7 @@ import { createApiKey, revokeApiKey } from '@/app/actions/api-keys'
 import { API_SCOPES, type ApiScope } from '@/lib/constants/api-scopes'
 import { useAskDialog } from '@/components/ui/AskDialog'
 import { DialogSurface } from '@/components/ui/dialog-a11y'
+import { ink } from '@/lib/theme'
 
 type ApiKey = {
   id: string
@@ -20,19 +21,19 @@ type ApiKey = {
 }
 
 const btnPrimary: React.CSSProperties = {
-  padding: '8px 14px', background: '#3b82f6', color: '#fff',
+  padding: '8px 14px', background: 'var(--primary-600)', color: '#fff',
   border: 'none', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer',
 }
 const btnOutline: React.CSSProperties = {
   padding: '6px 12px', background: 'var(--card-bg)', color: 'var(--text-muted)',
-  border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+  border: '1px solid var(--gray-300)', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer',
 }
 const btnDanger: React.CSSProperties = {
-  padding: '6px 12px', background: '#fef2f2', color: '#b91c1c',
-  border: '1px solid #fecaca', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+  padding: '6px 12px', background: 'var(--danger-50)', color: 'var(--danger-700)',
+  border: '1px solid var(--danger-200)', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer',
 }
 const input: React.CSSProperties = {
-  padding: '8px 10px', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 13,
+  padding: '8px 10px', border: '1px solid var(--gray-300)', borderRadius: 6, fontSize: 13,
   fontFamily: 'inherit', width: '100%', background: 'var(--card-bg)',
 }
 const labelStyle: React.CSSProperties = {
@@ -46,11 +47,11 @@ function fmtDate(s: string | null, locale: string): string {
 }
 
 function keyStatus(k: ApiKey): { status: 'revoked' | 'expired' | 'active'; color: string; bg: string } {
-  if (k.revoked_at) return { status: 'revoked', color: '#b91c1c', bg: '#fef2f2' }
+  if (k.revoked_at) return { status: 'revoked', color: 'var(--danger-700)', bg: 'var(--danger-50)' }
   if (k.expires_at && new Date(k.expires_at) < new Date()) {
-    return { status: 'expired', color: '#b45309', bg: '#fef3c7' }
+    return { status: 'expired', color: 'var(--warning-700)', bg: 'var(--warning-100)' }
   }
-  return { status: 'active', color: '#047857', bg: '#ecfdf5' }
+  return { status: 'active', color: 'var(--success-700)', bg: 'var(--success-50)' }
 }
 
 // Clave i18n de la descripción de un scope (los códigos ':' y '*' no van en la clave).
@@ -90,7 +91,7 @@ export default function ApiKeysView({ keys: initialKeys }: { keys: ApiKey[] }) {
           </h1>
           <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '4px 0 0' }}>
             {tx.rich('subtitle', {
-              api: c => <a href="/api/v1/openapi" style={{ color: '#3b82f6' }} target="_blank" rel="noreferrer">{c}</a>,
+              api: c => <a href="/api/v1/openapi" style={{ color: 'var(--primary-700)' }} target="_blank" rel="noreferrer">{c}</a>,
               code: c => <code>{c}</code>,
             })}
           </p>
@@ -99,13 +100,13 @@ export default function ApiKeysView({ keys: initialKeys }: { keys: ApiKey[] }) {
       </div>
 
       {error && (
-        <div style={{ padding: 12, background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 6, color: '#b91c1c', fontSize: 13, marginBottom: 16 }}>
+        <div style={{ padding: 12, background: 'var(--danger-50)', border: '1px solid var(--danger-200)', borderRadius: 6, color: 'var(--danger-700)', fontSize: 13, marginBottom: 16 }}>
           {error}
         </div>
       )}
 
       {keys.length === 0 && (
-        <div style={{ padding: 40, background: 'var(--gray-50)', border: '1px dashed #cbd5e1', borderRadius: 8, textAlign: 'center', color: 'var(--text-muted)', fontSize: 14 }}>
+        <div style={{ padding: 40, background: 'var(--gray-50)', border: '1px dashed var(--gray-300)', borderRadius: 8, textAlign: 'center', color: 'var(--text-muted)', fontSize: 14 }}>
           {tx('empty')}
         </div>
       )}
@@ -129,7 +130,7 @@ export default function ApiKeysView({ keys: initialKeys }: { keys: ApiKey[] }) {
               {keys.map(k => {
                 const st = keyStatus(k)
                 return (
-                  <tr key={k.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                  <tr key={k.id} style={{ borderBottom: '1px solid var(--gray-100)' }}>
                     <td style={td}><strong style={{ color: 'var(--text-strong)' }}>{k.name}</strong></td>
                     <td style={td}>
                       <code style={{ background: 'var(--gray-100)', padding: '2px 6px', borderRadius: 4, fontSize: 11 }}>
@@ -149,7 +150,7 @@ export default function ApiKeysView({ keys: initialKeys }: { keys: ApiKey[] }) {
                     <td style={td}>
                       <span style={{
                         display: 'inline-block', padding: '2px 8px', borderRadius: 4,
-                        background: st.bg, color: st.color, fontSize: 10, fontWeight: 700, letterSpacing: '0.05em',
+                        background: st.bg, color: ink(st.color), fontSize: 10, fontWeight: 700, letterSpacing: '0.05em',
                       }}>
                         {tx(`status.${st.status}`)}
                       </span>
@@ -199,11 +200,11 @@ const th: React.CSSProperties = {
   textTransform: 'uppercase', letterSpacing: '0.04em',
 }
 const td: React.CSSProperties = {
-  padding: '10px 12px', color: '#334155', verticalAlign: 'middle',
+  padding: '10px 12px', color: 'var(--text-body)', verticalAlign: 'middle',
 }
 const scopePill: React.CSSProperties = {
-  display: 'inline-block', padding: '2px 6px', background: '#eff6ff',
-  color: '#1d4ed8', borderRadius: 4, fontSize: 10, fontWeight: 600, fontFamily: 'ui-monospace, monospace',
+  display: 'inline-block', padding: '2px 6px', background: 'var(--primary-50)',
+  color: 'var(--primary-700)', borderRadius: 4, fontSize: 10, fontWeight: 600, fontFamily: 'ui-monospace, monospace',
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -284,8 +285,8 @@ function CreateKeyModal({
                   style={{
                     display: 'grid', gridTemplateColumns: 'auto 1fr', alignItems: 'start', columnGap: 8,
                     padding: '8px 10px', borderRadius: 6, cursor: 'pointer', fontSize: 12,
-                    background: checked ? '#eff6ff' : 'var(--gray-50)',
-                    border: checked ? '1px solid #93c5fd' : '1px solid var(--border)',
+                    background: checked ? 'var(--primary-50)' : 'var(--gray-50)',
+                    border: checked ? '1px solid var(--primary-300)' : '1px solid var(--border)',
                   }}
                 >
                   <input
@@ -311,7 +312,7 @@ function CreateKeyModal({
             value={expiresAt}
             onChange={e => setExpiresAt(e.target.value)}
           />
-          <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
             {tx('create.expiryHint')}
           </div>
         </div>
@@ -364,8 +365,8 @@ function TokenRevealModal({
         </p>
 
         <div style={{
-          padding: 14, background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: 8,
-          fontSize: 13, color: '#92400e', marginBottom: 16,
+          padding: 14, background: 'var(--warning-50)', border: '1px solid var(--warning-300)', borderRadius: 8,
+          fontSize: 13, color: 'var(--warning-800)', marginBottom: 16,
         }}>
           {tx.rich('reveal.warning', { strong: c => <strong>{c}</strong> })}
         </div>
@@ -381,7 +382,7 @@ function TokenRevealModal({
           />
           <button
             onClick={copy}
-            style={{ ...btnPrimary, minWidth: 100, background: copied ? '#10b981' : '#3b82f6' }}
+            style={{ ...btnPrimary, minWidth: 100, background: copied ? 'var(--success-500)' : 'var(--primary-600)' }}
           >
             {copied ? tx('reveal.copied') : tx('reveal.copy')}
           </button>
@@ -443,7 +444,7 @@ function ModalHeader({ id, title, onClose }: { id?: string; title: string; onClo
 
 function ModalError({ msg }: { msg: string }) {
   return (
-    <div style={{ padding: 10, background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 6, color: '#b91c1c', fontSize: 13, marginBottom: 14 }}>
+    <div style={{ padding: 10, background: 'var(--danger-50)', border: '1px solid var(--danger-200)', borderRadius: 6, color: 'var(--danger-700)', fontSize: 13, marginBottom: 14 }}>
       {msg}
     </div>
   )

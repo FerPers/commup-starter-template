@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl'
 import NfcSection from './NfcSection'
+import { ink } from '@/lib/theme'
 import { CRITICALITY_STYLE, INST_DISCIPLINES, cardStyle, sectionLabel, type Area, type Subsystem, type System, type Tag } from './tag-detail-shared'
 
 export default function TagOverviewTab({ tag, area, sys, sub, pidSignedUrl, projectId, canEdit }: {
@@ -31,7 +32,7 @@ export default function TagOverviewTab({ tag, area, sys, sub, pidSignedUrl, proj
       value: (
         <span style={{
           padding: '2px 8px', borderRadius: '5px', fontSize: '12px', fontWeight: 600,
-          background: crit.bg, color: crit.color, border: `1px solid ${crit.border}`,
+          background: crit.bg, color: ink(crit.color), border: `1px solid ${crit.border}`,
         }}>
           {t(`criticality.${tag.criticality ?? 'normal'}`)}
         </span>
@@ -69,9 +70,9 @@ export default function TagOverviewTab({ tag, area, sys, sub, pidSignedUrl, proj
             <div key={f.label} style={{
               display: 'grid', gridTemplateColumns: '140px 1fr', gap: '8px',
               padding: '10px 0',
-              borderBottom: i < infoFields.length - 1 ? '1px solid #f1f5f9' : 'none',
+              borderBottom: i < infoFields.length - 1 ? '1px solid var(--gray-100)' : 'none',
             }}>
-              <span style={{ fontSize: '12px', color: 'var(--gray-400)', fontWeight: 500 }}>{f.label}</span>
+              <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>{f.label}</span>
               <span style={{ fontSize: '13px', color: 'var(--text-strong)', fontWeight: 500 }}>{f.value}</span>
             </div>
           ))}
@@ -92,19 +93,19 @@ export default function TagOverviewTab({ tag, area, sys, sub, pidSignedUrl, proj
               <div key={f.label} style={{
                 display: 'grid', gridTemplateColumns: '100px 1fr', gap: '8px',
                 padding: '10px 0',
-                borderBottom: i < locFields.length - 1 ? '1px solid #f1f5f9' : 'none',
+                borderBottom: i < locFields.length - 1 ? '1px solid var(--gray-100)' : 'none',
               }}>
-                <span style={{ fontSize: '12px', color: 'var(--gray-400)', fontWeight: 500 }}>{f.label}</span>
+                <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>{f.label}</span>
                 {f.link ? (
                   <a href={f.link} target="_blank" rel="noopener noreferrer" style={{
-                    fontSize: '12px', color: 'var(--primary-600)', fontFamily: 'ui-monospace, monospace',
+                    fontSize: '12px', color: 'var(--primary-700)', fontFamily: 'ui-monospace, monospace',
                     textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px',
                   }}>
                     {f.value} <span style={{ opacity: 0.5, fontSize: '10px' }}>↗</span>
                   </a>
                 ) : (
                   <span style={{
-                    fontSize: '13px', color: f.value === '—' ? 'var(--gray-300)' : 'var(--text-strong)',
+                    fontSize: '13px', color: f.value === '—' ? 'var(--text-muted)' : 'var(--text-strong)',
                     fontWeight: 500,
                     fontFamily: f.label !== 'P&ID' && f.value !== '—' ? undefined : 'ui-monospace, monospace',
                   }}>
@@ -120,7 +121,7 @@ export default function TagOverviewTab({ tag, area, sys, sub, pidSignedUrl, proj
         <div style={cardStyle}>
           <p style={sectionLabel}>{t('overview.sectionEngineering')}</p>
           {!hasEngParams ? (
-            <div style={{ padding: '16px 0', textAlign: 'center', color: 'var(--gray-300)', fontSize: '13px' }}>
+            <div style={{ padding: '16px 0', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
               {t('overview.noEngParams')}
             </div>
           ) : (
@@ -140,10 +141,10 @@ export default function TagOverviewTab({ tag, area, sys, sub, pidSignedUrl, proj
               {isInst && (tag.sp_hh != null || tag.sp_h != null || tag.sp_l != null || tag.sp_ll != null) && (
                 <EngRow label={t('overview.engSetpoints')}>
                   <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                    {tag.sp_hh != null && <SetpointPill label="HH" value={tag.sp_hh} unit={tag.eng_unit} color="var(--danger-500)" />}
-                    {tag.sp_h  != null && <SetpointPill label="H"  value={tag.sp_h}  unit={tag.eng_unit} color="var(--orange-500)" />}
-                    {tag.sp_l  != null && <SetpointPill label="L"  value={tag.sp_l}  unit={tag.eng_unit} color="var(--primary-500)" />}
-                    {tag.sp_ll != null && <SetpointPill label="LL" value={tag.sp_ll} unit={tag.eng_unit} color="#6366f1" />}
+                    {tag.sp_hh != null && <SetpointPill label="HH" value={tag.sp_hh} unit={tag.eng_unit} color='var(--danger-700)' />}
+                    {tag.sp_h  != null && <SetpointPill label="H"  value={tag.sp_h}  unit={tag.eng_unit} color='var(--orange-700)' />}
+                    {tag.sp_l  != null && <SetpointPill label="L"  value={tag.sp_l}  unit={tag.eng_unit} color='var(--primary-700)' />}
+                    {tag.sp_ll != null && <SetpointPill label="LL" value={tag.sp_ll} unit={tag.eng_unit} color='var(--indigo-700)' />}
                   </div>
                 </EngRow>
               )}
@@ -215,10 +216,10 @@ function EngRow({ label, children, last }: { label: string; children: React.Reac
     <div style={{
       display: 'grid', gridTemplateColumns: '120px 1fr', gap: '8px',
       padding: '10px 0',
-      borderBottom: last ? 'none' : '1px solid #f1f5f9',
+      borderBottom: last ? 'none' : '1px solid var(--gray-100)',
       alignItems: 'center',
     }}>
-      <span style={{ fontSize: '12px', color: 'var(--gray-400)', fontWeight: 500 }}>{label}</span>
+      <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>{label}</span>
       <div>{children}</div>
     </div>
   )

@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import { revokeCertificate, reopenCertificate, signCertificate, removeCertificateSignature } from '@/app/actions/certificates'
 import { ITR_STATUS_COLORS } from '@/lib/constants/status-colors'
+import { alpha, ink } from '@/lib/theme'
 import { CERT_ROLE_CAPACITY, can, type CertSignRole, type MyCapacities } from '@/lib/constants/capacities'
 
 type CertSignatureRoleId = CertSignRole
@@ -61,10 +62,10 @@ type SignatureRow = {
 // ── Config (colors only) — ITR palette is shared; cert palette stays local ──
 
 const CERT_STATUS_COLORS = {
-  pending:   { color: 'var(--text-muted)', bg: 'var(--gray-100)' },
-  in_review: { color: '#3b82f6', bg: '#eff6ff' },
-  issued:    { color: '#10b981', bg: '#ecfdf5' },
-  rejected:  { color: '#ef4444', bg: '#fee2e2' },
+  pending:   { color: 'var(--text-muted)',  bg: 'var(--gray-100)' },
+  in_review: { color: 'var(--primary-700)', bg: 'var(--primary-50)' },
+  issued:    { color: 'var(--success-700)', bg: 'var(--success-50)' },
+  rejected:  { color: 'var(--danger-700)',  bg: 'var(--danger-100)' },
 } as const
 
 // ── Main component ─────────────────────────────────────────────────────────
@@ -242,12 +243,12 @@ export default function CertificateDetail({
       {/* S17: bloqueado por cambio de base (trigger trg_certificate_base_changed) */}
       {cert.status === 'issued' && cert.is_blocked && (
         <div role="alert" style={{
-          background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '12px',
-          padding: '14px 18px', marginBottom: '20px', color: '#991b1b',
+          background: 'var(--danger-50)', border: '1px solid var(--danger-200)', borderRadius: '12px',
+          padding: '14px 18px', marginBottom: '20px', color: 'var(--danger-800)',
         }}>
           <div style={{ fontSize: '14px', fontWeight: 700 }}>{t('detail.blockedTitle')}</div>
           {cert.block_reason && <div style={{ fontSize: '13px', marginTop: '4px' }}>{cert.block_reason}</div>}
-          <div style={{ fontSize: '12px', marginTop: '6px', color: '#b91c1c' }}>{t('detail.blockedHint')}</div>
+          <div style={{ fontSize: '12px', marginTop: '6px', color: 'var(--danger-700)' }}>{t('detail.blockedHint')}</div>
         </div>
       )}
 
@@ -262,10 +263,10 @@ export default function CertificateDetail({
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
             <div style={{
               width: '48px', height: '48px', borderRadius: '12px',
-              background: phase ? `${phase.color}20` : 'var(--gray-100)',
+              background: phase ? alpha(phase.color, 13) : 'var(--gray-100)',
               border: `2px solid ${phase?.color ?? 'var(--border)'}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '11px', fontWeight: 700, color: phase?.color ?? 'var(--text-muted)',
+              fontSize: '11px', fontWeight: 700, color: ink(phase?.color ?? 'var(--text-muted)'),
             }}>
               {phase?.certificate_name ?? phase?.code ?? '—'}
             </div>
@@ -279,7 +280,7 @@ export default function CertificateDetail({
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <span style={{
               padding: '5px 14px', borderRadius: '999px', fontSize: '12px', fontWeight: 600,
-              background: certColors.bg, color: certColors.color,
+              background: certColors.bg, color: ink(certColors.color),
             }}>
               {certStatusLabels[cert.status] ?? cert.status}
             </span>
@@ -291,8 +292,8 @@ export default function CertificateDetail({
                 className="no-print"
                 style={{
                   padding: '7px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 500,
-                  cursor: 'pointer', border: '1px solid #bbf7d0', background: '#f0fdf4',
-                  color: '#15803d', textDecoration: 'none', display: 'inline-flex',
+                  cursor: 'pointer', border: '1px solid var(--success-200)', background: 'var(--success-50)',
+                  color: 'var(--success-700)', textDecoration: 'none', display: 'inline-flex',
                   alignItems: 'center', gap: '5px',
                 }}
               >
@@ -319,7 +320,7 @@ export default function CertificateDetail({
                 onClick={() => setRevokeConfirm(true)}
                 style={{
                   padding: '7px 14px', borderRadius: '8px', fontSize: '13px', fontWeight: 500,
-                  cursor: 'pointer', border: '1px solid #fecaca', background: '#fee2e2', color: '#ef4444',
+                  cursor: 'pointer', border: '1px solid var(--danger-200)', background: 'var(--danger-100)', color: 'var(--danger-700)',
                 }}
               >
                 {t('detail.revokeBtn')}
@@ -331,7 +332,7 @@ export default function CertificateDetail({
                 onClick={() => setReopenConfirm(true)}
                 style={{
                   padding: '7px 14px', borderRadius: '8px', fontSize: '13px', fontWeight: 500,
-                  cursor: 'pointer', border: '1px solid #bfdbfe', background: '#eff6ff', color: '#3b82f6',
+                  cursor: 'pointer', border: '1px solid var(--primary-200)', background: 'var(--primary-50)', color: 'var(--primary-700)',
                 }}
               >
                 {t('detail.reopenBtn')}
@@ -341,7 +342,7 @@ export default function CertificateDetail({
         </div>
 
         {/* Info grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '0', borderTop: '1px solid #f1f5f9', paddingTop: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '0', borderTop: '1px solid var(--gray-100)', paddingTop: '20px' }}>
           {[
             { label: t('detail.infoProject'),    value: `${projectCode} — ${projectName}` },
             { label: t('detail.infoClient'),     value: projectClient ?? '—' },
@@ -352,7 +353,7 @@ export default function CertificateDetail({
             { label: t('detail.infoIssuedBy'),   value: personLabel(cert.issued_by_profile?.full_name, cert.issued_by_profile?.id) },
           ].map((item, i) => (
             <div key={i} style={{ padding: '10px 0', paddingRight: '20px' }}>
-              <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '3px' }}>
+              <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '3px' }}>
                 {item.label}
               </div>
               <div style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-strong)' }}>{item.value}</div>
@@ -361,8 +362,8 @@ export default function CertificateDetail({
         </div>
 
         {cert.notes && (
-          <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #f1f5f9' }}>
-            <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px' }}>
+          <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--gray-100)' }}>
+            <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px' }}>
               {t('detail.notesLabel')}
             </div>
             <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0, lineHeight: '1.5' }}>{cert.notes}</p>
@@ -382,23 +383,23 @@ export default function CertificateDetail({
           </h3>
           <span style={{
             padding: '3px 10px', borderRadius: '999px', fontSize: '12px', fontWeight: 600,
-            background: approvedItrs === itrs.length && itrs.length > 0 ? '#ecfdf5' : '#eff6ff',
-            color: approvedItrs === itrs.length && itrs.length > 0 ? '#10b981' : '#3b82f6',
+            background: approvedItrs === itrs.length && itrs.length > 0 ? 'var(--success-50)' : 'var(--primary-50)',
+            color: approvedItrs === itrs.length && itrs.length > 0 ? 'var(--success-700)' : 'var(--primary-700)',
           }}>
             {t('detail.itrsApproved', { approved: approvedItrs, total: itrs.length })}
           </span>
         </div>
 
         {itrs.length === 0 ? (
-          <p style={{ fontSize: '13px', color: 'var(--gray-400)', margin: 0 }}>{t('detail.itrsEmpty')}</p>
+          <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>{t('detail.itrsEmpty')}</p>
         ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
             <thead>
-              <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
+              <tr style={{ borderBottom: '1px solid var(--gray-100)' }}>
                 {[t('detail.itrColNumber'), t('detail.itrColTag'), t('detail.itrColTemplate'), t('detail.itrColStatus')].map((h, i) => (
                   <th key={i} style={{
                     padding: '8px 12px', textAlign: 'left',
-                    fontSize: '11px', fontWeight: 600, color: 'var(--gray-400)',
+                    fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)',
                     textTransform: 'uppercase', letterSpacing: '0.05em',
                   }}>
                     {h}
@@ -411,7 +412,7 @@ export default function CertificateDetail({
                 const colors = ITR_STATUS_COLORS[itr.status as keyof typeof ITR_STATUS_COLORS] ?? ITR_STATUS_COLORS.not_started
                 const label  = itrStatusLabels[itr.status] ?? itr.status
                 return (
-                  <tr key={itr.id} style={{ borderBottom: idx < itrs.length - 1 ? '1px solid #f8fafc' : 'none' }}>
+                  <tr key={itr.id} style={{ borderBottom: idx < itrs.length - 1 ? '1px solid var(--gray-50)' : 'none' }}>
                     <td style={{ padding: '9px 12px', fontWeight: 500, color: 'var(--text-strong)' }}>
                       {itr.itr_number}
                     </td>
@@ -424,7 +425,7 @@ export default function CertificateDetail({
                     <td style={{ padding: '9px 12px' }}>
                       <span style={{
                         padding: '2px 8px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
-                        background: colors.bg, color: colors.color,
+                        background: colors.bg, color: ink(colors.color),
                       }}>
                         {label}
                       </span>
@@ -450,23 +451,23 @@ export default function CertificateDetail({
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {exceptions.map(exc => (
               <div key={exc.id} style={{
-                background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '10px', padding: '14px 16px',
+                background: 'var(--warning-50)', border: '1px solid var(--warning-200)', borderRadius: '10px', padding: '14px 16px',
               }}>
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', marginBottom: '8px' }}>
                   <span style={{
-                    fontSize: '11px', fontWeight: 700, color: '#f59e0b',
-                    background: '#fef3c7', padding: '2px 8px', borderRadius: '4px', whiteSpace: 'nowrap',
+                    fontSize: '11px', fontWeight: 700, color: 'var(--warning-700)',
+                    background: 'var(--warning-100)', padding: '2px 8px', borderRadius: '4px', whiteSpace: 'nowrap',
                   }}>
                     {exc.punches?.punch_number}
                   </span>
-                  <span style={{ fontSize: '13px', color: '#78350f', fontWeight: 500 }}>
+                  <span style={{ fontSize: '13px', color: 'var(--warning-900)', fontWeight: 500 }}>
                     {exc.punches?.description}
                   </span>
                 </div>
-                <p style={{ fontSize: '12px', color: '#92400e', margin: '0 0 8px', lineHeight: '1.5' }}>
+                <p style={{ fontSize: '12px', color: 'var(--warning-800)', margin: '0 0 8px', lineHeight: '1.5' }}>
                   <strong>{t('detail.justificationLabel')}</strong> {exc.justification}
                 </p>
-                <div style={{ fontSize: '11px', color: '#d97706' }}>
+                <div style={{ fontSize: '11px', color: 'var(--warning-700)' }}>
                   {t('detail.approvedBy', { name: personLabel(exc.approved_by_profile?.full_name, exc.approved_by_profile?.id) })}
                   {' · '}
                   {new Date(exc.approved_at).toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' })}
@@ -483,7 +484,7 @@ export default function CertificateDetail({
         padding: '24px 32px',
         boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
       }}>
-        <h3 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 24px' }}>
+        <h3 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 24px' }}>
           {t('detail.signaturesTitle')}
         </h3>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '32px' }}>
@@ -503,10 +504,10 @@ export default function CertificateDetail({
                 {sig ? (
                   <>
                     <div style={{
-                      borderBottom: '1px solid #0f172a', marginBottom: '8px', height: '50px',
+                      borderBottom: '1px solid var(--gray-900)', marginBottom: '8px', height: '50px',
                       display: 'flex', alignItems: 'flex-end', justifyContent: sig.signature_image ? 'center' : 'flex-start',
                       paddingBottom: '6px',
-                      fontFamily: 'cursive', fontSize: '18px', color: '#0f172a',
+                      fontFamily: 'cursive', fontSize: '18px', color: 'var(--text-strong)',
                     }}>
                       {sig.signature_image
                         // eslint-disable-next-line @next/next/no-img-element -- base64 signature data URL, Image optimizer doesn't apply
@@ -518,7 +519,7 @@ export default function CertificateDetail({
                     <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '3px' }}>
                       <PersonName name={sig.signer_profile?.full_name} inactive={isInactiveMember(sig.user_id, memberIds)} />
                     </div>
-                    <div style={{ fontSize: '11px', color: 'var(--gray-400)', marginTop: '2px' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
                       {t('detail.sigSignedOn', {
                         date: new Date(sig.signed_at).toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' }),
                       })}
@@ -548,11 +549,11 @@ export default function CertificateDetail({
                   <>
                     <div style={{ borderBottom: '1px dashed var(--border)', marginBottom: '8px', height: '50px' }} />
                     <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>{roleLabel}</div>
-                    <div style={{ fontSize: '11px', color: 'var(--gray-400)', marginTop: '3px' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '3px' }}>
                       {t('detail.sigPending')}
                     </div>
                     {whyNot && (
-                      <div className="no-print" style={{ fontSize: '11px', color: 'var(--gray-400)', marginTop: '8px' }}>{whyNot}</div>
+                      <div className="no-print" style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '8px' }}>{whyNot}</div>
                     )}
                     {canSign && (
                       <button
@@ -561,8 +562,8 @@ export default function CertificateDetail({
                         disabled={isPending}
                         style={{
                           marginTop: '10px', padding: '6px 14px', fontSize: '12px', fontWeight: 600,
-                          border: '1px solid #bbf7d0', borderRadius: '8px',
-                          background: '#f0fdf4', color: '#15803d',
+                          border: '1px solid var(--success-200)', borderRadius: '8px',
+                          background: 'var(--success-50)', color: 'var(--success-700)',
                           cursor: isPending ? 'wait' : 'pointer',
                         }}
                       >
@@ -619,7 +620,7 @@ export default function CertificateDetail({
               />
             </label>
             {reopenError && (
-              <p style={{ fontSize: '13px', color: '#ef4444', margin: '0 0 14px' }}>{reopenError}</p>
+              <p style={{ fontSize: '13px', color: 'var(--danger-700)', margin: '0 0 14px' }}>{reopenError}</p>
             )}
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
               <button
@@ -631,7 +632,7 @@ export default function CertificateDetail({
               <button
                 onClick={handleReopen}
                 disabled={isPending || reopenReason.trim().length < 3}
-                style={{ padding: '8px 18px', border: 'none', borderRadius: '8px', background: (reopenReason.trim().length < 3) ? '#93c5fd' : '#3b82f6', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: (isPending || reopenReason.trim().length < 3) ? 'not-allowed' : 'pointer' }}
+                style={{ padding: '8px 18px', border: 'none', borderRadius: '8px', background: (reopenReason.trim().length < 3) ? 'var(--primary-300)' : 'var(--primary-600)', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: (isPending || reopenReason.trim().length < 3) ? 'not-allowed' : 'pointer' }}
               >
                 {isPending ? t('detail.reopenModal.submitting') : t('detail.reopenModal.confirm')}
               </button>
@@ -669,7 +670,7 @@ export default function CertificateDetail({
               />
             </label>
             {revokeError && (
-              <p style={{ fontSize: '13px', color: '#ef4444', margin: '0 0 14px' }}>{revokeError}</p>
+              <p style={{ fontSize: '13px', color: 'var(--danger-700)', margin: '0 0 14px' }}>{revokeError}</p>
             )}
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
               <button
@@ -681,7 +682,7 @@ export default function CertificateDetail({
               <button
                 onClick={handleRevoke}
                 disabled={isPending || revokeReason.trim().length < 3}
-                style={{ padding: '8px 18px', border: 'none', borderRadius: '8px', background: (revokeReason.trim().length < 3) ? '#fca5a5' : '#ef4444', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: (isPending || revokeReason.trim().length < 3) ? 'not-allowed' : 'pointer' }}
+                style={{ padding: '8px 18px', border: 'none', borderRadius: '8px', background: (revokeReason.trim().length < 3) ? 'var(--danger-300)' : 'var(--danger-500)', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: (isPending || revokeReason.trim().length < 3) ? 'not-allowed' : 'pointer' }}
               >
                 {isPending ? t('detail.revokeModal.submitting') : t('detail.revokeModal.confirm')}
               </button>
@@ -801,7 +802,7 @@ function CertSignModal({
         {/* Canvas drawing pad */}
         <div style={{ marginBottom: '14px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)' }}>
+            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-body)' }}>
               {t('detail.sigCanvasLabel')}
             </span>
             <button
@@ -824,7 +825,7 @@ function CertSignModal({
             />
             {!hasDrawn && (
               <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-                <span style={{ fontSize: '13px', color: 'var(--gray-300)' }}>{t('detail.sigCanvasPlaceholder')}</span>
+                <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{t('detail.sigCanvasPlaceholder')}</span>
               </div>
             )}
           </div>
@@ -847,7 +848,7 @@ function CertSignModal({
           }}
         />
         {signError && (
-          <p style={{ fontSize: '13px', color: '#ef4444', margin: '12px 0 0' }}>{signError}</p>
+          <p style={{ fontSize: '13px', color: 'var(--danger-700)', margin: '12px 0 0' }}>{signError}</p>
         )}
         <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '20px' }}>
           <button
@@ -861,7 +862,7 @@ function CertSignModal({
             disabled={isPending || !hasDrawn}
             style={{
               padding: '8px 18px', border: 'none', borderRadius: '8px',
-              background: (isPending || !hasDrawn) ? '#a7f3d0' : '#10b981',
+              background: (isPending || !hasDrawn) ? 'var(--success-200)' : 'var(--success-500)',
               color: '#fff', fontSize: '13px', fontWeight: 600,
               cursor: (isPending || !hasDrawn) ? 'not-allowed' : 'pointer',
             }}
