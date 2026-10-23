@@ -1897,6 +1897,7 @@
         "uploading": "Subiendo…",
         "loading": "Cargando fotos…",
         "empty": "Sin fotos. Captura evidencia antes de cerrar el punch.",
+        "emptyReadOnly": "Sin fotos.",
         "delete": "Eliminar",
         "confirmDelete": "¿Eliminar esta foto?",
         "confirmCloseWithoutPhotos": "No has añadido fotos a este punch. Es recomendable adjuntar evidencia antes de cerrar. ¿Cerrar de todas formas?"
@@ -5793,7 +5794,7 @@
     "claim": "Son mías — enviar",
     "discard": "Descartar",
     "needsNetwork": "Para descartar hace falta conexión (queda constancia de lo descartado).",
-    "prepareHint": "{n, plural, =1 {Descarga tu ITR pendiente} other {Descarga tus # ITR pendientes}} para abrirlos y llenarlos sin red en campo.",
+    "prepareHint": "{n, plural, =1 {Descarga tu ITR pendiente para abrirlo y trabajarlo} other {Descarga tus # ITR pendientes para abrirlos y trabajarlos}} sin red en campo.",
     "prepare": "Preparar para trabajar sin red",
     "preparing": "Descargando…",
     "prepared": "{ok, plural, =1 {# ITR listo} other {# ITR listos}} para trabajar sin red{failed, plural, =0 {} other { · # no se pudieron descargar}}.",

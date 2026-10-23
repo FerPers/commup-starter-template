@@ -43,6 +43,8 @@ export default function NotificationsBell({
   const tx = useTranslations('NotificationsBell')
   const locale = useLocale()
   const [open, setOpen] = useState(false)
+  // Ancho y corrimiento del panel: en el teléfono la campana no está en el borde y 360 px se salían por la izquierda.
+  const [panel, setPanel] = useState({ width: 360, right: 0 })
   const [items, setItems] = useState<NotificationRow[]>([])
   const [unread, setUnread] = useState(initialUnread)
   const [loading, setLoading] = useState(false)
@@ -115,6 +117,11 @@ export default function NotificationsBell({
 
   function handleToggle() {
     const next = !open
+    if (next && wrapperRef.current) {
+      const width = Math.min(360, window.innerWidth - 16)
+      const anchorRight = wrapperRef.current.getBoundingClientRect().right
+      setPanel({ width, right: Math.min(0, anchorRight - width - 8) })
+    }
     setOpen(next)
     if (next) void loadItems()
   }
@@ -192,8 +199,8 @@ export default function NotificationsBell({
           style={{
             position: 'absolute',
             top: 'calc(100% + 6px)',
-            right: 0,
-            width: 360,
+            right: panel.right,
+            width: panel.width,
             maxHeight: 480,
             display: 'flex',
             flexDirection: 'column',

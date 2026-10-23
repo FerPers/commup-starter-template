@@ -91,7 +91,7 @@ export function canSignCertificates(role: OrgMemberRole): boolean {
   return SIGNER_ROLES.includes(role)
 }
 
-/** ¿Este rol supervisa preservación (ve la cola de vencidos)? */
+/** ¿Este rol supervisa (ve todos los vencidos de preservación y revisa categorías de punch)? El resto ve sus planes. */
 export function seesPreservation(role: OrgMemberRole): boolean {
   return OVERSIGHT_ROLES.includes(role)
 }
@@ -105,7 +105,8 @@ export function seesPreservation(role: OrgMemberRole): boolean {
  */
 export function badgeTotal(c: MyWorkCounts, role: OrgMemberRole): number {
   return c.itrs_execute + c.itrs_review + c.punches + c.plan_items + (canSignCertificates(role) ? c.signatures : 0)
-    + (seesPreservation(role) ? c.punches_review : 0) + c.actions_mine + c.constraints_mine
+    // Preservación vencida: para el supervisor es de todo el proyecto (no suma); para el resto, sus planes (suma)
+    + (seesPreservation(role) ? c.punches_review : c.preservation_overdue) + c.actions_mine + c.constraints_mine
     + c.holds_to_release + c.milestones_to_witness + c.transfers_to_sign
     + c.performance_to_decide + c.performance_to_sign + c.gates_to_cosign + c.tq_answered
 }
@@ -132,7 +133,8 @@ const NOT_CLIENT = new Set<keyof MyWorkCounts>([
 /** ¿La cola es del rol? (aunque esté en 0). Mismas reglas de rol que las consultas de la página. */
 export function queueApplies(key: keyof MyWorkCounts, role: OrgMemberRole): boolean {
   if (key === 'signatures') return canSignCertificates(role)
-  if (key === 'preservation_overdue' || key === 'punches_review' || key === 'performance_to_decide') return seesPreservation(role)
+  if (key === 'preservation_overdue') return role !== 'client'
+  if (key === 'punches_review' || key === 'performance_to_decide') return seesPreservation(role)
   if (role === 'client') return !NOT_CLIENT.has(key)
   return true
 }

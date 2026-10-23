@@ -25,6 +25,7 @@ export default function Breadcrumbs({ projectNames }: { projectNames: Record<str
   return (
     <nav
       aria-label={tBc('label')}
+      className="topbar-crumbs"
       style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0, flex: 1 }}
     >
       <ol

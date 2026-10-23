@@ -4,8 +4,21 @@
     {
       "name": "dev",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
       "port": 3000
+    },
+    {
+      "name": "local",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "scripts/e2e/run.mjs",
+        "--no-build",
+        "--serve"
+      ],
+      "port": 3100
     }
   ]
 }

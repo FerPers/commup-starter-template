@@ -136,9 +136,11 @@ export default async function MyWorkPage({ searchParams }: { searchParams: Promi
       .in('project_id', projectIds)
       .order('issued_date', { ascending: true })
       .limit(200),
-    !oversight || projectIds.length === 0 ? none : supabase
-      .from('preservation_plans')
-      .select('id, next_due_date, project_id, tags(id, tag_number, description), preservation_procedures(code, title), projects(code)')
+    // Supervisores: todos los vencidos; el resto, los planes a su cargo (igual que my_work_counts.preservation_overdue)
+    // bounded: .limit(QUEUE_LIMIT + 1) al final de la cadena
+    role === 'client' || projectIds.length === 0 ? none : (oversight
+      ? supabase.from('preservation_plans').select('id, next_due_date, project_id, tags(id, tag_number, description), preservation_procedures(code, title), projects(code)')
+      : supabase.from('preservation_plans').select('id, next_due_date, project_id, tags(id, tag_number, description), preservation_procedures(code, title), projects(code)').eq('responsible_user_id', userId))
       .eq('status', 'active')
       .lt('next_due_date', bound)
       .in('project_id', projectIds)

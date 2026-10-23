@@ -27,7 +27,7 @@ const btn = (bg: string, color: string, border: string, disabled: boolean): Reac
   cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.5 : 1,
 })
 
-export function PunchVerification({ punch, projectId, tagId, userId, role, photoCount, onUpdated }: {
+export function PunchVerification({ punch, projectId, tagId, userId, role, photoCount, onUpdated, formatWhen }: {
   punch: VerifiablePunch
   projectId: string
   tagId?: string | null
@@ -36,6 +36,8 @@ export function PunchVerification({ punch, projectId, tagId, userId, role, photo
   /** Fotos del punch, si el modal las conoce: resolver sin fotos pide confirmación. */
   photoCount?: number | null
   onUpdated: () => void
+  /** Hora de la resolución con el mismo formato que el resto de la ficha (zona del proyecto, rotulada). */
+  formatWhen: (iso: string) => string
 }) {
   const t = useTranslations('PunchVerification')
   const uid = useId()
@@ -83,7 +85,7 @@ export function PunchVerification({ punch, projectId, tagId, userId, role, photo
     )
   }
 
-  const when = punch.resolved_at ? new Date(punch.resolved_at).toLocaleString() : ''
+  const when = punch.resolved_at ? formatWhen(punch.resolved_at) : ''
   return (
     <div style={{ ...box, background: 'var(--violet-50)', borderColor: 'var(--violet-200)' }}>
       <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--violet-800)' }}>

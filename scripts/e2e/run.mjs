@@ -3,13 +3,16 @@
 //   npm run e2e                 → toma URL y llaves de `supabase status`, compila la app con ellas y corre Playwright
 //   npm run e2e -- --no-build   → reutiliza la compilación anterior (solo si ya se compiló contra el local)
 //   npm run e2e -- <args>       → el resto va a `playwright test` (p. ej. --headed, -g "sin red")
+//   npm run e2e -- --serve      → en vez de Playwright, sirve la compilación en :3100 (revisión en pantalla con
+//                                 supabase/seed/review.sql; launch.json «local»)
 // Requiere `supabase start` (y `supabase db reset` para la semilla supabase/seed/e2e.sql). Se niega a correr si la
 // URL no es 127.0.0.1/localhost: estas pruebas escriben respuestas, fotos y firmas.
 import { execFileSync, spawnSync } from 'node:child_process'
 
 const args = process.argv.slice(2)
 const noBuild = args.includes('--no-build')
-const pwArgs = args.filter(a => a !== '--no-build')
+const serve = args.includes('--serve')
+const pwArgs = args.filter(a => a !== '--no-build' && a !== '--serve')
 
 function supabaseEnv() {
   if (process.env.E2E_SUPABASE_URL && process.env.E2E_ANON_KEY && process.env.E2E_SERVICE_ROLE_KEY) {
@@ -48,4 +51,5 @@ function run(cmd, cmdArgs) {
 }
 
 if (!noBuild) run('npx', ['next', 'build'])
-run('npx', ['playwright', 'test', ...pwArgs])
+if (serve) run('npx', ['next', 'start', '-p', String(process.env.E2E_PORT ?? 3100)])
+else run('npx', ['playwright', 'test', ...pwArgs])

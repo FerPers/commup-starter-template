@@ -98,6 +98,9 @@ AS $function$
       from preservation_plans pp
       join proj on proj.id = pp.project_id
       where public.preservation_is_overdue(pp.status, pp.next_due_date, proj.today)
+        -- Los supervisores ven todos los vencidos; el resto, los planes a su cargo (antes contaba todos para todos
+        -- y el inspector y el cliente veían la cola con un número y sin filas).
+        and ((select role from me) in ('owner', 'admin', 'architect', 'leader') or pp.responsible_user_id = auth.uid())
     ),
     'actions_mine', (
       select count(*)

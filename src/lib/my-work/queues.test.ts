@@ -34,9 +34,9 @@ describe('parseCounts / badgeTotal', () => {
     expect(parseCounts({ itrs_execute: '3', punches: -2, signatures: 1.9 })).toMatchObject({ itrs_execute: 3, punches: 0, signatures: 1 })
   })
 
-  it('el badge suma lo personal; las firmas solo para roles firmantes; preservación nunca', () => {
+  it('el badge suma lo personal; las firmas solo para roles firmantes; preservación solo la propia (no supervisores)', () => {
     const c = { ...EMPTY_COUNTS, itrs_execute: 2, itrs_review: 1, punches: 3, plan_items: 1, signatures: 4, preservation_overdue: 9 }
-    expect(badgeTotal(c, 'inspector')).toBe(7)
+    expect(badgeTotal(c, 'inspector')).toBe(16)
     expect(badgeTotal(c, 'leader')).toBe(7)
     expect(badgeTotal(c, 'architect')).toBe(11)
     expect(badgeTotal(c, 'owner')).toBe(11)
@@ -81,6 +81,8 @@ describe('parseCounts / badgeTotal', () => {
     expect(keysOf(chipGroups(EMPTY_COUNTS, 'client'))).not.toContain('registers_to_verify')
     expect(keysOf(chipGroups({ ...EMPTY_COUNTS, registers_to_verify: 1 }, 'client'))).toContain('registers_to_verify')
     expect(queueApplies('itrs_execute', 'client')).toBe(false)
+    expect(queueApplies('preservation_overdue', 'inspector')).toBe(true)
+    expect(queueApplies('preservation_overdue', 'client')).toBe(false)
     expect(queueApplies('performance_to_decide', 'leader')).toBe(true)
     // cada contador está en exactamente un grupo
     expect(CHIP_GROUPS.flatMap(g => g.keys).sort()).toEqual(Object.keys(EMPTY_COUNTS).sort())

@@ -148,7 +148,8 @@ export default function PunchPhotosSection({
           border: '1px dashed var(--border)', borderRadius: 6,
           margin: 0, textAlign: 'center',
         }}>
-          {t('empty')}
+          {/* Quien no sube fotos (el cliente) no recibe la indicación de capturar evidencia */}
+          {canUpload ? t('empty') : t('emptyReadOnly')}
         </p>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>

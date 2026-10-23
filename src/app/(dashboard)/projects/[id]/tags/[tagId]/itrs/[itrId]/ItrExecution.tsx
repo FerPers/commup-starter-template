@@ -34,6 +34,7 @@ import { ROLE_TIERS } from '@/lib/constants/roles'
 import { applyTheme, currentTheme, THEME_EVENT } from '@/lib/theme/client'
 import type { Theme } from '@/types/theme'
 import { ink, alpha } from '@/lib/theme'
+import { formatInZone } from '@/lib/time/zone'
 
 export default function ItrExecution({
   itr,
@@ -49,6 +50,7 @@ export default function ItrExecution({
   conflictsSlot,
   assignable,
   punchAssignees = [],
+  timezone,
 }: {
   itr: ItrData
   projectId: string
@@ -69,6 +71,8 @@ export default function ItrExecution({
   assignable?: AssignableMember[]
   /** S06 (C-22): miembros a los que se puede asignar un punch desde el ITR. */
   punchAssignees?: Array<{ user_id: string; full_name: string }>
+  /** Zona del proyecto: la hora de cada firma se muestra en ella y rotulada (el servidor corre en UTC). */
+  timezone: string
 }) {
   const router = useRouter()
   const t = useTranslations('ItrExecution')
@@ -465,8 +469,6 @@ export default function ItrExecution({
           {requiredRoles.map(role => {
             const sig = effectiveSignatures.find(s => s.role === role)
             const assignee = itr.itr_assignments.find(a => a.role === role)
-            const signedDate = sig ? sig.signed_at.slice(0, 10).split('-').reverse().join('/') : null
-            const signedTime = sig ? sig.signed_at.slice(11, 16) : null
             return (
               <div key={role} style={{ borderRadius: '7px', background: sig?.pending ? 'var(--warning-50)' : sig ? 'var(--success-50)' : 'var(--gray-50)', border: `1px solid ${sig?.pending ? 'var(--warning-200)' : sig ? 'var(--success-200)' : 'var(--border)'}`, overflow: 'hidden', minWidth: '130px' }}>
                 <div style={{ padding: '7px 10px' }}>
@@ -480,7 +482,7 @@ export default function ItrExecution({
                         <PersonName name={sig.profiles?.full_name} inactive={isInactiveMember(sig.user_id, memberIds)} />{sig.signer_company ? ` · ${sig.signer_company}` : ''}
                       </div>
                       <div style={{ fontSize: '10px', color: sig.pending ? 'var(--warning-700)' : 'var(--text-muted)', marginLeft: '17px', marginTop: '1px' }}>
-                        {sig.pending ? t('sync.pending') : `${signedDate} ${signedTime}`}
+                        {sig.pending ? t('sync.pending') : formatInZone(sig.signed_at, timezone, locale)}
                       </div>
                     </>
                   )}
@@ -682,14 +684,15 @@ export default function ItrExecution({
           >
             {t('footer.btnPunch')}
           </button>}
-          <button
+          {/* Con el ITR firmado o aprobado ya no se agregan fotos: el botón no se ofrece */}
+          {(canCapture || generalUploading) && <button
             onClick={() => generalPhotoInputRef.current?.click()}
             disabled={!canCapture || generalUploading}
             title={generalUploadError ?? t('upload.addPhoto')}
             style={{ ...footerBtn, background: generalUploading ? 'var(--primary-50)' : 'var(--success-50)', border: `1px solid ${generalUploadError ? 'var(--danger-300)' : 'var(--success-200)'}`, color: generalUploading ? 'var(--primary-700)' : 'var(--success-700)', cursor: canCapture && !generalUploading ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', gap: '5px' }}
           >
             {generalUploading ? '⏳' : '📷'} {(attachmentMap['general'] ?? []).length > 0 ? t('footer.btnPhotos', { count: (attachmentMap['general'] ?? []).length }) : t('footer.btnPhoto')}
-          </button>
+          </button>}
           {(() => {
             const allRolesPending = allRequiredSigned(requiredRoles, effectiveSignatures.map(s => s.role))
             const canSign = signingReady && !allRolesPending

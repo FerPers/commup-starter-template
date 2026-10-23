@@ -775,7 +775,10 @@ body.drawer-locked { overflow: hidden; }
    Búsqueda ⌘K (N3a)
    ========================================================================== */
 @media (max-width: 639px) {
-  .cmdk-trigger { width: 40px; justify-content: center; padding: 0 !important; }
+  .cmdk-trigger { width: 40px; flex-shrink: 0; justify-content: center; padding: 0 !important; }
+  .usermenu-org { display: none; }
+  /* En el teléfono a las migas les quedaban ~20 px («Mi…»): el nav queda solo como espaciador */
+  .topbar-crumbs > ol { display: none !important; }
   .cmdk-trigger-label { display: none; }
   .cmdk-backdrop { padding-top: 0 !important; }
   .cmdk-panel { width: 100vw !important; max-height: 100dvh !important; height: 100dvh; border-radius: 0 !important; }

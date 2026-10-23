@@ -1897,6 +1897,7 @@
         "uploading": "Uploading…",
         "loading": "Loading photos…",
         "empty": "No photos. Capture evidence before closing the punch.",
+        "emptyReadOnly": "No photos.",
         "delete": "Delete",
         "confirmDelete": "Delete this photo?",
         "confirmCloseWithoutPhotos": "You haven't added any photos to this punch. Attaching evidence is recommended before closing. Close anyway?"
@@ -5793,7 +5794,7 @@
     "claim": "They are mine — send",
     "discard": "Discard",
     "needsNetwork": "Discarding needs a connection (a record of what was discarded is kept).",
-    "prepareHint": "{n, plural, =1 {Download your pending ITR} other {Download your # pending ITRs}} to open and fill them offline in the field.",
+    "prepareHint": "{n, plural, =1 {Download your pending ITR to open and work on it} other {Download your # pending ITRs to open and work on them}} offline in the field.",
     "prepare": "Prepare to work offline",
     "preparing": "Downloading…",
     "prepared": "{ok, plural, =1 {# ITR ready} other {# ITRs ready}} to work offline{failed, plural, =0 {} other { · # could not be downloaded}}.",

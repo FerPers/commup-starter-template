@@ -124,6 +124,7 @@ export default async function ItrExecutionPage({
         currentUserId={ctx.userId}
         currentUserRole={membership.role}
         canEdit={canEdit}
+        timezone={projectToday.timezone}
         attachments={attachments}
         memberIds={(members ?? []).map(m => m.user_id)}
         punchAssignees={canEdit

@@ -113,8 +113,9 @@ export default function PunchDetail({ punch, projectId, projectName, timezone, t
   const meta: Array<[string, React.ReactNode]> = [
     [t('page.raisedBy'), <>{who(punch.raised_by)} · {when(punch.created_at)}</>],
     [t('page.assignedTo'), who(punch.assigned_to)],
-    ...(punch.target_date ? [[t('page.targetDate'), punch.target_date] as [string, React.ReactNode]] : []),
-    ...(punch.closed_date ? [[t('page.closedDate'), punch.closed_date] as [string, React.ReactNode]] : []),
+    // Fecha de calendario (sin hora): se formatea en UTC para que no corra un día según la zona
+    ...(punch.target_date ? [[t('page.targetDate'), formatInZone(punch.target_date, 'UTC', locale, false)] as [string, React.ReactNode]] : []),
+    ...(punch.closed_date ? [[t('page.closedDate'), formatInZone(punch.closed_date, 'UTC', locale, false)] as [string, React.ReactNode]] : []),
     ...(punch.subsystem ? [[t('page.location'), `${punch.subsystem.system ? `${punch.subsystem.system.code} › ` : ''}${punch.subsystem.code} — ${punch.subsystem.name}`] as [string, React.ReactNode]] : []),
     ...(punch.discipline ? [[t('page.discipline'), <span key="d" style={{ color: ink(punch.discipline.color), fontWeight: 600 }}>{punch.discipline.code} · {punch.discipline.name}</span>] as [string, React.ReactNode]] : []),
   ]
@@ -176,6 +177,7 @@ export default function PunchDetail({ punch, projectId, projectName, timezone, t
           <PunchVerification
             punch={punch}
             projectId={projectId} tagId={tagId} userId={userId} role={role} photoCount={photoCount} onUpdated={refresh}
+            formatWhen={when}
           />
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: canReassign ? '16px' : 0 }}>
             {punch.status !== 'in_progress' && role !== 'client' && (

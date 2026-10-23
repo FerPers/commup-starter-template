@@ -166,8 +166,9 @@ export default function UserMenu({
         <span style={{ textTransform: 'capitalize' }}>{roleLabels[activeRole] ?? activeRole}</span>
         {activeOrgName && (
           <>
-            <span aria-hidden="true" style={{ opacity: 0.5, fontWeight: 400 }}>@</span>
-            <span style={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>{activeOrgName}</span>
+            {/* En el teléfono no cabe: quedaba «@ C…» (usermenu-org en globals.css) */}
+            <span aria-hidden="true" className="usermenu-org" style={{ opacity: 0.5, fontWeight: 400 }}>@</span>
+            <span className="usermenu-org" style={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>{activeOrgName}</span>
           </>
         )}
         <ChevronDown size={14} style={{ opacity: 0.7, flexShrink: 0, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }} />
