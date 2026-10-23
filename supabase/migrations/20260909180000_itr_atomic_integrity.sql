@@ -215,7 +215,7 @@ CREATE TRIGGER itr_items_frozen BEFORE INSERT OR UPDATE OR DELETE ON public.itr_
 CREATE TRIGGER itr_sections_frozen BEFORE INSERT OR UPDATE OR DELETE ON public.itr_template_sections FOR EACH ROW EXECUTE FUNCTION public.guard_assigned_itr_template();
 
 REVOKE INSERT,UPDATE,DELETE,TRUNCATE ON public.itr_signatures FROM PUBLIC,authenticated,anon,service_role;
-CREATE OR REPLACE FUNCTION public.sign_itr_atomic(p_itr_id uuid,p_role text,p_signature_image text DEFAULT NULL) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public."sign_itr_atomic"(p_itr_id uuid,p_role text,p_signature_image text DEFAULT NULL) RETURNS jsonb
 LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,pg_temp AS $$
 DECLARE v public.itrs; e jsonb; roles text[]:=ARRAY['executor','supervisor','client']; uid uuid:=auth.uid(); org uuid; result_status text;
 BEGIN
@@ -240,7 +240,7 @@ BEGIN
  END IF;
  RETURN jsonb_build_object('status',result_status,'project_id',v.project_id,'tag_id',v.tag_id);
 END $$;
-CREATE OR REPLACE FUNCTION public.reopen_itr_atomic(p_itr_id uuid,p_reason text) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public."reopen_itr_atomic"(p_itr_id uuid,p_reason text) RETURNS jsonb
 LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,pg_temp AS $$
 DECLARE v public.itrs; uid uuid:=auth.uid(); org uuid; signatures jsonb; n integer;
 BEGIN
@@ -258,8 +258,8 @@ BEGIN
  UPDATE public.itrs SET status=CASE WHEN v.status='approved' THEN 'completed'::public.itr_status ELSE v.status END WHERE id=p_itr_id;
  RETURN jsonb_build_object('revoked_count',n,'previous_signatures',signatures,'project_id',v.project_id,'tag_id',v.tag_id,'itr_number',v.itr_number);
 END $$;
-REVOKE ALL ON FUNCTION public.sign_itr_atomic(uuid,text,text),public.reopen_itr_atomic(uuid,text) FROM PUBLIC,anon;
-GRANT EXECUTE ON FUNCTION public.sign_itr_atomic(uuid,text,text),public.reopen_itr_atomic(uuid,text) TO authenticated;
+REVOKE ALL ON FUNCTION public."sign_itr_atomic"(uuid,text,text),public."reopen_itr_atomic"(uuid,text) FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public."sign_itr_atomic"(uuid,text,text),public."reopen_itr_atomic"(uuid,text) TO authenticated;
 
 -- Restrictive policies supplement existing bucket access; they never grant access.
 DO $$ BEGIN

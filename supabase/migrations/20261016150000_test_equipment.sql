@@ -190,7 +190,7 @@ $fn$;
 REVOKE EXECUTE ON FUNCTION public.itr_test_equipment_blocker(uuid) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.itr_test_equipment_blocker(uuid) TO authenticated, service_role;
 
-CREATE OR REPLACE FUNCTION public.sign_itr_atomic(p_itr_id uuid, p_role text, p_signature_image text DEFAULT NULL::text)
+CREATE OR REPLACE FUNCTION public."sign_itr_atomic"(p_itr_id uuid, p_role text, p_signature_image text DEFAULT NULL::text)
  RETURNS jsonb
  LANGUAGE plpgsql
  SECURITY DEFINER

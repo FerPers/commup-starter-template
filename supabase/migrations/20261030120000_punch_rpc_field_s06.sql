@@ -257,7 +257,7 @@ $function$;
 
 
 -- next_punch_number_atomic  (supabase/functions-sql/next_punch_number_atomic.sql)
-CREATE OR REPLACE FUNCTION public.next_punch_number_atomic(p_project_id uuid)
+CREATE OR REPLACE FUNCTION public."next_punch_number_atomic"(p_project_id uuid)
  RETURNS text
  LANGUAGE plpgsql
  SECURITY DEFINER

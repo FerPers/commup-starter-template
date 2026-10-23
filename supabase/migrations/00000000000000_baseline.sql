@@ -2,7 +2,6 @@
 -- PostgreSQL database dump
 --
 
-\restrict xH47aHm3BcaoeAmXf6AM40Y2pF3dVYWpCUmUxs3iCSBF6hdRRSHi3c0qpzCcXZO
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 18.4
@@ -23,7 +22,7 @@ SET row_security = off;
 -- Name: public; Type: SCHEMA; Schema: -; Owner: -
 --
 
-CREATE SCHEMA public;
+CREATE SCHEMA IF NOT EXISTS public;
 
 
 --
@@ -1520,7 +1519,7 @@ $$;
 -- Name: next_punch_number_atomic(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.next_punch_number_atomic(p_project_id uuid) RETURNS text
+CREATE FUNCTION public."next_punch_number_atomic"(p_project_id uuid) RETURNS text
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $_$
@@ -8414,5 +8413,4 @@ CREATE POLICY workflow_rules_update ON public.workflow_rules FOR UPDATE USING (p
 -- PostgreSQL database dump complete
 --
 
-\unrestrict xH47aHm3BcaoeAmXf6AM40Y2pF3dVYWpCUmUxs3iCSBF6hdRRSHi3c0qpzCcXZO
 

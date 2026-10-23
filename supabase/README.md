@@ -28,7 +28,17 @@ supabase db reset                              # rebuilds local from baseline + 
 # when ready for prod, apply via MCP apply_migration or supabase db push
 ```
 
-Never edit `00000000000000_baseline.sql` after this point — additive migrations only.
+Never edit `00000000000000_baseline.sql` after this point — additive migrations only. (Exception, 2026-10-22: non-semantic edits so `supabase db push` can run it — see «Reproducibility» below.)
+
+**Every change to prod goes through a file in `migrations/` with the same version it is registered under.** `apply_migration` (MCP) registers its own timestamp and `supabase db query` registers nothing: after applying that way, register the file's version (`supabase migration repair --status applied <version>`). Nothing is created in prod from the SQL editor or the dashboard (extensions, publications, crons, RLS toggles): it goes in a migration.
+
+## Reproducibility (2026-10-22)
+
+Baseline + migrations rebuild prod's `public` schema exactly: verified on an empty project by comparing `scripts/loadtest/schema-ddl.sql` against prod with `scripts/loadtest/compare-ddl.mjs` (0 differences). What it took:
+
+- Three migrations applied in prod without a file were recovered from `supabase_migrations.schema_migrations.statements` (`20260909252000`, `20260909253000`, `20260910110000`); the rest of the manual changes live in `20261204120000_catchup_prod_drift.sql`; `00000000000001_platform_extensions.sql` enables `pg_cron` and `pg_net` (a new project lacks them).
+- What `supabase db push` (CLI 2.90) cannot run: psql metacommands (`\restrict`) and `CREATE SCHEMA public` without IF NOT EXISTS in the baseline; `CREATE INDEX CONCURRENTLY` (each migration goes in one pipeline); and an unquoted name ending in `_atomic` (`sign_itr_atomic`, …) in `CREATE FUNCTION`/`GRANT`/`REVOKE`, which its statement splitter mistakes for `BEGIN ATOMIC` — write `public."sign_itr_atomic"(…)` there.
+- Prod's migration registry still has the MCP timestamps (~89 rows that do not match the file names); repairing it is pending.
 
 ## Applying to a fresh environment
 
@@ -37,7 +47,7 @@ supabase link --project-ref <ref>
 supabase db push                # applies baseline + every later migration in order
 ```
 
-The baseline targets a clean Postgres database. It assumes the Supabase managed schemas (`auth`, `storage`, `realtime`, `extensions`, `vault`) already exist — which is the case on any provisioned Supabase project.
+The baseline targets a clean Postgres database. It assumes the Supabase managed schemas (`auth`, `storage`, `realtime`, `extensions`, `vault`) already exist — which is the case on any provisioned Supabase project. Vault secrets (`edge_function_url`, `webhook_dispatcher_url`, `service_role_key`) are per-environment and not in migrations.
 
 ## Marking baseline as applied on an existing prod
 

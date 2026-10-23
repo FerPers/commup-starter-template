@@ -334,8 +334,8 @@ REVOKE ALL ON FUNCTION public.new_performance_revision(p_test_id uuid, p_reason 
 GRANT EXECUTE ON FUNCTION public.new_performance_revision(p_test_id uuid, p_reason text) TO authenticated, service_role;
 REVOKE ALL ON FUNCTION public.new_procedure_revision(p_procedure_id uuid, p_reason text) FROM PUBLIC, anon, authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.new_procedure_revision(p_procedure_id uuid, p_reason text) TO authenticated, service_role;
-REVOKE ALL ON FUNCTION public.next_punch_number_atomic(p_project_id uuid) FROM PUBLIC, anon, authenticated, service_role;
-GRANT EXECUTE ON FUNCTION public.next_punch_number_atomic(p_project_id uuid) TO service_role;
+REVOKE ALL ON FUNCTION public."next_punch_number_atomic"(p_project_id uuid) FROM PUBLIC, anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public."next_punch_number_atomic"(p_project_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.notify_webhook_dispatcher() FROM PUBLIC, anon, authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.notify_webhook_dispatcher() TO service_role;
 REVOKE ALL ON FUNCTION public.open_shift_handover(p_project_id uuid, p_shift_label text, p_shift_date date) FROM PUBLIC, anon, authenticated, service_role;
@@ -414,8 +414,8 @@ REVOKE ALL ON FUNCTION public.release_hold_point(p_run_id uuid, p_step_id uuid, 
 GRANT EXECUTE ON FUNCTION public.release_hold_point(p_run_id uuid, p_step_id uuid, p_comment text) TO authenticated, service_role;
 REVOKE ALL ON FUNCTION public.remove_document_reference(p_reference_id uuid) FROM PUBLIC, anon, authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.remove_document_reference(p_reference_id uuid) TO authenticated, service_role;
-REVOKE ALL ON FUNCTION public.reopen_itr_atomic(p_itr_id uuid, p_reason text) FROM PUBLIC, anon, authenticated, service_role;
-GRANT EXECUTE ON FUNCTION public.reopen_itr_atomic(p_itr_id uuid, p_reason text) TO authenticated, service_role;
+REVOKE ALL ON FUNCTION public."reopen_itr_atomic"(p_itr_id uuid, p_reason text) FROM PUBLIC, anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public."reopen_itr_atomic"(p_itr_id uuid, p_reason text) TO authenticated, service_role;
 REVOKE ALL ON FUNCTION public.request_ownership_transfer(p_system_id uuid, p_to_stage text, p_exceptions jsonb, p_reason text) FROM PUBLIC, anon, authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.request_ownership_transfer(p_system_id uuid, p_to_stage text, p_exceptions jsonb, p_reason text) TO authenticated, service_role;
 REVOKE ALL ON FUNCTION public.resolve_punch(p_punch_id uuid, p_comment text) FROM PUBLIC, anon, authenticated, service_role;
@@ -474,8 +474,8 @@ REVOKE ALL ON FUNCTION public.set_vendor_checklist_item(p_package_id uuid, p_pha
 GRANT EXECUTE ON FUNCTION public.set_vendor_checklist_item(p_package_id uuid, p_phase text, p_key text, p_done boolean, p_note text) TO authenticated, service_role;
 REVOKE ALL ON FUNCTION public.set_webhook_enabled(p_sub_id uuid, p_enabled boolean) FROM PUBLIC, anon, authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.set_webhook_enabled(p_sub_id uuid, p_enabled boolean) TO authenticated, service_role;
-REVOKE ALL ON FUNCTION public.sign_itr_atomic(p_itr_id uuid, p_role text, p_signature_image text) FROM PUBLIC, anon, authenticated, service_role;
-GRANT EXECUTE ON FUNCTION public.sign_itr_atomic(p_itr_id uuid, p_role text, p_signature_image text) TO authenticated, service_role;
+REVOKE ALL ON FUNCTION public."sign_itr_atomic"(p_itr_id uuid, p_role text, p_signature_image text) FROM PUBLIC, anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public."sign_itr_atomic"(p_itr_id uuid, p_role text, p_signature_image text) TO authenticated, service_role;
 REVOKE ALL ON FUNCTION public.sign_ownership_transfer(p_transfer_id uuid, p_capacity text) FROM PUBLIC, anon, authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.sign_ownership_transfer(p_transfer_id uuid, p_capacity text) TO authenticated, service_role;
 REVOKE ALL ON FUNCTION public.sign_performance_certificate(p_certificate_id uuid, p_capacity text) FROM PUBLIC, anon, authenticated, service_role;

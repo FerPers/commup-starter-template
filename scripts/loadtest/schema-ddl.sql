@@ -1,8 +1,9 @@
 -- Esquema `public` de prod como DDL ordenado (una fila por sentencia: tipos, tablas, funciones, vistas, defaults,
--- restricciones, índices, triggers, RLS y políticas), leído SOLO del catálogo. Para clonar el esquema en un proyecto
--- aparte donde sembrar el banco: las migraciones del repo no reproducen prod (2026-10-22: funciones y columnas
--- creadas fuera de migraciones), y `supabase db dump` necesita Docker.
+-- restricciones, índices, triggers, RLS y políticas), leído SOLO del catálogo. Sirve para comprobar que las migraciones
+-- reproducen prod (compare-ddl.mjs entre prod y un proyecto vacío armado con ellas) y para clonar el esquema en un
+-- proyecto aparte sin pasar por las migraciones (`supabase db dump` necesita Docker).
 -- Uso: supabase db query --linked -o json -f scripts/loadtest/schema-ddl.sql > /tmp/ddl.json   (lectura en prod)
+--      node scripts/loadtest/compare-ddl.mjs /tmp/ddl.json /tmp/otro-ddl.json
 --      node scripts/loadtest/apply-ddl.mjs /tmp/ddl.json <dir-enlazado-al-proyecto-de-bench>
 WITH rel AS (
   SELECT c.oid, c.relname, c.relkind, c.relispartition, c.relrowsecurity, c.relforcerowsecurity, c.reloptions

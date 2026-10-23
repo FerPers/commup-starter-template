@@ -8,7 +8,8 @@
 --
 -- Proyecto aparte (plan gratuito, sin ramas ni Docker; así se midió R2b el 2026-10-22):
 --   1. Crear el proyecto y enlazarlo en un directorio propio: supabase link --project-ref <ref> --workdir <dir>
---   2. Clonar el esquema de prod: schema-ddl.sql (lectura en prod) + apply-ddl.mjs <ddl.json> <dir>
+--   2. Esquema: `supabase db push --workdir <dir>` (las migraciones reproducen prod desde 2026-10-22) o clonarlo del
+--      catálogo de prod: schema-ddl.sql (lectura en prod) + apply-ddl.mjs <ddl.json> <dir>
 --   3. node scripts/loadtest/run.mjs scripts/loadtest/seed.sql --workdir <dir>   (≈ 4 min)
 --   4. node scripts/loadtest/run.mjs scripts/loadtest/bench.sql --workdir <dir>
 --   5. Borrar el proyecto desde el panel.
