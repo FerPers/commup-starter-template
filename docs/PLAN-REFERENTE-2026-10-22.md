@@ -224,6 +224,7 @@ Una sola sesión de maquetas en un lienzo, como en N1–N3:
 | D2 base de pruebas aparte | Al recrear LOADTEST en R5 conviene decidirlo de nuevo (hoy los tests escriben en prod) |
 | Tuyos: invitar `+smtp2` como cliente y firmar PTC-0001; probar la subida de PDF en Documentos | Cuando puedas |
 | Aplazados por ti: ITR v2 Fase 1 y calibración de la tabla v2 (después de tu revisión campo por campo) | Sin fecha; R mejora con un catálogo mejor |
+| TQ (decisión de Luis, 2026-10-23): CommUp **no** amplía el módulo de TQ (es de ingeniería y construcción; su dueño es el EDMS o el sistema del EPC). Descartados el aviso y la cola «TQ por responder» del cliente. El módulo actual queda tal cual para proyectos sin EDMS; a futuro, TQ como referencia externa ligada a una restricción del sistema | Con la integración EDMS (trimestre) |
 | Trimestre: membresía por proyecto, SSO/MFA y reautenticación al firmar, P6, EDMS, observabilidad, brechas de la API v1, red-line | Después de P |
 
 ---
