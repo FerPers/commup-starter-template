@@ -475,7 +475,15 @@
       "signC": "Firm.C"
     },
     "generate": "Generar ITR",
-    "requirements": "Requisitos ITR"
+    "requirements": "Requisitos ITR",
+    "mobile": {
+      "more": "Más acciones",
+      "search": "Buscar ITR o tag",
+      "filters": "Filtros",
+      "filtersN": "Filtros · {count}",
+      "mine": "Asignados a mí",
+      "done": "Listo"
+    }
   },
   "PunchList": {
     "title": "Punch",
@@ -662,7 +670,18 @@
       "colStatus": "Estado",
       "execute": "Ejecutar"
     },
-    "empty": "No hay planes de preservación que coincidan."
+    "empty": "No hay planes de preservación que coincidan.",
+    "mobile": {
+      "scope": "Planes a mostrar",
+      "mine": "A mi cargo · {count}",
+      "all": "Todos · {count}",
+      "summary": "{overdue, plural, one {# vencido} other {# vencidos}} · {soon} esta semana · {active, plural, one {# activo} other {# activos}}",
+      "groupOverdue": "Vencidos",
+      "groupSoon": "Esta semana",
+      "groupOk": "Al día",
+      "groupOther": "Suspendidos o completados",
+      "showMore": "Ver {count} más"
+    }
   },
   "Certificates": {
     "blocked": "Bloqueado",

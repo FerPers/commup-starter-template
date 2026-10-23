@@ -757,19 +757,33 @@ body.drawer-locked { overflow: hidden; }
   100%    { box-shadow: 0 0 0 3px transparent; }
 }
 
-@media (max-width: 1023px) {
-  /* La barra fija del ITR queda encima de la barra inferior de los roles de campo, no la tapa. */
-  .app-main.has-tabbar .itr-footer {
-    bottom: calc(60px + env(safe-area-inset-bottom, 0px)) !important;
-    padding-bottom: 10px !important;
-  }
-}
+/* Backlog 4: sin barra de pestañas en la ejecución del ITR (MobileTabBar no se pinta ahí) */
+.app-main.has-tabbar:has(.itr-footer) { padding-bottom: 0; }
 
 @media (max-width: 639px) {
   .itr-footer-status { flex: 1 1 100%; }
+  .itr-footer-status:not(.is-alert) { display: none; }
   .itr-footer-extra { display: none; }
   .itr-footer-more { display: block; }
+  /* Una sola fila: ↓ N · Punch · Foto · Firmar (lo que sobra) · ⋯ */
+  .itr-footer { padding-left: 12px !important; padding-right: 12px !important; }
+  .itr-footer-actions { flex-wrap: nowrap !important; width: 100%; margin-left: 0 !important; }
+  .itr-footer-actions > * { flex-shrink: 0; }
+  .itr-footer-actions > button { padding-left: 10px !important; padding-right: 10px !important; }
+  .itr-footer-sign { flex: 1 1 auto; flex-shrink: 1 !important; min-width: 0; padding-left: 8px !important; padding-right: 8px !important; }
 }
+
+/* ==========================================================================
+   Teléfono vs escritorio (backlog 3–4, 2026-10-23): versiones de una misma vista para < 640 px. Con !important
+   porque los componentes ponen `display` en línea.
+   ========================================================================== */
+@media (max-width: 639px) {
+  .desk-only { display: none !important; }
+}
+@media (min-width: 640px) {
+  .phone-only { display: none !important; }
+}
+.itr-filter-sheet select { width: 100%; min-height: 44px; font-size: 16px !important; }
 
 /* ==========================================================================
    Búsqueda ⌘K (N3a)

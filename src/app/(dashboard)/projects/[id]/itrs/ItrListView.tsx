@@ -14,7 +14,7 @@ import { browserToday } from '@/lib/time/zone'
 import { normalizeRequired } from '@/lib/itr/signatures'
 import AddToWorkPlanModal, { type ModalItr } from '@/components/AddToWorkPlanModal'
 import { ITR_STATUS_COLORS } from '@/lib/constants/status-colors'
-import { Pagination } from '@/components/ui'
+import { Modal, Pagination } from '@/components/ui'
 import { useUrlFilters } from '@/lib/list/useUrlFilters'
 import type { ItrListRow, ItrSortKey, ItrStatusCounts } from '@/lib/list/itr-types'
 import type { SortDir } from '@/lib/list/params'
@@ -179,6 +179,55 @@ export default function ItrListView({
 
   const busy = isPending || url.isPending
 
+  // Teléfono (backlog 3, 2026-10-23): lista primero; filtros en una hoja y acciones de escritorio en «⋯»
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  const [moreOpen, setMoreOpen] = useState(false)
+  const sheetFilters = [filters.phase, filters.disc, filters.area, filters.system, filters.subsystem, filters.project,
+    filters.assignee && filters.assignee !== 'me' ? filters.assignee : ''].filter(Boolean).length
+  const filterSelects = (
+    <>
+      {allScope && (
+        <select value={filters.project ?? ''} onChange={e => url.set({ project: e.target.value })} style={selStyle} aria-label={tc('allProjects')}>
+          <option value="">{tc('allProjects')}</option>
+          {projects.map(p => <option key={p.id} value={p.id}>{p.code} — {p.name}</option>)}
+        </select>
+      )}
+      <select value={filters.phase} onChange={e => url.set({ phase: e.target.value })} style={selStyle} aria-label={t('filters.allPhases')}>
+        <option value="">{t('filters.allPhases')}</option>
+        {phases.map(p => <option key={p.id} value={p.code}>{p.code} — {p.name}</option>)}
+      </select>
+      <select value={filters.disc} onChange={e => url.set({ disc: e.target.value })} style={selStyle} aria-label={t('filters.allDisciplines')}>
+        <option value="">{t('filters.allDisciplines')}</option>
+        {disciplines.map(d => <option key={d.code} value={d.code}>{d.code} — {d.name}</option>)}
+      </select>
+      {scopes.areas.length > 0 && (
+        <select value={filters.area} onChange={e => url.set({ area: e.target.value, system: '', subsystem: '' })} style={selStyle} aria-label={t('filters.allAreas')}>
+          <option value="">{t('filters.allAreas')}</option>
+          {scopes.areas.map(a => <option key={a.id} value={a.id}>{a.code} — {a.name}</option>)}
+        </select>
+      )}
+      {!allScope && (
+        <>
+          <select value={filters.system} onChange={e => url.set({ system: e.target.value, subsystem: '' })} style={selStyle} aria-label={t('filters.allSystems')}>
+            <option value="">{t('filters.allSystems')}</option>
+            {visibleSystems.map(s => <option key={s.id} value={s.id}>{s.code} — {s.name}</option>)}
+          </select>
+          <select value={filters.subsystem} onChange={e => url.set({ subsystem: e.target.value })} style={selStyle} aria-label={t('filters.allSubsystems')}>
+            <option value="">{t('filters.allSubsystems')}</option>
+            {visibleSubsystems.map(s => <option key={s.id} value={s.id}>{s.code}</option>)}
+          </select>
+        </>
+      )}
+      <select value={filters.assignee} onChange={e => url.set({ assignee: e.target.value })} style={selStyle} aria-label={t('filters.anyAssignee')}>
+        <option value="">{t('filters.anyAssignee')}</option>
+        <option value="me">{t('filters.mine')}</option>
+        <option value="none">{t('filters.unassigned')}</option>
+        {users.map(u => <option key={u.user_id} value={u.user_id}>{u.full_name}</option>)}
+      </select>
+    </>
+  )
+  const clearFilters = () => { setSearch(''); url.clear(['status', 'phase', 'disc', 'q', 'system', 'subsystem', 'area', 'assignee', 'project']) }
+
   return (
     <div style={{ padding: 'clamp(12px, 4vw, 32px)', maxWidth: '1200px' }}>
 
@@ -190,7 +239,22 @@ export default function ItrListView({
           </Link>
           <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-strong)', margin: '8px 0 0' }}>ITRs</h1>
         </div>
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+        {/* Teléfono: las acciones de escritorio van en «⋯» */}
+        <div className="phone-only" style={{ position: 'relative' }}>
+          <button type="button" onClick={() => setMoreOpen(o => !o)} aria-expanded={moreOpen} aria-label={t('mobile.more')}
+            style={{ width: 44, height: 44, border: '1px solid var(--border)', borderRadius: 10, background: 'var(--card-bg)', color: 'var(--text-strong)', fontSize: 20, lineHeight: 1, cursor: 'pointer', fontFamily: 'inherit' }}>
+            ⋯
+          </button>
+          {moreOpen && (
+            <div style={{ position: 'absolute', right: 0, top: 'calc(100% + 6px)', zIndex: 30, minWidth: 220, padding: 6, display: 'flex', flexDirection: 'column', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 10, boxShadow: '0 10px 30px rgba(0,0,0,0.12)' }}>
+              {!allScope && <Link href={`/projects/${projectId}/itrs/requirements`} style={moreItem}>{t('requirements')}</Link>}
+              {canEdit && !allScope && <Link href={`/projects/${projectId}/itrs/generate`} style={moreItem}>{t('generate')}</Link>}
+              <button type="button" onClick={() => { setMoreOpen(false); exportCsv() }} disabled={isExporting || total === 0} style={{ ...moreItem, border: 0, background: 'transparent', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit' }}>↓ CSV</button>
+              {!allScope && <a href={`/projects/${projectId}/reports/itr-test-pack/pdf`} target="_blank" rel="noopener noreferrer" style={moreItem}>{t('testPackPdf')}</a>}
+            </div>
+          )}
+        </div>
+        <div className="desk-only" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
         {/* R2a: registro de requisitos por tag (lo que debe existir, no solo lo que existe). */}
         {!allScope && (
           <Link href={`/projects/${projectId}/itrs/requirements`} style={{
@@ -234,7 +298,7 @@ export default function ItrListView({
 
       {/* Summary cards (conteos en SQL) */}
       {/* C-29: en el teléfono las tarjetas bajan de línea en vez de aplastarse */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px', marginBottom: '24px' }}>
+      <div className="desk-only" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px', marginBottom: '24px' }}>
         {ITR_STATUS_KEYS.map(key => {
           const cfg = ITR_STATUS_COLORS[key]
           const active = filters.status === key
@@ -352,8 +416,49 @@ export default function ItrListView({
         </div>
       )}
 
+      {/* Teléfono: buscador, «Filtros» (hoja) y chips de estado */}
+      <div className="phone-only" style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 12 }}>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder={t('mobile.search')}
+            aria-label={t('filters.search')}
+            style={{ flex: 1, minWidth: 0, height: 44, boxSizing: 'border-box', padding: '0 12px', border: '1px solid var(--border)', borderRadius: 10, fontSize: 16, fontFamily: 'inherit', background: 'var(--card-bg)', color: 'var(--text-strong)' }}
+          />
+          <button type="button" onClick={() => setFiltersOpen(true)}
+            style={{ height: 44, padding: '0 14px', border: `1px solid ${sheetFilters ? 'var(--primary-300)' : 'var(--border)'}`, borderRadius: 10, background: sheetFilters ? 'var(--primary-50)' : 'var(--card-bg)', color: sheetFilters ? 'var(--primary-700)' : 'var(--text-strong)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
+            {sheetFilters ? t('mobile.filtersN', { count: sheetFilters }) : t('mobile.filters')}
+          </button>
+        </div>
+        <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>
+          <button type="button" onClick={() => url.set({ assignee: filters.assignee === 'me' ? null : 'me' })} aria-pressed={filters.assignee === 'me'}
+            style={chip(filters.assignee === 'me')}>
+            {t('mobile.mine')}
+          </button>
+          {ITR_STATUS_KEYS.filter(key => (counts[key] ?? 0) > 0 || filters.status === key).map(key => {
+            const active = filters.status === key
+            return (
+              <button key={key} type="button" onClick={() => url.set({ status: active ? null : key })} aria-pressed={active} style={chip(active)}>
+                {t(`itrStatus.${key}`)} {counts[key] ?? 0}
+              </button>
+            )
+          })}
+        </div>
+        <span style={{ fontSize: 12, color: 'var(--text-muted)', opacity: busy ? 0.5 : 1 }}>{t('filters.count', { filtered: total, total: totalAll })}</span>
+      </div>
+      <Modal open={filtersOpen} onClose={() => setFiltersOpen(false)} title={t('mobile.filters')} size="sm"
+        footer={
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+            {hasFilters && <button type="button" onClick={clearFilters} style={{ height: 44, padding: '0 16px', border: '1px solid var(--border)', borderRadius: 10, background: 'var(--card-bg)', color: 'var(--text-body)', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>{tc('clear')}</button>}
+            <button type="button" onClick={() => setFiltersOpen(false)} style={{ height: 44, padding: '0 20px', border: 0, borderRadius: 10, background: 'var(--primary-600)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{t('mobile.done')}</button>
+          </div>
+        }>
+        <div className="itr-filter-sheet" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>{filterSelects}</div>
+      </Modal>
+
       {/* Filters → URL */}
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
+      <div className="desk-only" style={{ display: 'flex', gap: '10px', marginBottom: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
         <input
           value={search}
           onChange={e => setSearch(e.target.value)}
@@ -361,47 +466,10 @@ export default function ItrListView({
           aria-label={t('filters.search')}
           style={{ padding: '8px 12px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', width: '220px', fontFamily: 'inherit' }}
         />
-        {allScope && (
-          <select value={filters.project ?? ''} onChange={e => url.set({ project: e.target.value })} style={selStyle} aria-label={tc('allProjects')}>
-            <option value="">{tc('allProjects')}</option>
-            {projects.map(p => <option key={p.id} value={p.id}>{p.code} — {p.name}</option>)}
-          </select>
-        )}
-        <select value={filters.phase} onChange={e => url.set({ phase: e.target.value })} style={selStyle}>
-          <option value="">{t('filters.allPhases')}</option>
-          {phases.map(p => <option key={p.id} value={p.code}>{p.code} — {p.name}</option>)}
-        </select>
-        <select value={filters.disc} onChange={e => url.set({ disc: e.target.value })} style={selStyle}>
-          <option value="">{t('filters.allDisciplines')}</option>
-          {disciplines.map(d => <option key={d.code} value={d.code}>{d.code} — {d.name}</option>)}
-        </select>
-        {scopes.areas.length > 0 && (
-          <select value={filters.area} onChange={e => url.set({ area: e.target.value, system: '', subsystem: '' })} style={selStyle} aria-label={t('filters.allAreas')}>
-            <option value="">{t('filters.allAreas')}</option>
-            {scopes.areas.map(a => <option key={a.id} value={a.id}>{a.code} — {a.name}</option>)}
-          </select>
-        )}
-        {!allScope && (
-          <>
-            <select value={filters.system} onChange={e => url.set({ system: e.target.value, subsystem: '' })} style={selStyle} aria-label={t('filters.allSystems')}>
-              <option value="">{t('filters.allSystems')}</option>
-              {visibleSystems.map(s => <option key={s.id} value={s.id}>{s.code} — {s.name}</option>)}
-            </select>
-            <select value={filters.subsystem} onChange={e => url.set({ subsystem: e.target.value })} style={selStyle} aria-label={t('filters.allSubsystems')}>
-              <option value="">{t('filters.allSubsystems')}</option>
-              {visibleSubsystems.map(s => <option key={s.id} value={s.id}>{s.code}</option>)}
-            </select>
-          </>
-        )}
-        <select value={filters.assignee} onChange={e => url.set({ assignee: e.target.value })} style={selStyle} aria-label={t('filters.anyAssignee')}>
-          <option value="">{t('filters.anyAssignee')}</option>
-          <option value="me">{t('filters.mine')}</option>
-          <option value="none">{t('filters.unassigned')}</option>
-          {users.map(u => <option key={u.user_id} value={u.user_id}>{u.full_name}</option>)}
-        </select>
+        {filterSelects}
         {hasFilters && (
           <button
-            onClick={() => { setSearch(''); url.clear(['status', 'phase', 'disc', 'q', 'system', 'subsystem', 'area', 'assignee', 'project']) }}
+            onClick={clearFilters}
             style={{ padding: '8px 12px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '12px', color: 'var(--text-muted)', cursor: 'pointer' }}
           >
             {tc('clear')} ×
@@ -434,7 +502,11 @@ export default function ItrListView({
           <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>{t('empty')}</p>
         </div>
       ) : (
-        <div style={{ background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)', overflowX: 'auto', opacity: busy ? 0.6 : 1, transition: 'opacity 0.15s' }}>
+        <>
+        <ul className="phone-only" style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 8, opacity: busy ? 0.6 : 1 }}>
+          {rows.map(itr => <ItrCard key={itr.id} itr={itr} allScope={allScope} memberIds={memberIds} statusLabel={t(`itrStatus.${itr.status}` as Parameters<typeof t>[0])} />)}
+        </ul>
+        <div className="desk-only" style={{ background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)', overflowX: 'auto', opacity: busy ? 0.6 : 1, transition: 'opacity 0.15s' }}>
           {/* Header */}
           <div style={{ display: 'grid', gridTemplateColumns: cols, minWidth: minW, gap: '4px', padding: '10px 16px', background: 'var(--gray-50)', borderBottom: '1px solid var(--border)', alignItems: 'center' }}>
             <input
@@ -558,6 +630,7 @@ export default function ItrListView({
             )
           })}
         </div>
+        </>
       )}
 
       <Pagination page={page} total={total} pageSize={pageSize} onPage={p => url.set({ page: p }, { resetPage: false })} disabled={busy} />
@@ -566,6 +639,56 @@ export default function ItrListView({
 }
 
 // ── Sub-components ─────────────────────────────────────────────────────
+
+/** Teléfono: un ITR por tarjeta (fase, número, estado, tag, plantilla y responsable, avance). */
+function ItrCard({ itr, allScope, memberIds, statusLabel }: { itr: ItrListRow; allScope: boolean; memberIds: Set<string>; statusLabel: string }) {
+  const st = ITR_STATUS_COLORS[itr.status] ?? ITR_STATUS_COLORS.not_started
+  const executor = itr.assignments.find(a => a.role === 'executor')
+  const body = (
+    <>
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          {itr.phase_code && <span style={{ padding: '1px 6px', borderRadius: 5, fontSize: 11, fontWeight: 700, background: alpha(itr.phase_color ?? 'var(--gray-500)', 9), color: ink(itr.phase_color ?? 'var(--text-muted)') }}>{itr.phase_code}</span>}
+          <span style={{ fontFamily: 'ui-monospace, monospace', fontWeight: 700, fontSize: 15, color: 'var(--text-strong)' }}>{itr.itr_number}</span>
+          {allScope && <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--primary-700)' }}>{itr.project_code}</span>}
+          <span style={{ marginLeft: 'auto', padding: '2px 8px', borderRadius: 999, fontSize: 12, fontWeight: 600, background: st.bg, color: ink(st.color), border: `1px solid ${alpha(st.color, 25)}`, whiteSpace: 'nowrap' }}>{statusLabel}</span>
+        </div>
+        {itr.tag_number && <div style={{ fontSize: 14, color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{itr.tag_number} · {itr.tag_description}</div>}
+        <div style={{ fontSize: 12, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {itr.discipline_code ? `${itr.discipline_code} · ` : ''}{itr.template_title ?? '—'}
+          {executor && <> · <PersonName name={executor.full_name} inactive={isInactiveMember(executor.user_id, memberIds)} /></>}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ flex: 1, height: 6, borderRadius: 3, background: 'var(--gray-100)', overflow: 'hidden' }}>
+            <div style={{ height: '100%', width: `${itr.progress_pct}%`, background: itr.progress_pct >= 100 ? 'var(--success-500)' : 'var(--primary-500)' }} />
+          </div>
+          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{itr.progress_pct} %</span>
+        </div>
+      </div>
+      {itr.tag_id && <span aria-hidden="true" style={{ color: 'var(--text-muted)', fontSize: 18 }}>›</span>}
+    </>
+  )
+  const box: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 10, padding: 12, background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 12, textDecoration: 'none', color: 'inherit' }
+  return (
+    <li>
+      {itr.tag_id
+        ? <Link href={`/projects/${itr.project_id}/tags/${itr.tag_id}/itrs/${itr.id}`} style={box}>{body}</Link>
+        : <div style={box}>{body}</div>}
+    </li>
+  )
+}
+
+const chip = (active: boolean): React.CSSProperties => ({
+  height: 36, padding: '0 12px', borderRadius: 999, fontSize: 13, whiteSpace: 'nowrap', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0,
+  border: `1px solid ${active ? 'var(--primary-600)' : 'var(--border)'}`,
+  background: active ? 'var(--primary-50)' : 'var(--card-bg)',
+  color: active ? 'var(--primary-700)' : 'var(--text-body)',
+  fontWeight: active ? 600 : 400,
+})
+
+const moreItem: React.CSSProperties = {
+  display: 'block', padding: '12px 14px', borderRadius: 8, fontSize: 14, color: 'var(--text-strong)', textDecoration: 'none',
+}
 
 function SortHeader({ label, sortKey, current, dir, onSort }: {
   label: string

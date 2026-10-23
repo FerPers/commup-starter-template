@@ -26,7 +26,7 @@ export default async function AllPreservation() {
     : await fetchAllRowsFlagged(() => supabase
         .from('preservation_plans')
         .select(`
-          id, status, start_date, next_due_date, last_performed_date, project_id,
+          id, status, start_date, next_due_date, last_performed_date, project_id, responsible_user_id,
           projects(id, name, code),
           tags(id, tag_number, description),
           preservation_procedures(id, code, title, frequency, interval_days)
@@ -43,6 +43,7 @@ export default async function AllPreservation() {
     <PreservationGlobal
       projects={projects ?? []}
       plans={plans}
+      userId={ctx.userId}
     />
     </>
   )

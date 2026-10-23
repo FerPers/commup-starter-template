@@ -650,7 +650,8 @@ export default function ItrExecution({
       />
 
       <div className="itr-footer" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'var(--card-bg)', borderTop: '1px solid var(--border)', padding: '10px 16px calc(10px + env(safe-area-inset-bottom, 0px))', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px 10px', zIndex: 100 }}>
-        <div className="itr-footer-status" role="status" style={{ fontSize: '11px', color: isOffline ? 'var(--warning-700)' : syncing ? 'var(--primary-700)' : isPending ? 'var(--primary-700)' : lastSaved ? 'var(--success-700)' : 'var(--text-muted)' }}>
+        {/* Teléfono (backlog 4): la línea de estado solo ocupa lugar cuando importa (sin red, sincronizando, error) */}
+        <div className={`itr-footer-status${isOffline || syncing || saveError ? ' is-alert' : ''}`} role="status" style={{ fontSize: '11px', color: isOffline ? 'var(--warning-700)' : syncing ? 'var(--primary-700)' : isPending ? 'var(--primary-700)' : lastSaved ? 'var(--success-700)' : 'var(--text-muted)' }}>
           {isOffline && pendingCount > 0
             ? t('footer.offlineWithPending', { count: pendingCount })
             : isOffline
@@ -667,15 +668,17 @@ export default function ItrExecution({
             ? t('footer.saved', { time: lastSaved.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }) })
             : t('footer.autoSave')}
         </div>
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end', marginLeft: 'auto' }}>
+        <div className="itr-footer-actions" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end', marginLeft: 'auto' }}>
           {/* C-29: salta al siguiente ítem obligatorio sin llenar (circular) */}
           {canCapture && completion.missingRequiredItemIds.length > 0 && (
             <button
               onClick={jumpToNextPending}
               title={t('footer.nextPendingTitle')}
+              aria-label={t('footer.nextPending', { count: completion.missingRequiredItemIds.length })}
               style={{ ...footerBtn, background: 'var(--warning-50)', border: '1px solid var(--warning-200)', color: 'var(--warning-700)' }}
             >
-              ↓ {t('footer.nextPending', { count: completion.missingRequiredItemIds.length })}
+              ↓ <span className="desk-only">{t('footer.nextPending', { count: completion.missingRequiredItemIds.length })}</span>
+              <span className="phone-only">{completion.missingRequiredItemIds.length}</span>
             </button>
           )}
           {canEdit && <button
@@ -703,6 +706,7 @@ export default function ItrExecution({
               : ''
             return (
               <button
+                className="itr-footer-sign"
                 onClick={() => setShowSignModal(true)}
                 disabled={!canSign}
                 title={signTooltip || undefined}

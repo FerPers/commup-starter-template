@@ -475,7 +475,15 @@
       "signC": "Sign.C"
     },
     "generate": "Generate ITRs",
-    "requirements": "ITR requirements"
+    "requirements": "ITR requirements",
+    "mobile": {
+      "more": "More actions",
+      "search": "Search ITR or tag",
+      "filters": "Filters",
+      "filtersN": "Filters · {count}",
+      "mine": "Assigned to me",
+      "done": "Done"
+    }
   },
   "PunchList": {
     "title": "Punch",
@@ -662,7 +670,18 @@
       "colStatus": "Status",
       "execute": "Run"
     },
-    "empty": "No preservation plans match the current filters."
+    "empty": "No preservation plans match the current filters.",
+    "mobile": {
+      "scope": "Plans to show",
+      "mine": "Assigned to me · {count}",
+      "all": "All · {count}",
+      "summary": "{overdue} overdue · {soon} this week · {active} active",
+      "groupOverdue": "Overdue",
+      "groupSoon": "This week",
+      "groupOk": "Up to date",
+      "groupOther": "Suspended or completed",
+      "showMore": "Show {count} more"
+    }
   },
   "Certificates": {
     "blocked": "Blocked",

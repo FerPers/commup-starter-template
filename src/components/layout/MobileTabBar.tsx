@@ -20,6 +20,8 @@ import { useMounted } from '@/hooks/useMounted'
  * Menú (abre el drawer).
  */
 
+const ITR_EXECUTION = /^\/projects\/[^/]+\/tags\/[^/]+\/itrs\/[^/]+$/
+
 interface MobileTabBarProps {
   counts: { myWork: number }
   role: string
@@ -44,6 +46,9 @@ export default function MobileTabBar({ counts, role, projects }: MobileTabBarPro
   const syncBadge = mounted && (!isOnline || pendingCount > 0)
     ? { color: isOnline ? 'var(--warning-700)' : 'var(--danger-700)', label: isOnline ? t('syncPending', { count: pendingCount }) : t('offline', { count: pendingCount }) }
     : null
+
+  // Backlog 4 (2026-10-23): en la ejecución de un ITR la barra propia del ITR ocupa el pie; la de pestañas se oculta
+  if (ITR_EXECUTION.test(pathname)) return null
 
   const items: TabItem[] = [
     { href: '/my-work', labelKey: 'myWork', Icon: ListChecks, badge: counts.myWork },

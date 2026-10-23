@@ -24,7 +24,7 @@ export default async function ProjectPreservationPage({ params, searchParams }: 
   const { rows: plans, truncated } = await fetchAllRowsFlagged(() => ctx.supabase
     .from('preservation_plans')
     .select(`
-      id, status, start_date, next_due_date, last_performed_date, project_id,
+      id, status, start_date, next_due_date, last_performed_date, project_id, responsible_user_id,
       projects(id, name, code),
       tags(id, tag_number, description),
       preservation_procedures(id, code, title, frequency, interval_days)
@@ -39,7 +39,7 @@ export default async function ProjectPreservationPage({ params, searchParams }: 
     {truncated && (
       <PartialNote>{tl('listPartial')}</PartialNote>
     )}
-    <PreservationGlobal projects={[project]} plans={plans} projectScope={project} />
+    <PreservationGlobal projects={[project]} plans={plans} projectScope={project} userId={ctx.userId} />
     </>
   )
 }
