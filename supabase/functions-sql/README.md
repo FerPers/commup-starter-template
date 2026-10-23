@@ -16,6 +16,7 @@ reproducir migraciones para saber qué calcula un gate o una cola de «Mi trabaj
 | `compute_project_readiness` / `compute_project_progress` | Readiness y avance físico del proyecto, set-based con una sola verificación de pertenencia (S20; banco en `scripts/loadtest/`) |
 | `compute_project_gate_progress` | Avance de cada sistema en cada gate (ITR aprobados de la fase / ITR de la fase) en una consulta: skyline de liberación (E1) |
 | `compute_project_pid_coverage` / `compute_project_pid_drawing_coverage` | Cobertura del P&ID (E2): tags con pin en la revisión vigente de un P&ID, por sistema y por plano |
+| `system_palette` / `system_assign_color` | Paleta del color estable de cada sistema (P1, `systems.color`; = `SYSTEM_PALETTE` en `src/lib/systems/colors.ts`, test de paridad). El trigger da el menos usado del proyecto cuando llega vacío (`DEFAULT ''`) o NULL |
 | `org_gate_policy` / `system_pssr_status` / `system_phase_level` / `startup_prerequisites` | Política de regresión (D13), PSSR único, nivel por fase con corte de punch, prerrequisitos de arranque (S11) |
 | `approve_system_gate` / `sign_system_gate` | Aprobación y multifirma de gates |
 | `my_work_counts` | Badge y colas de «Mi trabajo» |

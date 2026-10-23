@@ -4,7 +4,8 @@ import { redirect, notFound } from 'next/navigation'
 import PidViewer from './PidViewer'
 import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
-import { fetchAllRows, fetchAllRowsFlagged } from '@/lib/list/fetch-all'
+import { fetchAllRows } from '@/lib/list/fetch-all'
+import type { Hotspot, SystemRef } from './types'
 
 // N2d: visor de un documento P&ID (doc_type = 'pid'). Abre la revisión vigente o la de `?rev=`; los pines son de esa
 // revisión. Al emitirse una revisión nueva, los de la anterior llegan copiados y «por revisar» hasta confirmarlos.
@@ -72,31 +73,20 @@ export default async function PidViewerPage({
 
   // S09 (B-07, F-08): el estado de cada pin se calcula SOLO con los tags que tienen pin en este plano
   // (antes se leían todos los tags/punches/ITR del proyecto y PostgREST cortaba en 1000 filas, así que
-  // `itr_completion_pct` salía de una muestra). La lista del selector de tags (solo para editores) se pagina.
-  const pickerTagsSelect = 'id, tag_number, description, status, discipline_id, disciplines:discipline_id(id, code, name, color), subsystems:subsystem_id(systems:system_id(id, code, name))'
-  const [{ data: rawHotspots }, pickerRes] = await Promise.all([
-    // bounded: pines de una revisión de un plano (tope 5000)
-    supabase
+  // `itr_completion_pct` salía de una muestra). P1: el selector de tags busca en el servidor (searchPidTags).
+  // bounded: pines de una revisión de un plano (tope 5000)
+  const { data: rawHotspots } = await supabase
       .from('pid_hotspots')
       .select(`
         id, tag_id, page_num, x_pct, y_pct, needs_review, created_by, created_at,
         tags:tag_id ( id, tag_number, description, status,
           disciplines:discipline_id ( id, code, name, color ),
-          subsystems:subsystem_id ( systems:system_id ( id, code, name ) )
+          subsystems:subsystem_id ( systems:system_id ( id, code, name, color ) )
         )
       `)
       .eq('revision_id', revision.id)
       .eq('project_id', id)
-      .limit(5000),
-    canEdit
-      ? fetchAllRowsFlagged(() => supabase
-          .from('tags')
-          .select(pickerTagsSelect)
-          .eq('project_id', id)
-          .order('tag_number'))
-      : Promise.resolve({ rows: [], truncated: false }),
-  ])
-  const allTags = pickerRes.rows
+      .limit(5000)
 
   // Estado por tag con pin, en lotes de 200 ids (largo de URL de PostgREST).
   const hotspotTagIds = [...new Set((rawHotspots ?? []).map(h => h.tag_id).filter(Boolean))]
@@ -138,14 +128,13 @@ export default async function PidViewerPage({
     }
   }
 
-  // Sistema del tag (fase 2): el visor colorea y filtra los pines por sistema.
-  type SystemRef = { id: string; code: string; name: string }
+  // Sistema del tag (fase 2): el visor colorea (P1: con el color del sistema) y filtra los pines por sistema.
   const systemOf = (sub: unknown): SystemRef | null =>
     ((sub as { systems: SystemRef | null } | null)?.systems) ?? null
 
   // Enrich hotspots
 
-  const hotspots = (rawHotspots ?? []).map(h => {
+  const hotspots: Hotspot[] = (rawHotspots ?? []).map(h => {
     const tag = h.tags
     const tagId = h.tag_id
     const total = itrTotalByTag.get(tagId) ?? 0
@@ -176,30 +165,6 @@ export default async function PidViewerPage({
     }
   })
 
-  type TagItem = {
-    id: string; tag_number: string; description: string; status: string
-    discipline: { id: string; code: string; name: string; color: string }
-    system: SystemRef | null
-  }
-
-  const tags: TagItem[] = allTags.map(t => {
-    const disc = t.disciplines
-    return {
-      id: t.id,
-      tag_number: t.tag_number,
-      description: t.description,
-      status: t.status,
-      discipline: {
-        id: disc?.id ?? '',
-        code: disc?.code ?? '??',
-        name: disc?.name ?? '',
-        color: disc?.color ?? '#94a3b8',
-      },
-      system: systemOf(t.subsystems),
-    }
-  })
-
-  const tl = await getTranslations('Common')
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', overflow: 'hidden' }}>
       {/* Top bar */}
@@ -233,17 +198,10 @@ export default async function PidViewerPage({
         </div>
       </div>
 
-      {pickerRes.truncated && (
-        <div style={{ padding: '6px 20px', background: 'var(--warning-50)', color: 'var(--warning-700)', fontSize: '12px', flexShrink: 0 }}>
-          {tl('listPartial')}
-        </div>
-      )}
-
       {/* Viewer */}
       <PidViewer
         signedUrl={signedData.signedUrl}
         hotspots={hotspots}
-        tags={tags}
         projectId={id}
         documentId={documentId}
         revisionId={revision.id}

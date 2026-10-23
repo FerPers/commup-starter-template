@@ -2,6 +2,7 @@
 
 import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { withAuth } from '@/lib/auth/withAuth'
+import { clampPct } from '@/lib/pid/geometry'
 import { revalidatePath } from 'next/cache'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/supabase.generated'
@@ -41,6 +42,7 @@ export const upsertHotspot = withAuth(
   ): Promise<{ id?: string; error?: string }> => {
     const rev = await pidRevision(ctx.supabase, input.revision_id, input.project_id)
     if (!rev) return { error: 'Revisión del P&ID no encontrada en el proyecto' }
+    if (!Number.isInteger(input.page_num) || input.page_num < 1) return { error: 'Página no válida' }
 
     // Ubicar (o mover) un pin lo deja revisado: alguien lo puso en su lugar sobre esta revisión.
     const { data, error } = await ctx.supabase
@@ -51,8 +53,9 @@ export const upsertHotspot = withAuth(
         project_id: input.project_id,
         org_id: ctx.orgId,
         page_num: input.page_num,
-        x_pct: input.x_pct,
-        y_pct: input.y_pct,
+        // P1: un clic en el borde da 100 (antes desbordaba numeric(6,4)); 0..100 = CHECK pid_hotspots_pct_range.
+        x_pct: clampPct(input.x_pct),
+        y_pct: clampPct(input.y_pct),
         created_by: ctx.userId,
         needs_review: false,
       }, { onConflict: 'revision_id,tag_id,page_num' })

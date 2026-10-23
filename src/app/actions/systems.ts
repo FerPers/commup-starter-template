@@ -13,6 +13,7 @@ import {
   type DependencyKind,
   type SystemType,
 } from '@/lib/systems/dependencies'
+import { normalizeSystemColor } from '@/lib/systems/colors'
 import type { DependencyImportRow, SystemImportRow } from '@/lib/systems/import'
 import type { TablesUpdate } from '@/types/supabase.generated'
 
@@ -35,6 +36,7 @@ function revalidate(projectId: string, systemId?: string) {
 function dbError(err: { code?: string; message: string }): string {
   if (err.code === '23505') return 'Esa dependencia ya existe'
   if (err.code === '23514' && /priority/.test(err.message)) return 'La prioridad debe ser P1 a P5'
+  if (err.code === '23514' && /systems_color_hex/.test(err.message)) return 'Color no válido'
   if (err.code === '23514' && /battery_limits/.test(err.message)) return 'Límites de batería no válidos'
   return err.message
 }
@@ -65,6 +67,8 @@ export const updateSystem = withAuth(
       system_type?: SystemType | null
       priority?: number | null
       battery_limits?: Record<string, unknown>
+      /** P1: color en el P&ID; null = que la BD asigne el menos usado del proyecto. */
+      color?: string | null
     },
   ): Promise<{ error?: string }> => {
     // Parche parcial: solo se toca lo que viene en el input.
@@ -81,6 +85,12 @@ export const updateSystem = withAuth(
     if ('priority' in input) {
       if (input.priority != null && !(Number.isInteger(input.priority) && input.priority >= 1 && input.priority <= 5)) return { error: 'La prioridad debe ser P1 a P5' }
       patch.priority = input.priority ?? null
+    }
+    if ('color' in input) {
+      const color = input.color == null ? '' : normalizeSystemColor(input.color)
+      if (color === null) return { error: 'Color no válido' }
+      // '' = que el trigger system_assign_color ponga el menos usado del proyecto.
+      patch.color = color
     }
     if ('battery_limits' in input) patch.battery_limits = cleanBatteryLimits(input.battery_limits ?? {})
     if (!Object.keys(patch).length) return {}

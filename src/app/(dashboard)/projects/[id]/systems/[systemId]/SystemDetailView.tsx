@@ -15,6 +15,7 @@ import {
   type DependencyKind,
   type SystemType,
 } from '@/lib/systems/dependencies'
+import { SYSTEM_PALETTE } from '@/lib/systems/colors'
 
 export type DependencyRow = {
   id: string
@@ -44,6 +45,8 @@ type Props = {
     area: string
     system_type: SystemType | null
     priority: number | null
+    /** P1: color del sistema en el P&ID (estable en el proyecto). */
+    color: string
     battery_limits: BatteryLimits
     frozenAt: string | null
     frozenBy: string | null
@@ -86,6 +89,7 @@ export default function SystemDetailView({ project, system, dependsOn, enables, 
   const [systemType, setSystemType] = useState<SystemType | ''>(system.system_type ?? '')
   const [priority, setPriority] = useState<string>(system.priority ? String(system.priority) : '')
   const [limits, setLimits] = useState<BatteryLimits>(system.battery_limits)
+  const [color, setColor] = useState(system.color)
 
   const [providerId, setProviderId] = useState('')
   const [kind, setKind] = useState<DependencyKind>('utility')
@@ -122,6 +126,7 @@ export default function SystemDetailView({ project, system, dependsOn, enables, 
   function saveAttributes() {
     run(() => updateSystem({
       ...base, name, system_type: systemType || null, priority: priority ? Number(priority) : null,
+      ...(color !== system.color ? { color } : {}),
     }), t('detail.saved'))
   }
 
@@ -189,6 +194,23 @@ export default function SystemDetailView({ project, system, dependsOn, enables, 
             </select>
           </label>
         </div>
+        <fieldset style={{ border: 'none', padding: 0, margin: '12px 0 0' }}>
+          <legend style={{ ...label, marginBottom: 6 }}>{t('detail.color')}</legend>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+            {SYSTEM_PALETTE.map(c => (
+              <button key={c} type="button" disabled={!canEdit} aria-pressed={color === c} aria-label={c} title={c}
+                onClick={() => setColor(c)}
+                style={{ width: 24, height: 24, borderRadius: '50%', background: c, cursor: canEdit ? 'pointer' : 'default', padding: 0,
+                  border: '2px solid var(--card-bg)', boxShadow: color === c ? '0 0 0 2px var(--text-strong)' : '0 0 0 1px var(--border)' }} />
+            ))}
+            <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, ...small }}>
+              <input type="color" value={color} disabled={!canEdit} onChange={e => setColor(e.target.value)}
+                aria-label={t('detail.colorCustom')} style={{ width: 32, height: 26, padding: 0, border: '1px solid var(--border)', borderRadius: 6, background: 'none' }} />
+              {t('detail.colorCustom')}
+            </label>
+          </div>
+          <p style={{ ...small, margin: '6px 0 0' }}>{t('detail.colorHelp')}</p>
+        </fieldset>
         <p style={{ ...small, margin: '10px 0 0' }}>{t('detail.typeHelp')}</p>
         {canEdit && <div style={{ marginTop: 12 }}><button type="button" style={btn('primary')} disabled={isPending} onClick={saveAttributes}>{t('detail.save')}</button></div>}
       </section>

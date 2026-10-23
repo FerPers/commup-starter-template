@@ -37,7 +37,7 @@ export default async function SystemFilePage({ params, searchParams }: {
 
   const { data: system } = await supabase
     .from('systems')
-    .select('id, code, name, project_id, system_type, priority, battery_limits, boundary_frozen_at, boundary_frozen_by, areas(code, name), projects(id, code, name, org_id, timezone)')
+    .select('id, code, name, color, project_id, system_type, priority, battery_limits, boundary_frozen_at, boundary_frozen_by, areas(code, name), projects(id, code, name, org_id, timezone)')
     .eq('id', systemId)
     .eq('project_id', id)
     .maybeSingle()
@@ -219,6 +219,7 @@ export default async function SystemFilePage({ params, searchParams }: {
           area: area ? `${area.code} — ${area.name}` : '',
           system_type: (system.system_type as SystemType | null) ?? null,
           priority: system.priority,
+          color: system.color,
           battery_limits: (system.battery_limits ?? {}) as BatteryLimits,
           frozenAt: system.boundary_frozen_at,
           frozenBy: (frozenBy as { full_name: string | null } | null)?.full_name ?? null,

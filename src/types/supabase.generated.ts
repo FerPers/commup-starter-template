@@ -9828,6 +9828,7 @@ export type Database = {
           boundary_frozen_at: string | null
           boundary_frozen_by: string | null
           code: string
+          color: string
           current_phase_id: string | null
           description: string | null
           id: string
@@ -9842,6 +9843,7 @@ export type Database = {
           boundary_frozen_at?: string | null
           boundary_frozen_by?: string | null
           code: string
+          color?: string
           current_phase_id?: string | null
           description?: string | null
           id?: string
@@ -9856,6 +9858,7 @@ export type Database = {
           boundary_frozen_at?: string | null
           boundary_frozen_by?: string | null
           code?: string
+          color?: string
           current_phase_id?: string | null
           description?: string | null
           id?: string
@@ -14204,6 +14207,7 @@ export type Database = {
           system_id: string
         }[]
       }
+      system_palette: { Args: never; Returns: string[] }
       system_phase_level: {
         Args: {
           p_limit: number

@@ -62,10 +62,19 @@ describe('enablingSystemIds / cleanBatteryLimits', () => {
   })
 })
 
-describe('systemColorMap', () => {
-  it('colores estables por orden de código, sin repetir hasta agotar la paleta', async () => {
-    const { systemColorMap, SYSTEM_PALETTE } = await import('./colors')
-    const m = systemColorMap([{ id: 'b', code: 'U100' }, { id: 'a', code: 'A100' }, { id: 'b', code: 'U100' }])
-    expect([...m.entries()]).toEqual([['a', SYSTEM_PALETTE[0]], ['b', SYSTEM_PALETTE[1]]])
+describe('color del sistema (P1)', () => {
+  it('la paleta TS es igual al SQL system_palette()', async () => {
+    const { readFileSync } = await import('node:fs')
+    const { SYSTEM_PALETTE } = await import('./colors')
+    const sql = readFileSync('supabase/functions-sql/system_palette.sql', 'utf8')
+    expect([...sql.matchAll(/'(#[0-9a-f]{6})'/g)].map(m => m[1])).toEqual([...SYSTEM_PALETTE])
+  })
+
+  it('normaliza al formato de systems_color_hex', async () => {
+    const { normalizeSystemColor } = await import('./colors')
+    expect(normalizeSystemColor(' #ABCDEF ')).toBe('#abcdef')
+    expect(normalizeSystemColor('#abc')).toBeNull()
+    expect(normalizeSystemColor('red')).toBeNull()
+    expect(normalizeSystemColor(null)).toBeNull()
   })
 })
