@@ -161,7 +161,7 @@ export async function buildHandoverBundle(x: BundleInput): Promise<BundleResult>
       } })
     }
     // P4: límites del sistema sobre sus hojas P&ID vigentes; sin marcas no hay PDF (no es una omisión).
-    tasks.push({ path: `${dir}/losh/LOSH-${safeName(sys.code)}.pdf`, run: async () => {
+    tasks.push({ path: `${dir}/limites/Limites-${safeName(sys.code)}.pdf`, run: async () => {
       const r = await loadLoshPdf(db, { projectId, systemId: sys.system_id, branding })
       if (!r) return fail(sys.code)
       return r.input.losh.sheets.length ? renderLoshPdf(r.input) : null

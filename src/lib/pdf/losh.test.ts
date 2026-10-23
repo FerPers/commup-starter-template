@@ -44,7 +44,7 @@ describe('PDF LOSH (P4)', () => {
     const out = await PDFDocument.load(bytes)
     expect(out.getPageCount()).toBe(3)
     expect(out.getPage(2).getRotation().angle).toBe(90)
-    expect(out.getTitle()).toBe('LOSH A100-S01')
+    expect(out.getTitle()).toBe('Límites de sistema / System boundaries A100-S01')
   })
 
   it('sin PDF original, PDF dañado o página inexistente: solo la portada, sin romperse', async () => {

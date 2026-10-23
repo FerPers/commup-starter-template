@@ -147,9 +147,9 @@ export async function renderLoshPdf(x: LoshPdfInput): Promise<Uint8Array> {
   const { losh } = x
   const sys = losh.system
   const r = await Renderer.create()
-  r.doc.setTitle(`LOSH ${sys.code}`)
+  r.doc.setTitle(`Límites de sistema / System boundaries ${sys.code}`)
   r.doc.setAuthor('CommUp')
-  r.doc.setSubject('Límites de sistema / System limits (LOSH)')
+  r.doc.setSubject('Planos de límites del sistema / System boundary drawings')
   const generatedAt = todayIn(x.timezone)
   const color = hexToRgb(sys.color)
 
@@ -172,7 +172,7 @@ export async function renderLoshPdf(x: LoshPdfInput): Promise<Uint8Array> {
   r.setFooter(({ page }) => {
     const footerY = MARGIN
     page.drawLine({ start: { x: MARGIN, y: footerY + FOOTER_H - 4 }, end: { x: A4_W - MARGIN, y: footerY + FOOTER_H - 4 }, thickness: 0.5, color: COLOR.borderLight })
-    page.drawText(sanitize(`CommUp · LOSH ${sys.code} · ${x.projectCode}`), { x: MARGIN, y: footerY + 6, size: 7, font: r.fontRegular, color: COLOR.empty })
+    page.drawText(sanitize(`CommUp · ${bi('Límites', 'Boundaries')} ${sys.code} · ${x.projectCode}`), { x: MARGIN, y: footerY + 6, size: 7, font: r.fontRegular, color: COLOR.empty })
     const right = sanitize(`Generado / Generated: ${generatedAt}`)
     page.drawText(right, { x: A4_W - MARGIN - r.fontRegular.widthOfTextAtSize(right, 7), y: footerY + 6, size: 7, font: r.fontRegular, color: COLOR.empty })
   })
@@ -183,7 +183,7 @@ export async function renderLoshPdf(x: LoshPdfInput): Promise<Uint8Array> {
   const qrSize = 58
   const topY = r.y
   if (x.recordUrl) drawRecordQr(r, x.recordUrl, A4_W - MARGIN - qrSize, topY, qrSize)
-  r.drawText(bi('Límites de sistema (LOSH)', 'System limits (LOSH)'), { x: MARGIN, y: r.y - 16, size: 16, bold: true, color: COLOR.text, maxWidth: A4_W - MARGIN * 2 - qrSize - 12 })
+  r.drawText(bi('Planos de límites del sistema', 'System boundary drawings'), { x: MARGIN, y: r.y - 16, size: 16, bold: true, color: COLOR.text, maxWidth: A4_W - MARGIN * 2 - qrSize - 12 })
   r.moveY(24)
   r.drawRect({ x: MARGIN, y: r.y - 12, width: 12, height: 12, color })
   r.drawText(`${sys.code} — ${sys.name}`, { x: MARGIN + 18, y: r.y - 11, size: 12, bold: true, color: COLOR.text, maxWidth: A4_W - MARGIN * 2 - qrSize - 30 })
@@ -274,7 +274,7 @@ export async function renderLoshPdf(x: LoshPdfInput): Promise<Uint8Array> {
       overlayPage(r, page, sheet.markups.filter(mk => mk.page_num === num), {
         losh, color,
         stamp: [
-          `LOSH · ${sys.code} — ${sys.name}`,
+          `${bi('Límites', 'Boundaries')} · ${sys.code} — ${sys.name}`,
           `${sheet.number} · Rev. ${sheet.rev} · ${bi('Hoja', 'Sheet')} ${num}`,
           `CommUp · ${x.projectCode} · ${generatedAt}`,
         ],

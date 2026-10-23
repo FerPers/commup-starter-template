@@ -550,7 +550,7 @@ export async function loadLoshPdf(db: Db, x: { projectId: string; systemId: stri
   }
 
   return {
-    filename: `LOSH-${losh.system.code.replace(/[^a-zA-Z0-9-]/g, '_')}.pdf`,
+    filename: `Limites-${losh.system.code.replace(/[^a-zA-Z0-9-]/g, '_')}.pdf`,
     input: {
       projectName: project.name, projectCode: project.code, timezone: project.timezone, branding, losh, sources, omitted,
       recordUrl: `${siteUrl()}${systemTabHref(x.projectId, x.systemId, 'drawings')}`,

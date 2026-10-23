@@ -3486,8 +3486,8 @@
         "ofSheets": "{a} de {b} hojas",
         "review": "{count, plural, one {# marca por revisar} other {# marcas por revisar}}",
         "deliverable": "Entregable",
-        "pdf": "Descargar PDF LOSH",
-        "pdfEmpty": "PDF LOSH · sin límites dibujados",
+        "pdf": "Descargar planos de límites",
+        "pdfEmpty": "Planos de límites · sin límites dibujados",
         "pdfPages": "{count, plural, one {# hoja con límites} other {# hojas con límites}} · también va en el paquete de handover"
       },
       "empty": "Ningún tag del sistema cita un P&ID ni tiene pin, y el sistema no tiene límites dibujados.",
@@ -3517,7 +3517,7 @@
       "more": "y {count} más",
       "missingMore": "{count, plural, one {Y # plano más citado sin documento} other {Y # planos más citados sin documento}}: {list}",
       "controls": {
-        "title": "Controles del LOSH ({count})",
+        "title": "Controles de límites ({count})",
         "hint": "Solo avisan; se corrigen en el plano",
         "sheetShort": "h.",
         "ownOnOther": "{tag} es de {system} pero cae sobre el resalte de {other} en {sheet}",

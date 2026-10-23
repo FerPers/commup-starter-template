@@ -3486,8 +3486,8 @@
         "ofSheets": "{a} of {b} sheets",
         "review": "{count, plural, one {# markup to review} other {# markups to review}}",
         "deliverable": "Deliverable",
-        "pdf": "Download LOSH PDF",
-        "pdfEmpty": "LOSH PDF · no limits drawn",
+        "pdf": "Download boundary drawings",
+        "pdfEmpty": "Boundary drawings · no limits drawn",
         "pdfPages": "{count, plural, one {# sheet with limits} other {# sheets with limits}} · also included in the handover package"
       },
       "empty": "No tag of the system cites a P&ID or has a pin, and the system has no limits drawn.",
@@ -3517,7 +3517,7 @@
       "more": "and {count} more",
       "missingMore": "{count, plural, one {And # more drawing cited without document} other {And # more drawings cited without document}}: {list}",
       "controls": {
-        "title": "LOSH checks ({count})",
+        "title": "Boundary checks ({count})",
         "hint": "Warnings only; fix them on the drawing",
         "sheetShort": "p.",
         "ownOnOther": "{tag} belongs to {system} but sits on the {other} highlight on {sheet}",
