@@ -77,6 +77,8 @@ interface Props {
   names: Record<string, string>
   userId: string
   timezone: string | null
+  /** F-21b `?rl=`: red-line a encuadrar y elegir al abrir. */
+  focusRedlineId: string | null
 }
 
 type MarkupPatch = { system_id?: string; other_system_id?: string | null; label?: string | null; points?: Pt[]; target_document_id?: string | null; target_page?: number }
@@ -94,11 +96,11 @@ const floatBtn: React.CSSProperties = {
   color: 'var(--text-strong)', fontSize: 13, cursor: 'pointer',
 }
 const DRAW_TOOLS: Tool[] = ['line', 'limit', 'label', 'connector']
-const RL_TOOLS: Tool[] = ['rl_cloud', 'rl_pen', 'rl_text']
+const RL_TOOLS: Tool[] = ['rl_cloud', 'rl_pen', 'rl_text', 'rl_point']
 
 export default function PidViewer({
   signedUrl, hotspots: initialHotspots, markups: initialMarkups, systems: systemList, approvedGates, systemStates, focusSystemId, placeTag,
-  focusMarkupId, initialPage, pidDocs, incoming, projectId, documentId, revisionId, canEdit, redlines, names, userId, timezone,
+  focusMarkupId, initialPage, pidDocs, incoming, projectId, documentId, revisionId, canEdit, redlines, names, userId, timezone, focusRedlineId,
 }: Props) {
   const t = useTranslations('PidDocuments')
   const router = useRouter()
@@ -203,6 +205,18 @@ export default function PidViewer({
     setIsolated(mk.system_id)
     setActiveSystem(mk.system_id)
   }, [focusMarkupId]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // F-21b `?rl=`: hoja del red-line, encuadre y el red-line elegido.
+  useEffect(() => {
+    const rl = focusRedlineId ? redlines.find(r => r.id === focusRedlineId) : null
+    const b = rl ? bounds(rl.marks.flatMap(m => m.p)) : null
+    if (!rl || !b) return
+    const pad = 0.04
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- encuadre inicial desde el enlace `?rl=`
+    setCurrentPage(rl.page_num)
+    setFocus(prev => ({ box: { minX: Math.max(0, b.minX - pad), minY: Math.max(0, b.minY - pad), maxX: Math.min(1, b.maxX + pad), maxY: Math.min(1, b.maxY + pad) }, key: (prev?.key ?? 0) + 1 }))
+    setSelectedRedlineId(rl.id)
+  }, [focusRedlineId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // `?page=` sin `?system=`: solo la página.
   useEffect(() => {
@@ -484,6 +498,7 @@ export default function PidViewer({
     }
     if (tool === 'rl_pen') { setDraft(d => [...d, u]); return }
     if (tool === 'rl_text') { setPendingText(u); return }
+    if (tool === 'rl_point') { setRlMarks([{ k: 'point', p: [u] }]); setRlForm(true); return }
     if (tool === 'limit') {
       const lines = pageMarkups.filter(m => m.kind === 'line').map(m => ({ ...m, points: displayPoints(m, page!.rotation) }))
       const hit = nearestLine(u, lines, size, markupMetrics(size).hit)
@@ -633,7 +648,8 @@ export default function PidViewer({
   const pageUnpaired = pageMarkups.filter(m => unpaired.has(m.id))
   const pageOrphans = orphanIncoming.filter(c => (c.target_page ?? 1) === currentPage)
 
-  const effectiveTool: Tool = canDraw ? tool : 'select'
+  // F-21b: en el teléfono no hay barra de herramientas, pero un editor puede marcar un red-line puntual.
+  const effectiveTool: Tool = canDraw ? tool : canEdit && tool === 'rl_point' ? 'rl_point' : 'select'
   const rlTool = RL_TOOLS.includes(effectiveTool)
   const interaction = effectiveTool === 'pan' ? 'pan'
     : DRAW_TOOLS.includes(effectiveTool) || rlTool || (effectiveTool === 'pin' && !!placingTag) ? 'point'
@@ -805,6 +821,21 @@ export default function PidViewer({
             </div>
           )}
         </div>
+        {/* F-21b: teléfono de un editor = red-line puntual (un toque en el plano y la hoja de abajo). */}
+        {!wide && canEdit && !rlForm && (tool === 'rl_point' ? (
+          <div style={{ position: 'absolute', top: 10, left: 10, right: 10, zIndex: 30, display: 'flex', gap: 8, alignItems: 'center', padding: '8px 10px', borderRadius: 12, background: 'var(--card-bg)', border: '1px solid var(--danger-200)', boxShadow: '0 4px 14px rgba(13,30,50,.15)' }}>
+            <strong style={{ flex: 1, fontSize: 14, color: 'var(--danger-700)' }}>{t('redline.hint_rl_point')}</strong>
+            <button type="button" onClick={() => { discardRedline(); setTool('select') }}
+              style={{ minHeight: 44, padding: '0 14px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--card-bg)', color: 'var(--text-strong)', fontSize: 14, cursor: 'pointer' }}>
+              {t('viewer.cancel')}
+            </button>
+          </div>
+        ) : (
+          <button type="button" onClick={() => { setLayers(l => ({ ...l, redline: true })); setSelectedRedlineId(null); setTool('rl_point') }}
+            style={{ position: 'absolute', bottom: 12, right: 12, zIndex: 30, minHeight: 48, padding: '0 18px', borderRadius: 999, border: 0, background: 'var(--danger-600)', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', boxShadow: '0 6px 18px rgba(13,30,50,.25)' }}>
+            {t('redline.phoneAdd')}
+          </button>
+        ))}
         {/* F-21a: en tableta, Deshacer · Cancelar · Terminar marcas grandes mientras se dibuja un red-line. */}
         {isTouch && canDraw && rlTool && rlBusy && !rlForm && (
           <div style={{ position: 'absolute', bottom: 18, left: '50%', transform: 'translateX(-50%)', zIndex: 35, display: 'flex', gap: 10, background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 16, padding: 10, boxShadow: '0 10px 30px rgba(13,30,50,.18)' }}>
@@ -835,7 +866,8 @@ export default function PidViewer({
         ...(wide
           ? { width: 'clamp(240px, 26vw, 330px)', borderLeft: '1px solid var(--border)' }
           : { width: '100%', maxHeight: '38%', borderTop: '1px solid var(--border)' }),
-        flexShrink: 0, background: 'var(--card-bg)', display: 'flex', flexDirection: 'column', overflowY: 'auto',
+        // relative: lo absoluto de adentro (etiquetas sr-only) queda dentro del scroll de la barra y no estira la página
+        flexShrink: 0, background: 'var(--card-bg)', display: 'flex', flexDirection: 'column', overflowY: 'auto', position: 'relative',
       }}>
         {wide && (
           <button type="button" onClick={() => setLegendOpen(false)} aria-label={t('markups.legendClose')}
@@ -863,7 +895,7 @@ export default function PidViewer({
             onCancel={() => setPendingText(null)}
           />
         )}
-        {rlForm && rlMarks.length > 0 && (
+        {wide && rlForm && rlMarks.length > 0 && (
           <RedlineDraftPanel markCount={rlMarks.length} systemList={systemList} defaultSystemId={activeSystem ?? isolated} projectId={projectId}
             busy={isPending} onSave={saveRedline} onDiscard={discardRedline} onBack={() => setRlForm(false)} />
         )}
@@ -1007,6 +1039,15 @@ export default function PidViewer({
           </div>
         )}
       </aside>}
+
+      {/* F-21b: hoja del red-line puntual en el teléfono */}
+      {!wide && rlForm && rlMarks.length > 0 && (
+        <div style={{ position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 120, maxHeight: '78dvh', overflowY: 'auto', background: 'var(--card-bg)', borderRadius: '18px 18px 0 0', boxShadow: '0 -10px 30px rgba(13,30,50,.22)', paddingBottom: 'calc(12px + env(safe-area-inset-bottom, 0px))' }}>
+          <div aria-hidden="true" style={{ width: 40, height: 4, borderRadius: 2, background: 'var(--gray-300)', margin: '10px auto 0' }} />
+          <RedlineDraftPanel markCount={rlMarks.length} systemList={systemList} defaultSystemId={activeSystem ?? isolated} projectId={projectId} compact
+            busy={isPending} onSave={saveRedline} onDiscard={() => { discardRedline(); setTool('select') }} onBack={() => { setRlMarks([]); setRlForm(false) }} />
+        </div>
+      )}
 
       {/* Tag Quick View Modal */}
       {selectedHotspot && selectedTagData && (

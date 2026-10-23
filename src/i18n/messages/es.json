@@ -2149,7 +2149,13 @@
       "layers": "Capas",
       "layer_pins": "Pines",
       "layer_losh": "Límites",
-      "layer_redline": "Red-line"
+      "layer_redline": "Red-line",
+      "phoneAdd": "+ Red-line",
+      "hint_rl_point": "Toca el punto del plano que cambió",
+      "pointTitle": "Red-line puntual",
+      "otherPoint": "Otro punto",
+      "phoneOnlyPoint": "Para nube, trazo o texto, ábrelo en tableta o escritorio.",
+      "tool_rl_point": "Punto"
     }
   },
   "PreservationExecution": {
@@ -2951,7 +2957,8 @@
       "registersAuthorize": "registros por autorizar",
       "registersVerify": "registros por verificar",
       "dailyReports": "reportes diarios por emitir",
-      "tqAnswered": "TQ respondidas"
+      "tqAnswered": "TQ respondidas",
+      "redlinesReview": "red-lines por revisar"
     },
     "queues": {
       "execute": "ITRs por ejecutar",
@@ -2978,7 +2985,8 @@
       "registersAuthorize": "Registros por autorizar",
       "registersVerify": "Registros por verificar",
       "dailyReports": "Reportes diarios por emitir",
-      "tqAnswered": "TQ respondidas por cerrar"
+      "tqAnswered": "TQ respondidas por cerrar",
+      "redlinesReview": "Red-lines por revisar"
     },
     "empty": {
       "execute": "No tienes ITRs pendientes de ejecución.",
@@ -3005,7 +3013,8 @@
       "registersAuthorize": "Ningún registro por autorizar.",
       "registersVerify": "Ningún registro por verificar.",
       "dailyReports": "No hay reportes en borrador.",
-      "tqAnswered": "No hay TQ respondidas por cerrar."
+      "tqAnswered": "No hay TQ respondidas por cerrar.",
+      "redlinesReview": "No hay red-lines de otros esperando tu revisión."
     },
     "due": {
       "overdue": "vence {date}",
@@ -5965,7 +5974,9 @@
       "action_to_verify": "Acción por verificar",
       "register_to_authorize": "Registro por autorizar",
       "register_to_verify": "Registro por verificar",
-      "register_overdue": "Registro vencido"
+      "register_overdue": "Registro vencido",
+      "redline_to_review": "Red-line por revisar",
+      "redline_reviewed": "Red-line revisado"
     },
     "markAll": "Marcar todas"
   },

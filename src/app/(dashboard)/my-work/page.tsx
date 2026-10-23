@@ -35,7 +35,7 @@ const CHIP_LABEL: Record<keyof MyWorkCounts, string> = {
   performance_to_decide: 'performanceDecide', performance_to_sign: 'performanceSign',
   gates_to_approve: 'gatesApprove', gates_to_cosign: 'gatesCosign', gates_regressed: 'gatesRegressed',
   registers_to_authorize: 'registersAuthorize', registers_to_verify: 'registersVerify', daily_reports_to_issue: 'dailyReports',
-  tq_answered: 'tqAnswered',
+  tq_answered: 'tqAnswered', redlines_to_review: 'redlinesReview',
 }
 
 type ReadinessRow = { project_id: string; entity_id: string; system_id: string | null }
@@ -102,7 +102,7 @@ export default async function MyWorkPage({ searchParams }: { searchParams: Promi
   const none = Promise.resolve({ data: null })
   const punchSel = 'id, punch_number, category, description, status, target_date, project_id, projects(code), tags(tag_number)'
   const actionSel = 'id, number, title, priority, due_date, project_id, projects(code)'
-  const [{ data: countsRaw }, { data: assignments }, { data: punches }, { data: planItems }, { data: certs }, { data: preservation }, { data: toVerify }, { data: toReview }, { data: myActions }, { data: actionsVerify }, { data: myConstraints }, { data: handovers }, { data: holds }, { data: lineupItems }, { data: pendingMilestones }, { data: pendingTransfers }, { data: perfToDecide }, { data: perfCerts }, { data: readinessRaw }] = await Promise.all([
+  const [{ data: countsRaw }, { data: assignments }, { data: punches }, { data: planItems }, { data: certs }, { data: preservation }, { data: toVerify }, { data: toReview }, { data: myActions }, { data: actionsVerify }, { data: myConstraints }, { data: handovers }, { data: holds }, { data: lineupItems }, { data: pendingMilestones }, { data: pendingTransfers }, { data: perfToDecide }, { data: perfCerts }, { data: readinessRaw }, { data: redlinesRaw }] = await Promise.all([
     getMyWorkCounts(orgId).then(data => ({ data })),
     // S09 (B-07): solo ITR no aprobados de los proyectos de la org, paginado (antes: TODAS mis asignaciones,
     // cortadas en 1000 → podían faltar las pendientes mientras el badge SQL contaba bien).
@@ -251,6 +251,15 @@ export default async function MyWorkPage({ searchParams }: { searchParams: Promi
       .limit(50),
     // S22 (D-04/H-02): colas de readiness, la misma función SQL que cuenta my_work_counts.
     supabase.rpc('my_readiness_items', { p_org_id: orgId }),
+    // F-21b: red-lines abiertos de otros, para quien puede revisarlos (igual que my_work_counts.redlines_to_review).
+    !oversight || projectIds.length === 0 ? none : supabase
+      .from('pid_redlines')
+      .select('id, number, description, project_id, document_id, revision_id, created_at, projects(code), documents(number)')
+      .eq('status', 'open')
+      .neq('created_by', userId)
+      .in('project_id', projectIds)
+      .order('created_at', { ascending: true })
+      .limit(QUEUE_LIMIT + 1),
   ])
 
   const counts = parseCounts(countsRaw)
@@ -265,6 +274,10 @@ export default async function MyWorkPage({ searchParams }: { searchParams: Promi
   type ActionQueueRow = { id: string; number: string; title: string; priority: string; due_date: string | null; project_id: string; projects: { code: string } | null }
   const actionRows = (myActions ?? []) as unknown as ActionQueueRow[]
   const actionVerifyRows = (actionsVerify ?? []) as unknown as ActionQueueRow[]
+  const redlineRows = (redlinesRaw ?? []) as unknown as {
+    id: string; number: string; description: string; project_id: string; document_id: string; revision_id: string
+    projects: { code: string } | null; documents: { number: string } | null
+  }[]
   const constraintRows = (myConstraints ?? []) as unknown as {
     id: string; number: string; title: string; escalation_level: number; need_date: string; project_id: string
     projects: { code: string } | null; systems: { code: string } | null
@@ -419,6 +432,10 @@ export default async function MyWorkPage({ searchParams }: { searchParams: Promi
     actions_mine: { more: dailyHref(actionRows[0]?.project_id, 'actions'), rows: actionRows.map(a => (
       <Row key={a.id} href={`/projects/${a.project_id}/daily/action/${a.id}`} stripe={a.priority === 'critical' ? 'var(--danger-500)' : a.priority === 'high' ? 'var(--warning-600)' : 'var(--primary-500)'}
         code={a.number} what={a.title} project={a.projects?.code} right={duePill(a.due_date, a.project_id)} />
+    )) },
+    redlines_to_review: { more: redlineRows[0] ? `/projects/${redlineRows[0].project_id}/documents?type=pid` : '/projects', rows: redlineRows.map(r => (
+      <Row key={r.id} href={`/projects/${r.project_id}/documents/${r.document_id}/viewer?rev=${r.revision_id}&rl=${r.id}`} stripe="var(--danger-600)"
+        code={r.number} what={`${r.documents?.number ?? ''} · ${r.description}`} project={r.projects?.code} right={<Pill tone="danger">{t('due.review')}</Pill>} />
     )) },
     actions_verify: { more: dailyHref(actionVerifyRows[0]?.project_id, 'actions'), rows: actionVerifyRows.map(a => (
       <Row key={a.id} href={`/projects/${a.project_id}/daily/action/${a.id}`} stripe="var(--violet-600)" code={a.number} what={a.title} project={a.projects?.code} right={verifyPill} />

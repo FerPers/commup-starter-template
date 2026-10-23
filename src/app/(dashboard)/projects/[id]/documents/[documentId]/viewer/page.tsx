@@ -17,12 +17,13 @@ import type { ApprovedGates, Hotspot, IncomingConnector, MarkupView, PidDoc, Red
 // P3: `?system=<id>` abre el plano aislando y encuadrando ese sistema; `?place=<tagId>` abre «Pin de tag» con ese tag.
 // P4: `?mk=<id>` abre la hoja de esa marca, la encuadra y la elige (el conector de vuelta al seguir uno); `?page=<n>`
 // abre esa página (un conector sin par lleva a la página destino con `?system=`).
+// F-21b: `?rl=<id>` abre la hoja de ese red-line, lo encuadra y lo elige (desde el aviso y Mi trabajo).
 export default async function PidViewerPage({
   params,
   searchParams,
 }: {
   params: Promise<{ id: string; documentId: string }>
-  searchParams: Promise<{ rev?: string; system?: string; place?: string; mk?: string; page?: string }>
+  searchParams: Promise<{ rev?: string; system?: string; place?: string; mk?: string; page?: string; rl?: string }>
 }) {
   const [{ id, documentId }, sp] = await Promise.all([params, searchParams])
 
@@ -326,6 +327,7 @@ export default async function PidViewerPage({
         names={names}
         userId={ctx.userId}
         timezone={project.timezone}
+        focusRedlineId={sp.rl && redlines.some(r => r.id === sp.rl) ? sp.rl : null}
       />
     </div>
   )

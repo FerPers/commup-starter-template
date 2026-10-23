@@ -50,7 +50,7 @@ async function uploadPhotos(files: File[], ids: { projectId: string; documentId:
 
 /** Formulario del red-line en curso (se abre con «Terminar marcas»). */
 export function RedlineDraftPanel({
-  markCount, systemList, defaultSystemId, projectId, busy, onSave, onDiscard, onBack,
+  markCount, systemList, defaultSystemId, projectId, busy, onSave, onDiscard, onBack, compact = false,
 }: {
   markCount: number
   systemList: SystemRef[]
@@ -59,8 +59,10 @@ export function RedlineDraftPanel({
   busy: boolean
   onSave: (v: { description: string; system_id: string | null; tag: TagItem | null; photos: File[] }) => void
   onDiscard: () => void
-  /** Volver a dibujar (seguir agregando marcas). */
+  /** Volver a dibujar (seguir agregando marcas; en el teléfono, elegir otro punto). */
   onBack: () => void
+  /** F-21b: hoja del teléfono (red-line puntual): sin borde propio y «Otro punto» en vez de «Seguir marcando». */
+  compact?: boolean
 }) {
   const t = useTranslations('PidDocuments')
   const descId = useId()
@@ -72,9 +74,9 @@ export function RedlineDraftPanel({
   const fileRef = useRef<HTMLInputElement>(null)
   const ok = description.trim().length >= 3
   return (
-    <section aria-label={t('redline.newTitle')} style={{ ...box, borderColor: 'var(--danger-200)' }}>
-      <strong style={{ fontSize: 16, color: 'var(--text-strong)' }}>{t('redline.newTitle')}</strong>
-      <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{t('redline.marksCount', { count: markCount })}</span>
+    <section aria-label={t('redline.newTitle')} style={compact ? { ...box, border: 0, margin: 0 } : { ...box, borderColor: 'var(--danger-200)' }}>
+      <strong style={{ fontSize: 16, color: 'var(--text-strong)' }}>{compact ? t('redline.pointTitle') : t('redline.newTitle')}</strong>
+      {!compact && <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{t('redline.marksCount', { count: markCount })}</span>}
       <label htmlFor={descId} style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-body)' }}>{t('redline.description')}</label>
       <textarea id={descId} value={description} onChange={e => setDescription(e.target.value)} rows={4} maxLength={2000}
         placeholder={t('redline.descriptionPlaceholder')} style={{ ...field, resize: 'vertical' }} />
@@ -99,9 +101,10 @@ export function RedlineDraftPanel({
           onChange={e => { const fs = Array.from(e.target.files ?? []); setPhotos(p => [...p, ...fs]); e.target.value = '' }} />
       </div>
       <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('redline.staysOpen')}</span>
+      {compact && <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('redline.phoneOnlyPoint')}</span>}
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <button type="button" onClick={onDiscard} disabled={busy} style={btn('plain')}>{t('redline.discard')}</button>
-        <button type="button" onClick={onBack} disabled={busy} style={btn('plain')}>{t('redline.keepDrawing')}</button>
+        <button type="button" onClick={onBack} disabled={busy} style={btn('plain')}>{compact ? t('redline.otherPoint') : t('redline.keepDrawing')}</button>
         <button type="button" disabled={!ok || busy} onClick={() => onSave({ description: description.trim(), system_id: systemId, tag, photos })}
           style={{ ...btn('primary'), flex: 1, opacity: ok && !busy ? 1 : 0.5 }}>{busy ? '…' : t('redline.save')}</button>
       </div>

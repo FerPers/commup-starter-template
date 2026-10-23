@@ -2149,7 +2149,13 @@
       "layers": "Layers",
       "layer_pins": "Pins",
       "layer_losh": "Boundaries",
-      "layer_redline": "Red-line"
+      "layer_redline": "Red-line",
+      "phoneAdd": "+ Red-line",
+      "hint_rl_point": "Tap the point on the drawing that changed",
+      "pointTitle": "Point red-line",
+      "otherPoint": "Another point",
+      "phoneOnlyPoint": "For cloud, stroke or text, open it on a tablet or desktop.",
+      "tool_rl_point": "Point"
     }
   },
   "PreservationExecution": {
@@ -2951,7 +2957,8 @@
       "registersAuthorize": "registers to authorize",
       "registersVerify": "registers to verify",
       "dailyReports": "daily reports to issue",
-      "tqAnswered": "answered TQs"
+      "tqAnswered": "answered TQs",
+      "redlinesReview": "red-lines to review"
     },
     "queues": {
       "execute": "ITRs to execute",
@@ -2978,7 +2985,8 @@
       "registersAuthorize": "Registers to authorize",
       "registersVerify": "Registers to verify",
       "dailyReports": "Daily reports to issue",
-      "tqAnswered": "Answered TQs to close"
+      "tqAnswered": "Answered TQs to close",
+      "redlinesReview": "Red-lines to review"
     },
     "empty": {
       "execute": "You have no ITRs pending execution.",
@@ -3005,7 +3013,8 @@
       "registersAuthorize": "No registers to authorize.",
       "registersVerify": "No registers to verify.",
       "dailyReports": "No draft daily reports.",
-      "tqAnswered": "No answered TQs to close."
+      "tqAnswered": "No answered TQs to close.",
+      "redlinesReview": "No red-lines from others are waiting for your review."
     },
     "due": {
       "overdue": "due {date}",
@@ -5965,7 +5974,9 @@
       "action_to_verify": "Action to verify",
       "register_to_authorize": "Register to authorize",
       "register_to_verify": "Register to verify",
-      "register_overdue": "Register overdue"
+      "register_overdue": "Register overdue",
+      "redline_to_review": "Red-line to review",
+      "redline_reviewed": "Red-line reviewed"
     },
     "markAll": "Mark all"
   },

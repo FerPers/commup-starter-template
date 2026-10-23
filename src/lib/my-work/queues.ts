@@ -46,6 +46,8 @@ export type MyWorkCounts = {
   registers_to_verify: number
   daily_reports_to_issue: number
   tq_answered: number
+  /** F-21b: red-lines abiertos de otros, por aceptar o rechazar (Líder en adelante; la RPC da 0 al resto). */
+  redlines_to_review: number
 }
 
 export const EMPTY_COUNTS: MyWorkCounts = {
@@ -53,7 +55,7 @@ export const EMPTY_COUNTS: MyWorkCounts = {
   punches_verify: 0, punches_review: 0, actions_mine: 0, actions_verify: 0, constraints_mine: 0, handovers_to_receive: 0, holds_to_release: 0, lineup_to_verify: 0, milestones_to_witness: 0, transfers_to_sign: 0,
   performance_to_decide: 0, performance_to_sign: 0,
   gates_to_approve: 0, gates_to_cosign: 0, gates_regressed: 0, registers_to_authorize: 0, registers_to_verify: 0,
-  daily_reports_to_issue: 0, tq_answered: 0,
+  daily_reports_to_issue: 0, tq_answered: 0, redlines_to_review: 0,
 }
 
 /** S22: colas que llegan de `my_readiness_items` (contador y filas). */
@@ -82,7 +84,7 @@ export function parseCounts(raw: unknown): MyWorkCounts {
     performance_to_decide: n('performance_to_decide'), performance_to_sign: n('performance_to_sign'),
     gates_to_approve: n('gates_to_approve'), gates_to_cosign: n('gates_to_cosign'), gates_regressed: n('gates_regressed'),
     registers_to_authorize: n('registers_to_authorize'), registers_to_verify: n('registers_to_verify'),
-    daily_reports_to_issue: n('daily_reports_to_issue'), tq_answered: n('tq_answered'),
+    daily_reports_to_issue: n('daily_reports_to_issue'), tq_answered: n('tq_answered'), redlines_to_review: n('redlines_to_review'),
   }
 }
 
@@ -120,7 +122,7 @@ export type ChipGroup = 'execute' | 'verify' | 'sign' | 'decide'
  */
 export const CHIP_GROUPS: { group: ChipGroup; keys: (keyof MyWorkCounts)[] }[] = [
   { group: 'execute', keys: ['itrs_execute', 'punches', 'actions_mine', 'plan_items', 'preservation_overdue', 'constraints_mine'] },
-  { group: 'verify', keys: ['punches_verify', 'actions_verify', 'lineup_to_verify', 'handovers_to_receive', 'registers_to_verify', 'tq_answered'] },
+  { group: 'verify', keys: ['punches_verify', 'actions_verify', 'lineup_to_verify', 'handovers_to_receive', 'registers_to_verify', 'tq_answered', 'redlines_to_review'] },
   { group: 'sign', keys: ['itrs_review', 'gates_to_cosign', 'holds_to_release', 'milestones_to_witness', 'transfers_to_sign', 'performance_to_sign', 'signatures'] },
   { group: 'decide', keys: ['gates_to_approve', 'gates_regressed', 'performance_to_decide', 'daily_reports_to_issue', 'registers_to_authorize', 'punches_review'] },
 ]
@@ -140,7 +142,7 @@ const FIELD_ONLY_IF_ANY = new Set<keyof MyWorkCounts>([
 export function queueApplies(key: keyof MyWorkCounts, role: OrgMemberRole): boolean {
   if (key === 'signatures') return canSignCertificates(role)
   if (key === 'preservation_overdue') return role !== 'client'
-  if (key === 'punches_review' || key === 'performance_to_decide') return seesPreservation(role)
+  if (key === 'punches_review' || key === 'performance_to_decide' || key === 'redlines_to_review') return seesPreservation(role)
   if (role === 'client') return !NOT_CLIENT.has(key)
   if (role === 'inspector') return !FIELD_ONLY_IF_ANY.has(key)
   return true

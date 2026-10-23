@@ -100,6 +100,23 @@ BEGIN
     PERFORM public.notify_users(v_org, array_remove(v_users, NEW.raised_by), 'punch_cat_a', 'Punch Cat A: ' || NEW.punch_number,
       left(NEW.description, 300), '/projects/' || NEW.project_id || '/punches/' || NEW.id,
       jsonb_build_object('punchId', NEW.id, 'projectId', NEW.project_id));
+
+  -- F-21b: red-line nuevo → Líder en adelante (menos quien lo creó); aceptado o rechazado → quien lo creó.
+  ELSIF TG_TABLE_NAME = 'pid_redlines' THEN
+    SELECT d.number INTO v_code FROM documents d WHERE d.id = NEW.document_id;
+    IF TG_OP = 'INSERT' THEN
+      SELECT array_agg(u) INTO v_users FROM public.project_role_members(NEW.project_id, ARRAY['owner', 'admin', 'architect', 'leader']) u;
+      PERFORM public.notify_users(NEW.org_id, array_remove(v_users, NEW.created_by), 'redline_to_review',
+        'Red-line por revisar: ' || NEW.number || ' · ' || coalesce(v_code, ''), left(NEW.description, 300),
+        '/projects/' || NEW.project_id || '/documents/' || NEW.document_id || '/viewer?rev=' || NEW.revision_id || '&rl=' || NEW.id,
+        jsonb_build_object('redlineId', NEW.id, 'projectId', NEW.project_id));
+    ELSIF NEW.status IN ('accepted', 'rejected') AND v_prev = 'open' THEN
+      PERFORM public.notify_users(NEW.org_id, ARRAY[NEW.created_by], 'redline_reviewed',
+        'Red-line revisado: ' || NEW.number || ' · ' || CASE NEW.status WHEN 'accepted' THEN 'aceptado' ELSE 'rechazado' END,
+        coalesce(NEW.review_note, left(NEW.description, 300)),
+        '/projects/' || NEW.project_id || '/documents/' || NEW.document_id || '/viewer?rev=' || NEW.revision_id || '&rl=' || NEW.id,
+        jsonb_build_object('redlineId', NEW.id, 'projectId', NEW.project_id, 'status', NEW.status));
+    END IF;
   END IF;
   RETURN NULL;
 END;

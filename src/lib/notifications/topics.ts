@@ -28,6 +28,8 @@ const KIND_TOPIC: Record<string, NotificationTopic> = {
   register_to_verify: 'field',
   action_to_verify: 'field',
   tq_answered: 'field',
+  redline_to_review: 'field',
+  redline_reviewed: 'field',
 
   gate_ready: 'readiness',
   gate_regressed: 'readiness',

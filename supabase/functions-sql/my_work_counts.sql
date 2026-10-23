@@ -118,6 +118,16 @@ AS $function$
           and a.project_id in (select id from proj)
       ) else 0 end
     ),
+    -- F-21b: red-lines abiertos de otros, para quien puede revisarlos (Líder en adelante; = review_pid_redline).
+    'redlines_to_review', (
+      select case when (select role from me) in ('owner', 'admin', 'architect', 'leader') then (
+        select count(*)
+        from pid_redlines r
+        where r.status = 'open'
+          and r.created_by is distinct from auth.uid()
+          and r.project_id in (select id from proj)
+      ) else 0 end
+    ),
     'constraints_mine', (
       select count(*)
       from project_constraints c

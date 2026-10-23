@@ -30,9 +30,9 @@ export type MarkupView = Markup
 
 /**
  * Herramientas del visor (maqueta P2): elegir, mover, resaltar línea, límite, etiqueta, conector (P4), pin de tag.
- * F-21a: red-line = nube, trazo y texto (Líder en adelante).
+ * F-21a: red-line = nube, trazo y texto (Líder en adelante); F-21b: punto (red-line puntual del teléfono).
  */
-export type Tool = 'select' | 'pan' | 'line' | 'limit' | 'label' | 'connector' | 'pin' | 'rl_cloud' | 'rl_pen' | 'rl_text'
+export type Tool = 'select' | 'pan' | 'line' | 'limit' | 'label' | 'connector' | 'pin' | 'rl_cloud' | 'rl_pen' | 'rl_text' | 'rl_point'
 
 /** F-21a: red-line de la revisión abierta con sus comentarios y la cantidad de fotos. */
 export type RedlineView = Redline & {
