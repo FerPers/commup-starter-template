@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { createPortal } from 'react-dom'
 import { useMounted } from '@/hooks/useMounted'
 import type {
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export default function BackupDocumentView({ backup, onClose }: Props) {
+  const t = useTranslations('BackupDocument')
   const mounted = useMounted()
 
   useEffect(() => {
@@ -27,15 +29,15 @@ export default function BackupDocumentView({ backup, onClose }: Props) {
     // Browsers print the document <title> as the page header. Swap it
     // temporarily so the printed PDF doesn't say "CommUp — Completion ..."
     const prevTitle = document.title
-    const orgName = backup.org?.name ?? 'Organización'
-    document.title = `Templates Backup — ${orgName}`
+    const orgName = backup.org?.name ?? t('org')
+    document.title = `${t('docTitle')} — ${orgName}`
 
     return () => {
       window.removeEventListener('keydown', onKey)
       document.body.style.overflow = prevOverflow
       document.title = prevTitle
     }
-  }, [onClose, backup.org?.name])
+  }, [onClose, backup.org?.name, t])
 
   const totalItr = backup.itr_templates.length
   const totalPres = backup.preservation_procedures.length
@@ -110,9 +112,9 @@ export default function BackupDocumentView({ backup, onClose }: Props) {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <span style={{ fontSize: '13px', fontWeight: 600 }}>Vista documento</span>
+          <span style={{ fontSize: '13px', fontWeight: 600 }}>{t('view')}</span>
           <span style={{ fontSize: '12px', color: '#94a3b8' }}>
-            {totalItr + totalPres + totalPssr} templates · {backup.org?.name ?? '—'}
+            {t('templates', { n: totalItr + totalPres + totalPssr })} · {backup.org?.name ?? '—'}
           </span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -128,9 +130,9 @@ export default function BackupDocumentView({ backup, onClose }: Props) {
               fontWeight: 600,
               cursor: 'pointer',
             }}
-            title="Imprimir / Guardar como PDF"
+            title={t('printHint')}
           >
-            Imprimir / PDF
+            {t('print')}
           </button>
           <button
             onClick={onClose}
@@ -144,7 +146,7 @@ export default function BackupDocumentView({ backup, onClose }: Props) {
               cursor: 'pointer',
             }}
           >
-            Cerrar
+            {t('close')}
           </button>
         </div>
       </div>
@@ -178,27 +180,27 @@ export default function BackupDocumentView({ backup, onClose }: Props) {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
                 <div style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.12em', color: '#64748b', fontWeight: 700 }}>
-                  CommUp · Templates Backup
+                  CommUp · {t('docTitle')}
                 </div>
                 <h1 style={{ fontSize: '22px', fontWeight: 700, margin: '6px 0 0' }}>
-                  {backup.org?.name ?? 'Organización'}
+                  {backup.org?.name ?? t('org')}
                 </h1>
               </div>
               <div style={{ textAlign: 'right', fontSize: '11px', color: '#64748b' }}>
-                <div>Formato v{backup.version}</div>
-                <div>Exportado: {exportedAt}</div>
+                <div>{t('format', { v: backup.version })}</div>
+                <div>{t('exported', { at: exportedAt })}</div>
               </div>
             </div>
             <div style={{ display: 'flex', gap: '20px', marginTop: '14px', fontSize: '11px' }}>
               <Stat label="ITR" value={totalItr} color="#3b82f6" />
-              <Stat label="Preservación" value={totalPres} color="#10b981" />
+              <Stat label={t('preservation')} value={totalPres} color="#10b981" />
               <Stat label="PSSR" value={totalPssr} color="#8b5cf6" />
             </div>
           </div>
 
           {/* ITR Templates */}
           {totalItr > 0 && (
-            <ModuleHeader title="Templates ITR" color="#3b82f6" count={totalItr} />
+            <ModuleHeader title={t('itrTemplates')} color="#3b82f6" count={totalItr} />
           )}
           {backup.itr_templates.map((t, i) => (
             <ItrCard key={`itr-${i}`} tpl={t} />
@@ -208,7 +210,7 @@ export default function BackupDocumentView({ backup, onClose }: Props) {
           {totalPres > 0 && (
             <>
               {totalItr > 0 && <div className="backup-doc-page-break" />}
-              <ModuleHeader title="Procedimientos de Preservación" color="#10b981" count={totalPres} />
+              <ModuleHeader title={t('preservationProcedures')} color="#10b981" count={totalPres} />
             </>
           )}
           {backup.preservation_procedures.map((p, i) => (
@@ -219,7 +221,7 @@ export default function BackupDocumentView({ backup, onClose }: Props) {
           {totalPssr > 0 && (
             <>
               {(totalItr > 0 || totalPres > 0) && <div className="backup-doc-page-break" />}
-              <ModuleHeader title="Templates PSSR" color="#8b5cf6" count={totalPssr} />
+              <ModuleHeader title={t('pssrTemplates')} color="#8b5cf6" count={totalPssr} />
             </>
           )}
           {backup.pssr_templates.map((t, i) => (
@@ -228,13 +230,13 @@ export default function BackupDocumentView({ backup, onClose }: Props) {
 
           {totalItr + totalPres + totalPssr === 0 && (
             <div style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>
-              El backup no contiene templates.
+              {t('empty')}
             </div>
           )}
 
           {/* Footer */}
           <div style={{ marginTop: '40px', paddingTop: '16px', borderTop: '1px solid #e2e8f0', fontSize: '10px', color: '#94a3b8', textAlign: 'center' }}>
-            Documento generado desde {backup.format} v{backup.version} · commup.app
+            {t('footer', { format: backup.format, v: backup.version })}
           </div>
         </div>
       </div>
@@ -293,6 +295,7 @@ function Tag({ children, color }: { children: React.ReactNode; color: string }) 
 }
 
 function ItrCard({ tpl }: { tpl: ItrTemplateBackup }) {
+  const t = useTranslations('BackupDocument')
   const totalItems = tpl.sections.reduce((a, s) => a + s.items.length, 0)
   return (
     <div className="backup-doc-section" style={{ marginBottom: '24px', border: '1px solid #e2e8f0', borderRadius: '6px', overflow: 'hidden' }}>
@@ -308,14 +311,14 @@ function ItrCard({ tpl }: { tpl: ItrTemplateBackup }) {
             {tpl.discipline_code && <Tag color="#0ea5e9">{tpl.discipline_code}</Tag>}
             {tpl.phase_code && <Tag color="#f59e0b">Fase {tpl.phase_code}</Tag>}
             {tpl.is_global && <Tag color="#8b5cf6">GLOBAL</Tag>}
-            {!tpl.is_active && <Tag color="#64748b">INACTIVO</Tag>}
+            {!tpl.is_active && <Tag color="#64748b">{t('inactive')}</Tag>}
           </div>
         </div>
         {tpl.description && (
           <p style={{ margin: '6px 0 0', fontSize: '11px', color: '#475569', fontStyle: 'italic' }}>{tpl.description}</p>
         )}
         <div style={{ marginTop: '8px', fontSize: '10px', color: '#64748b' }}>
-          {tpl.sections.length} sección{tpl.sections.length === 1 ? '' : 'es'} · {totalItems} ítem{totalItems === 1 ? '' : 's'} · v{tpl.version}
+          {t('sections', { n: tpl.sections.length })} · {t('items', { n: totalItems })} · v{tpl.version}
         </div>
       </div>
 
@@ -331,10 +334,10 @@ function ItrCard({ tpl }: { tpl: ItrTemplateBackup }) {
               <thead>
                 <tr style={{ background: '#f8fafc', textAlign: 'left' }}>
                   <th style={thStyle}>#</th>
-                  <th style={thStyle}>Descripción</th>
-                  <th style={thStyle}>Tipo</th>
-                  <th style={thStyle}>Aceptación</th>
-                  <th style={thStyle}>Flags</th>
+                  <th style={thStyle}>{t('col.description')}</th>
+                  <th style={thStyle}>{t('col.type')}</th>
+                  <th style={thStyle}>{t('col.acceptance')}</th>
+                  <th style={thStyle}>{t('col.flags')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -361,7 +364,7 @@ function ItrCard({ tpl }: { tpl: ItrTemplateBackup }) {
                       </td>
                       <td style={tdStyle}>
                         <span style={{ fontFamily: 'monospace', fontSize: '10px' }}>{it.item_type}</span>
-                        {it.unit && <div style={{ color: '#64748b', fontSize: '9.5px' }}>unidad: {it.unit}</div>}
+                        {it.unit && <div style={{ color: '#64748b', fontSize: '9.5px' }}>{t('unit', { unit: it.unit })}</div>}
                       </td>
                       <td style={tdStyle}>{formatAcceptance(it)}</td>
                       <td style={tdStyle}>
@@ -375,7 +378,7 @@ function ItrCard({ tpl }: { tpl: ItrTemplateBackup }) {
                     </tr>
                   ))}
                 {sec.items.length === 0 && (
-                  <tr><td colSpan={5} style={{ ...tdStyle, color: '#94a3b8', fontStyle: 'italic' }}>Sin ítems</td></tr>
+                  <tr><td colSpan={5} style={{ ...tdStyle, color: '#94a3b8', fontStyle: 'italic' }}>{t('noItems')}</td></tr>
                 )}
               </tbody>
             </table>
@@ -386,6 +389,7 @@ function ItrCard({ tpl }: { tpl: ItrTemplateBackup }) {
 }
 
 function PreservationCard({ proc }: { proc: PreservationProcedureBackup }) {
+  const t = useTranslations('BackupDocument')
   return (
     <div className="backup-doc-section" style={{ marginBottom: '24px', border: '1px solid #e2e8f0', borderRadius: '6px', overflow: 'hidden' }}>
       <div style={{ padding: '12px 16px', background: '#f0fdf4', borderBottom: '1px solid #dcfce7' }}>
@@ -409,7 +413,7 @@ function PreservationCard({ proc }: { proc: PreservationProcedureBackup }) {
           <p style={{ margin: '6px 0 0', fontSize: '11px', color: '#475569', fontStyle: 'italic' }}>{proc.description}</p>
         )}
         <div style={{ marginTop: '8px', fontSize: '10px', color: '#64748b' }}>
-          {proc.items.length} ítem{proc.items.length === 1 ? '' : 's'} de inspección
+          {t('inspectionItems', { n: proc.items.length })}
         </div>
       </div>
 
@@ -417,10 +421,10 @@ function PreservationCard({ proc }: { proc: PreservationProcedureBackup }) {
         <thead>
           <tr style={{ background: '#f8fafc', textAlign: 'left' }}>
             <th style={thStyle}>#</th>
-            <th style={thStyle}>Etiqueta</th>
-            <th style={thStyle}>Tipo</th>
-            <th style={thStyle}>Aceptación</th>
-            <th style={thStyle}>Flags</th>
+            <th style={thStyle}>{t('col.label')}</th>
+            <th style={thStyle}>{t('col.type')}</th>
+            <th style={thStyle}>{t('col.acceptance')}</th>
+            <th style={thStyle}>{t('col.flags')}</th>
           </tr>
         </thead>
         <tbody>
@@ -433,7 +437,7 @@ function PreservationCard({ proc }: { proc: PreservationProcedureBackup }) {
                 <td style={tdStyle}>{it.label}</td>
                 <td style={tdStyle}>
                   <span style={{ fontFamily: 'monospace', fontSize: '10px' }}>{it.item_type}</span>
-                  {it.unit && <div style={{ color: '#64748b', fontSize: '9.5px' }}>unidad: {it.unit}</div>}
+                  {it.unit && <div style={{ color: '#64748b', fontSize: '9.5px' }}>{t('unit', { unit: it.unit })}</div>}
                 </td>
                 <td style={tdStyle}>
                   {it.min_value != null || it.max_value != null
@@ -449,7 +453,7 @@ function PreservationCard({ proc }: { proc: PreservationProcedureBackup }) {
               </tr>
             ))}
           {proc.items.length === 0 && (
-            <tr><td colSpan={5} style={{ ...tdStyle, color: '#94a3b8', fontStyle: 'italic' }}>Sin ítems</td></tr>
+            <tr><td colSpan={5} style={{ ...tdStyle, color: '#94a3b8', fontStyle: 'italic' }}>{t('noItems')}</td></tr>
           )}
         </tbody>
       </table>
@@ -458,6 +462,7 @@ function PreservationCard({ proc }: { proc: PreservationProcedureBackup }) {
 }
 
 function PssrCard({ tpl }: { tpl: PssrTemplateBackup }) {
+  const t = useTranslations('BackupDocument')
   const byCategory = new Map<string, typeof tpl.items>()
   for (const it of tpl.items) {
     const arr = byCategory.get(it.category) ?? []
@@ -472,8 +477,8 @@ function PssrCard({ tpl }: { tpl: PssrTemplateBackup }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '12px' }}>
           <h3 style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: '#8b5cf6' }}>{tpl.name}</h3>
           <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-            {!tpl.is_active && <Tag color="#64748b">INACTIVO</Tag>}
-            <Tag color="#8b5cf6">{tpl.items.length} ítems</Tag>
+            {!tpl.is_active && <Tag color="#64748b">{t('inactive')}</Tag>}
+            <Tag color="#8b5cf6">{t('items', { n: tpl.items.length })}</Tag>
           </div>
         </div>
         {tpl.description && (
@@ -490,9 +495,9 @@ function PssrCard({ tpl }: { tpl: PssrTemplateBackup }) {
             <thead>
               <tr style={{ background: '#f8fafc', textAlign: 'left' }}>
                 <th style={thStyle}>#</th>
-                <th style={thStyle}>Elemento</th>
-                <th style={thStyle}>Requisito</th>
-                <th style={thStyle}>Notas</th>
+                <th style={thStyle}>{t('col.element')}</th>
+                <th style={thStyle}>{t('col.requirement')}</th>
+                <th style={thStyle}>{t('col.notes')}</th>
               </tr>
             </thead>
             <tbody>
@@ -515,7 +520,7 @@ function PssrCard({ tpl }: { tpl: PssrTemplateBackup }) {
         </div>
       ))}
       {tpl.items.length === 0 && (
-        <div style={{ padding: '12px 16px', color: '#94a3b8', fontStyle: 'italic', fontSize: '11px' }}>Sin ítems</div>
+        <div style={{ padding: '12px 16px', color: '#94a3b8', fontStyle: 'italic', fontSize: '11px' }}>{t('noItems')}</div>
       )}
     </div>
   )

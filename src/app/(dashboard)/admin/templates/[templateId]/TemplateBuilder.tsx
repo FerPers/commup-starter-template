@@ -230,7 +230,7 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
   function handlePreviewDoc() {
     startTransition(async () => {
       const res = await exportItrTemplate(template.id)
-      if (res.error || !res.backup) { setActionError(res.error ?? 'Error al previsualizar'); return }
+      if (res.error || !res.backup) { setActionError(res.error ?? t('previewError')); return }
       setDocPreview(res.backup)
     })
   }
@@ -238,7 +238,7 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
   function handleExportJson() {
     startTransition(async () => {
       const res = await exportItrTemplate(template.id)
-      if (res.error || !res.backup) { setActionError(res.error ?? 'Error al exportar'); return }
+      if (res.error || !res.backup) { setActionError(res.error ?? t('exportError')); return }
       downloadJsonFile(`commup-itr-${template.code}-${dateStamp()}.json`, res.backup)
     })
   }
@@ -262,10 +262,10 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
         {canEdit && (
           <Link
             href={`/admin/templates/${template.id}/translations`}
-            title="Revisar y traducir al español (con ayuda de IA)"
+            title={t('translateTitle')}
             style={{ fontSize: '12px', fontWeight: 600, color: '#6d28d9', background: '#f5f3ff', border: '1px solid #ddd6fe', borderRadius: '7px', padding: '6px 12px', textDecoration: 'none' }}
           >
-            ES · Traducción
+            {t('translateLabel')}
           </Link>
         )}
       </div>

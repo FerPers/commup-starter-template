@@ -3,6 +3,7 @@
 import type { Enums } from '@/types/supabase.generated'
 import { useEffect, useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { bulkUpdateTagStatus } from '@/app/actions/bulk'
 import { Pagination } from '@/components/ui'
@@ -153,7 +154,7 @@ export default function TagsView({
         </div>
 
         {canEdit && (
-          <a
+          <Link
             href={
               activeDiscipline === 'ALL'
                 ? `/projects/${projectId}/import`
@@ -168,7 +169,7 @@ export default function TagsView({
             }}
           >
             {activeDiscipline !== 'ALL' ? t('list.importDisc', { disc: activeDiscipline }) : t('list.importTags')}
-          </a>
+          </Link>
         )}
       </div>
 
@@ -193,9 +194,9 @@ export default function TagsView({
               style={{ color: '#1d4ed8', fontWeight: 600, textDecoration: 'none', fontSize: '12px' }}>
               {t('list.qrLabels')}
             </a>
-            <a href={`/projects/${projectId}/tags`} style={{ color: '#1d4ed8', fontWeight: 600, textDecoration: 'none', fontSize: '12px' }}>
+            <Link href={`/projects/${projectId}/tags`} style={{ color: '#1d4ed8', fontWeight: 600, textDecoration: 'none', fontSize: '12px' }}>
               {t('list.clearFilter')}
-            </a>
+            </Link>
           </span>
         </div>
       )}

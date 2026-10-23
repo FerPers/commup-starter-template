@@ -222,12 +222,12 @@ export default function SignalsView({
           <div style={{ fontSize: '40px', marginBottom: '12px', opacity: 0.3 }}>📋</div>
           <p style={{ fontSize: '15px', fontWeight: 500, color: 'var(--text-strong)', margin: '0 0 6px' }}>{t('emptyTitle')}</p>
           <p style={{ fontSize: '13px', color: '#94a3b8', margin: '0 0 20px' }}>{t('emptyDesc')}</p>
-          <a href={`/projects/${projectId}/import-signals`} style={{
+          <Link href={`/projects/${projectId}/import-signals`} style={{
             padding: '9px 20px', background: '#10b981', color: 'white',
             borderRadius: '8px', fontSize: '13px', fontWeight: 500, textDecoration: 'none',
           }}>
             {t('importBtn')}
-          </a>
+          </Link>
         </div>
       ) : (
         <div style={{ background: 'var(--card-bg)', borderRadius: '14px', border: '1px solid var(--border)', overflow: 'hidden' }}>

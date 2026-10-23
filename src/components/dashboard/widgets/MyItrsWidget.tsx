@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import { ITR_STYLE, TaskSection } from './_shared'
@@ -48,7 +49,7 @@ export default async function MyItrsWidget({ userId }: { userId: string }) {
         // S10 (G-13): vencido según el día del proyecto, no el de UTC
         const overdue = itr.scheduled_date && itr.scheduled_date < todayIn((itr.projects as { timezone?: string } | null)?.timezone) && itr.status === 'not_started'
         return (
-          <a key={itr.id} href={`/projects/${itr.project_id}/tags/${itr.tags?.id}/itrs/${itr.id}`} style={{ display: 'block', textDecoration: 'none' }}>
+          <Link key={itr.id} href={`/projects/${itr.project_id}/tags/${itr.tags?.id}/itrs/${itr.id}`} style={{ display: 'block', textDecoration: 'none' }}>
             <div style={{ padding: '14px 16px', background: 'var(--card-bg)', border: `1px solid ${overdue ? '#fecaca' : 'var(--border)'}`, borderLeft: `3px solid ${overdue ? 'var(--danger-500)' : style.color}`, borderRadius: 'var(--radius-md)', display: 'grid', gridTemplateColumns: '1fr auto', gap: 12, alignItems: 'center' }}>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
@@ -78,7 +79,7 @@ export default async function MyItrsWidget({ userId }: { userId: string }) {
                 </div>
               </div>
             </div>
-          </a>
+          </Link>
         )
       })}
     </TaskSection>

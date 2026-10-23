@@ -1,10 +1,13 @@
 'use client'
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-  not_started: { label: 'Sin iniciar', color: '#94a3b8', bg: '#f1f5f9' },
-  in_progress:  { label: 'En progreso', color: '#3b82f6', bg: '#eff6ff' },
-  completed:    { label: 'Completo',    color: '#10b981', bg: '#ecfdf5' },
-  on_hold:      { label: 'En pausa',    color: '#f59e0b', bg: '#fffbeb' },
+import Link from 'next/link'
+import { useTranslations } from 'next-intl'
+
+const STATUS_CONFIG: Record<string, { color: string; bg: string }> = {
+  not_started: { color: '#94a3b8', bg: '#f1f5f9' },
+  in_progress:  { color: '#3b82f6', bg: '#eff6ff' },
+  completed:    { color: '#10b981', bg: '#ecfdf5' },
+  on_hold:      { color: '#f59e0b', bg: '#fffbeb' },
 }
 
 export interface TagQuickViewData {
@@ -25,7 +28,9 @@ interface Props {
 }
 
 export default function TagQuickViewModal({ tag, projectId, onClose }: Props) {
-  const status = STATUS_CONFIG[tag.status] ?? STATUS_CONFIG.not_started
+  const tx = useTranslations('TagQuickView')
+  const statusKey = tag.status in STATUS_CONFIG ? tag.status : 'not_started'
+  const status = STATUS_CONFIG[statusKey]
   const pct = Math.round(tag.itr_completion_pct)
 
   return (
@@ -69,6 +74,7 @@ export default function TagQuickViewModal({ tag, projectId, onClose }: Props) {
             </div>
             <button
               onClick={onClose}
+              aria-label={tx('close')}
               style={{
                 background: 'none', border: 'none', cursor: 'pointer',
                 color: '#94a3b8', fontSize: '20px', lineHeight: 1,
@@ -92,7 +98,7 @@ export default function TagQuickViewModal({ tag, projectId, onClose }: Props) {
               padding: '3px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: 500,
               background: status.bg, color: status.color,
             }}>
-              {status.label}
+              {tx(`status.${statusKey}`)}
             </span>
           </div>
         </div>
@@ -102,7 +108,7 @@ export default function TagQuickViewModal({ tag, projectId, onClose }: Props) {
           {/* ITR Progress */}
           <div style={{ marginBottom: '14px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-              <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 500 }}>Progreso ITR</span>
+              <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 500 }}>{tx('itrProgress')}</span>
               <span style={{ fontSize: '12px', fontWeight: 700, color: pct === 100 ? '#10b981' : '#0f172a' }}>
                 {pct}%
               </span>
@@ -140,7 +146,7 @@ export default function TagQuickViewModal({ tag, projectId, onClose }: Props) {
 
           {/* CTA */}
           <div style={{ display: 'flex', gap: '8px' }}>
-            <a
+            <Link
               href={`/projects/${projectId}/tags?view=cards&tag=${tag.id}`}
               style={{
                 flex: 1, textAlign: 'center',
@@ -151,8 +157,8 @@ export default function TagQuickViewModal({ tag, projectId, onClose }: Props) {
               }}
             >
               🔷 Digital Twin
-            </a>
-            <a
+            </Link>
+            <Link
               href={`/projects/${projectId}/tags/${tag.id}`}
               style={{
                 flex: 1, textAlign: 'center',
@@ -162,8 +168,8 @@ export default function TagQuickViewModal({ tag, projectId, onClose }: Props) {
                 textDecoration: 'none',
               }}
             >
-              Ver detalle →
-            </a>
+              {tx('viewDetail')}
+            </Link>
           </div>
         </div>
       </div>

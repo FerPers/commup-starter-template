@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
@@ -110,9 +111,9 @@ export default function ForgotPasswordPage() {
           )}
 
           <p style={{ textAlign: 'center', margin: '20px 0 0' }}>
-            <a href="/login" style={{ color: 'var(--primary-500)', fontSize: 'var(--text-sm)', fontWeight: 600, textDecoration: 'none' }}>
+            <Link href="/login" style={{ color: 'var(--primary-500)', fontSize: 'var(--text-sm)', fontWeight: 600, textDecoration: 'none' }}>
               {t('backToLogin')}
-            </a>
+            </Link>
           </p>
         </Card>
       </div>

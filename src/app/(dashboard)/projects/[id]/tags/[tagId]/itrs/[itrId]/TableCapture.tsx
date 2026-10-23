@@ -10,6 +10,7 @@
 // causa) y las columnas de referencia se muestran en gris, sin edición.
 
 import { useEffect, useRef, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { evaluateTable, reshapeTable, sourceRefText, type SourceRow, type TableCapture as Capture, type TableCellValue, type TableConfig } from '@/lib/itr/table'
 
 /** Captura inicial cuando aún no hay registro: filas fijas o las de la foto; las variables esperan la cantidad. */
@@ -27,6 +28,7 @@ export default function TableCapture({ options, value, disabled, onChange, sourc
   onChange: (value: string) => void
   sourceRows?: SourceRow[] | null
 }) {
+  const tx = useTranslations('TableCapture')
   const evaluated = evaluateTable(options, value, sourceRows)
   const config = evaluated.config
   const initial = evaluated.data ?? blank(config, sourceRows)
@@ -40,8 +42,8 @@ export default function TableCapture({ options, value, disabled, onChange, sourc
 
   const field = { width: '100%', minWidth: '90px', padding: '7px 8px', border: '1px solid var(--border)', borderRadius: '6px', background: 'var(--card-bg)', color: 'var(--text-strong)', fontSize: '12px', boxSizing: 'border-box' } as const
 
-  if (!config) return <p role="alert" style={{ color: 'var(--danger-700)', fontSize: '12px' }}>La plantilla no define columnas válidas para esta tabla; corrígela antes de ejecutar.</p>
-  if (config.rows.mode === 'source' && !sourceRows?.length) return <p role="alert" style={{ color: 'var(--danger-700)', fontSize: '12px' }}>Esta tabla se arma con las señales del lazo o los efectos de la causa: genera el ITR desde la pantalla de lazos o la matriz C&E.</p>
+  if (!config) return <p role="alert" style={{ color: 'var(--danger-700)', fontSize: '12px' }}>{tx('noColumns')}</p>
+  if (config.rows.mode === 'source' && !sourceRows?.length) return <p role="alert" style={{ color: 'var(--danger-700)', fontSize: '12px' }}>{tx('needsSource')}</p>
 
   // Lo calculado (desviación, resultado automático) no se guarda: CommUp y SQL lo recalculan siempre.
   const serialize = (capture: Capture) => {
@@ -54,11 +56,11 @@ export default function TableCapture({ options, value, disabled, onChange, sourc
     if (!config) return
     const n = Number(count)
     if (config.rows.mode === 'variable' && (!Number.isInteger(n) || n < config.rows.min || n > config.rows.max)) {
-      setError(`Indica una cantidad entera entre ${config.rows.min} y ${config.rows.max}.`); return
+      setError(tx('invalidCount', { min: config.rows.min, max: config.rows.max })); return
     }
     const next = reshapeTable(config, current.current, config.rows.mode === 'fixed' ? config.rows.labels.length : n)
     const removed = current.current?.rows.filter(row => !next.rows.some(other => other.id === row.id)) ?? []
-    if (removed.some(row => Object.values(row.cells).some(cell => cell !== null && cell !== '')) && !window.confirm('Este cambio retira filas con información. ¿Confirmas cambiar la cantidad?')) return
+    if (removed.some(row => Object.values(row.cells).some(cell => cell !== null && cell !== '')) && !window.confirm(tx('confirmRemoveRows'))) return
     setError(''); current.current = next; onChange(serialize(next))
   }
 
@@ -70,15 +72,15 @@ export default function TableCapture({ options, value, disabled, onChange, sourc
 
   // Render from props (pure); the ref only seeds the next capture inside handlers.
   const data = evaluated.data ?? blank(config, sourceRows)
-  const rowsLabel = config.rows.mode === 'fixed' ? 'Fila' : config.rows.label
+  const rowsLabel = config.rows.mode === 'fixed' ? tx('rowDefault') : config.rows.label
 
   return <fieldset disabled={disabled} style={{ border: 0, margin: 0, padding: 0, minWidth: 0 }}>
     {config.rows.mode === 'variable' && (
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'end', marginBottom: '10px' }}>
-        <label style={{ fontSize: '12px' }}>Cantidad de {config.rows.label.toLowerCase()}s ({config.rows.min}–{config.rows.max})
-          <input aria-label="Cantidad de filas" style={{ ...field, width: '110px' }} type="number" min={config.rows.min} max={config.rows.max} step={1} value={count} onChange={e => setCount(e.target.value)} />
+        <label style={{ fontSize: '12px' }}>{tx('countLabel', { label: config.rows.label.toLowerCase(), min: config.rows.min, max: config.rows.max })}
+          <input aria-label={tx('countAria')} style={{ ...field, width: '110px' }} type="number" min={config.rows.min} max={config.rows.max} step={1} value={count} onChange={e => setCount(e.target.value)} />
         </label>
-        <button type="button" onClick={configure} style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--border)', fontSize: '12px', cursor: 'pointer' }}>{evaluated.data ? 'Actualizar filas' : 'Crear filas'}</button>
+        <button type="button" onClick={configure} style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--border)', fontSize: '12px', cursor: 'pointer' }}>{tx(evaluated.data ? 'updateRows' : 'createRows')}</button>
       </div>
     )}
     {error && <p role="alert" style={{ color: 'var(--danger-700)', fontSize: '12px' }}>{error}</p>}
@@ -89,7 +91,7 @@ export default function TableCapture({ options, value, disabled, onChange, sourc
             <th style={{ padding: '6px 8px', textAlign: 'left', color: 'var(--text-muted)' }}>{rowsLabel}</th>
             {config.columns.map(column => (
               <th key={column.key} style={{ padding: '6px 8px', textAlign: 'left', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                {column.label}{column.unit ? ` (${column.unit})` : ''}{column.type === 'reference' ? '' : column.type === 'computed' || column.auto_from ? ' ·calc.' : column.required ? '' : ' ·opc.'}
+                {column.label}{column.unit ? ` (${column.unit})` : ''}{column.type === 'reference' ? '' : column.type === 'computed' || column.auto_from ? tx('colCalc') : column.required ? '' : tx('colOptional')}
                 {column.type === 'computed' && column.tolerance !== null && column.tolerance !== undefined && <span style={{ fontWeight: 400 }}> ±{column.tolerance}</span>}
               </th>
             ))}
@@ -114,13 +116,13 @@ export default function TableCapture({ options, value, disabled, onChange, sourc
                   }
                   if (column.type === 'result' && column.auto_from) {
                     return <td key={column.key} style={{ padding: '6px 8px', fontWeight: 700, color: cell === 'fail' ? 'var(--danger-700)' : cell === 'pass' ? 'var(--success-700)' : 'var(--text-muted)' }} aria-label={label}>
-                      {cell === 'pass' ? 'Aceptado' : cell === 'fail' ? 'Rechazado' : 'Pendiente'}
+                      {cell === 'pass' ? tx('pass') : cell === 'fail' ? tx('fail') : tx('pending')}
                     </td>
                   }
                   if (column.type === 'datetime') return <td key={column.key}><input aria-label={label} style={{ ...field, minWidth: '170px' }} type="datetime-local" value={typeof cell === 'string' ? cell : ''} onChange={e => changeCell(row.id, column.key, e.target.value)} /></td>
                   if (column.type === 'number') return <td key={column.key}><input aria-label={label} style={field} type="number" step="any" value={typeof cell === 'number' ? cell : ''} onChange={e => changeCell(row.id, column.key, e.target.value === '' || !Number.isFinite(e.target.valueAsNumber) ? null : e.target.valueAsNumber)} /></td>
                   if (column.type === 'select') return <td key={column.key}><select aria-label={label} style={field} value={typeof cell === 'string' ? cell : ''} onChange={e => changeCell(row.id, column.key, e.target.value)}><option value="">—</option>{(column.options ?? []).map(option => <option key={option} value={option}>{option}</option>)}</select></td>
-                  if (column.type === 'result') return <td key={column.key}><select aria-label={label} style={{ ...field, color: cell === 'fail' ? 'var(--danger-700)' : cell === 'pass' ? 'var(--success-700)' : undefined }} value={typeof cell === 'string' ? cell : ''} onChange={e => changeCell(row.id, column.key, e.target.value)}><option value="">Pendiente</option><option value="pass">Aceptado</option><option value="fail">Rechazado</option><option value="not_applicable">No aplica</option></select></td>
+                  if (column.type === 'result') return <td key={column.key}><select aria-label={label} style={{ ...field, color: cell === 'fail' ? 'var(--danger-700)' : cell === 'pass' ? 'var(--success-700)' : undefined }} value={typeof cell === 'string' ? cell : ''} onChange={e => changeCell(row.id, column.key, e.target.value)}><option value="">{tx('pending')}</option><option value="pass">{tx('pass')}</option><option value="fail">{tx('fail')}</option><option value="not_applicable">{tx('notApplicable')}</option></select></td>
                   return <td key={column.key}><input aria-label={label} style={{ ...field, minWidth: '140px' }} value={typeof cell === 'string' ? cell : ''} onChange={e => changeCell(row.id, column.key, e.target.value)} /></td>
                 })}
               </tr>
@@ -129,16 +131,16 @@ export default function TableCapture({ options, value, disabled, onChange, sourc
         </table>
       </div>
       {evaluated.asFoundOut > 0 && (
-        <p style={{ fontSize: '12px', margin: '6px 0 0', color: 'var(--warning-700)' }}>⚑ {evaluated.asFoundOut} punto(s) «as found» fuera de tolerancia: queda registrado; la aceptación se evalúa con «as left».</p>
+        <p style={{ fontSize: '12px', margin: '6px 0 0', color: 'var(--warning-700)' }}>⚑ {tx('asFoundOut', { count: evaluated.asFoundOut })}</p>
       )}
       {evaluated.stability && config.stability && (
         <p style={{ fontSize: '12px', margin: '6px 0 0', fontWeight: 600, color: evaluated.stability.ok === false ? 'var(--danger-700)' : evaluated.stability.ok ? 'var(--success-700)' : 'var(--text-muted)' }}>
-          Estabilidad: últimas {config.stability.last_n} lecturas {config.stability.min !== null ? `≥ ${config.stability.min}` : ''}{config.stability.min !== null && config.stability.max !== null ? ' y ' : ''}{config.stability.max !== null ? `≤ ${config.stability.max}` : ''} —{' '}
-          {evaluated.stability.ok === null ? `faltan lecturas (${evaluated.stability.have}/${evaluated.stability.needed})` : evaluated.stability.ok ? 'cumple' : 'no cumple'}
+          {tx('stability', { n: config.stability.last_n, range: [config.stability.min !== null ? `≥ ${config.stability.min}` : null, config.stability.max !== null ? `≤ ${config.stability.max}` : null].filter(Boolean).join(tx('stabilityAnd')) })}{' '}
+          {evaluated.stability.ok === null ? tx('stabilityMissing', { have: evaluated.stability.have, needed: evaluated.stability.needed }) : tx(evaluated.stability.ok ? 'stabilityOk' : 'stabilityFail')}
         </p>
       )}
       <p role="status" style={{ fontSize: '12px', margin: '6px 0 0', color: evaluated.hasFail ? 'var(--danger-700)' : 'var(--text-muted)' }}>
-        {evaluated.hasFail ? 'Hay resultados rechazados o fuera del rango declarado.' : evaluated.isComplete ? 'Registro diligenciado; pendiente de las aprobaciones que correspondan.' : evaluated.data ? `Registro pendiente: ${evaluated.errors.slice(0, 3).join(' · ')}${evaluated.errors.length > 3 ? ` · +${evaluated.errors.length - 3}` : ''}` : 'Registro pendiente: diligencia las celdas requeridas.'}
+        {evaluated.hasFail ? tx('statusFail') : evaluated.isComplete ? tx('statusComplete') : evaluated.data ? tx('statusPending', { errors: `${evaluated.errors.slice(0, 3).join(' · ')}${evaluated.errors.length > 3 ? ` · +${evaluated.errors.length - 3}` : ''}` }) : tx('statusFill')}
       </p>
     </>}
   </fieldset>

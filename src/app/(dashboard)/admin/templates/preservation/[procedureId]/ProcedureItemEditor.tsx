@@ -2,6 +2,7 @@
 
 import type { Enums } from '@/types/supabase.generated'
 import { useState, useTransition } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import {
   upsertProcedureItem,
@@ -70,20 +71,19 @@ interface Props {
 // ── Config ─────────────────────────────────────────────────────
 
 const ITEM_TYPES = [
-  { value: 'checkbox',    label: 'Verificación', color: '#3b82f6' },
-  { value: 'yes_no',      label: 'Sí / No',       color: '#10b981' },
-  { value: 'number',      label: 'Número',        color: '#f59e0b' },
-  { value: 'measurement', label: 'Medición',       color: '#8b5cf6' },
-  { value: 'text',        label: 'Texto libre',    color: 'var(--text-muted)' },
-]
+  { value: 'checkbox',    color: '#3b82f6' },
+  { value: 'yes_no',      color: '#10b981' },
+  { value: 'number',      color: '#f59e0b' },
+  { value: 'measurement', color: '#8b5cf6' },
+  { value: 'text',        color: 'var(--text-muted)' },
+] as const
 
-const FREQ_LABELS: Record<string, string> = {
-  daily: 'Diario', weekly: 'Semanal', biweekly: 'Quincenal',
-  monthly: 'Mensual', quarterly: 'Trimestral',
-}
+const FREQS = ['daily', 'weekly', 'biweekly', 'monthly', 'quarterly']
 
 function TypeBadge({ type }: { type: string }) {
-  const cfg = ITEM_TYPES.find(t => t.value === type) ?? { label: type, color: 'var(--gray-400)' }
+  const t = useTranslations('PreservationTemplates')
+  const found = ITEM_TYPES.find(x => x.value === type)
+  const cfg = found ? { label: t(`type.${found.value}`), color: found.color } : { label: type, color: 'var(--gray-400)' }
   return (
     <span style={{
       padding: '2px 8px', borderRadius: '20px', fontSize: '11px', fontWeight: 600,
@@ -100,6 +100,8 @@ const DEFAULT_ITEM = {
 }
 
 export default function ProcedureItemEditor({ procedure, disciplines, canEdit }: Props) {
+  const t = useTranslations('PreservationTemplates')
+  const tp = useTranslations('Preservation')
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [items, setItems] = useState<ProcItem[]>(procedure.preservation_procedure_items)
@@ -147,7 +149,7 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
   }
 
   async function handleSaveItem() {
-    if (!itemForm.label.trim()) { setItemError('El label es requerido'); return }
+    if (!itemForm.label.trim()) { setItemError(t('labelRequired')); return }
     const needsRange = ['measurement', 'number'].includes(itemForm.item_type)
     const minV = itemForm.minValue !== '' ? parseFloat(itemForm.minValue) : undefined
     const maxV = itemForm.maxValue !== '' ? parseFloat(itemForm.maxValue) : undefined
@@ -177,7 +179,7 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
   }
 
   async function handleDeleteItem(itemId: string) {
-    if (!confirm('¿Eliminar este ítem?')) return
+    if (!confirm(t('deleteItemConfirm'))) return
     startTransition(async () => {
       const result = await deleteProcedureItem(itemId, procedure.id)
       if (result.error) alert(result.error)
@@ -204,9 +206,9 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
   }
 
   async function handleSaveHeader() {
-    if (!hdrForm.code.trim() || !hdrForm.title.trim()) { setHdrError('Código y título son requeridos'); return }
+    if (!hdrForm.code.trim() || !hdrForm.title.trim()) { setHdrError(t('codeTitleRequired')); return }
     const days = parseInt(hdrForm.intervalDays)
-    if (isNaN(days) || days < 1) { setHdrError('Intervalo inválido'); return }
+    if (isNaN(days) || days < 1) { setHdrError(t('invalidInterval')); return }
     setHdrError(null)
     startTransition(async () => {
       const result = await updateProcedure({
@@ -236,7 +238,7 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
           onClick={() => router.push('/admin/templates/preservation')}
           style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#3b82f6', fontSize: '14px', fontWeight: 500, padding: 0 }}
         >
-          Procedimientos de Preservación
+          {t('back')}
         </button>
         <span style={{ color: 'var(--gray-400)' }}>›</span>
         <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>{procedure.code}</span>
@@ -260,7 +262,7 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
               )}
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600, background: '#f0f9ff', color: '#0ea5e9' }}>
-                  {FREQ_LABELS[procedure.frequency] ?? procedure.frequency} · {procedure.interval_days} días
+                  {FREQS.includes(procedure.frequency) ? tp(`freq.${procedure.frequency as 'daily'}`) : procedure.frequency} · {t('days', { n: procedure.interval_days })}
                 </span>
                 {procedure.disciplines && (
                   <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600, background: procedure.disciplines.color + '20', color: procedure.disciplines.color }}>
@@ -268,10 +270,10 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
                   </span>
                 )}
                 {procedure.requires_photo && (
-                  <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '12px', background: 'var(--gray-50)', color: 'var(--text-muted)' }}>📷 Foto</span>
+                  <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '12px', background: 'var(--gray-50)', color: 'var(--text-muted)' }}>📷 {t('photo')}</span>
                 )}
                 {procedure.requires_signature && (
-                  <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '12px', background: 'var(--gray-50)', color: 'var(--text-muted)' }}>✍ Firma</span>
+                  <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '12px', background: 'var(--gray-50)', color: 'var(--text-muted)' }}>✍ {t('signature')}</span>
                 )}
               </div>
             </div>
@@ -281,35 +283,35 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
                   onClick={() => {
                     startTransition(async () => {
                       const res = await exportPreservationProcedure(procedure.id)
-                      if (res.error || !res.backup) { setHdrError(res.error ?? 'Error al previsualizar'); return }
+                      if (res.error || !res.backup) { setHdrError(res.error ?? t('previewError')); return }
                       setDocPreview(res.backup)
                     })
                   }}
                   disabled={isPending}
                   style={{ padding: '7px 14px', borderRadius: '8px', background: '#eff6ff', color: '#1e40af', border: '1px solid #bfdbfe', fontWeight: 600, fontSize: '13px', cursor: isPending ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap' }}
-                  title="Renderiza este procedimiento como documento imprimible"
+                  title={t('viewDocHint')}
                 >
-                  Ver como documento
+                  {t('viewDoc')}
                 </button>
                 <button
                   onClick={() => {
                     startTransition(async () => {
                       const res = await exportPreservationProcedure(procedure.id)
-                      if (res.error || !res.backup) { setHdrError(res.error ?? 'Error al exportar'); return }
+                      if (res.error || !res.backup) { setHdrError(res.error ?? t('exportError')); return }
                       downloadJsonFile(`commup-pres-${procedure.code}-${dateStamp()}.json`, res.backup)
                     })
                   }}
                   disabled={isPending}
                   style={{ padding: '7px 14px', borderRadius: '8px', background: '#fef3c7', color: '#a16207', border: '1px solid #fde68a', fontWeight: 500, fontSize: '13px', cursor: isPending ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap' }}
-                  title="Descargar este procedimiento como JSON"
+                  title={t('exportJsonHint')}
                 >
-                  Exportar JSON
+                  {t('exportJson')}
                 </button>
                 <button
                   onClick={() => setEditHeader(true)}
                   style={{ padding: '7px 14px', borderRadius: '8px', background: 'var(--gray-100)', color: 'var(--gray-700)', fontWeight: 600, fontSize: '13px', cursor: 'pointer', border: 'none', whiteSpace: 'nowrap' }}
                 >
-                  Editar encabezado
+                  {t('editHeader')}
                 </button>
               </div>
             )}
@@ -324,43 +326,43 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '12px' }}>
                 <div>
-                  <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '4px' }}>Código</label>
+                  <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '4px' }}>{t('codePlain')}</label>
                   <input value={hdrForm.code} onChange={e => setHdrForm(f => ({ ...f, code: e.target.value.toUpperCase() }))}
                     style={{ width: '100%', padding: '7px 10px', border: '1px solid #d1d5db', borderRadius: '7px', fontSize: '13px', boxSizing: 'border-box' }} />
                 </div>
                 <div>
-                  <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '4px' }}>Título</label>
+                  <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '4px' }}>{t('titlePlain')}</label>
                   <input value={hdrForm.title} onChange={e => setHdrForm(f => ({ ...f, title: e.target.value }))}
                     style={{ width: '100%', padding: '7px 10px', border: '1px solid #d1d5db', borderRadius: '7px', fontSize: '13px', boxSizing: 'border-box' }} />
                 </div>
               </div>
               <div>
-                <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '4px' }}>Descripción</label>
+                <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '4px' }}>{t('description')}</label>
                 <textarea value={hdrForm.description} onChange={e => setHdrForm(f => ({ ...f, description: e.target.value }))}
                   rows={2} style={{ width: '100%', padding: '7px 10px', border: '1px solid #d1d5db', borderRadius: '7px', fontSize: '13px', resize: 'vertical', boxSizing: 'border-box' }} />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 100px', gap: '12px' }}>
                 <div>
-                  <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '4px' }}>Disciplina</label>
+                  <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '4px' }}>{t('discipline')}</label>
                   <select value={hdrForm.disciplineId} onChange={e => setHdrForm(f => ({ ...f, disciplineId: e.target.value }))}
                     style={{ width: '100%', padding: '7px 10px', border: '1px solid #d1d5db', borderRadius: '7px', fontSize: '13px', boxSizing: 'border-box' }}>
-                    <option value="">— Ninguna —</option>
+                    <option value="">{t('none')}</option>
                     {disciplines.map(d => <option key={d.id} value={d.id}>{d.code} — {d.name}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '4px' }}>Frecuencia</label>
+                  <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '4px' }}>{t('frequencyPlain')}</label>
                   <select value={hdrForm.frequency} onChange={e => setHdrForm(f => ({ ...f, frequency: e.target.value as Enums<'preservation_frequency'> }))}
                     style={{ width: '100%', padding: '7px 10px', border: '1px solid #d1d5db', borderRadius: '7px', fontSize: '13px', boxSizing: 'border-box' }}>
-                    <option value="daily">Diario</option>
-                    <option value="weekly">Semanal</option>
-                    <option value="biweekly">Quincenal</option>
-                    <option value="monthly">Mensual</option>
-                    <option value="quarterly">Trimestral</option>
+                    <option value="daily">{tp('freq.daily')}</option>
+                    <option value="weekly">{tp('freq.weekly')}</option>
+                    <option value="biweekly">{tp('freq.biweekly')}</option>
+                    <option value="monthly">{tp('freq.monthly')}</option>
+                    <option value="quarterly">{tp('freq.quarterly')}</option>
                   </select>
                 </div>
                 <div>
-                  <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '4px' }}>Días</label>
+                  <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '4px' }}>{t('daysLabel')}</label>
                   <input type="number" min="1" value={hdrForm.intervalDays} onChange={e => setHdrForm(f => ({ ...f, intervalDays: e.target.value }))}
                     style={{ width: '100%', padding: '7px 10px', border: '1px solid #d1d5db', borderRadius: '7px', fontSize: '13px', boxSizing: 'border-box' }} />
                 </div>
@@ -368,21 +370,21 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
               <div style={{ display: 'flex', gap: '20px' }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px' }}>
                   <input type="checkbox" checked={hdrForm.requiresPhoto} onChange={e => setHdrForm(f => ({ ...f, requiresPhoto: e.target.checked }))} />
-                  Requiere foto
+                  {t('requiresPhoto')}
                 </label>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px' }}>
                   <input type="checkbox" checked={hdrForm.requiresSignature} onChange={e => setHdrForm(f => ({ ...f, requiresSignature: e.target.checked }))} />
-                  Requiere firma
+                  {t('requiresSignature')}
                 </label>
               </div>
               <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                 <button onClick={() => { setEditHeader(false); setHdrError(null) }}
                   style={{ padding: '7px 16px', borderRadius: '7px', background: 'var(--gray-100)', color: 'var(--text-muted)', fontWeight: 600, fontSize: '13px', cursor: 'pointer', border: 'none' }}>
-                  Cancelar
+                  {t('cancel')}
                 </button>
                 <button onClick={handleSaveHeader} disabled={isPending}
                   style={{ padding: '7px 16px', borderRadius: '7px', background: '#3b82f6', color: '#fff', fontWeight: 600, fontSize: '13px', cursor: 'pointer', border: 'none', opacity: isPending ? 0.7 : 1 }}>
-                  Guardar
+                  {t('save')}
                 </button>
               </div>
             </div>
@@ -393,9 +395,9 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
       {/* Items section */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
         <h2 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>
-          Ítems del check sheet
+          {t('itemsTitle')}
           <span style={{ fontSize: '13px', fontWeight: 400, color: 'var(--gray-400)', marginLeft: '8px' }}>
-            ({items.length} {items.length === 1 ? 'ítem' : 'ítems'})
+            ({t('items', { n: items.length })})
           </span>
         </h2>
         {canEdit && (
@@ -403,14 +405,14 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
             onClick={openAdd}
             style={{ padding: '7px 16px', borderRadius: '8px', background: '#3b82f6', color: '#fff', fontWeight: 600, fontSize: '13px', cursor: 'pointer', border: 'none' }}
           >
-            + Agregar ítem
+            {t('addItem')}
           </button>
         )}
       </div>
 
       {items.length === 0 ? (
         <div style={{ background: 'var(--gray-50)', border: '2px dashed #e2e8f0', borderRadius: '10px', padding: '40px', textAlign: 'center' }}>
-          <div style={{ fontSize: '14px', color: 'var(--gray-400)' }}>Sin ítems — agrega verificaciones, mediciones o notas de texto</div>
+          <div style={{ fontSize: '14px', color: 'var(--gray-400)' }}>{t('noItems')}</div>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -438,10 +440,10 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
                   <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-strong)' }}>{item.label}</span>
                   {item.is_critical && (
-                    <span style={{ padding: '1px 7px', borderRadius: '10px', fontSize: '10px', fontWeight: 700, background: '#fef2f2', color: '#dc2626' }}>CRÍTICO</span>
+                    <span style={{ padding: '1px 7px', borderRadius: '10px', fontSize: '10px', fontWeight: 700, background: '#fef2f2', color: '#dc2626' }}>{t('critical')}</span>
                   )}
                   {!item.is_required && (
-                    <span style={{ padding: '1px 7px', borderRadius: '10px', fontSize: '10px', fontWeight: 600, background: 'var(--gray-100)', color: 'var(--gray-400)' }}>Opcional</span>
+                    <span style={{ padding: '1px 7px', borderRadius: '10px', fontSize: '10px', fontWeight: 600, background: 'var(--gray-100)', color: 'var(--gray-400)' }}>{t('optional')}</span>
                   )}
                 </div>
                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
@@ -467,7 +469,7 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
                 <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
                   <button onClick={() => openEdit(item)}
                     style={{ padding: '5px 10px', borderRadius: '6px', background: 'var(--gray-100)', color: 'var(--gray-700)', fontSize: '12px', fontWeight: 600, cursor: 'pointer', border: 'none' }}>
-                    Editar
+                    {t('edit')}
                   </button>
                   <button onClick={() => handleDeleteItem(item.id)}
                     style={{ padding: '5px 10px', borderRadius: '6px', background: '#fff5f5', color: '#dc2626', fontSize: '12px', fontWeight: 600, cursor: 'pointer', border: 'none' }}>
@@ -486,7 +488,7 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
           <div style={{ background: 'var(--card-bg)', borderRadius: '14px', padding: '26px', width: '100%', maxWidth: '480px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>
-                {editingItemId ? 'Editar ítem' : 'Agregar ítem'}
+                {editingItemId ? t('editItem') : t('addItemTitle')}
               </h3>
               <button onClick={() => setShowAddItem(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', color: 'var(--gray-400)' }}>✕</button>
             </div>
@@ -499,31 +501,31 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <div>
-                <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '5px' }}>Descripción / Label *</label>
+                <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '5px' }}>{t('itemLabel')}</label>
                 <input
                   value={itemForm.label}
                   onChange={e => setItemForm(f => ({ ...f, label: e.target.value }))}
-                  placeholder="Ej: Verificar nivel de aceite"
+                  placeholder={t('itemPlaceholder')}
                   style={{ width: '100%', padding: '8px 10px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '13px', boxSizing: 'border-box' }}
                 />
               </div>
 
               <div>
-                <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '5px' }}>Tipo de ítem *</label>
+                <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '5px' }}>{t('itemType')}</label>
                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                  {ITEM_TYPES.map(t => (
+                  {ITEM_TYPES.map(it => (
                     <button
-                      key={t.value}
-                      onClick={() => setItemForm(f => ({ ...f, item_type: t.value }))}
+                      key={it.value}
+                      onClick={() => setItemForm(f => ({ ...f, item_type: it.value }))}
                       style={{
                         padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer',
                         border: '2px solid',
-                        borderColor: itemForm.item_type === t.value ? t.color : 'var(--border)',
-                        background: itemForm.item_type === t.value ? t.color + '20' : 'var(--card-bg)',
-                        color: itemForm.item_type === t.value ? t.color : 'var(--text-muted)',
+                        borderColor: itemForm.item_type === it.value ? it.color : 'var(--border)',
+                        background: itemForm.item_type === it.value ? it.color + '20' : 'var(--card-bg)',
+                        color: itemForm.item_type === it.value ? it.color : 'var(--text-muted)',
                       }}
                     >
-                      {t.label}
+                      {t(`type.${it.value}`)}
                     </button>
                   ))}
                 </div>
@@ -532,18 +534,18 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
               {needsRange && (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
                   <div>
-                    <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '5px' }}>Unidad</label>
+                    <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '5px' }}>{t('unit')}</label>
                     <input value={itemForm.unit} onChange={e => setItemForm(f => ({ ...f, unit: e.target.value }))}
                       placeholder="bar, °C, mA…"
                       style={{ width: '100%', padding: '7px 9px', border: '1px solid #d1d5db', borderRadius: '7px', fontSize: '13px', boxSizing: 'border-box' }} />
                   </div>
                   <div>
-                    <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '5px' }}>Mín</label>
+                    <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '5px' }}>{t('min')}</label>
                     <input type="number" value={itemForm.minValue} onChange={e => setItemForm(f => ({ ...f, minValue: e.target.value }))}
                       style={{ width: '100%', padding: '7px 9px', border: '1px solid #d1d5db', borderRadius: '7px', fontSize: '13px', boxSizing: 'border-box' }} />
                   </div>
                   <div>
-                    <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '5px' }}>Máx</label>
+                    <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '5px' }}>{t('max')}</label>
                     <input type="number" value={itemForm.maxValue} onChange={e => setItemForm(f => ({ ...f, maxValue: e.target.value }))}
                       style={{ width: '100%', padding: '7px 9px', border: '1px solid #d1d5db', borderRadius: '7px', fontSize: '13px', boxSizing: 'border-box' }} />
                   </div>
@@ -553,11 +555,11 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
               <div style={{ display: 'flex', gap: '20px', paddingTop: '4px' }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', color: 'var(--gray-700)' }}>
                   <input type="checkbox" checked={itemForm.isCritical} onChange={e => setItemForm(f => ({ ...f, isCritical: e.target.checked }))} />
-                  <span>Crítico <span style={{ fontSize: '11px', color: 'var(--gray-400)' }}>(bloquea aprobación)</span></span>
+                  <span>{t('criticalLabel')} <span style={{ fontSize: '11px', color: 'var(--gray-400)' }}>{t('criticalHelp')}</span></span>
                 </label>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', color: 'var(--gray-700)' }}>
                   <input type="checkbox" checked={itemForm.isRequired} onChange={e => setItemForm(f => ({ ...f, isRequired: e.target.checked }))} />
-                  Requerido
+                  {t('requiredLabel')}
                 </label>
               </div>
             </div>
@@ -565,11 +567,11 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '20px' }}>
               <button onClick={() => setShowAddItem(false)}
                 style={{ padding: '8px 16px', borderRadius: '8px', background: 'var(--gray-100)', color: 'var(--text-muted)', fontWeight: 600, fontSize: '13px', cursor: 'pointer', border: 'none' }}>
-                Cancelar
+                {t('cancel')}
               </button>
               <button onClick={handleSaveItem} disabled={isPending}
                 style={{ padding: '8px 18px', borderRadius: '8px', background: '#3b82f6', color: '#fff', fontWeight: 600, fontSize: '13px', cursor: isPending ? 'wait' : 'pointer', border: 'none', opacity: isPending ? 0.7 : 1 }}>
-                {isPending ? 'Guardando...' : (editingItemId ? 'Actualizar' : 'Agregar')}
+                {isPending ? t('saving') : (editingItemId ? t('update') : t('add'))}
               </button>
             </div>
           </div>

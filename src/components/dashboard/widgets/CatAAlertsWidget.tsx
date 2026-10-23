@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { AlertTriangle } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
@@ -37,7 +38,7 @@ export default async function CatAAlertsWidget({ orgId }: { orgId: string }) {
             <div style={{ fontSize: 'var(--text-sm)', color: '#c2410c' }}>{t('architect.catADesc', { count: unassignedCatA.length })}</div>
           </div>
         </div>
-        <a href="/punch-list" style={{ fontSize: 'var(--text-sm)', color: '#ea580c', fontWeight: 600, textDecoration: 'none' }}>{t('architect.catAViewAll')}</a>
+        <Link href="/punch-list" style={{ fontSize: 'var(--text-sm)', color: '#ea580c', fontWeight: 600, textDecoration: 'none' }}>{t('architect.catAViewAll')}</Link>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         {(unassignedCatA ?? []).slice(0, 5).map(p => (

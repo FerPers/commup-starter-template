@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useCallback, useMemo, useEffect } from 'react'
+import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import * as XLSX from 'xlsx'
 import { importTags, findExistingTags, previewTagImport, type TagRow, type ImportResult, type TagImportPreview } from '@/app/actions/import'
 import { dedupeLast, mergeCounts, runBatches, IMPORT_BATCH } from '@/lib/import/batches'
@@ -130,6 +132,7 @@ export default function ImportWizard({
   disciplines: { code: string; name: string; color: string }[]
   disciplinePrefill?: { code: string; name: string; color: string }
 }) {
+  const ti = useTranslations('TagImport')
   const [step, setStep]               = useState<Step>('upload')
   const [dragging, setDragging]       = useState(false)
   const [fileName, setFileName]       = useState<string | null>(null)
@@ -187,25 +190,25 @@ export default function ImportWizard({
         const { rows: rawRows } = pickBestSheet(wb, COL_KEYWORDS)
 
         if (rawRows.length === 0) {
-          setParseWarnings(['El archivo está vacío.']); return
+          setParseWarnings([ti('warn.empty')]); return
         }
 
         const { headerRowIdx, colIndex } = detectHeaderRow(rawRows, COL_KEYWORDS)
         const warnings: string[] = []
 
         if (colIndex['tag'] === undefined) {
-          warnings.push('No se encontró columna TAG / ETIQUETA. Verifica que tu archivo tenga encabezados reconocibles.')
+          warnings.push(ti('warn.noTagColumn'))
         }
 
         const parsed = parseRows(rawRows, colIndex, headerRowIdx + 1, disciplineCode)
 
         if (parsed.length === 0) {
-          setParseWarnings([...warnings, 'No se encontraron filas de datos válidas (TAG debe contener letras y números).']); return
+          setParseWarnings([...warnings, ti('warn.noRows')]); return
         }
 
         if (!disciplineCode) {
           const unknown = [...new Set(parsed.map(r => r.discipline_code).filter(c => !disciplineCodes.has(c)))]
-          if (unknown.length > 0) warnings.push(`Disciplinas no reconocidas: ${unknown.join(', ')} — esas filas serán omitidas.`)
+          if (unknown.length > 0) warnings.push(ti('warn.unknownDisciplines', { list: unknown.join(', ') }))
         }
 
         setParseWarnings(warnings)
@@ -216,11 +219,11 @@ export default function ImportWizard({
         setRows(parsed)
         setStep('preview')
       } catch {
-        setParseWarnings(['Error al leer el archivo. Verifica que sea un .xlsx o .xls válido.'])
+        setParseWarnings([ti('warn.readError')])
       }
     }
     reader.readAsArrayBuffer(file)
-  }, [disciplineCodes])
+  }, [disciplineCodes, ti])
 
   const onDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault(); setDragging(false)
@@ -242,7 +245,7 @@ export default function ImportWizard({
       batch => importTags(projectId, batch as TagRow[], columns), mergeCounts, (done, total) => setProgress({ done, total }))
     setLoading(false); setProgress(null)
     if (error && !res) { setImportError(error); return }
-    if (error) setImportError(`Se detuvo a mitad: ${error}. Lo importado hasta ahí quedó guardado; vuelve a importar el archivo para completar.`)
+    if (error) setImportError(ti('stoppedMidway', { error }))
     setResult(res!); setStep('result')
   }
 
@@ -253,15 +256,15 @@ export default function ImportWizard({
   return (
     <div style={{ padding: '32px' }}>
 
-      <a href={`/projects/${projectId}/tags`} style={{ fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
+      <Link href={`/projects/${projectId}/tags`} style={{ fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
         ← {projectName}
-      </a>
+      </Link>
 
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '28px', gap: '16px' }}>
         <div>
           <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-strong)', margin: 0, letterSpacing: '-0.4px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-            Importar Tags / Equipos
+            {ti('title')}
             {disciplinePrefill && (
               <span style={{
                 padding: '3px 10px', borderRadius: '6px', fontSize: '14px', fontWeight: 700,
@@ -272,12 +275,12 @@ export default function ImportWizard({
             )}
           </h1>
           <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: '4px 0 0' }}>
-            Carga tu lista desde Excel. Se crean áreas, sistemas y subsistemas automáticamente.
+            {ti('subtitle')}
           </p>
         </div>
         {step === 'upload' && (
           <button onClick={() => downloadTemplate(prefillCode || 'MECH')} style={{ padding: '8px 16px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}>
-            ↓ Descargar plantilla
+            ↓ {ti('downloadTemplate')}
           </button>
         )}
       </div>
@@ -285,7 +288,7 @@ export default function ImportWizard({
       {/* Step indicator */}
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '28px' }}>
         {(['upload', 'preview', 'result'] as Step[]).map((s, i) => {
-          const labels = ['Cargar archivo', 'Vista previa', 'Resultado']
+          const labels = [ti('step.upload'), ti('step.preview'), ti('step.result')]
           const done   = (step === 'preview' && i === 0) || step === 'result'
           const active = step === s
           return (
@@ -317,7 +320,7 @@ export default function ImportWizard({
 
           {!disciplinePrefill && (
             <div style={{ background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <span style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500, whiteSpace: 'nowrap' }}>Disciplina:</span>
+              <span style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500, whiteSpace: 'nowrap' }}>{ti('discipline')}</span>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', flex: 1 }}>
                 {disciplines.map(d => (
                   <button
@@ -337,7 +340,7 @@ export default function ImportWizard({
                 ))}
               </div>
               {!manualDiscipline && (
-                <span style={{ fontSize: '11px', color: '#f59e0b', whiteSpace: 'nowrap' }}>Selecciona una disciplina</span>
+                <span style={{ fontSize: '11px', color: '#f59e0b', whiteSpace: 'nowrap' }}>{ti('pickDiscipline')}</span>
               )}
             </div>
           )}
@@ -355,11 +358,11 @@ export default function ImportWizard({
             }}
           >
             <div style={{ fontSize: '36px', marginBottom: '12px', opacity: 0.4 }}>⊞</div>
-            <p style={{ fontSize: '15px', fontWeight: 500, color: 'var(--text-muted)', margin: '0 0 6px' }}>Arrastra tu archivo Excel aquí</p>
-            <p style={{ fontSize: '13px', color: 'var(--gray-400)', margin: '0 0 20px' }}>o haz clic para seleccionar (.xlsx, .xls)</p>
+            <p style={{ fontSize: '15px', fontWeight: 500, color: 'var(--text-muted)', margin: '0 0 6px' }}>{ti('drop')}</p>
+            <p style={{ fontSize: '13px', color: 'var(--gray-400)', margin: '0 0 20px' }}>{ti('orClick')}</p>
             <input id="file-input" type="file" accept=".xlsx,.xls" onChange={onFileChange} style={{ display: 'none' }} />
             <span style={{ padding: '8px 20px', background: '#3b82f6', color: '#fff', borderRadius: '8px', fontSize: '13px', fontWeight: 500, pointerEvents: 'none' }}>
-              Seleccionar archivo
+              {ti('selectFile')}
             </span>
             {parseWarnings.length > 0 && (
               <div style={{ marginTop: '20px', padding: '12px', background: '#fef3c7', borderRadius: '8px', textAlign: 'left' }}>
@@ -372,23 +375,23 @@ export default function ImportWizard({
           {/* Column guide */}
           <div style={{ background: 'var(--gray-50)', borderRadius: '12px', border: '1px solid var(--border)', padding: '20px' }}>
             <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Columnas detectadas automáticamente
+              {ti('columnsTitle')}
             </p>
             {[
               { key: 'TAG / ETIQUETA',           req: true,  note: 'ESDV-7621001, FT-101, P-762A' },
-              { key: 'DESCRIPCION / EQUIPO',      req: true,  note: 'Descripción del instrumento' },
-              { key: 'TIPO EQUIPO / EQUIPMENT TYPE', req: false, note: 'Código o nombre del catálogo (P, TK, FT…). Si falta, se detecta por el prefijo del tag' },
-              { key: 'P&ID',                      req: false, note: 'Número de plano P&ID' },
-              { key: 'AREA_CODE / SE/Sitio',      req: false, note: 'Código de área' },
-              { key: 'SYSTEM_CODE / SISTEMA',     req: false, note: 'Código de sistema' },
-              { key: 'SUBSYSTEM_CODE',            req: false, note: 'Código de subsistema' },
-              { key: 'FABRICANTE / MARCA/MODELO', req: false, note: 'Fabricante y modelo' },
-              { key: 'DATASHEET / DATASHEET REV', req: false, note: 'Hoja de datos y su revisión (todos). Autollena los ITR' },
-              { key: 'SERIAL / SERIE',            req: false, note: 'Número de serie. Autollena los ITR' },
-              { key: 'RANGE MIN / RANGE MAX / UNIT', req: false, note: 'Rango calibrado y unidad de ingeniería (INST). Autollena los ITR de calibración' },
-              { key: 'JUNCTION BOX / CAJA',       req: false, note: 'Caja de conexiones asociada (INST)' },
-              { key: 'FLUID TYPE / FLUIDO',      req: false, note: 'Tipo de fluido (MEC/tubería)' },
-              { key: 'MOUNTING TYPICAL / TIPICO',req: false, note: 'Típico de montaje (INST)' },
+              { key: 'DESCRIPCION / EQUIPO',      req: true,  note: ti('colNote.description') },
+              { key: 'TIPO EQUIPO / EQUIPMENT TYPE', req: false, note: ti('colNote.equipmentType') },
+              { key: 'P&ID',                      req: false, note: ti('colNote.pid') },
+              { key: 'AREA_CODE / SE/Sitio',      req: false, note: ti('colNote.area') },
+              { key: 'SYSTEM_CODE / SISTEMA',     req: false, note: ti('colNote.system') },
+              { key: 'SUBSYSTEM_CODE',            req: false, note: ti('colNote.subsystem') },
+              { key: 'FABRICANTE / MARCA/MODELO', req: false, note: ti('colNote.manufacturer') },
+              { key: 'DATASHEET / DATASHEET REV', req: false, note: ti('colNote.datasheet') },
+              { key: 'SERIAL / SERIE',            req: false, note: ti('colNote.serial') },
+              { key: 'RANGE MIN / RANGE MAX / UNIT', req: false, note: ti('colNote.range') },
+              { key: 'JUNCTION BOX / CAJA',       req: false, note: ti('colNote.junctionBox') },
+              { key: 'FLUID TYPE / FLUIDO',      req: false, note: ti('colNote.fluid') },
+              { key: 'MOUNTING TYPICAL / TIPICO',req: false, note: ti('colNote.mounting') },
             ].map(col => (
               <div key={col.key} style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', marginBottom: '10px' }}>
                 <span style={{ padding: '1px 5px', borderRadius: '4px', fontSize: '9px', fontWeight: 700, flexShrink: 0, marginTop: '2px', background: col.req ? '#fee2e2' : 'var(--gray-100)', color: col.req ? '#dc2626' : 'var(--text-muted)' }}>
@@ -403,7 +406,7 @@ export default function ImportWizard({
             {!disciplinePrefill && (
               <>
                 <div style={{ borderTop: '1px solid var(--border)', margin: '12px 0' }} />
-                <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Disciplinas disponibles</p>
+                <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{ti('availableDisciplines')}</p>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                   {disciplines.map(d => <span key={d.code} style={{ padding: '2px 8px', borderRadius: '5px', fontSize: '11px', fontWeight: 700, background: `${d.color}18`, color: d.color }}>{d.code}</span>)}
                 </div>
@@ -411,7 +414,7 @@ export default function ImportWizard({
             )}
             <div style={{ borderTop: '1px solid var(--border)', marginTop: '14px', paddingTop: '12px' }}>
               <p style={{ fontSize: '11px', color: 'var(--gray-400)', margin: 0 }}>
-                El encabezado puede estar en cualquier fila — se detecta automáticamente. Compatible con Instrument Index, listas eléctricas y mecánicas.
+                {ti('headerHint')}
               </p>
             </div>
           </div>
@@ -425,10 +428,10 @@ export default function ImportWizard({
             <div style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
               <strong style={{ color: 'var(--text-strong)' }}>{fileName}</strong>
               <span style={{ margin: '0 8px', color: 'var(--gray-300)' }}>·</span>
-              <span style={{ color: '#10b981', fontWeight: 500 }}>{validRows.length} válidos</span>
-              {invalidRows.length > 0 && <span style={{ color: '#ef4444', fontWeight: 500, marginLeft: '8px' }}>{invalidRows.length} omitidos</span>}
+              <span style={{ color: '#10b981', fontWeight: 500 }}>{ti('valid', { n: validRows.length })}</span>
+              {invalidRows.length > 0 && <span style={{ color: '#ef4444', fontWeight: 500, marginLeft: '8px' }}>{ti('skippedN', { n: invalidRows.length })}</span>}
             </div>
-            <button onClick={() => { setStep('upload'); setRows([]); setFileName(null); setExistingTags(null) }} style={{ fontSize: '13px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>← Cambiar archivo</button>
+            <button onClick={() => { setStep('upload'); setRows([]); setFileName(null); setExistingTags(null) }} style={{ fontSize: '13px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>← {ti('changeFile')}</button>
           </div>
 
           {parseWarnings.length > 0 && (
@@ -441,29 +444,29 @@ export default function ImportWizard({
           {existingTags && existingTags.size > 0 && (
             <div style={{ padding: '12px 16px', background: '#eff6ff', borderRadius: '10px', marginBottom: '14px', border: '1px solid #bfdbfe' }}>
               <p style={{ fontSize: '13px', color: '#1e40af', margin: 0 }}>
-                <strong>{existingTags.size} de {rows.length}</strong> tags ya existen: solo se actualizan las columnas que trae este archivo y con valor; <strong>lo que no viene no se toca</strong> y conservan su avance.
+                {ti.rich('existing', { n: existingTags.size, total: rows.length, strong: c => <strong>{c}</strong> })}
               </p>
               {!preview ? (
-                <p style={{ fontSize: '12px', color: '#1e40af', margin: '6px 0 0' }}>Calculando cambios…</p>
+                <p style={{ fontSize: '12px', color: '#1e40af', margin: '6px 0 0' }}>{ti('computing')}</p>
               ) : (
                 <>
                   <p style={{ fontSize: '12px', color: '#1e40af', margin: '6px 0 0' }}>
-                    {preview.newTags} nuevos · {preview.updatedTags} con cambios · {preview.unchangedTags} sin cambios
+                    {ti('diffSummary', { added: preview.newTags, changed: preview.updatedTags, same: preview.unchangedTags })}
                   </p>
                   {Object.keys(preview.fieldChanges).length > 0 && (
                     <ul style={{ margin: '6px 0 0', paddingLeft: '18px', fontSize: '12px', color: '#1e3a8a' }}>
                       {Object.entries(preview.fieldChanges).sort((a, b) => b[1] - a[1]).map(([field, n]) => (
-                        <li key={field}>{FIELD_LABELS[field] ?? field}: cambia en {n} tag{n === 1 ? '' : 's'}</li>
+                        <li key={field}>{FIELD_KEYS.includes(field) ? ti(`field.${field as 'description'}`) : field}: {ti('changesIn', { n })}</li>
                       ))}
                     </ul>
                   )}
                   {preview.moves.some(m => m.blocked) && (
                     <p style={{ fontSize: '12px', color: '#b45309', margin: '6px 0 0' }}>
-                      ⚠ {preview.moves.filter(m => m.blocked).length} tag(s) cambiarían de subsistema pero tienen ITR o punch: <strong>se quedan donde están</strong> ({preview.moves.filter(m => m.blocked).slice(0, 5).map((m, n) => (
+                      ⚠ {ti.rich('blockedMoves', { n: preview.moves.filter(m => m.blocked).length, strong: c => <strong>{c}</strong> })} ({preview.moves.filter(m => m.blocked).slice(0, 5).map((m, n) => (
                         <span key={m.tag}>{n > 0 && ', '}{m.tagId
-                          ? <a href={`/projects/${projectId}/tags/${m.tagId}`} target="_blank" rel="noopener noreferrer" style={{ color: '#b45309' }}>{m.tag}</a>
+                          ? <Link href={`/projects/${projectId}/tags/${m.tagId}`} target="_blank" rel="noopener noreferrer" style={{ color: '#b45309' }}>{m.tag}</Link>
                           : m.tag}</span>
-                      ))}{preview.moves.filter(m => m.blocked).length > 5 ? '…' : ''}). Para moverlos con sus ITR y punches, usa «Mover de subsistema» en el detalle de cada tag (líder+, con motivo).
+                      ))}{preview.moves.filter(m => m.blocked).length > 5 ? '…' : ''}). {ti('blockedMovesHint')}
                     </p>
                   )}
                 </>
@@ -475,10 +478,10 @@ export default function ImportWizard({
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
               <thead>
                 <tr style={{ background: 'var(--gray-50)', borderBottom: '1px solid var(--border)' }}>
-                  <Th>#</Th><Th>TAG</Th><Th>Descripción</Th><Th>Tipo de equipo</Th><Th>Disciplina</Th>
-                  <Th>Área / Sistema / Subsistema</Th>
+                  <Th>#</Th><Th>TAG</Th><Th>{ti('col.description')}</Th><Th>{ti('col.type')}</Th><Th>{ti('col.discipline')}</Th>
+                  <Th>{ti('col.hierarchy')}</Th>
                   {hasPid && <Th>P&ID</Th>}
-                  <Th>Fabricante</Th>
+                  <Th>{ti('col.manufacturer')}</Th>
                 </tr>
               </thead>
               <tbody>
@@ -493,7 +496,7 @@ export default function ImportWizard({
                       <td style={tdStyle}>
                         <span style={{ fontWeight: 600, color: 'var(--text-strong)', fontFamily: 'monospace' }}>{row.tag_number}</span>
                         {existingTags?.has(row.tag_number.trim()) && (
-                          <span style={{ marginLeft: '6px', padding: '1px 6px', borderRadius: '4px', fontSize: '9px', fontWeight: 700, background: '#eff6ff', color: '#1e40af', border: '1px solid #bfdbfe', verticalAlign: 'middle' }}>EXISTE</span>
+                          <span style={{ marginLeft: '6px', padding: '1px 6px', borderRadius: '4px', fontSize: '9px', fontWeight: 700, background: '#eff6ff', color: '#1e40af', border: '1px solid #bfdbfe', verticalAlign: 'middle' }}>{ti('exists')}</span>
                         )}
                       </td>
                       <td style={tdStyle}><span style={{ color: 'var(--text-muted)' }}>{row.description || '—'}</span></td>
@@ -505,7 +508,7 @@ export default function ImportWizard({
                         const t = detectTagType(row.tag_number)
                         const code = detectEquipmentTypeCode(row.tag_number)
                         return t
-                          ? <span title="Detectado por el prefijo del tag" style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '10px', fontWeight: 600, background: '#f0fdf4', color: '#15803d', border: '1px solid #bbf7d0', whiteSpace: 'nowrap' }}>{t.typeName}{code ? ` (${code})` : ''}</span>
+                          ? <span title={ti('detectedByPrefix')} style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '10px', fontWeight: 600, background: '#f0fdf4', color: '#15803d', border: '1px solid #bbf7d0', whiteSpace: 'nowrap' }}>{t.typeName}{code ? ` (${code})` : ''}</span>
                           : <span style={{ fontSize: '11px', color: 'var(--gray-300)' }}>—</span>
                       })()}</td>
                       <td style={tdStyle}>
@@ -521,7 +524,7 @@ export default function ImportWizard({
                 })}
               </tbody>
             </table>
-            {rows.length > 30 && <div style={{ padding: '10px 16px', fontSize: '12px', color: 'var(--gray-400)', borderTop: '1px solid #f1f5f9' }}>Mostrando 30 de {rows.length} filas</div>}
+            {rows.length > 30 && <div style={{ padding: '10px 16px', fontSize: '12px', color: 'var(--gray-400)', borderTop: '1px solid #f1f5f9' }}>{ti('showing', { total: rows.length })}</div>}
           </div>
 
           {importError && (
@@ -531,9 +534,9 @@ export default function ImportWizard({
           )}
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-            <a href={`/projects/${projectId}/tags`} style={{ padding: '10px 20px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none', display: 'flex', alignItems: 'center' }}>Cancelar</a>
+            <Link href={`/projects/${projectId}/tags`} style={{ padding: '10px 20px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none', display: 'flex', alignItems: 'center' }}>{ti('cancel')}</Link>
             <button onClick={handleImport} disabled={loading || validRows.length === 0} style={{ padding: '10px 24px', background: '#10b981', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 500, cursor: loading ? 'wait' : 'pointer', opacity: validRows.length === 0 ? 0.5 : 1 }}>
-              {loading ? (progress ? `Importando… ${progress.done} / ${progress.total}` : 'Importando…') : `✓ Importar ${validRows.length} tags`}
+              {loading ? (progress ? ti('importingProgress', { done: progress.done, total: progress.total }) : ti('importing')) : `✓ ${ti('importN', { n: validRows.length })}`}
             </button>
           </div>
         </div>
@@ -543,42 +546,42 @@ export default function ImportWizard({
       {step === 'result' && result && (
         <div style={{ textAlign: 'center', padding: '32px' }}>
           <div style={{ fontSize: '52px', marginBottom: '12px' }}>{result.errors.length === 0 ? '✅' : '⚠️'}</div>
-          <h2 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 24px' }}>Importación completada</h2>
+          <h2 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 24px' }}>{ti('done')}</h2>
           <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', marginBottom: '32px', flexWrap: 'wrap' }}>
             <div style={{ padding: '20px 32px', background: '#ecfdf5', borderRadius: '12px', border: '1px solid #a7f3d0' }}>
               <div style={{ fontSize: '32px', fontWeight: 700, color: '#10b981' }}>{result.imported}</div>
-              <div style={{ fontSize: '13px', color: '#059669', marginTop: '4px' }}>Nuevos</div>
+              <div style={{ fontSize: '13px', color: '#059669', marginTop: '4px' }}>{ti('new')}</div>
             </div>
             {result.updated > 0 && (
               <div style={{ padding: '20px 32px', background: '#eff6ff', borderRadius: '12px', border: '1px solid #bfdbfe' }}>
                 <div style={{ fontSize: '32px', fontWeight: 700, color: '#2563eb' }}>{result.updated}</div>
-                <div style={{ fontSize: '13px', color: '#1e40af', marginTop: '4px' }}>Actualizados</div>
+                <div style={{ fontSize: '13px', color: '#1e40af', marginTop: '4px' }}>{ti('updated')}</div>
               </div>
             )}
             {result.skipped > 0 && (
               <div style={{ padding: '20px 32px', background: '#fef3c7', borderRadius: '12px', border: '1px solid #fde68a' }}>
                 <div style={{ fontSize: '32px', fontWeight: 700, color: '#d97706' }}>{result.skipped}</div>
-                <div style={{ fontSize: '13px', color: '#b45309', marginTop: '4px' }}>Omitidos</div>
+                <div style={{ fontSize: '13px', color: '#b45309', marginTop: '4px' }}>{ti('skipped')}</div>
               </div>
             )}
           </div>
           {result.warnings.length > 0 && (
             <div style={{ textAlign: 'left', background: '#fef3c7', borderRadius: '10px', padding: '16px', marginBottom: '24px', border: '1px solid #fde68a' }}>
-              <p style={{ fontSize: '12px', fontWeight: 600, color: '#92400e', margin: '0 0 8px' }}>Advertencias:</p>
+              <p style={{ fontSize: '12px', fontWeight: 600, color: '#92400e', margin: '0 0 8px' }}>{ti('warnings')}</p>
               {result.warnings.map((w, i) => <p key={i} style={{ fontSize: '12px', color: '#92400e', margin: '2px 0' }}>⚠ {w}</p>)}
             </div>
           )}
           {result.errors.length > 0 && (
             <div style={{ textAlign: 'left', background: '#fef2f2', borderRadius: '10px', padding: '16px', marginBottom: '24px', border: '1px solid #fca5a5' }}>
-              <p style={{ fontSize: '12px', fontWeight: 600, color: '#dc2626', margin: '0 0 8px' }}>Errores:</p>
-              {result.errors.slice(0, 10).map((e, i) => <p key={i} style={{ fontSize: '12px', color: '#991b1b', margin: '2px 0', fontFamily: 'monospace' }}>Fila {e.row} [{e.tag}]: {e.reason}</p>)}
-              {result.errors.length > 10 && <p style={{ fontSize: '12px', color: '#991b1b', margin: '6px 0 0' }}>… y {result.errors.length - 10} más.</p>}
-              <button onClick={() => downloadErrors(result.errors, fileName)} style={{ marginTop: '8px', padding: '6px 12px', fontSize: '12px', borderRadius: '6px', border: '1px solid #fca5a5', background: 'var(--card-bg)', color: '#b91c1c', cursor: 'pointer' }}>⬇ Descargar errores (Excel)</button>
+              <p style={{ fontSize: '12px', fontWeight: 600, color: '#dc2626', margin: '0 0 8px' }}>{ti('errors')}</p>
+              {result.errors.slice(0, 10).map((e, i) => <p key={i} style={{ fontSize: '12px', color: '#991b1b', margin: '2px 0', fontFamily: 'monospace' }}>{ti('errorRow', { row: e.row, tag: e.tag })} {e.reason}</p>)}
+              {result.errors.length > 10 && <p style={{ fontSize: '12px', color: '#991b1b', margin: '6px 0 0' }}>{ti('andMore', { n: result.errors.length - 10 })}</p>}
+              <button onClick={() => downloadErrors(result.errors, fileName, ti)} style={{ marginTop: '8px', padding: '6px 12px', fontSize: '12px', borderRadius: '6px', border: '1px solid #fca5a5', background: 'var(--card-bg)', color: '#b91c1c', cursor: 'pointer' }}>⬇ {ti('downloadErrors')}</button>
             </div>
           )}
           <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-            <a href={`/projects/${projectId}/tags`} style={{ padding: '10px 22px', background: '#3b82f6', color: '#fff', borderRadius: '8px', fontSize: '13px', fontWeight: 500, textDecoration: 'none' }}>Ver tags →</a>
-            <button onClick={() => { setStep('upload'); setRows([]); setFileName(null); setExistingTags(null); setResult(null) }} style={{ padding: '10px 22px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)', cursor: 'pointer' }}>Importar más</button>
+            <Link href={`/projects/${projectId}/tags`} style={{ padding: '10px 22px', background: '#3b82f6', color: '#fff', borderRadius: '8px', fontSize: '13px', fontWeight: 500, textDecoration: 'none' }}>{ti('viewTags')} →</Link>
+            <button onClick={() => { setStep('upload'); setRows([]); setFileName(null); setExistingTags(null); setResult(null) }} style={{ padding: '10px 22px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)', cursor: 'pointer' }}>{ti('importMore')}</button>
           </div>
         </div>
       )}
@@ -587,22 +590,19 @@ export default function ImportWizard({
   )
 }
 
-/** Nombres legibles de las columnas de BD en la vista previa. */
-const FIELD_LABELS: Record<string, string> = {
-  description: 'Descripción', manufacturer: 'Fabricante', model: 'Modelo', serial_number: 'Serie',
-  preservation_required: 'Requiere preservación', pid_drawing: 'P&ID', datasheet_number: 'Hoja de datos',
-  revision: 'Revisión de hoja de datos', range_min: 'Rango mínimo', range_max: 'Rango máximo', eng_unit: 'Unidad',
-  junction_box: 'Caja de conexiones', fluid_type: 'Fluido', mounting_typical: 'Típico de montaje',
-  criticality: 'Criticidad', sil_level: 'SIL', equipment_type_id: 'Tipo de equipo', subsystem_id: 'Subsistema',
-  discipline_id: 'Disciplina',
-}
+// Nombres legibles de las columnas de BD en la vista previa: TagImport.field.<columna>.
+const FIELD_KEYS = [
+  'description', 'manufacturer', 'model', 'serial_number', 'preservation_required', 'pid_drawing', 'datasheet_number',
+  'revision', 'range_min', 'range_max', 'eng_unit', 'junction_box', 'fluid_type', 'mounting_typical', 'criticality',
+  'sil_level', 'equipment_type_id', 'subsystem_id', 'discipline_id',
+]
 
 /** C-24: el informe de errores completo, no solo los 10 primeros. */
-function downloadErrors(errors: ImportResult['errors'], fileName: string | null) {
-  const ws = XLSX.utils.json_to_sheet(errors.map(e => ({ Fila: e.row, Tag: e.tag, Motivo: e.reason })))
+function downloadErrors(errors: ImportResult['errors'], fileName: string | null, ti: (key: string) => string) {
+  const ws = XLSX.utils.json_to_sheet(errors.map(e => ({ [ti('xlsx.row')]: e.row, Tag: e.tag, [ti('xlsx.reason')]: e.reason })))
   const wb = XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(wb, ws, 'Errores')
-  XLSX.writeFile(wb, `errores-${(fileName ?? 'importacion').replace(/\.[^.]+$/, '')}.xlsx`)
+  XLSX.utils.book_append_sheet(wb, ws, ti('xlsx.sheet'))
+  XLSX.writeFile(wb, `${ti('xlsx.file')}-${(fileName ?? 'import').replace(/\.[^.]+$/, '')}.xlsx`)
 }
 
 function Th({ children }: { children: React.ReactNode }) {

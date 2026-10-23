@@ -3,7 +3,7 @@ import { getLocale } from 'next-intl/server'
 import LegalPage, { type LegalSection } from '@/components/landing/LegalPage'
 
 export const metadata: Metadata = {
-  title: 'Terms of Service — CommUp',
+  title: 'Terms of Service',
   robots: { index: true, follow: true },
 }
 

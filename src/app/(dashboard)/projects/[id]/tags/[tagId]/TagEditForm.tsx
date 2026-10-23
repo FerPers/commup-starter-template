@@ -136,7 +136,7 @@ export default function TagEditForm({ tag, projectId, onCancel, canDelete }: {
           </FormField>
 
           <FormField label={t('edit.fieldPidNumber')}>
-            <input style={inputStyle} placeholder="Ej: P-1001" value={form.pid_drawing} onChange={e => set('pid_drawing', e.target.value)} />
+            <input style={inputStyle} placeholder={t('edit.phPid')} value={form.pid_drawing} onChange={e => set('pid_drawing', e.target.value)} />
           </FormField>
 
           <FormField label={t('edit.fieldStatus')}>
@@ -184,21 +184,21 @@ export default function TagEditForm({ tag, projectId, onCancel, canDelete }: {
           </FormField>
 
           <FormField label={t('edit.fieldEngUnit')}>
-            <input style={inputStyle} placeholder="Ej: mmH2O, bar, °C, kV" value={form.eng_unit} onChange={e => set('eng_unit', e.target.value)} />
+            <input style={inputStyle} placeholder={t('edit.phEngUnit')} value={form.eng_unit} onChange={e => set('eng_unit', e.target.value)} />
           </FormField>
 
           {!isInst && (
             <FormField label={t('edit.fieldFluidType')}>
-              <input style={inputStyle} placeholder="Ej: Gas Natural, Crudo, Agua Producida" value={form.fluid_type} onChange={e => set('fluid_type', e.target.value)} />
+              <input style={inputStyle} placeholder={t('edit.phFluid')} value={form.fluid_type} onChange={e => set('fluid_type', e.target.value)} />
             </FormField>
           )}
 
           <FormField label={t('edit.fieldDatasheet')}>
-            <input style={inputStyle} placeholder="Ej: DS-P-762802A" value={form.datasheet_number} onChange={e => set('datasheet_number', e.target.value)} />
+            <input style={inputStyle} placeholder={t('edit.phDatasheet')} value={form.datasheet_number} onChange={e => set('datasheet_number', e.target.value)} />
           </FormField>
 
           <FormField label={t('edit.fieldRevision')}>
-            <input style={inputStyle} placeholder="Ej: Rev. C" value={form.revision} onChange={e => set('revision', e.target.value)} />
+            <input style={inputStyle} placeholder={t('edit.phRevision')} value={form.revision} onChange={e => set('revision', e.target.value)} />
           </FormField>
 
         </div>
@@ -249,15 +249,15 @@ export default function TagEditForm({ tag, projectId, onCancel, canDelete }: {
               </FormField>
 
               <FormField label={t('edit.fieldIoAddress')}>
-                <input style={inputStyle} placeholder="Ej: AI-100" value={form.io_address} onChange={e => set('io_address', e.target.value)} />
+                <input style={inputStyle} placeholder={t('edit.phIo')} value={form.io_address} onChange={e => set('io_address', e.target.value)} />
               </FormField>
 
               <FormField label={t('edit.fieldJunctionBox')}>
-                <input style={inputStyle} placeholder="Ej: JB-101A" value={form.junction_box} onChange={e => set('junction_box', e.target.value)} />
+                <input style={inputStyle} placeholder={t('edit.phJb')} value={form.junction_box} onChange={e => set('junction_box', e.target.value)} />
               </FormField>
 
               <FormField label={t('edit.fieldMounting')}>
-                <input style={inputStyle} placeholder="Ej: TYP-INST-001" value={form.mounting_typical} onChange={e => set('mounting_typical', e.target.value)} />
+                <input style={inputStyle} placeholder={t('edit.phMounting')} value={form.mounting_typical} onChange={e => set('mounting_typical', e.target.value)} />
               </FormField>
 
             </div>

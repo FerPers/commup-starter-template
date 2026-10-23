@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
@@ -161,12 +162,12 @@ export default function CertificatesView({
 
       {/* Header */}
       <div style={{ marginBottom: '28px' }}>
-        <a href={`/projects/${projectId}`} style={{
+        <Link href={`/projects/${projectId}`} style={{
           display: 'inline-flex', alignItems: 'center', gap: '6px',
           fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none', marginBottom: '16px',
         }}>
           {t('view.backLink', { projectName })}
-        </a>
+        </Link>
         <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-strong)', letterSpacing: '-0.5px', margin: 0 }}>
           {t('view.title')}
         </h1>
@@ -316,7 +317,7 @@ export default function CertificatesView({
                     </td>
                     <td style={{ padding: '12px 16px' }}>
                       {pd.certificate && certColors && certLabel ? (
-                        <a href={`/projects/${projectId}/certificates/${pd.certificate.id}`} style={{ textDecoration: 'none' }}>
+                        <Link href={`/projects/${projectId}/certificates/${pd.certificate.id}`} style={{ textDecoration: 'none' }}>
                           <div style={{ fontWeight: 500, color: '#3b82f6', fontSize: '12px' }}>
                             {pd.certificate.certificate_number}
                           </div>
@@ -338,7 +339,7 @@ export default function CertificatesView({
                               </span>
                             )}
                           </div>
-                        </a>
+                        </Link>
                       ) : (
                         <span style={{ color: '#94a3b8', fontSize: '12px' }}>—</span>
                       )}
@@ -359,7 +360,7 @@ export default function CertificatesView({
                       )}
                       {pd.certificate && (
                         <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', alignItems: 'center' }}>
-                          <a
+                          <Link
                             href={`/projects/${projectId}/certificates/${pd.certificate.id}`}
                             style={{
                               padding: '6px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 500,
@@ -368,7 +369,7 @@ export default function CertificatesView({
                             }}
                           >
                             {t('view.viewBtn')}
-                          </a>
+                          </Link>
                           {pd.certificate.status === 'issued' && (
                             <a
                               href={`/projects/${projectId}/certificates/${pd.certificate.id}/pdf`}

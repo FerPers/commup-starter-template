@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
@@ -95,9 +96,9 @@ export default function SetPasswordPage() {
               <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-base)', margin: '0 0 20px' }}>
                 {t('noSessionHint')}
               </p>
-              <a href="/forgot-password" style={{ color: 'var(--primary-500)', fontSize: 'var(--text-base)', fontWeight: 600, textDecoration: 'none' }}>
+              <Link href="/forgot-password" style={{ color: 'var(--primary-500)', fontSize: 'var(--text-base)', fontWeight: 600, textDecoration: 'none' }}>
                 {t('requestNew')}
-              </a>
+              </Link>
             </div>
           )}
 

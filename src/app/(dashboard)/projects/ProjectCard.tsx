@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useTranslations, useLocale } from 'next-intl'
 import { Card, Badge } from '@/components/ui'
 
@@ -31,7 +32,7 @@ export default function ProjectCard({ project, phases, inactive = false }: {
   }
 
   return (
-    <a href={`/projects/${project.id}`} style={{ textDecoration: 'none' }}>
+    <Link href={`/projects/${project.id}`} style={{ textDecoration: 'none' }}>
       <Card padding="md" hoverable elevation="sm" style={{ opacity: inactive ? 0.65 : 1 }}>
         {/* Card header */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 14 }}>
@@ -96,6 +97,6 @@ export default function ProjectCard({ project, phases, inactive = false }: {
           </div>
         )}
       </Card>
-    </a>
+    </Link>
   )
 }

@@ -1,9 +1,12 @@
 'use client'
 
 import { useState, useTransition, useRef } from 'react'
+import { useTranslations } from 'next-intl'
 import * as XLSX from 'xlsx'
 import { importTemplateItems, type ImportSection } from '@/app/actions/itr-templates'
 import type { ItrItemType } from '@/types/database'
+
+type Tx = ReturnType<typeof useTranslations>
 
 interface Props {
   templateId: string
@@ -32,33 +35,36 @@ const TYPE_MAP: Record<string, ItrItemType> = {
   seleccion: 'select', select: 'select',
 }
 
-function mapType(raw: unknown, warnings: string[], rowNum: number): ItrItemType {
+function mapType(raw: unknown, warnings: string[], rowNum: number, tx: Tx): ItrItemType {
   if (!raw) return 'checkbox'
   const key = normalizeStr(String(raw))
   const mapped = TYPE_MAP[key]
-  if (!mapped) warnings.push(`Fila ${rowNum}: tipo desconocido "${raw}" — se usará 'verificacion'`)
+  if (!mapped) warnings.push(tx('warnUnknownType', { row: rowNum, raw: String(raw) }))
   return mapped ?? 'checkbox'
 }
 
 function mapBool(raw: unknown): boolean {
   if (!raw) return false
   const s = normalizeStr(String(raw))
-  return s === 's' || s === 'si' || s === 'sí' || s === 'yes' || s === 'true' || s === '1' || s === 'x'
+  return s === 's' || s === 'si' || s === 'sí' || s === 'y' || s === 'yes' || s === 'true' || s === '1' || s === 'x'
 }
 
 // ── Excel template download ───────────────────────────────────
 
-function downloadTemplate() {
+function downloadTemplate(tx: Tx) {
   const headers = [
-    'N° Ítem', 'Sección', 'Descripción EN', 'Descripción ES',
-    'Tipo', 'Crítico', 'Requerido', 'Foto', 'Unidad', 'Criterio Mín', 'Criterio Máx',
+    tx('col.number'), tx('col.section'), tx('col.descEn'), tx('col.descEs'),
+    tx('col.type'), tx('col.critical'), tx('col.required'), tx('col.photo'), tx('col.unit'), tx('col.min'), tx('col.max'),
   ]
+  const [secGeneral, secElectrical, secDocs] = [tx('sample.sectionGeneral'), tx('sample.sectionElectrical'), tx('sample.sectionDocs')]
+  const [check, measure, sign] = [tx('sample.typeCheck'), tx('sample.typeMeasurement'), tx('sample.typeSignature')]
+  const [yes, no] = [tx('sample.yes'), tx('sample.no')]
   const sample = [
-    ['1.0', 'INSPECCIÓN GENERAL', 'Verify nameplate data', 'Verificar datos de placa de datos', 'verificacion', 'N', 'S', 'N', '', '', ''],
-    ['1.1', 'INSPECCIÓN GENERAL', 'Check enclosure IP rating', 'Verificar clasificación IP del gabinete', 'verificacion', 'N', 'S', 'N', '', '', ''],
-    ['2.0', 'PRUEBAS ELÉCTRICAS', 'Measure insulation resistance', 'Medir resistencia de aislamiento', 'medicion', 'S', 'S', 'N', 'MΩ', '100', ''],
-    ['2.1', 'PRUEBAS ELÉCTRICAS', 'Verify trip settings', 'Verificar ajuste de protecciones', 'verificacion', 'S', 'S', 'N', '', '', ''],
-    ['3.0', 'DOCUMENTACIÓN', 'Sign and date form', 'Firmar y fechar formulario', 'firma', 'N', 'S', 'N', '', '', ''],
+    ['1.0', secGeneral, 'Verify nameplate data', 'Verificar datos de placa de datos', check, no, yes, no, '', '', ''],
+    ['1.1', secGeneral, 'Check enclosure IP rating', 'Verificar clasificación IP del gabinete', check, no, yes, no, '', '', ''],
+    ['2.0', secElectrical, 'Measure insulation resistance', 'Medir resistencia de aislamiento', measure, yes, yes, no, 'MΩ', '100', ''],
+    ['2.1', secElectrical, 'Verify trip settings', 'Verificar ajuste de protecciones', check, yes, yes, no, '', '', ''],
+    ['3.0', secDocs, 'Sign and date form', 'Firmar y fechar formulario', sign, no, yes, no, '', '', ''],
   ]
   const ws = XLSX.utils.aoa_to_sheet([headers, ...sample])
   ws['!cols'] = [
@@ -78,7 +84,7 @@ interface ParseResult {
   warnings: string[]
 }
 
-function parseRows(rows: unknown[][]): ParseResult {
+function parseRows(rows: unknown[][], tx: Tx): ParseResult {
   const warnings: string[] = []
   const sectionsMap: Map<string, ImportSection> = new Map()
   const sectionOrder: string[] = []
@@ -101,11 +107,11 @@ function parseRows(rows: unknown[][]): ParseResult {
     if (!descEN && !sectionTitle && !itemNumber) continue
 
     if (!descEN) {
-      warnings.push(`Fila ${i + 1}: descripción EN vacía — omitida`)
+      warnings.push(tx('warnEmptyDesc', { row: i + 1 }))
       continue
     }
 
-    const sec = sectionTitle || 'SIN SECCIÓN'
+    const sec = sectionTitle || tx('noSection')
 
     if (!sectionsMap.has(sec)) {
       sectionsMap.set(sec, { title: sec, items: [] })
@@ -119,7 +125,7 @@ function parseRows(rows: unknown[][]): ParseResult {
       item_number: itemNumber || null,
       description: descEN,
       description_es: descES || null,
-      item_type: mapType(typeRaw, warnings, i + 1),
+      item_type: mapType(typeRaw, warnings, i + 1, tx),
       is_critical: critical,
       is_required: required,
       requires_photo: photo,
@@ -136,6 +142,7 @@ function parseRows(rows: unknown[][]): ParseResult {
 // ── Component ──────────────────────────────────────────────────
 
 export default function ImportItemsModal({ templateId, hasExistingContent, onClose, onSuccess }: Props) {
+  const tx = useTranslations('ItemImport')
   const fileRef = useRef<HTMLInputElement>(null)
   const [isPending, startTransition] = useTransition()
   const [step, setStep] = useState<'upload' | 'preview' | 'done'>('upload')
@@ -155,18 +162,18 @@ export default function ImportItemsModal({ templateId, hasExistingContent, onClo
         const ws = wb.Sheets[wb.SheetNames[0]]
         const rows: unknown[][] = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' })
         if (rows.length < 2) {
-          setParseError('El archivo está vacío o solo tiene el encabezado.')
+          setParseError(tx('errEmpty'))
           return
         }
-        const result = parseRows(rows)
+        const result = parseRows(rows, tx)
         if (result.sections.length === 0) {
-          setParseError('No se encontraron ítems válidos en el archivo.')
+          setParseError(tx('errNoItems'))
           return
         }
         setParsed(result)
         setStep('preview')
       } catch {
-        setParseError('Error al leer el archivo. Verifica que sea un .xlsx o .xls válido.')
+        setParseError(tx('errRead'))
       }
     }
     reader.readAsArrayBuffer(file)
@@ -215,12 +222,12 @@ export default function ImportItemsModal({ templateId, hasExistingContent, onClo
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '20px' }}>
           <div>
             <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 4px' }}>
-              Importar ítems desde Excel
+              {tx('title')}
             </h2>
             <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>
-              {step === 'upload' && 'Sube tu archivo .xlsx con las secciones e ítems del ITR'}
-              {step === 'preview' && `${parsed!.sections.length} secciones · ${totalItems} ítems detectados`}
-              {step === 'done' && 'Importación completada'}
+              {step === 'upload' && tx('subtitleUpload')}
+              {step === 'preview' && tx('subtitlePreview', { sections: parsed!.sections.length, items: totalItems })}
+              {step === 'done' && tx('subtitleDone')}
             </p>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', fontSize: '18px', lineHeight: 1, padding: '2px' }}>✕</button>
@@ -231,12 +238,12 @@ export default function ImportItemsModal({ templateId, hasExistingContent, onClo
           <div>
             {/* Download template link */}
             <div style={{ marginBottom: '16px', padding: '10px 14px', background: '#f0f9ff', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: '12px', color: '#0284c7' }}>¿Primera vez? Descarga el formato de ejemplo</span>
+              <span style={{ fontSize: '12px', color: '#0284c7' }}>{tx('firstTime')}</span>
               <button
-                onClick={downloadTemplate}
+                onClick={() => downloadTemplate(tx)}
                 style={{ fontSize: '12px', fontWeight: 600, color: '#0284c7', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
               >
-                Descargar template
+                {tx('downloadTemplate')}
               </button>
             </div>
 
@@ -255,10 +262,10 @@ export default function ImportItemsModal({ templateId, hasExistingContent, onClo
             >
               <div style={{ fontSize: '32px', marginBottom: '10px', opacity: 0.5 }}>📊</div>
               <p style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-muted)', margin: '0 0 4px' }}>
-                Arrastra tu archivo Excel aquí
+                {tx('dropHere')}
               </p>
               <p style={{ fontSize: '12px', color: 'var(--gray-400)', margin: 0 }}>
-                o haz clic para seleccionar (.xlsx, .xls)
+                {tx('orClick')}
               </p>
               <input ref={fileRef} type="file" accept=".xlsx,.xls" onChange={handleFileChange} style={{ display: 'none' }} />
             </div>
@@ -272,14 +279,14 @@ export default function ImportItemsModal({ templateId, hasExistingContent, onClo
             {/* Column reference */}
             <div style={{ marginTop: '16px', padding: '12px 14px', background: 'var(--gray-50)', borderRadius: '8px' }}>
               <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                Columnas esperadas (fila 1 = encabezado)
+                {tx('columnsTitle')}
               </p>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3px 12px' }}>
                 {[
-                  ['A', 'N° Ítem'], ['B', 'Sección'], ['C', 'Descripción EN *'],
-                  ['D', 'Descripción ES'], ['E', 'Tipo'], ['F', 'Crítico (S/N)'],
-                  ['G', 'Requerido (S/N)'], ['H', 'Foto (S/N)'], ['I', 'Unidad'],
-                  ['J', 'Criterio Mín'], ['K', 'Criterio Máx'],
+                  ['A', tx('col.number')], ['B', tx('col.section')], ['C', `${tx('col.descEn')} *`],
+                  ['D', tx('col.descEs')], ['E', tx('col.type')], ['F', tx('col.criticalYn')],
+                  ['G', tx('col.requiredYn')], ['H', tx('col.photoYn')], ['I', tx('col.unit')],
+                  ['J', tx('col.min')], ['K', tx('col.max')],
                 ].map(([col, label]) => (
                   <div key={col} style={{ display: 'flex', gap: '6px', fontSize: '11px' }}>
                     <span style={{ fontFamily: 'monospace', fontWeight: 700, color: '#3b82f6', minWidth: '14px' }}>{col}</span>
@@ -288,7 +295,7 @@ export default function ImportItemsModal({ templateId, hasExistingContent, onClo
                 ))}
               </div>
               <p style={{ fontSize: '11px', color: 'var(--gray-400)', margin: '8px 0 0' }}>
-                Tipos válidos: verificacion · si_no · medicion · numero · texto · foto · firma · fecha · seleccion
+                {tx('validTypes')}
               </p>
             </div>
           </div>
@@ -301,7 +308,7 @@ export default function ImportItemsModal({ templateId, hasExistingContent, onClo
             {parsed.warnings.length > 0 && (
               <div style={{ padding: '10px 14px', background: '#fffbeb', borderRadius: '8px', marginBottom: '12px', border: '1px solid #fcd34d' }}>
                 <p style={{ fontSize: '11px', fontWeight: 600, color: '#92400e', margin: '0 0 4px' }}>
-                  {parsed.warnings.length} advertencia{parsed.warnings.length > 1 ? 's' : ''}:
+                  {tx('warnings', { count: parsed.warnings.length })}
                 </p>
                 {parsed.warnings.map((w, i) => (
                   <p key={i} style={{ fontSize: '11px', color: '#78350f', margin: '2px 0 0' }}>• {w}</p>
@@ -315,7 +322,7 @@ export default function ImportItemsModal({ templateId, hasExistingContent, onClo
                 <div key={sIdx} style={{ borderBottom: sIdx < parsed.sections.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
                   <div style={{ padding: '10px 14px', background: 'var(--gray-50)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)' }}>{sec.title}</span>
-                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{sec.items.length} ítems</span>
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{tx('itemsCount', { count: sec.items.length })}</span>
                   </div>
                   {sec.items.slice(0, 3).map((item, iIdx) => (
                     <div key={iIdx} style={{ padding: '7px 14px 7px 22px', display: 'flex', gap: '10px', alignItems: 'center', borderTop: '1px solid #f8fafc' }}>
@@ -330,7 +337,7 @@ export default function ImportItemsModal({ templateId, hasExistingContent, onClo
                   ))}
                   {sec.items.length > 3 && (
                     <p style={{ padding: '6px 22px', fontSize: '11px', color: 'var(--gray-400)', margin: 0 }}>
-                      + {sec.items.length - 3} más...
+                      {tx('more', { count: sec.items.length - 3 })}
                     </p>
                   )}
                 </div>
@@ -348,10 +355,10 @@ export default function ImportItemsModal({ templateId, hasExistingContent, onClo
                 />
                 <div>
                   <p style={{ fontSize: '13px', fontWeight: 500, color: replace ? '#c2410c' : 'var(--text-muted)', margin: '0 0 2px' }}>
-                    Reemplazar contenido existente
+                    {tx('replaceTitle')}
                   </p>
                   <p style={{ fontSize: '11px', color: 'var(--gray-400)', margin: 0 }}>
-                    {replace ? 'Se eliminarán todas las secciones e ítems actuales antes de importar.' : 'Los nuevos ítems se agregarán al final del template.'}
+                    {tx(replace ? 'replaceOn' : 'replaceOff')}
                   </p>
                 </div>
               </label>
@@ -368,7 +375,7 @@ export default function ImportItemsModal({ templateId, hasExistingContent, onClo
                 onClick={() => { setStep('upload'); setParsed(null); setParseError(null) }}
                 style={{ padding: '9px 16px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)', cursor: 'pointer' }}
               >
-                ← Volver
+                {tx('back')}
               </button>
               <button
                 onClick={handleImport}
@@ -379,7 +386,7 @@ export default function ImportItemsModal({ templateId, hasExistingContent, onClo
                   border: 'none', cursor: isPending ? 'not-allowed' : 'pointer',
                 }}
               >
-                {isPending ? 'Importando...' : `Importar ${totalItems} ítems →`}
+                {isPending ? tx('importing') : tx('importBtn', { count: totalItems })}
               </button>
             </div>
           </div>
@@ -390,11 +397,10 @@ export default function ImportItemsModal({ templateId, hasExistingContent, onClo
           <div style={{ textAlign: 'center', padding: '20px 0' }}>
             <div style={{ fontSize: '40px', marginBottom: '14px' }}>✅</div>
             <p style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-strong)', margin: '0 0 6px' }}>
-              Importación exitosa
+              {tx('successTitle')}
             </p>
             <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: '0 0 24px' }}>
-              {importResult.sectionsCreated} sección{importResult.sectionsCreated !== 1 ? 'es' : ''} y{' '}
-              {importResult.itemsCreated} ítem{importResult.itemsCreated !== 1 ? 's' : ''} creados.
+              {tx('successDetail', { sections: importResult.sectionsCreated, items: importResult.itemsCreated })}
             </p>
             <button
               onClick={onSuccess}
@@ -403,7 +409,7 @@ export default function ImportItemsModal({ templateId, hasExistingContent, onClo
                 borderRadius: '8px', fontSize: '13px', fontWeight: 500, border: 'none', cursor: 'pointer',
               }}
             >
-              Ver template actualizado →
+              {tx('viewUpdated')}
             </button>
           </div>
         )}

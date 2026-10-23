@@ -346,8 +346,8 @@ export default function ItrExecution({
             {(itr.loops ?? itr.ce_causes) && (
               <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>
                 {itr.loops
-                  ? t.rich('header.loopSource', { a: chunks => <a href={`/projects/${projectId}/loops`} style={{ fontWeight: 700, fontFamily: 'ui-monospace, monospace' }}>{chunks}</a>, loop: itr.loops.loop_number })
-                  : t.rich('header.causeSource', { a: chunks => <a href={`/projects/${projectId}/ce-matrices/${itr.ce_causes!.ce_matrices?.id ?? ''}`} style={{ fontWeight: 700, fontFamily: 'ui-monospace, monospace' }}>{chunks}</a>, matrix: itr.ce_causes!.ce_matrices?.code ?? '', cause: itr.ce_causes!.code, description: itr.ce_causes!.description ?? '' })}
+                  ? t.rich('header.loopSource', { a: chunks => <Link href={`/projects/${projectId}/loops`} style={{ fontWeight: 700, fontFamily: 'ui-monospace, monospace' }}>{chunks}</Link>, loop: itr.loops.loop_number })
+                  : t.rich('header.causeSource', { a: chunks => <Link href={`/projects/${projectId}/ce-matrices/${itr.ce_causes!.ce_matrices?.id ?? ''}`} style={{ fontWeight: 700, fontFamily: 'ui-monospace, monospace' }}>{chunks}</Link>, matrix: itr.ce_causes!.ce_matrices?.code ?? '', cause: itr.ce_causes!.code, description: itr.ce_causes!.description ?? '' })}
                 {' '}· {t('header.sourceRows', { count: sourceRows?.length ?? 0 })}
               </div>
             )}

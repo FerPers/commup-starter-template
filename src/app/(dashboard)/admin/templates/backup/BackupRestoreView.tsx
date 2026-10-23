@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition, useRef } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import {
   exportAllTemplates,
@@ -40,6 +41,8 @@ function downloadJson(filename: string, payload: unknown) {
 }
 
 export default function BackupRestoreView({ orgName, orgSlug }: Props) {
+  // `tb` (no `t`): las plantillas del respaldo se recorren como `t`.
+  const tb = useTranslations('TemplatesBackup')
   const router = useRouter()
   const [isExporting, startExport] = useTransition()
   const [isRestoring, startRestore] = useTransition()
@@ -71,7 +74,7 @@ export default function BackupRestoreView({ orgName, orgSlug }: Props) {
     startExport(async () => {
       const res = await exportAllTemplates()
       if (res.error || !res.backup) {
-        setExportError(res.error ?? 'Error al exportar')
+        setExportError(res.error ?? tb('exportError'))
         return
       }
       const slug = orgSlug ? slugify(orgSlug) : slugify(orgName)
@@ -95,12 +98,12 @@ export default function BackupRestoreView({ orgName, orgSlug }: Props) {
     try {
       const obj = JSON.parse(text) as TemplatesBackup
       if (obj?.format !== 'commup.templates.backup') {
-        setParseError('Este archivo no es un backup de CommUp Templates (campo "format" inválido)')
+        setParseError(tb('badFormat'))
         setParsed(null)
         return
       }
       if (typeof obj.version !== 'number') {
-        setParseError('Backup sin versión')
+        setParseError(tb('noVersion'))
         setParsed(null)
         return
       }
@@ -112,7 +115,7 @@ export default function BackupRestoreView({ orgName, orgSlug }: Props) {
       setTaxonomyPreview(null)
       runPreflight(obj)
     } catch (e) {
-      setParseError(`JSON inválido: ${e instanceof Error ? e.message : 'parse error'}`)
+      setParseError(tb('badJson', { msg: e instanceof Error ? e.message : 'parse error' }))
       setParsed(null)
     }
   }
@@ -132,7 +135,7 @@ export default function BackupRestoreView({ orgName, orgSlug }: Props) {
         setTaxonomyMsg(`Errores: ${errs.join(' · ')}`)
       } else {
         setTaxonomyMsg(
-          `Creadas: ${res.created?.disciplines ?? 0} disciplinas · ${res.created?.phases ?? 0} fases · ${res.created?.equipmentTypes ?? 0} tipos de equipo`
+          tb('created', { disciplines: res.created?.disciplines ?? 0, phases: res.created?.phases ?? 0, types: res.created?.equipmentTypes ?? 0 }),
         )
       }
       // Re-run preflight to confirm everything is now in place.
@@ -168,7 +171,7 @@ export default function BackupRestoreView({ orgName, orgSlug }: Props) {
         includePssr,
       })
       if (res.error || !res.result) {
-        setParseError(res.error ?? 'Error al restaurar')
+        setParseError(res.error ?? tb('restoreError'))
         return
       }
       setRestoreResult(res.result)
@@ -182,9 +185,9 @@ export default function BackupRestoreView({ orgName, orgSlug }: Props) {
       <div style={cardStyle}>
         <div style={cardHeader}>
           <div>
-            <h2 style={cardTitle}>Exportar todo</h2>
+            <h2 style={cardTitle}>{tb('exportTitle')}</h2>
             <p style={cardSubtitle}>
-              Descarga un único JSON con todos tus templates ITR, procedimientos de preservación y templates PSSR de la org activa.
+              {tb('exportHelp')}
             </p>
           </div>
         </div>
@@ -194,7 +197,7 @@ export default function BackupRestoreView({ orgName, orgSlug }: Props) {
             disabled={isExporting}
             style={primaryButton(isExporting)}
           >
-            {isExporting ? 'Exportando…' : 'Descargar backup completo'}
+            {isExporting ? tb('exporting') : tb('exportButton')}
           </button>
           <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
             Nombre: <code style={codeStyle}>commup-templates-{orgSlug ? slugify(orgSlug) : slugify(orgName)}-{todayStamp()}.json</code>
@@ -207,9 +210,9 @@ export default function BackupRestoreView({ orgName, orgSlug }: Props) {
       <div style={cardStyle}>
         <div style={cardHeader}>
           <div>
-            <h2 style={cardTitle}>Restaurar desde JSON</h2>
+            <h2 style={cardTitle}>{tb('restoreTitle')}</h2>
             <p style={cardSubtitle}>
-              Sube un backup. Verás un resumen del contenido antes de confirmar la restauración.
+              {tb('restoreHelp')}
             </p>
           </div>
         </div>
@@ -231,10 +234,10 @@ export default function BackupRestoreView({ orgName, orgSlug }: Props) {
         >
           <div style={{ fontSize: '24px', marginBottom: '8px', opacity: 0.4 }}>↑</div>
           <p style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-strong)', margin: '0 0 4px' }}>
-            {filename ? `Archivo cargado: ${filename}` : 'Arrastra el JSON o haz clic para seleccionar'}
+            {filename ? tb('loaded', { name: filename }) : tb('drop')}
           </p>
           <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: 0 }}>
-            Solo archivos generados por CommUp (formato &quot;commup.templates.backup&quot;)
+            {tb('onlyCommup')}
           </p>
           <input
             ref={fileInputRef}
@@ -259,17 +262,17 @@ export default function BackupRestoreView({ orgName, orgSlug }: Props) {
               gridTemplateColumns: 'repeat(4, 1fr)',
               gap: '10px',
             }}>
-              <SummaryCell label="Formato" value={`v${parsed.version}`} mono />
+              <SummaryCell label={tb('format')} value={`v${parsed.version}`} mono />
               <SummaryCell
-                label="Org origen"
+                label={tb('sourceOrg')}
                 value={parsed.org?.name ?? '—'}
               />
               <SummaryCell
-                label="Exportado"
-                value={parsed.exported_at ? new Date(parsed.exported_at).toLocaleString('es-ES') : '—'}
+                label={tb('exported')}
+                value={parsed.exported_at ? new Date(parsed.exported_at).toLocaleString() : '—'}
               />
               <SummaryCell
-                label="Total"
+                label={tb('total')}
                 value={`${parsed.itr_templates.length + parsed.preservation_procedures.length + parsed.pssr_templates.length}`}
               />
             </div>
@@ -290,18 +293,18 @@ export default function BackupRestoreView({ orgName, orgSlug }: Props) {
               entries={parsed.itr_templates.map(t => ({
                 code: t.code,
                 title: t.title,
-                meta: `${t.discipline_code ?? '—'} · ${t.phase_code ?? '—'} · ${t.sections.reduce((a, s) => a + s.items.length, 0)} ítems`,
+                meta: `${t.discipline_code ?? '—'} · ${t.phase_code ?? '—'} · ${tb('items', { n: t.sections.reduce((a, s) => a + s.items.length, 0) })}`,
               }))}
               checked={includeItr}
               onCheck={setIncludeItr}
             />
             <ModuleSummary
-              title={`Preservación (${parsed.preservation_procedures.length})`}
+              title={`${tb('preservation')} (${parsed.preservation_procedures.length})`}
               color="#10b981"
               entries={parsed.preservation_procedures.map(p => ({
                 code: p.code,
                 title: p.title,
-                meta: `${p.frequency} · ${p.interval_days}d · ${p.items.length} ítems`,
+                meta: `${p.frequency} · ${p.interval_days}d · ${tb('items', { n: p.items.length })}`,
               }))}
               checked={includePreservation}
               onCheck={setIncludePreservation}
@@ -312,7 +315,7 @@ export default function BackupRestoreView({ orgName, orgSlug }: Props) {
               entries={parsed.pssr_templates.map(t => ({
                 code: t.name,
                 title: t.description ?? '',
-                meta: `${t.items.length} ítems`,
+                meta: tb('items', { n: t.items.length }),
               }))}
               checked={includePssr}
               onCheck={setIncludePssr}
@@ -327,9 +330,9 @@ export default function BackupRestoreView({ orgName, orgSlug }: Props) {
                   borderRadius: '6px', fontSize: '12px', color: '#1e40af', cursor: 'pointer',
                   fontWeight: 600,
                 }}
-                title="Renderiza el backup como documento imprimible"
+                title={tb('viewDocHint')}
               >
-                Ver como documento
+                {tb('viewDoc')}
               </button>
               <button
                 onClick={() => setShowRaw(s => !s)}
@@ -338,7 +341,7 @@ export default function BackupRestoreView({ orgName, orgSlug }: Props) {
                   borderRadius: '6px', fontSize: '12px', color: 'var(--text-strong)', cursor: 'pointer',
                 }}
               >
-                {showRaw ? 'Ocultar JSON crudo' : 'Ver JSON crudo'}
+                {showRaw ? tb('hideRaw') : tb('showRaw')}
               </button>
               {showRaw && (
                 <pre style={{
@@ -368,7 +371,7 @@ export default function BackupRestoreView({ orgName, orgSlug }: Props) {
               gap: '12px',
             }}>
               <h3 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-strong)', margin: 0 }}>
-                Opciones de restauración
+                {tb('options')}
               </h3>
 
               <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--text-strong)' }}>
@@ -377,12 +380,12 @@ export default function BackupRestoreView({ orgName, orgSlug }: Props) {
                   checked={skipDuplicates}
                   onChange={e => setSkipDuplicates(e.target.checked)}
                 />
-                Omitir si ya existe un template con el mismo código/nombre (recomendado)
+                {tb('skipDuplicates')}
               </label>
 
               {!skipDuplicates && (
                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--text-strong)' }}>
-                  Sufijo para duplicados:
+                  {tb('suffix')}
                   <input
                     value={duplicateSuffix}
                     onChange={e => setDuplicateSuffix(e.target.value)}
@@ -403,7 +406,7 @@ export default function BackupRestoreView({ orgName, orgSlug }: Props) {
                 borderRadius: '6px',
                 border: '1px solid #fde68a',
               }}>
-                ⚠ Las disciplinas, fases y tipos de equipo se mapean por <strong>código</strong> en la org activa. Si falta alguno, ese template se omite con error.
+                {tb.rich('mapping', { strong: c => <strong>{c}</strong> })}
               </p>
             </div>
 
@@ -413,7 +416,7 @@ export default function BackupRestoreView({ orgName, orgSlug }: Props) {
                 disabled={isRestoring || (!includeItr && !includePreservation && !includePssr)}
                 style={primaryButton(isRestoring || (!includeItr && !includePreservation && !includePssr))}
               >
-                {isRestoring ? 'Restaurando…' : 'Restaurar a la org activa'}
+                {isRestoring ? tb('restoring') : tb('restoreButton')}
               </button>
             </div>
           </div>
@@ -427,10 +430,10 @@ export default function BackupRestoreView({ orgName, orgSlug }: Props) {
         {restoreResult && (
           <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-strong)', margin: 0 }}>
-              Resultado
+              {tb('result')}
             </h3>
             <ResultRow label="ITR" r={restoreResult.itr} />
-            <ResultRow label="Preservación" r={restoreResult.preservation} />
+            <ResultRow label={tb('preservation')} r={restoreResult.preservation} />
             <ResultRow label="PSSR" r={restoreResult.pssr} />
           </div>
         )}
@@ -448,11 +451,12 @@ function TaxonomyPreflight({
   isCreating: boolean
   message: string | null
 }) {
+  const tb = useTranslations('TemplatesBackup')
   if (isChecking && !preview) {
     return (
       <div style={preflightCard('#f3f4f6', '#d1d5db')}>
         <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-          Verificando taxonomía requerida en la org activa…
+          {tb('checking')}
         </span>
       </div>
     )
@@ -471,10 +475,10 @@ function TaxonomyPreflight({
           <span style={{ fontSize: '16px' }}>✓</span>
           <div>
             <div style={{ fontSize: '13px', fontWeight: 600, color: '#065f46' }}>
-              Taxonomía completa
+              {tb('taxonomyOk')}
             </div>
             <div style={{ fontSize: '12px', color: '#047857' }}>
-              Todas las disciplinas, fases y tipos de equipo del backup existen en la org activa.
+              {tb('taxonomyOkHelp')}
             </div>
           </div>
         </div>
@@ -488,21 +492,21 @@ function TaxonomyPreflight({
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: '13px', fontWeight: 600, color: '#92400e', marginBottom: '6px' }}>
-            ⚠ Faltan {total} elemento{total === 1 ? '' : 's'} de taxonomía en la org activa
+            {tb('missing', { n: total })}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px', color: '#92400e' }}>
             {preview.missingDisciplines.length > 0 && (
-              <div><strong>Disciplinas:</strong> {preview.missingDisciplines.join(', ')}</div>
+              <div><strong>{tb('disciplines')}</strong> {preview.missingDisciplines.join(', ')}</div>
             )}
             {preview.missingPhases.length > 0 && (
-              <div><strong>Fases:</strong> {preview.missingPhases.join(', ')}</div>
+              <div><strong>{tb('phases')}</strong> {preview.missingPhases.join(', ')}</div>
             )}
             {preview.missingEquipmentTypes.length > 0 && (
-              <div><strong>Tipos de equipo:</strong> {preview.missingEquipmentTypes.join(', ')}</div>
+              <div><strong>{tb('types')}</strong> {preview.missingEquipmentTypes.join(', ')}</div>
             )}
           </div>
           <div style={{ fontSize: '11px', color: '#a16207', marginTop: '8px' }}>
-            Los templates que las referencian se omitirán al restaurar a menos que las crees primero.
+            {tb('missingHelp')}
           </div>
         </div>
         <button
@@ -519,9 +523,9 @@ function TaxonomyPreflight({
             cursor: isCreating ? 'not-allowed' : 'pointer',
             whiteSpace: 'nowrap',
           }}
-          title="Crear los elementos faltantes con valores por defecto (editables después)"
+          title={tb('autoCreateHint')}
         >
-          {isCreating ? 'Creando…' : 'Crear automáticamente'}
+          {isCreating ? tb('creating') : tb('autoCreate')}
         </button>
       </div>
       {message && (
@@ -575,6 +579,7 @@ function ModuleSummary({
   checked: boolean
   onCheck: (v: boolean) => void
 }) {
+  const tb = useTranslations('TemplatesBackup')
   const [expanded, setExpanded] = useState(false)
   return (
     <div style={{ border: '1px solid var(--border)', borderRadius: '10px', overflow: 'hidden' }}>
@@ -603,7 +608,7 @@ function ModuleSummary({
               borderRadius: '6px', fontSize: '11px', color: 'var(--text-muted)', cursor: 'pointer',
             }}
           >
-            {expanded ? 'Ocultar' : 'Ver lista'}
+            {expanded ? tb('hide') : tb('showList')}
           </button>
         )}
       </div>
@@ -640,6 +645,7 @@ function ResultRow({
   label: string
   r: { created: number; skipped: number; errors: string[] }
 }) {
+  const tb = useTranslations('TemplatesBackup')
   return (
     <div style={{
       padding: '10px 14px',
@@ -651,13 +657,13 @@ function ResultRow({
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center' }}>
         <strong style={{ color: 'var(--text-strong)' }}>{label}</strong>
         <span>
-          <span style={{ color: '#10b981' }}>+{r.created} creados</span>
+          <span style={{ color: '#10b981' }}>{tb('createdN', { n: r.created })}</span>
           {' · '}
-          <span style={{ color: 'var(--text-muted)' }}>{r.skipped} omitidos</span>
+          <span style={{ color: 'var(--text-muted)' }}>{tb('skippedN', { n: r.skipped })}</span>
           {r.errors.length > 0 && (
             <>
               {' · '}
-              <span style={{ color: '#ef4444' }}>{r.errors.length} errores</span>
+              <span style={{ color: '#ef4444' }}>{tb('errorsN', { n: r.errors.length })}</span>
             </>
           )}
         </span>
@@ -665,7 +671,7 @@ function ResultRow({
       {r.errors.length > 0 && (
         <ul style={{ margin: '8px 0 0', paddingLeft: '18px', color: '#ef4444', fontSize: '12px' }}>
           {r.errors.slice(0, 10).map((err, i) => <li key={i}>{err}</li>)}
-          {r.errors.length > 10 && <li>… y {r.errors.length - 10} más</li>}
+          {r.errors.length > 10 && <li>{tb('more', { n: r.errors.length - 10 })}</li>}
         </ul>
       )}
     </div>

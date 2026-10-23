@@ -3,6 +3,7 @@
 import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import * as XLSX from 'xlsx'
 import ImportMatrixModal from './ImportMatrixModal'
 import {
@@ -22,10 +23,10 @@ type Phase = { code: string; name: string; order_index: number }
 
 const BATCH = 12
 
-const STATUS_STYLE: Record<MatrixRow['status'], { bg: string; color: string; label: string }> = {
-  proposed: { bg: '#fef3c7', color: '#92400e', label: 'Propuesta' },
-  accepted: { bg: '#dcfce7', color: '#166534', label: 'Aceptada' },
-  rejected: { bg: '#fee2e2', color: '#991b1b', label: 'Rechazada' },
+const STATUS_STYLE: Record<MatrixRow['status'], { bg: string; color: string }> = {
+  proposed: { bg: '#fef3c7', color: '#92400e' },
+  accepted: { bg: '#dcfce7', color: '#166534' },
+  rejected: { bg: '#fee2e2', color: '#991b1b' },
 }
 
 export default function MatrixView({
@@ -40,6 +41,8 @@ export default function MatrixView({
 }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
+  // `tm` (no `t`): los tipos de equipo se recorren como `t`.
+  const tm = useTranslations('MatrixAdmin')
   const [error, setError] = useState<string | null>(loadError)
   const [progress, setProgress] = useState<{ done: number; total: number; log: string[] } | null>(null)
   const [filter, setFilter] = useState<'all' | 'pending' | 'empty'>('all')
@@ -103,18 +106,18 @@ export default function MatrixView({
     for (let i = 0; i < typeIds.length; i += BATCH) {
       const chunk = typeIds.slice(i, i + BATCH)
       const res = await generateMatrixWithAi(chunk)
-      if (res.error) { log.push(`✕ Lote ${i / BATCH + 1}: ${res.error}`); setError(res.error) }
+      if (res.error) { log.push(`✕ ${tm('batch', { n: i / BATCH + 1 })}: ${res.error}`); setError(res.error) }
       else if (res.result) {
         summary.proposed += res.result.proposed
         summary.keptHumanDecision += res.result.keptHumanDecision
         summary.unknownCodes.push(...res.result.unknownCodes)
         summary.typesWithoutProposals.push(...res.result.typesWithoutProposals)
-        log.push(`✓ Lote ${i / BATCH + 1}: ${res.result.proposed} propuestas${res.result.typesWithoutProposals.length ? ` · sin propuesta: ${res.result.typesWithoutProposals.join(', ')}` : ''}`)
+        log.push(`✓ ${tm('batch', { n: i / BATCH + 1 })}: ${tm('batchProposed', { n: res.result.proposed })}${res.result.typesWithoutProposals.length ? ` · ${tm('withoutProposal', { list: res.result.typesWithoutProposals.join(', ') })}` : ''}`)
       }
       setProgress({ done: Math.min(i + BATCH, typeIds.length), total: typeIds.length, log: [...log] })
       router.refresh()
     }
-    log.push(`Listo: ${summary.proposed} propuestas nuevas · ${summary.keptHumanDecision} decisiones tuyas respetadas${summary.unknownCodes.length ? ` · ${summary.unknownCodes.length} códigos desconocidos ignorados` : ''}`)
+    log.push(tm('done', { proposed: summary.proposed, kept: summary.keptHumanDecision }) + (summary.unknownCodes.length ? ` · ${tm('unknownCodes', { n: summary.unknownCodes.length })}` : ''))
     setProgress({ done: typeIds.length, total: typeIds.length, log: [...log] })
     router.refresh()
   }
@@ -173,44 +176,44 @@ export default function MatrixView({
 
   return (
     <div style={{ padding: '32px', maxWidth: '1100px' }}>
-      <Link href="/admin/templates" style={{ fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none' }}>← Plantillas ITR</Link>
+      <Link href="/admin/templates" style={{ fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none' }}>← {tm('back')}</Link>
 
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', margin: '12px 0 20px', flexWrap: 'wrap' }}>
         <div>
-          <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-strong)', margin: 0, letterSpacing: '-0.4px' }}>Matriz ITR por tipo de equipo</h1>
+          <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-strong)', margin: 0, letterSpacing: '-0.4px' }}>{tm('title')}</h1>
           <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: '4px 0 0', maxWidth: '70ch' }}>
-            Qué plantillas aplican a cada tipo de equipo, por fase. La IA propone con motivo y confianza; tú aceptas o rechazas. Lo aceptado se sugiere primero al asignar ITRs a un tag.
+            {tm('subtitle')}
           </p>
         </div>
         <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
           <button
             disabled={busy || !aiEnabled}
             onClick={() => generate(equipmentTypes.filter(t => (rowsByType.get(t.id) ?? []).length === 0).map(t => t.id))}
-            title={aiEnabled ? 'Genera propuestas solo para los tipos que aún no tienen ninguna fila' : 'IA no configurada en este entorno'}
+            title={aiEnabled ? tm('generateEmptyHint') : tm('aiOff')}
             style={btn('#6d28d9', '#f5f3ff', '#ddd6fe', busy || !aiEnabled)}
           >
-            ✦ Generar con IA (tipos vacíos)
+            {tm('generateEmpty')}
           </button>
           <button
             disabled={busy || !aiEnabled}
             onClick={() => generate(equipmentTypes.map(t => t.id))}
-            title="Vuelve a proponer para todos los tipos. Tus decisiones (aceptadas/rechazadas) no se tocan."
+            title={tm('regenerateHint')}
             style={btn('#6d28d9', 'var(--card-bg)', '#ddd6fe', busy || !aiEnabled)}
           >
-            Regenerar todo
+            {tm('regenerate')}
           </button>
-          <button onClick={downloadTemplate} title="Excel con tus tipos y el catálogo para llenar la matriz a mano" style={btn('#1e40af', 'var(--card-bg)', '#bfdbfe', false)}>
-            ↓ Plantilla Excel
+          <button onClick={downloadTemplate} title={tm('templateHint')} style={btn('#1e40af', 'var(--card-bg)', '#bfdbfe', false)}>
+            {tm('template')}
           </button>
-          <button disabled={busy} onClick={() => setShowImport(true)} title="Sube la plantilla llena: las filas entran como aceptadas" style={btn('#166534', '#dcfce7', '#bbf7d0', busy)}>
-            ↑ Importar desde Excel
+          <button disabled={busy} onClick={() => setShowImport(true)} title={tm('importHint')} style={btn('#166534', '#dcfce7', '#bbf7d0', busy)}>
+            {tm('import')}
           </button>
         </div>
       </div>
 
       {!aiEnabled && (
         <div style={{ padding: '10px 14px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '8px', color: '#92400e', fontSize: '13px', marginBottom: '14px' }}>
-          La IA no está configurada en este entorno (falta la clave ANTHROPIC_API_KEY en Cloudflare). Puedes construir la matriz a mano con «+ Añadir plantilla».
+          {tm('aiOffNote')}
         </div>
       )}
       {error && (
@@ -219,8 +222,8 @@ export default function MatrixView({
       {progress && (
         <div style={{ padding: '12px 14px', background: '#faf5ff', border: '1px solid #ddd6fe', borderRadius: '8px', marginBottom: '14px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#5b21b6', fontWeight: 600, marginBottom: '6px' }}>
-            <span>{progress.done < progress.total ? 'Generando propuestas…' : 'Generación terminada'}</span>
-            <span>{progress.done} / {progress.total} tipos</span>
+            <span>{progress.done < progress.total ? tm('generating') : tm('generated')}</span>
+            <span>{tm('progress', { done: progress.done, total: progress.total })}</span>
           </div>
           <div style={{ height: '6px', background: '#ede9fe', borderRadius: '3px', overflow: 'hidden' }}>
             <div style={{ width: `${Math.round((progress.done / progress.total) * 100)}%`, height: '100%', background: '#7c3aed', transition: 'width .3s' }} />
@@ -233,25 +236,25 @@ export default function MatrixView({
 
       {/* Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '18px' }}>
-        <Stat label="Tipos con matriz aceptada" value={`${stats.withAccepted} / ${equipmentTypes.length}`} />
-        <Stat label="Propuestas por revisar" value={String(stats.pending)} accent={stats.pending > 0 ? '#b45309' : undefined} />
-        <Stat label="Filas aceptadas" value={String(stats.accepted)} accent="#166534" />
-        <Stat label="Rechazadas" value={String(stats.rejected)} />
+        <Stat label={tm('stat.withAccepted')} value={`${stats.withAccepted} / ${equipmentTypes.length}`} />
+        <Stat label={tm('stat.pending')} value={String(stats.pending)} accent={stats.pending > 0 ? '#b45309' : undefined} />
+        <Stat label={tm('stat.accepted')} value={String(stats.accepted)} accent="#166534" />
+        <Stat label={tm('stat.rejected')} value={String(stats.rejected)} />
       </div>
 
       {/* Filtros */}
       <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap' }}>
-        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar tipo (P, TK, bomba…)" style={{ ...input, width: '220px' }} />
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder={tm('search')} style={{ ...input, width: '220px' }} />
         <select value={category} onChange={e => setCategory(e.target.value)} style={input}>
-          <option value="">Todas las categorías</option>
-          {categories.map(c => <option key={c || '__none'} value={c}>{c || 'Sin categoría'}</option>)}
+          <option value="">{tm('allCategories')}</option>
+          {categories.map(c => <option key={c || '__none'} value={c}>{c || tm('noCategory')}</option>)}
         </select>
         {(['all', 'pending', 'empty'] as const).map(f => (
           <button key={f} onClick={() => setFilter(f)} style={{ ...chip, background: filter === f ? '#0B1D3A' : 'var(--card-bg)', color: filter === f ? '#fff' : 'var(--text-muted)' }}>
-            {f === 'all' ? 'Todos' : f === 'pending' ? 'Con propuestas pendientes' : 'Sin filas'}
+            {tm(`filter.${f}`)}
           </button>
         ))}
-        <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginLeft: 'auto' }}>{visibleTypes.length} tipos</span>
+        <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginLeft: 'auto' }}>{tm('types', { n: visibleTypes.length })}</span>
       </div>
 
       {/* Tipos */}
@@ -271,22 +274,22 @@ export default function MatrixView({
                 <span style={{ marginLeft: 'auto', display: 'flex', gap: '6px' }}>
                   {pendingIds.length > 0 && (
                     <button disabled={busy} onClick={() => act(() => reviewMatrixRows(pendingIds, 'accepted'))} style={btn('#166534', '#dcfce7', '#bbf7d0', busy)}>
-                      Aceptar {pendingIds.length} propuesta{pendingIds.length !== 1 ? 's' : ''}
+                      {tm('acceptN', { n: pendingIds.length })}
                     </button>
                   )}
                   {aiEnabled && (
-                    <button disabled={busy} onClick={() => generate([t.id])} style={btn('#6d28d9', 'var(--card-bg)', '#ddd6fe', busy)} title="Proponer solo para este tipo">✦</button>
+                    <button disabled={busy} onClick={() => generate([t.id])} style={btn('#6d28d9', 'var(--card-bg)', '#ddd6fe', busy)} title={tm('proposeOne')}>✦</button>
                   )}
-                  <button disabled={busy} onClick={() => { setAddingFor(addingFor === t.id ? null : t.id); setAddTemplate('') }} style={btn('#1e40af', '#eff6ff', '#bfdbfe', busy)}>+ Añadir plantilla</button>
+                  <button disabled={busy} onClick={() => { setAddingFor(addingFor === t.id ? null : t.id); setAddTemplate('') }} style={btn('#1e40af', '#eff6ff', '#bfdbfe', busy)}>{tm('add')}</button>
                 </span>
               </div>
 
               {addingFor === t.id && (
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center', padding: '10px', background: '#eff6ff', borderRadius: '8px', marginBottom: '10px' }}>
                   <select value={addTemplate} onChange={e => setAddTemplate(e.target.value)} style={{ ...input, flex: 1 }}>
-                    <option value="">Elige una plantilla…</option>
+                    <option value="">{tm('pickTemplate')}</option>
                     {templates.filter(tp => !usedTemplateIds.has(tp.id)).map(tp => (
-                      <option key={tp.id} value={tp.id}>{tp.code} · {tp.title} ({tp.discipline_code ?? '?'} / fase {tp.phase_code ?? '?'})</option>
+                      <option key={tp.id} value={tp.id}>{tp.code} · {tp.title} ({tp.discipline_code ?? '?'} / {tm('phase', { code: tp.phase_code ?? '?' })})</option>
                     ))}
                   </select>
                   <button
@@ -294,20 +297,20 @@ export default function MatrixView({
                     onClick={() => act(async () => { const r = await addMatrixRow({ equipmentTypeId: t.id, templateId: addTemplate }); if (!r.error) { setAddingFor(null); setAddTemplate('') } return r })}
                     style={btn('#fff', '#2563eb', '#2563eb', busy || !addTemplate)}
                   >
-                    Añadir como aceptada
+                    {tm('addAccepted')}
                   </button>
                 </div>
               )}
 
               {rows.length === 0 ? (
-                <p style={{ margin: '6px 0 0', fontSize: '12px', color: 'var(--gray-400)' }}>Sin plantillas asociadas todavía.</p>
+                <p style={{ margin: '6px 0 0', fontSize: '12px', color: 'var(--gray-400)' }}>{tm('noRows')}</p>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   {rows.map(r => {
                     const st = STATUS_STYLE[r.status]
                     return (
                       <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', borderRadius: '8px', background: r.status === 'rejected' ? 'var(--gray-50)' : 'transparent', border: '1px solid #f1f5f9', opacity: r.status === 'rejected' ? 0.7 : 1 }}>
-                        <span style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '11px', fontWeight: 700, background: '#e0e7ff', color: '#3730a3', whiteSpace: 'nowrap' }}>Fase {r.template.phase_code ?? '?'}</span>
+                        <span style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '11px', fontWeight: 700, background: '#e0e7ff', color: '#3730a3', whiteSpace: 'nowrap' }}>{tm('phaseCap', { code: r.template.phase_code ?? '?' })}</span>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-strong)' }}>
                             <span style={{ fontFamily: 'ui-monospace, monospace' }}>{r.template.code}</span> · {r.template.title}
@@ -316,13 +319,13 @@ export default function MatrixView({
                           {r.reason && <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{r.reason}</div>}
                         </div>
                         {r.confidence !== null && (
-                          <span title="Confianza de la IA" style={{ fontSize: '11px', fontWeight: 700, whiteSpace: 'nowrap', color: r.confidence >= 0.7 ? '#15803d' : r.confidence >= 0.4 ? '#b45309' : '#dc2626' }}>{Math.round(r.confidence * 100)}%</span>
+                          <span title={tm('confidence')} style={{ fontSize: '11px', fontWeight: 700, whiteSpace: 'nowrap', color: r.confidence >= 0.7 ? '#15803d' : r.confidence >= 0.4 ? '#b45309' : '#dc2626' }}>{Math.round(r.confidence * 100)}%</span>
                         )}
-                        <span style={{ padding: '2px 8px', borderRadius: '999px', fontSize: '10px', fontWeight: 700, background: st.bg, color: st.color, whiteSpace: 'nowrap' }}>{st.label}{r.source === 'manual' ? ' · manual' : ''}</span>
+                        <span style={{ padding: '2px 8px', borderRadius: '999px', fontSize: '10px', fontWeight: 700, background: st.bg, color: st.color, whiteSpace: 'nowrap' }}>{tm(`status.${r.status}`)}{r.source === 'manual' ? ` · ${tm('manual')}` : ''}</span>
                         <span style={{ display: 'flex', gap: '4px' }}>
-                          {r.status !== 'accepted' && <button disabled={busy} onClick={() => act(() => reviewMatrixRows([r.id], 'accepted'))} title="Aceptar" style={btnIcon('#166534')}>✓</button>}
-                          {r.status !== 'rejected' && <button disabled={busy} onClick={() => act(() => reviewMatrixRows([r.id], 'rejected'))} title="Rechazar" style={btnIcon('#991b1b')}>✕</button>}
-                          <button disabled={busy} onClick={() => act(() => deleteMatrixRow(r.id))} title="Eliminar fila" style={btnIcon('var(--gray-400)')}>🗑</button>
+                          {r.status !== 'accepted' && <button disabled={busy} onClick={() => act(() => reviewMatrixRows([r.id], 'accepted'))} title={tm('accept')} style={btnIcon('#166534')}>✓</button>}
+                          {r.status !== 'rejected' && <button disabled={busy} onClick={() => act(() => reviewMatrixRows([r.id], 'rejected'))} title={tm('reject')} style={btnIcon('#991b1b')}>✕</button>}
+                          <button disabled={busy} onClick={() => act(() => deleteMatrixRow(r.id))} title={tm('deleteRow')} style={btnIcon('var(--gray-400)')}>🗑</button>
                         </span>
                       </div>
                     )
@@ -333,7 +336,7 @@ export default function MatrixView({
           )
         })}
         {visibleTypes.length === 0 && (
-          <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Ningún tipo de equipo coincide con el filtro.</p>
+          <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{tm('noMatch')}</p>
         )}
       </div>
 

@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 // Header del review PSSR: breadcrumb, chips de estado, editor de fecha límite
 // (autocontenido) y botones de acción — extraído de PssrReviewForm.tsx (Q4).
 
@@ -68,9 +69,9 @@ export default function PssrReviewHeader({
 
   return (
     <div style={{ marginBottom: '24px' }}>
-      <a href={`/projects/${projectId}/pssr`} style={{ fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none' }}>
+      <Link href={`/projects/${projectId}/pssr`} style={{ fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none' }}>
         {t('backToList', { projectName })}
-      </a>
+      </Link>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', marginTop: '10px', flexWrap: 'wrap' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
@@ -173,7 +174,7 @@ export default function PssrReviewHeader({
             {t('review.downloadPdf')}
           </a>
           {review.status === 'approved' && review.rfsu_certificate_id && (
-            <a
+            <Link
               href={`/projects/${projectId}/certificates/${review.rfsu_certificate_id}`}
               style={{
                 padding: '9px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
@@ -182,7 +183,7 @@ export default function PssrReviewHeader({
               }}
             >
               {t('review.viewRfsu')}
-            </a>
+            </Link>
           )}
           {(review.status === 'draft' || review.status === 'in_progress' || review.status === 'rejected') && !readonly && allResolved && (
             <button

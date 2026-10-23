@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
@@ -148,12 +149,12 @@ export default function LoginPage() {
             </div>
 
             <div style={{ textAlign: 'right', marginTop: -8 }}>
-              <a href="/forgot-password" style={{
+              <Link href="/forgot-password" style={{
                 fontSize: 'var(--text-sm)', color: 'var(--primary-500)',
                 fontWeight: 600, textDecoration: 'none',
               }}>
                 {t('forgotPassword')}
-              </a>
+              </Link>
             </div>
 
             {/* Error */}

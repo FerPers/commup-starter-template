@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { ShieldCheck } from 'lucide-react'
 import { createPssrTemplate, seedDefaultPssrTemplate, deletePssrTemplate } from '@/app/actions/pssr'
@@ -19,6 +20,8 @@ interface Template {
 }
 
 export default function PssrTemplatesView({ templates, canEdit }: { templates: Template[]; canEdit: boolean }) {
+  // `tx` (no `t`): las plantillas se recorren como `t`.
+  const tx = useTranslations('PssrTemplates')
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [showModal, setShowModal] = useState(false)
@@ -31,12 +34,12 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
   const [previewError, setPreviewError] = useState<string | null>(null)
 
   async function handleCreate() {
-    if (!form.name.trim()) { setFormError('El nombre es requerido'); return }
+    if (!form.name.trim()) { setFormError(tx('nameRequired')); return }
     setFormError(null)
     startTransition(async () => {
       const res = await createPssrTemplate({ name: form.name, description: form.description || undefined })
       if (res.error ?? !res.template) {
-        setFormError(res.error ?? 'Error al crear')
+        setFormError(res.error ?? tx('createError'))
         return
       }
       setShowModal(false)
@@ -81,10 +84,10 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
             <ShieldCheck size={32} color="var(--warning-500)" aria-hidden="true" />
           </div>
           <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-strong)', margin: '0 0 6px' }}>
-            No hay templates PSSR
+            {tx('emptyTitle')}
           </p>
           <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '20px' }}>
-            Crea uno desde cero o carga el checklist estándar de 22 ítems
+            {tx('emptyHelp')}
           </p>
           {canEdit && (
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -95,7 +98,7 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
                   background: 'var(--card-bg)', color: 'var(--text-muted)', border: '1px solid var(--border)', cursor: 'pointer',
                 }}
               >
-                Importar de otra org
+                {tx('importFromOrg')}
               </button>
               <button
                 onClick={() => setShowModal(true)}
@@ -104,7 +107,7 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
                   background: 'var(--primary-500)', color: '#fff', border: 'none', cursor: 'pointer',
                 }}
               >
-                + Nuevo template
+                {tx('new')}
               </button>
             </div>
           )}
@@ -123,7 +126,7 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
                   background: 'var(--card-bg)', color: 'var(--text-muted)', border: '1px solid var(--border)', cursor: 'pointer',
                 }}
               >
-                Importar de otra org
+                {tx('importFromOrg')}
               </button>
               <button
                 onClick={() => setShowModal(true)}
@@ -132,7 +135,7 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
                   background: 'var(--primary-500)', color: '#fff', border: 'none', cursor: 'pointer',
                 }}
               >
-                + Nuevo template
+                {tx('new')}
               </button>
             </div>
           )}
@@ -154,7 +157,7 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
                   <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>{t.description}</div>
                 )}
                 <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                  {t.pssr_template_items.length} ítems
+                  {tx('items', { n: t.pssr_template_items.length })}
                 </div>
               </div>
 
@@ -164,7 +167,7 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
                 background: t.is_active ? 'rgba(16,185,129,0.12)' : 'var(--gray-100)',
                 color: t.is_active ? 'var(--success-700)' : 'var(--text-muted)',
               }}>
-                {t.is_active ? 'Activo' : 'Inactivo'}
+                {t.is_active ? tx('active') : tx('inactive')}
               </span>
 
               {/* Actions */}
@@ -173,19 +176,19 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
                   onClick={() => {
                     startTransition(async () => {
                       const res = await exportPssrTemplate(t.id)
-                      if (res.error || !res.backup) { setPreviewError(res.error ?? 'Error al previsualizar'); return }
+                      if (res.error || !res.backup) { setPreviewError(res.error ?? tx('previewError')); return }
                       setDocPreview(res.backup)
                     })
                   }}
                   disabled={isPending}
-                  title="Vista previa como documento imprimible"
+                  title={tx('previewHint')}
                   style={{
                     padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600,
                     background: '#eff6ff', border: '1px solid #bfdbfe', color: '#1e40af',
                     cursor: 'pointer',
                   }}
                 >
-                  👁 Vista previa
+                  {tx('preview')}
                 </button>
               </div>
               {canEdit && (
@@ -200,7 +203,7 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
                         cursor: 'pointer',
                       }}
                     >
-                      {seedingId === t.id ? 'Cargando...' : '↓ Seed 22 ítems'}
+                      {seedingId === t.id ? tx('seeding') : tx('seed')}
                     </button>
                   )}
                   <button
@@ -211,7 +214,7 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
                       cursor: 'pointer',
                     }}
                   >
-                    Editar
+                    {tx('edit')}
                   </button>
                   <button
                     onClick={() => handleDelete(t.id)}
@@ -222,7 +225,7 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
                       cursor: 'pointer',
                     }}
                   >
-                    {deletingId === t.id ? '...' : 'Eliminar'}
+                    {deletingId === t.id ? '…' : tx('delete')}
                   </button>
                 </div>
               )}
@@ -257,17 +260,17 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
             boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
           }} onClick={e => e.stopPropagation()}>
             <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 20px' }}>
-              Nuevo template PSSR
+              {tx('newTitle')}
             </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
                 <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-strong)', display: 'block', marginBottom: '6px' }}>
-                  Nombre *
+                  {tx('name')}
                 </label>
                 <input
                   value={form.name}
                   onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                  placeholder="PSSR Estándar"
+                  placeholder={tx('namePlaceholder')}
                   style={{
                     width: '100%', padding: '10px 12px', borderRadius: '8px',
                     border: '1.5px solid var(--border)', fontSize: '14px', outline: 'none',
@@ -277,13 +280,13 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
               </div>
               <div>
                 <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-strong)', display: 'block', marginBottom: '6px' }}>
-                  Descripción
+                  {tx('description')}
                 </label>
                 <textarea
                   value={form.description}
                   onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                   rows={2}
-                  placeholder="Checklist completo de 22 ítems..."
+                  placeholder={tx('descriptionPlaceholder')}
                   style={{
                     width: '100%', padding: '10px 12px', borderRadius: '8px',
                     border: '1.5px solid var(--border)', fontSize: '14px', outline: 'none',
@@ -302,7 +305,7 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
                     background: 'var(--gray-100)', border: 'none', cursor: 'pointer', color: 'var(--text-strong)',
                   }}
                 >
-                  Cancelar
+                  {tx('cancel')}
                 </button>
                 <button
                   onClick={handleCreate}
@@ -313,7 +316,7 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
                     cursor: isPending ? 'not-allowed' : 'pointer', opacity: isPending ? 0.7 : 1,
                   }}
                 >
-                  {isPending ? 'Creando...' : 'Crear template'}
+                  {isPending ? tx('creating') : tx('create')}
                 </button>
               </div>
             </div>

@@ -1,6 +1,7 @@
 import { fetchItrPhaseCounts, fetchPunchCounts, sumItr, sumPunch, isOpenPunch } from '@/lib/list/kpi-query'
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect, notFound } from 'next/navigation'
+import { getLocale } from 'next-intl/server'
 import ReportPrint from './ReportPrint'
 import { getSubsystemKpis, getProjectSnapshots } from '@/app/actions/kpi-snapshots'
 
@@ -23,7 +24,7 @@ export default async function KpiReportPage({ params }: { params: Promise<{ id: 
   ] = await Promise.all([
     supabase
       .from('projects')
-      .select('id, name, code, client, location, start_date, end_date')
+      .select('id, name, code, client, location, start_date, end_date, timezone')
       .eq('id', projectId)
       .eq('org_id', membership.org_id)
       .single(),
@@ -61,8 +62,10 @@ export default async function KpiReportPage({ params }: { params: Promise<{ id: 
   const lastSnapshot = snapshots[snapshots.length - 1]
   const snapshotNum = snapshots.length
 
-  const reportDate = new Date().toLocaleDateString('es-CO', {
-    year: 'numeric', month: 'long', day: 'numeric',
+  // «Hoy» en la zona del proyecto (S10), en el idioma del usuario.
+  const locale = await getLocale()
+  const reportDate = new Date().toLocaleDateString(locale === 'en' ? 'en-US' : 'es-CO', {
+    year: 'numeric', month: 'long', day: 'numeric', timeZone: project.timezone ?? 'America/Bogota',
   })
 
   return (

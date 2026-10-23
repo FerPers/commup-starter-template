@@ -38,46 +38,27 @@ type Execution = {
 
 // ── Static catalogs ──────────────────────────────────────────
 // S21 (I-08): catálogo v1 (entidad en singular) + eventos de negocio; las reglas viejas se migraron en 20261117120000.
-const TRIGGER_EVENTS: { value: string; label: string }[] = [
-  { value: 'punch.created',        label: 'Punch creado' },
-  { value: 'punch.updated',        label: 'Punch actualizado' },
-  { value: 'punch.deleted',        label: 'Punch eliminado' },
-  { value: 'punch.assigned',       label: 'Punch asignado' },
-  { value: 'punch.closed',         label: 'Punch cerrado' },
-  { value: 'itr.created',          label: 'ITR creado' },
-  { value: 'itr.updated',          label: 'ITR actualizado' },
-  { value: 'itr.deleted',          label: 'ITR eliminado' },
-  { value: 'itr.completed',        label: 'ITR completado' },
-  { value: 'itr.approved',         label: 'ITR aprobado' },
-  { value: 'itr.rejected',         label: 'ITR rechazado' },
-  { value: 'certificate.created',  label: 'Certificado creado' },
-  { value: 'certificate.updated',  label: 'Certificado actualizado' },
-  { value: 'certificate.issued',   label: 'Certificado emitido' },
-  { value: 'gate.approved',        label: 'Gate aprobado' },
-  { value: 'gate.revoked',         label: 'Gate revocado' },
-  { value: 'transfer.completed',   label: 'Traspaso completado' },
-  { value: 'system.updated',       label: 'Sistema actualizado' },
-  { value: 'subsystem.updated',    label: 'Subsistema actualizado' },
-  { value: 'loop.updated',         label: 'Loop actualizado' },
+const TRIGGER_EVENTS: string[] = [
+  'punch.created', 'punch.updated', 'punch.deleted', 'punch.assigned', 'punch.closed',
+  'itr.created', 'itr.updated', 'itr.deleted', 'itr.completed', 'itr.approved', 'itr.rejected',
+  'certificate.created', 'certificate.updated', 'certificate.issued',
+  'gate.approved', 'gate.revoked',
+  'transfer.completed',
+  'system.updated', 'subsystem.updated', 'loop.updated',
   // S13 (F-31): «interlocks.updated» se quitó: la tabla interlocks se reemplazó por las matrices C&E (fase 4-D) y el evento ya no ocurre.
-  { value: 'signal.updated',       label: 'Signal actualizada' },
+  'signal.updated',
 ]
 
-const ACTION_TYPES: { value: WorkflowActionType; label: string; description: string }[] = [
-  { value: 'block_certificate',   label: 'Bloquear certificado',   description: 'Marca el certificado como bloqueado con razón' },
-  { value: 'notify_user',         label: 'Notificar usuario',      description: 'Crea alerta in-app para un rol o usuario' },
-  { value: 'create_punch',        label: 'Crear punch',            description: 'Genera un punch automáticamente' },
-  { value: 'webhook_call',        label: 'Llamar webhook',         description: 'POST a una URL https pública con el payload del evento' },
-]
+const ACTION_TYPES: WorkflowActionType[] = ['block_certificate', 'notify_user', 'create_punch', 'webhook_call']
 
-const OPERATORS: { value: string; label: string; jsonlogic: string }[] = [
-  { value: 'eq',  label: '=',  jsonlogic: '==' },
-  { value: 'neq', label: '≠',  jsonlogic: '!=' },
-  { value: 'gt',  label: '>',  jsonlogic: '>' },
-  { value: 'gte', label: '≥',  jsonlogic: '>=' },
-  { value: 'lt',  label: '<',  jsonlogic: '<' },
-  { value: 'lte', label: '≤',  jsonlogic: '<=' },
-  { value: 'in',  label: 'en', jsonlogic: 'in' },
+const OPERATORS: { value: string; jsonlogic: string }[] = [
+  { value: 'eq',  jsonlogic: '==' },
+  { value: 'neq', jsonlogic: '!=' },
+  { value: 'gt',  jsonlogic: '>' },
+  { value: 'gte', jsonlogic: '>=' },
+  { value: 'lt',  jsonlogic: '<' },
+  { value: 'lte', jsonlogic: '<=' },
+  { value: 'in',  jsonlogic: 'in' },
 ]
 
 // ── JsonLogic helpers (simple row builder) ───────────────────
@@ -149,6 +130,7 @@ export default function WorkflowsView({
 }) {
   // N0 (H-13): título = etiqueta del menú.
   const tNav = useTranslations('Sidebar.nav')
+  const tx = useTranslations('Workflows')
   const [rules, setRules] = useState<Rule[]>(initialRules)
   const [editingRule, setEditingRule] = useState<Rule | null>(null)
   const [creating, setCreating] = useState(false)
@@ -179,7 +161,7 @@ export default function WorkflowsView({
   }
 
   const handleDelete = (rule: Rule) => {
-    if (!confirm(`¿Eliminar regla "${rule.name}"?`)) return
+    if (!confirm(tx('deleteConfirm', { name: rule.name }))) return
     setError(null)
     startTransition(async () => {
       const res = await deleteWorkflowRule(rule.id)
@@ -196,10 +178,10 @@ export default function WorkflowsView({
             {tNav('workflows')}
           </h1>
           <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '4px 0 0' }}>
-            Reglas declarativas que reaccionan a eventos de dominio. Evaluadas por <code>evaluate-workflow</code>.
+            {tx.rich('subtitle', { code: c => <code>{c}</code> })}
           </p>
         </div>
-        <button onClick={() => setCreating(true)} style={btnPrimary}>+ Nueva regla</button>
+        <button onClick={() => setCreating(true)} style={btnPrimary}>{tx('newRule')}</button>
       </div>
 
       {error && (
@@ -210,14 +192,14 @@ export default function WorkflowsView({
 
       {rules.length === 0 && !creating && (
         <div style={{ padding: 40, background: 'var(--gray-50)', border: '1px dashed #cbd5e1', borderRadius: 8, textAlign: 'center', color: 'var(--text-muted)', fontSize: 14 }}>
-          No hay reglas configuradas. Crea la primera para automatizar respuestas a eventos.
+          {tx('empty')}
         </div>
       )}
 
       {Object.keys(rulesByEvent).sort().map(event => (
         <div key={event} style={{ marginBottom: 24 }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8, padding: '0 4px' }}>
-            {TRIGGER_EVENTS.find(t => t.value === event)?.label ?? event}
+            {TRIGGER_EVENTS.includes(event) ? tx(`trigger.${event}`) : event}
             <span style={{ marginLeft: 6, color: 'var(--gray-400)', fontWeight: 500 }}>({event})</span>
           </div>
           <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden' }}>
@@ -265,8 +247,9 @@ function RuleRow({
   onEdit: () => void
   onDelete: () => void
 }) {
+  const tx = useTranslations('Workflows')
   const [expanded, setExpanded] = useState(false)
-  const actionLabel = ACTION_TYPES.find(a => a.value === rule.action_type)?.label ?? rule.action_type
+  const actionLabel = tx(`action.${rule.action_type}.label`)
   const lastExec = executions[0]
   const matches = executions.filter(e => e.matched).length
 
@@ -276,7 +259,7 @@ function RuleRow({
         <button
           onClick={onToggle}
           disabled={isPending}
-          title={rule.enabled ? 'Desactivar' : 'Activar'}
+          title={tx(rule.enabled ? 'deactivate' : 'activate')}
           style={{
             width: 32, height: 18, borderRadius: 9, border: 'none', cursor: 'pointer', flexShrink: 0,
             background: rule.enabled ? '#10b981' : 'var(--gray-300)', position: 'relative', padding: 0,
@@ -292,7 +275,7 @@ function RuleRow({
           <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-strong)' }}>
             {rule.name}
             <span style={{ marginLeft: 8, fontSize: 11, color: 'var(--text-muted)', fontWeight: 500 }}>
-              prioridad {rule.priority}
+              {tx('priorityLabel', { n: rule.priority })}
             </span>
           </div>
           {rule.description && (
@@ -302,15 +285,15 @@ function RuleRow({
             → <strong style={{ color: 'var(--text-muted)' }}>{actionLabel}</strong>
             {executions.length > 0 && (
               <span style={{ marginLeft: 10 }}>
-                {matches}/{executions.length} matches recientes
-                {lastExec?.error_message && <span style={{ color: '#ef4444', marginLeft: 6 }}>· último error</span>}
+                {tx('recentMatches', { matches, total: executions.length })}
+                {lastExec?.error_message && <span style={{ color: '#ef4444', marginLeft: 6 }}>· {tx('lastError')}</span>}
               </span>
             )}
           </div>
         </div>
-        <button onClick={() => setExpanded(e => !e)} style={btnOutline}>{expanded ? 'Cerrar' : 'JSON'}</button>
-        <button onClick={onEdit} disabled={isPending} style={btnOutline}>Editar</button>
-        <button onClick={onDelete} disabled={isPending} style={btnDanger}>Eliminar</button>
+        <button onClick={() => setExpanded(e => !e)} style={btnOutline}>{expanded ? tx('close') : 'JSON'}</button>
+        <button onClick={onEdit} disabled={isPending} style={btnOutline}>{tx('edit')}</button>
+        <button onClick={onDelete} disabled={isPending} style={btnDanger}>{tx('delete')}</button>
       </div>
       {expanded && (
         <div style={{ padding: '0 16px 14px', fontSize: 11, fontFamily: 'ui-monospace, monospace', color: 'var(--text-muted)' }}>
@@ -336,9 +319,10 @@ function RuleEditorModal({
   onClose: () => void
   onSaved: (rule: Rule) => void
 }) {
+  const tx = useTranslations('Workflows')
   const [name, setName] = useState(rule?.name ?? '')
   const [description, setDescription] = useState(rule?.description ?? '')
-  const [triggerEvent, setTriggerEvent] = useState(rule?.trigger_event ?? TRIGGER_EVENTS[0].value)
+  const [triggerEvent, setTriggerEvent] = useState(rule?.trigger_event ?? TRIGGER_EVENTS[0])
   const [actionType, setActionType] = useState<Enums<'workflow_action_type'>>(rule?.action_type ?? 'notify_user')
   const [priority, setPriority] = useState(rule?.priority ?? 100)
   const [enabled, setEnabled] = useState(rule?.enabled ?? true)
@@ -363,14 +347,14 @@ function RuleEditorModal({
     let conditionJsonlogic: Json
     if (advancedMode) {
       try { conditionJsonlogic = JSON.parse(advancedJson) }
-      catch { return setErr('JSON de condición inválido') }
+      catch { return setErr(tx('errConditionJson')) }
     } else {
       conditionJsonlogic = rowsToJsonLogic(conditionRows)
     }
 
     let actionPayload: { [key: string]: Json }
     try { actionPayload = JSON.parse(payloadJson) }
-    catch { return setErr('JSON de payload inválido') }
+    catch { return setErr(tx('errPayloadJson')) }
 
     setSaving(true)
     const input = {
@@ -407,9 +391,9 @@ function RuleEditorModal({
       <div style={{ background: 'var(--card-bg)', borderRadius: 10, width: '100%', maxWidth: 720, padding: 24 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>
-            {rule ? 'Editar regla' : 'Nueva regla'}
+            {tx(rule ? 'editRule' : 'newRuleTitle')}
           </h2>
-          <button onClick={onClose} aria-label="Cerrar" style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: 'var(--text-muted)' }}>×</button>
+          <button onClick={onClose} aria-label={tx('close')} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: 'var(--text-muted)' }}>×</button>
         </div>
 
         {err && (
@@ -420,34 +404,34 @@ function RuleEditorModal({
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
           <div>
-            <label style={label}>Nombre</label>
-            <input style={input} value={name} onChange={e => setName(e.target.value)} placeholder="Ej: Bloquear MC si punches A abiertos" />
+            <label style={label}>{tx('field.name')}</label>
+            <input style={input} value={name} onChange={e => setName(e.target.value)} placeholder={tx('field.namePlaceholder')} />
           </div>
           <div>
-            <label style={label}>Prioridad</label>
+            <label style={label}>{tx('field.priority')}</label>
             <input style={input} type="number" value={priority} onChange={e => setPriority(Number(e.target.value))} />
           </div>
         </div>
 
         <div style={{ marginBottom: 14 }}>
-          <label style={label}>Descripción</label>
+          <label style={label}>{tx('field.description')}</label>
           <input style={input} value={description ?? ''} onChange={e => setDescription(e.target.value)} />
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 18 }}>
           <div>
-            <label style={label}>Evento disparador</label>
+            <label style={label}>{tx('field.trigger')}</label>
             <select style={input} value={triggerEvent} onChange={e => setTriggerEvent(e.target.value)}>
-              {TRIGGER_EVENTS.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+              {TRIGGER_EVENTS.map(t => <option key={t} value={t}>{tx(`trigger.${t}`)}</option>)}
             </select>
           </div>
           <div>
-            <label style={label}>Acción</label>
+            <label style={label}>{tx('field.action')}</label>
             <select style={input} value={actionType} onChange={e => setActionType(e.target.value as WorkflowActionType)}>
-              {ACTION_TYPES.map(a => <option key={a.value} value={a.value}>{a.label}</option>)}
+              {ACTION_TYPES.map(a => <option key={a} value={a}>{tx(`action.${a}.label`)}</option>)}
             </select>
             <div style={{ fontSize: 11, color: 'var(--gray-400)', marginTop: 4 }}>
-              {ACTION_TYPES.find(a => a.value === actionType)?.description}
+              {tx(`action.${actionType}.description`)}
             </div>
           </div>
         </div>
@@ -455,7 +439,7 @@ function RuleEditorModal({
         {/* ── Condiciones ── */}
         <div style={{ marginBottom: 18 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-            <label style={{ ...label, marginBottom: 0 }}>Condiciones (AND)</label>
+            <label style={{ ...label, marginBottom: 0 }}>{tx('conditions.title')}</label>
             <button
               type="button"
               onClick={() => {
@@ -467,7 +451,7 @@ function RuleEditorModal({
               }}
               style={{ ...btnOutline, fontSize: 11, padding: '4px 8px' }}
             >
-              {advancedMode ? '← Editor visual' : 'JSON avanzado →'}
+              {tx(advancedMode ? 'conditions.visual' : 'conditions.advanced')}
             </button>
           </div>
 
@@ -475,14 +459,14 @@ function RuleEditorModal({
             <>
               {conditionRows.length === 0 && (
                 <div style={{ fontSize: 12, color: 'var(--gray-400)', padding: '8px 0' }}>
-                  Sin condiciones — la regla se ejecuta en cada evento.
+                  {tx('conditions.none')}
                 </div>
               )}
               {conditionRows.map((row, i) => (
                 <div key={i} style={{ display: 'grid', gridTemplateColumns: '2fr 90px 2fr 30px', gap: 8, marginBottom: 6 }}>
                   <input
                     style={input}
-                    placeholder="campo (ej: new.category)"
+                    placeholder={tx('conditions.fieldPlaceholder')}
                     value={row.field}
                     onChange={e => setConditionRows(rs => rs.map((r, j) => i === j ? { ...r, field: e.target.value } : r))}
                   />
@@ -491,17 +475,17 @@ function RuleEditorModal({
                     value={row.op}
                     onChange={e => setConditionRows(rs => rs.map((r, j) => i === j ? { ...r, op: e.target.value } : r))}
                   >
-                    {OPERATORS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                    {OPERATORS.map(o => <option key={o.value} value={o.value}>{tx(`op.${o.value}`)}</option>)}
                   </select>
                   <input
                     style={input}
-                    placeholder="valor"
+                    placeholder={tx('conditions.valuePlaceholder')}
                     value={row.value}
                     onChange={e => setConditionRows(rs => rs.map((r, j) => i === j ? { ...r, value: e.target.value } : r))}
                   />
                   <button
                     onClick={() => setConditionRows(rs => rs.filter((_, j) => j !== i))}
-                    aria-label="Eliminar condición"
+                    aria-label={tx('conditions.remove')}
                     style={{ ...btnDanger, padding: '4px 0' }}
                   >×</button>
                 </div>
@@ -510,7 +494,7 @@ function RuleEditorModal({
                 type="button"
                 onClick={() => setConditionRows(rs => [...rs, { field: '', op: 'eq', value: '' }])}
                 style={{ ...btnOutline, marginTop: 4 }}
-              >+ Condición</button>
+              >{tx('conditions.add')}</button>
             </>
           ) : (
             <textarea
@@ -521,30 +505,30 @@ function RuleEditorModal({
             />
           )}
           <div style={{ fontSize: 11, color: 'var(--gray-400)', marginTop: 4 }}>
-            Campos disponibles: <code>new.*</code>, <code>old.*</code> (payload del evento).
+            {tx.rich('conditions.fields', { code: c => <code>{c}</code> })}
           </div>
         </div>
 
         {/* ── Payload ── */}
         <div style={{ marginBottom: 18 }}>
-          <label style={label}>Payload de la acción (JSON)</label>
+          <label style={label}>{tx('payload.label')}</label>
           <textarea
             style={{ ...input, fontFamily: 'ui-monospace, monospace', minHeight: 100, fontSize: 12 }}
             value={payloadJson}
             onChange={e => setPayloadJson(e.target.value)}
-            placeholder='{"reason": "Punches Cat A abiertos"}'
+            placeholder={`{"reason": "${tx('payload.reasonExample')}"}`}
           />
         </div>
 
         <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20, fontSize: 13, color: 'var(--text-muted)' }}>
           <input type="checkbox" checked={enabled} onChange={e => setEnabled(e.target.checked)} />
-          Regla activa
+          {tx('active')}
         </label>
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
-          <button onClick={onClose} style={btnOutline} disabled={saving}>Cancelar</button>
+          <button onClick={onClose} style={btnOutline} disabled={saving}>{tx('cancel')}</button>
           <button onClick={handleSave} style={btnPrimary} disabled={saving}>
-            {saving ? 'Guardando...' : 'Guardar'}
+            {tx(saving ? 'saving' : 'save')}
           </button>
         </div>
       </div>

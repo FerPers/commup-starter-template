@@ -8,7 +8,7 @@
  * - Vibración haptica en scan exitoso
  */
 
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { parseRegisterQr } from '@/lib/registers/qr';
@@ -77,6 +77,7 @@ function useNFCScan(
   onScan: (result: ScanResult) => void,
   onError: (error: string) => void
 ) {
+  const tx = useTranslations('Scanner')
   const abortRef = useRef<AbortController | null>(null);
   const [nfcAvailable, setNfcAvailable] = useState(false);
   const [nfcActive, setNfcActive] = useState(false);
@@ -88,7 +89,7 @@ function useNFCScan(
 
   const startNFC = useCallback(async () => {
     if (!('NDEFReader' in window)) {
-      onError('NFC no disponible en este dispositivo');
+      onError(tx('nfc.unavailable'));
       return;
     }
     try {
@@ -117,23 +118,23 @@ function useNFCScan(
           navigator.vibrate?.([100, 50, 100]);
           onScan({ ...parsed, tag_type: 'NFC', raw, timestamp: new Date().toISOString() });
         } else {
-          onError(`NFC tag no reconocido: ${raw}`);
+          onError(tx('nfc.unrecognized', { raw }));
         }
       });
 
       ndef.addEventListener('readingerror', () => {
-        onError('Error leyendo NFC tag. Acerque más el dispositivo.');
+        onError(tx('nfc.readError'));
       });
     } catch (err: unknown) {
       const e = err as { name?: string; message?: string };
       if (e.name === 'NotAllowedError') {
-        onError('Permiso NFC denegado. Habilítelo en configuración.');
+        onError(tx('nfc.denied'));
       } else {
-        onError(`NFC error: ${e.message ?? String(err)}`);
+        onError(tx('nfc.error', { message: e.message ?? String(err) }));
       }
       setNfcActive(false);
     }
-  }, [onScan, onError]);
+  }, [onScan, onError, tx]);
 
   const stopNFC = useCallback(() => {
     abortRef.current?.abort();
@@ -149,6 +150,7 @@ function useQRScan(
   onScan: (result: ScanResult) => void,
   onError: (error: string) => void
 ) {
+  const tx = useTranslations('Scanner')
   const scannerRef = useRef<Html5QrcodeScannerLike | null>(null);
   const [qrActive, setQrActive] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
@@ -165,7 +167,7 @@ function useQRScan(
 
       const cameras = await Html5Qrcode.getCameras();
       if (!cameras || cameras.length === 0) {
-        throw new Error('No se encontró cámara');
+        throw new Error(tx('qr.noCamera'));
       }
 
       // Preferir cámara trasera
@@ -195,7 +197,7 @@ function useQRScan(
             navigator.vibrate?.([150]);
             onScan({ ...parsed, tag_type: 'QR', raw: decodedText, timestamp: new Date().toISOString() });
           } else {
-            onError(`Código no reconocido: ${decodedText.substring(0, 40)}...`);
+            onError(tx('qr.unrecognized', { text: decodedText.substring(0, 40) }));
           }
         },
         undefined // errores de frame: ignorar (normal)
@@ -206,12 +208,12 @@ function useQRScan(
     } catch (err: unknown) {
       const m = (err as { message?: string })?.message;
       const msg = m?.includes('permission')
-        ? 'Permiso de cámara denegado. Habilítelo en el navegador.'
-        : m ?? 'Error iniciando cámara';
+        ? tx('qr.denied')
+        : m ?? tx('qr.startError');
       setCameraError(msg);
       onError(msg);
     }
-  }, [containerId, onScan, onError]);
+  }, [containerId, onScan, onError, tx]);
 
   const stopQR = useCallback(async () => {
     if (scannerRef.current) {
@@ -236,6 +238,8 @@ function useQRScan(
 export default function QRNFCScanner() {
   // N0 (H-13): título = etiqueta del menú.
   const tNav = useTranslations('Sidebar.nav')
+  const tx = useTranslations('Scanner')
+  const locale = useLocale()
   const router = useRouter();
   const QR_CONTAINER_ID = 'commup-qr-container';
 
@@ -313,7 +317,7 @@ export default function QRNFCScanner() {
     if (parsed) {
       handleScan({ ...parsed, tag_type: 'MANUAL', raw: manualInput, timestamp: new Date().toISOString() });
     } else {
-      handleError('Escribe el número del tag o pega el enlace de su etiqueta.');
+      handleError(tx('manual.invalid'));
     }
   };
 
@@ -373,8 +377,8 @@ export default function QRNFCScanner() {
               }}
             >
               {m === 'QR' && '📷 QR'}
-              {m === 'NFC' && `📡 NFC${!nfcAvailable ? ' (N/D)' : ''}`}
-              {m === 'MANUAL' && '⌨️ Manual'}
+              {m === 'NFC' && `📡 NFC${!nfcAvailable ? ` ${tx('mode.nfcNa')}` : ''}`}
+              {m === 'MANUAL' && `⌨️ ${tx('mode.manual')}`}
             </button>
           )
         })}
@@ -426,12 +430,12 @@ export default function QRNFCScanner() {
                 background: qrActive ? 'rgba(37, 99, 235, 0.8)' : 'rgba(51, 65, 85, 0.8)',
                 color: qrActive ? 'var(--primary-100)' : 'var(--gray-400)',
               }}>
-                {qrActive ? '● Escaneando...' : '⊘ Cámara inactiva'}
+                {qrActive ? `● ${tx('qr.scanning')}` : `⊘ ${tx('qr.inactive')}`}
               </span>
             </div>
           </div>
           <p style={{ color: 'var(--gray-400)', fontSize: 'var(--text-sm)', textAlign: 'center', marginTop: 16 }}>
-            Apunte al código QR o código de barras del tag del equipo
+            {tx('qr.hint')}
           </p>
         </div>
       )}
@@ -453,7 +457,7 @@ export default function QRNFCScanner() {
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: 64, marginBottom: 8 }}>📡</div>
               <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--primary-400)' }}>
-                {nfcActive ? 'Listo' : 'Inactivo'}
+                {nfcActive ? tx('nfc.ready') : tx('nfc.inactive')}
               </div>
             </div>
           </div>
@@ -462,19 +466,19 @@ export default function QRNFCScanner() {
               onClick={startNFC}
               style={{ background: 'var(--primary-600)', color: '#fff', fontWeight: 700, padding: '12px 32px', borderRadius: 'var(--radius-lg)', transition: 'background 0.15s', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
             >
-              Activar NFC
+              {tx('nfc.activate')}
             </button>
           )}
           {nfcActive && (
             <>
               <p style={{ color: 'var(--gray-300)', textAlign: 'center', fontSize: 'var(--text-lg)', fontWeight: 500 }}>
-                Acerque el dispositivo al tag NFC del equipo
+                {tx('nfc.hint')}
               </p>
               <button
                 onClick={stopNFC}
                 style={{ background: 'var(--gray-700)', color: '#fff', padding: '8px 24px', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)', transition: 'background 0.15s', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
               >
-                Detener
+                {tx('nfc.stop')}
               </button>
             </>
           )}
@@ -485,7 +489,7 @@ export default function QRNFCScanner() {
       {mode === 'MANUAL' && (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: 16, gap: 16 }}>
           <p style={{ color: 'var(--gray-400)', fontSize: 'var(--text-sm)' }}>
-            Ingrese el ID del tag o escanee/pegue la URL del equipo
+            {tx('manual.hint')}
           </p>
           <div style={{ position: 'relative' }}>
             <input
@@ -493,7 +497,7 @@ export default function QRNFCScanner() {
               value={manualInput}
               onChange={(e) => setManualInput(e.target.value.toUpperCase())}
               onKeyDown={(e) => e.key === 'Enter' && handleManualSubmit()}
-              placeholder="EJ: PMP-001-P-001A"
+              placeholder={tx('manual.placeholder')}
               style={{
                 width: '100%',
                 background: 'var(--gray-800)',
@@ -526,10 +530,10 @@ export default function QRNFCScanner() {
               fontFamily: 'inherit',
             }}
           >
-            Ir a Tag →
+            {tx('manual.go')}
           </button>
           <div style={{ marginTop: 8, padding: 12, background: 'var(--gray-800)', borderRadius: 'var(--radius-md)' }}>
-            <p style={{ color: 'var(--gray-500)', fontSize: 'var(--text-xs)', fontFamily: 'ui-monospace, monospace', margin: 0 }}>Formatos válidos:</p>
+            <p style={{ color: 'var(--gray-500)', fontSize: 'var(--text-xs)', fontFamily: 'ui-monospace, monospace', margin: 0 }}>{tx('manual.formats')}</p>
             <p style={{ color: 'var(--gray-400)', fontSize: 'var(--text-xs)', fontFamily: 'ui-monospace, monospace', marginTop: 4, marginBottom: 0 }}>PT-101 · 21-PT-1001A · FT-101/A</p>
             <p style={{ color: 'var(--gray-400)', fontSize: 'var(--text-xs)', fontFamily: 'ui-monospace, monospace', margin: 0 }}>https://commup.app/tag_360/…</p>
             <p style={{ color: 'var(--gray-400)', fontSize: 'var(--text-xs)', fontFamily: 'ui-monospace, monospace', margin: 0 }}>commup://tag/XXX</p>
@@ -546,9 +550,9 @@ export default function QRNFCScanner() {
           />
           <div style={{ background: 'var(--gray-800)', borderTopLeftRadius: 16, borderTopRightRadius: 16, padding: 16, maxHeight: '60vh', overflowY: 'auto' }}>
             <div style={{ width: 48, height: 4, background: 'var(--gray-600)', borderRadius: 'var(--radius-pill)', margin: '0 auto 16px' }} />
-            <h2 style={{ fontWeight: 700, fontSize: 'var(--text-lg)', marginBottom: 16, marginTop: 0 }}>Escaneados Recientes</h2>
+            <h2 style={{ fontWeight: 700, fontSize: 'var(--text-lg)', marginBottom: 16, marginTop: 0 }}>{tx('history.title')}</h2>
             {recentScans.length === 0 ? (
-              <p style={{ color: 'var(--gray-500)', textAlign: 'center', padding: '32px 0' }}>Sin historial aún</p>
+              <p style={{ color: 'var(--gray-500)', textAlign: 'center', padding: '32px 0' }}>{tx('history.empty')}</p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {recentScans.map((scan, i) => (
@@ -567,7 +571,7 @@ export default function QRNFCScanner() {
                         <div style={{ color: 'var(--gray-400)', fontSize: 'var(--text-sm)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{scan.equipment_name}</div>
                       )}
                       <div style={{ color: 'var(--gray-500)', fontSize: 'var(--text-xs)' }}>
-                        {new Date(scan.scanned_at).toLocaleString('es', { dateStyle: 'short', timeStyle: 'short' })}
+                        {new Date(scan.scanned_at).toLocaleString(locale === 'en' ? 'en-US' : 'es', { dateStyle: 'short', timeStyle: 'short' })}
                       </div>
                     </div>
                     <svg style={{ width: 20, height: 20, color: 'var(--gray-500)', flexShrink: 0 }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -587,8 +591,8 @@ export default function QRNFCScanner() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <span style={{ fontSize: 'var(--text-xl)' }}>✓</span>
             <div>
-              <div style={{ fontWeight: 700 }}>{lastScan.register_id ? 'Registro controlado' : lastScan.tag_id}</div>
-              <div style={{ fontSize: 'var(--text-sm)', opacity: 0.85 }}>{lastScan.register_id ? 'Abriendo registro...' : 'Navegando a Tag 360°...'}</div>
+              <div style={{ fontWeight: 700 }}>{lastScan.register_id ? tx('success.register') : lastScan.tag_id}</div>
+              <div style={{ fontSize: 'var(--text-sm)', opacity: 0.85 }}>{tx(lastScan.register_id ? 'success.openingRegister' : 'success.openingTag')}</div>
             </div>
           </div>
         </div>

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { Bell, BellDot, Check } from 'lucide-react'
 import {
   listMyNotifications,
@@ -12,17 +12,21 @@ import {
 } from '@/app/actions/notifications'
 import { createClient } from '@/lib/supabase/client'
 
-function formatRelative(iso: string): string {
+function formatRelative(
+  iso: string,
+  tx: (key: 'now' | 'minutesAgo' | 'hoursAgo' | 'daysAgo', values?: { n: number }) => string,
+  locale: string,
+): string {
   const ts = new Date(iso).getTime()
   const diff = Date.now() - ts
   const m = Math.floor(diff / 60_000)
-  if (m < 1) return 'ahora'
-  if (m < 60) return `hace ${m} min`
+  if (m < 1) return tx('now')
+  if (m < 60) return tx('minutesAgo', { n: m })
   const h = Math.floor(m / 60)
-  if (h < 24) return `hace ${h} h`
+  if (h < 24) return tx('hoursAgo', { n: h })
   const d = Math.floor(h / 24)
-  if (d < 30) return `hace ${d} d`
-  return new Date(iso).toLocaleDateString()
+  if (d < 30) return tx('daysAgo', { n: d })
+  return new Date(iso).toLocaleDateString(locale === 'en' ? 'en-US' : 'es-CO')
 }
 
 export default function NotificationsBell({
@@ -36,6 +40,8 @@ export default function NotificationsBell({
 }) {
   const router = useRouter()
   const t = useTranslations('A11y')
+  const tx = useTranslations('NotificationsBell')
+  const locale = useLocale()
   const [open, setOpen] = useState(false)
   const [items, setItems] = useState<NotificationRow[]>([])
   const [unread, setUnread] = useState(initialUnread)
@@ -206,7 +212,7 @@ export default function NotificationsBell({
             borderBottom: '1px solid var(--border)',
           }}>
             <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-strong)' }}>
-              Notificaciones
+              {tx('title')}
             </span>
             {unread > 0 && (
               <button
@@ -224,18 +230,18 @@ export default function NotificationsBell({
                   gap: 4,
                 }}
               >
-                <Check size={12} /> Marcar todas
+                <Check size={12} /> {tx('markAll')}
               </button>
             )}
           </div>
           <div style={{ overflowY: 'auto', flex: 1 }}>
             {loading ? (
               <p style={{ padding: 16, fontSize: 13, color: 'var(--text-muted)', textAlign: 'center' }}>
-                Cargando…
+                {tx('loading')}
               </p>
             ) : items.length === 0 ? (
               <p style={{ padding: 24, fontSize: 13, color: 'var(--text-muted)', textAlign: 'center' }}>
-                No tienes notificaciones
+                {tx('empty')}
               </p>
             ) : (
               items.slice(0, 10).map(n => (
@@ -271,7 +277,7 @@ export default function NotificationsBell({
                     </span>
                   )}
                   <span style={{ fontSize: 11, color: 'var(--gray-400)' }}>
-                    {formatRelative(n.created_at)}
+                    {formatRelative(n.created_at, tx, locale)}
                   </span>
                 </button>
               ))
@@ -291,7 +297,7 @@ export default function NotificationsBell({
               textAlign: 'center',
             }}
           >
-            Ver todas
+            {tx('viewAll')}
           </button>
         </div>
       )}

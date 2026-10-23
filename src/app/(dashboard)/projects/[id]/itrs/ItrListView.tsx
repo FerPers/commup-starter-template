@@ -200,12 +200,12 @@ export default function ItrListView({
           </Link>
         )}
         {canEdit && !allScope && (
-          <a href={`/projects/${projectId}/itrs/generate`} style={{
+          <Link href={`/projects/${projectId}/itrs/generate`} style={{
             padding: '9px 14px', background: 'var(--primary-500)', border: '1px solid var(--primary-500)',
             borderRadius: '8px', fontSize: '13px', color: '#fff', textDecoration: 'none', whiteSpace: 'nowrap', fontWeight: 600,
           }}>
             {t('generate')}
-          </a>
+          </Link>
         )}
         <button type="button" onClick={exportCsv} disabled={isExporting || total === 0}
           style={{

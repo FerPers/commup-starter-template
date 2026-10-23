@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { PersonName } from '@/components/ui'
 import { isInactiveMember } from '@/lib/people/inactive'
 import { useMemo, useState, useTransition, useRef, useEffect } from 'react'
@@ -225,12 +226,12 @@ export default function CertificateDetail({
 
       {/* Back */}
       <div className="no-print" style={{ marginBottom: '20px' }}>
-        <a href={`/projects/${projectId}/certificates`} style={{
+        <Link href={`/projects/${projectId}/certificates`} style={{
           display: 'inline-flex', alignItems: 'center', gap: '6px',
           fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none',
         }}>
           {t('detail.backLink', { projectName })}
-        </a>
+        </Link>
       </div>
 
       {/* S17: bloqueado por cambio de base (trigger trg_certificate_base_changed) */}

@@ -91,6 +91,7 @@ Las rutas, los nombres de tablas y la API no se renombran (`readiness`, `gates`,
 
 **V2. Resto de pantallas** (Q G-06):
 - Los 46 archivos sin `t()` y los que mezclan, empezando por admin de integración (webhooks, api-keys, workflows), los editores de plantillas, C&E, las importaciones y `ReportPrint`.
+- ✅ hecho 2026-10-23: admin de plantillas (ITR, matriz, respaldo, PSSR, preservación, importaciones), C&E, lazos, importación de tags y de señales, `ReportPrint` (fecha en la zona del proyecto e idioma), webhooks, API keys, flujos, configuración de la org, avisos push (`PushManager`), pantallas de tags y campo, guía pública. Restos de V1: «En línea»/«Sin conexión» en la píldora, sin sufijo «— CommUp» duplicado en títulos, `SwipeCaptureFlow.tsx` borrado (no se usaba). H-20: los `<a href="/…">` internos pasaron a `Link` (quedan `<a>` solo para PDF/Excel/API, `target=_blank` y anclas). Quedan para V3 los textos de error que devuelven las acciones y helpers compartidos con el servidor (`assignmentError`, `reflexiveRuleError`).
 
 **V3. Errores del servidor y PDF** (Q C-18):
 - Los 414 `error: '…'` de las acciones pasan a códigos (`{ error: 'code', params }` → `Errors.*`), empezando por `itr-instances`, `vendors`, `performance`, `itr-templates`, `startup`, `daily`, `punches` y los mensajes de `withAuth`.
@@ -216,7 +217,7 @@ Una sola sesión de maquetas en un lienzo, como en N1–N3:
 | Verificar en pantalla las vistas de inspector y cliente (barra del teléfono, Mi trabajo, punch del cliente, TQ, alto contraste) | **Al principio, junto con O** (necesita que inicies sesión con esos usuarios) |
 | Advertencia de React «key» en la página del ITR | O |
 | D16 resumen diario por correo (elegir proveedor: Resend, SES o el SMTP de Supabase) | Sesión propia cuando elijas proveedor |
-| H-20: 37 archivos con `<a href="/…">` → `Link` | De paso en V2 |
+| H-20: 37 archivos con `<a href="/…">` → `Link` | ✅ En V2 (2026-10-23) |
 | Q: `window.confirm` restantes → `useAskDialog` (G-08), modales accesibles (G-12), autosave del ITR (C-19, B-15), diccionario i18n por página (G-15), casts `as unknown as` (G-18), Playwright de recorridos de campo (G-17), tokens fuera de campo para oscuro y contraste (G-10) | De paso en cada bloque. G-17 en una sesión propia antes de R2 (protege la ejecución de ITR) |
 | B-17 (integridad del mismo proyecto, revertido) | Ya cubierto por `guard_same_project`; se cierra en la cobertura |
 | D2 base de pruebas aparte | Al recrear LOADTEST en R5 conviene decidirlo de nuevo (hoy los tests escriben en prod) |

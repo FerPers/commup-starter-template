@@ -9,12 +9,12 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useMemo, useState, useTransition } from 'react'
+import { useTranslations } from 'next-intl'
 import { deleteCeMatrix, deleteCeRow, saveCeCause, saveCeEffect, setCeLink } from '@/app/actions/ce-matrix'
 import GenerateSourceItrsModal, { type GenerationMember, type GenerationTemplate } from '@/components/itr/GenerateSourceItrsModal'
-import { ITR_STATUS_LABELS } from '@/lib/ce/test-status'
 import type { SourceItrInfo } from '@/lib/itr/source-itrs-server'
 import {
-  CE_ACTIONS, CE_ACTION_LABELS, CE_VOTINGS, CE_VOTING_LABELS, linkLabel, matrixGaps, nextSeq,
+  CE_ACTIONS, CE_VOTINGS, linkLabel, matrixGaps, nextSeq,
   type CeAction, type CeCause, type CeEffect, type CeLink, type CeVoting,
 } from '@/lib/ce/matrix'
 
@@ -28,6 +28,7 @@ const field = { width: '100%', padding: '7px 9px', border: '1px solid var(--bord
 const primary = { padding: '8px 12px', borderRadius: '7px', border: 0, background: 'var(--primary-600, #2563eb)', color: '#fff', fontSize: '12px', fontWeight: 600, cursor: 'pointer' } as const
 const secondary = { padding: '8px 12px', borderRadius: '7px', border: '1px solid var(--border)', background: 'var(--card-bg)', color: 'var(--text-strong)', fontSize: '12px', cursor: 'pointer' } as const
 const danger = { ...secondary, color: '#b91c1c', borderColor: '#fecaca' } as const
+const ITR_STATUSES = ['not_started', 'in_progress', 'completed', 'approved', 'rejected', 'on_hold']
 
 export default function CeMatrixEditor({ projectId, projectName, matrix, causes, effects, links, tagNumbers, canEdit, causeItrs = {}, templates = [], members = [] }: {
   projectId: string
@@ -42,6 +43,7 @@ export default function CeMatrixEditor({ projectId, projectName, matrix, causes,
   templates?: GenerationTemplate[]
   members?: GenerationMember[]
 }) {
+  const tc = useTranslations('CeMatrix')
   const router = useRouter()
   const [panel, setPanel] = useState<Panel>(null)
   const [error, setError] = useState('')
@@ -71,8 +73,8 @@ export default function CeMatrixEditor({ projectId, projectName, matrix, causes,
   const effectItrs = (effectId: string) => links.filter(l => l.effect_id === effectId && causeItrs[l.cause_id]).length
 
   function removeMatrix() {
-    if (testedItrs > 0) { setError(`La matriz tiene ${testedItrs} ITR de prueba C&E generados: no se puede borrar (crea una nueva revisión de la matriz).`); return }
-    if (!window.confirm(`¿Borrar la matriz ${matrix.code} con sus ${causes.length} causas, ${effects.length} efectos y ${links.length} cruces?`)) return
+    if (testedItrs > 0) { setError(tc('cannotDeleteMatrix', { n: testedItrs })); return }
+    if (!window.confirm(tc('deleteMatrixConfirm', { code: matrix.code, causes: causes.length, effects: effects.length, links: links.length }))) return
     setError('')
     start(async () => {
       const res = await deleteCeMatrix({ projectId, id: matrix.id })
@@ -90,26 +92,26 @@ export default function CeMatrixEditor({ projectId, projectName, matrix, causes,
 
   return (
     <div style={{ padding: '32px' }}>
-      <Link href={`/projects/${projectId}/ce-matrices`} style={{ fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none' }}>← {projectName} · Matrices C&E</Link>
+      <Link href={`/projects/${projectId}/ce-matrices`} style={{ fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none' }}>← {projectName} · {tc('back')}</Link>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '16px', flexWrap: 'wrap', margin: '12px 0 16px' }}>
         <div>
           <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 4px' }}><span style={{ fontFamily: 'monospace' }}>{matrix.code}</span> · {matrix.title}</h1>
           <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>
-            {[matrix.system, matrix.revision && `Rev. ${matrix.revision}`, matrix.sourceDocument].filter(Boolean).join(' · ') || 'Sin sistema ni documento fuente'}
-            {' · '}{causes.length} causas · {effects.length} efectos · {links.length} cruces · {tested}/{causes.length} causas con prueba aprobada
+            {[matrix.system, matrix.revision && `Rev. ${matrix.revision}`, matrix.sourceDocument].filter(Boolean).join(' · ') || tc('noSource')}
+            {' · '}{tc('summary', { causes: causes.length, effects: effects.length, links: links.length, tested })}
           </p>
         </div>
         {canEdit && <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          <button type="button" style={primary} onClick={() => { setError(''); setPanel({ kind: 'cause', row: null }) }}>+ Causa</button>
-          <button type="button" style={primary} onClick={() => { setError(''); setPanel({ kind: 'effect', row: null }) }}>+ Efecto</button>
-          {missing.length > 0 && <button type="button" style={secondary} onClick={() => setGenerate(missing.map(c => ({ id: c.id, label: c.code })))}>Generar pruebas faltantes ({missing.length})</button>}
-          <button type="button" style={danger} disabled={pending} onClick={removeMatrix}>Borrar matriz</button>
+          <button type="button" style={primary} onClick={() => { setError(''); setPanel({ kind: 'cause', row: null }) }}>{tc('addCause')}</button>
+          <button type="button" style={primary} onClick={() => { setError(''); setPanel({ kind: 'effect', row: null }) }}>{tc('addEffect')}</button>
+          {missing.length > 0 && <button type="button" style={secondary} onClick={() => setGenerate(missing.map(c => ({ id: c.id, label: c.code })))}>{tc('generateMissing', { n: missing.length })}</button>}
+          <button type="button" style={danger} disabled={pending} onClick={removeMatrix}>{tc('deleteMatrix')}</button>
         </div>}
       </div>
 
       {(gaps.causesWithoutEffect.length > 0 || gaps.effectsWithoutCause.length > 0) && (
         <p style={{ fontSize: '12px', color: '#b45309', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '8px', padding: '8px 12px', margin: '0 0 12px' }}>
-          ⚠ {gaps.causesWithoutEffect.length} causa(s) sin efecto y {gaps.effectsWithoutCause.length} efecto(s) sin causa (marcados en ámbar). Revisa contra el documento fuente.
+          {tc('gaps', { causes: gaps.causesWithoutEffect.length, effects: gaps.effectsWithoutCause.length })}
         </p>
       )}
       {error && !panel && <p role="alert" style={{ color: '#b91c1c', fontSize: '12px' }}>{error}</p>}
@@ -117,17 +119,17 @@ export default function CeMatrixEditor({ projectId, projectName, matrix, causes,
       <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
         <div style={{ flex: '1 1 640px', minWidth: 0, background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '12px', overflow: 'auto', maxHeight: '75vh' }}>
           {causes.length === 0 && effects.length === 0 ? (
-            <p style={{ padding: '48px 24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px', margin: 0 }}>Matriz vacía: agrega causas (filas) y efectos (columnas), luego marca los cruces.</p>
+            <p style={{ padding: '48px 24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px', margin: 0 }}>{tc('empty')}</p>
           ) : (
             <table style={{ borderCollapse: 'collapse', fontSize: '12px' }}>
               <thead>
                 <tr>
-                  <th style={{ position: 'sticky', top: 0, left: 0, zIndex: 3, background: 'var(--gray-50)', padding: '8px 10px', textAlign: 'left', borderBottom: '1px solid var(--border)', minWidth: '280px' }}>Causa \ Efecto</th>
-                  <th style={{ position: 'sticky', top: 0, zIndex: 2, background: 'var(--gray-50)', padding: '8px 10px', textAlign: 'left', borderBottom: '1px solid var(--border)', fontSize: '11px', color: 'var(--text-muted)', minWidth: '150px' }}>Prueba (ITR)</th>
+                  <th style={{ position: 'sticky', top: 0, left: 0, zIndex: 3, background: 'var(--gray-50)', padding: '8px 10px', textAlign: 'left', borderBottom: '1px solid var(--border)', minWidth: '280px' }}>{tc('corner')}</th>
+                  <th style={{ position: 'sticky', top: 0, zIndex: 2, background: 'var(--gray-50)', padding: '8px 10px', textAlign: 'left', borderBottom: '1px solid var(--border)', fontSize: '11px', color: 'var(--text-muted)', minWidth: '150px' }}>{tc('testCol')}</th>
                   {effects.map(e => (
                     <th key={e.id} scope="col" title={`${e.code} — ${e.description}${e.tag_number ? ` (${e.tag_number})` : ''}`} style={{ position: 'sticky', top: 0, zIndex: 2, background: loneEffects.has(e.id) ? '#fffbeb' : 'var(--gray-50)', borderBottom: '1px solid var(--border)', padding: '6px 4px', verticalAlign: 'bottom' }}>
                       <button type="button" disabled={!canEdit} onClick={() => { setError(''); setPanel({ kind: 'effect', row: e }) }} style={{ border: 0, background: 'transparent', cursor: canEdit ? 'pointer' : 'default', writingMode: 'vertical-rl', transform: 'rotate(180deg)', fontSize: '11px', fontWeight: 600, color: 'var(--text-strong)', maxHeight: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', padding: 0 }}>
-                        {e.code}{e.tag_number ? ` · ${e.tag_number}` : ''} · {CE_ACTION_LABELS[e.action]}
+                        {e.code}{e.tag_number ? ` · ${e.tag_number}` : ''} · {tc(`action.${e.action}`)}
                       </button>
                     </th>
                   ))}
@@ -139,7 +141,7 @@ export default function CeMatrixEditor({ projectId, projectName, matrix, causes,
                     <button type="button" disabled={!canEdit} onClick={() => { setError(''); setPanel({ kind: 'cause', row: c }) }} style={{ border: 0, background: 'transparent', padding: 0, cursor: canEdit ? 'pointer' : 'default', textAlign: 'left', color: 'var(--text-strong)', fontSize: '12px' }}>
                       <strong style={{ fontFamily: 'monospace' }}>{c.code}</strong> {c.description}
                       <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                        {[c.signal_tag ?? c.tag_number, [c.condition, c.setpoint].filter(Boolean).join(' '), c.voting && CE_VOTING_LABELS[c.voting]].filter(Boolean).join(' · ') || '—'}
+                        {[c.signal_tag ?? c.tag_number, [c.condition, c.setpoint].filter(Boolean).join(' '), c.voting && tc(`voting.${c.voting}`)].filter(Boolean).join(' · ') || '—'}
                       </div>
                     </button>
                   </th>
@@ -151,7 +153,7 @@ export default function CeMatrixEditor({ projectId, projectName, matrix, causes,
                     const tested = link ? causeItrs[c.id]?.rows[e.id] : undefined
                     const active = panel?.kind === 'cell' && panel.cause.id === c.id && panel.effect.id === e.id
                     return (
-                      <td key={e.id} aria-label={`${c.code} × ${e.code}: ${link ? linkLabel(link) : 'sin cruce'}${tested === 'pass' ? ', prueba aprobada' : tested === 'fail' ? ', prueba rechazada' : ''}`}
+                      <td key={e.id} aria-label={`${c.code} × ${e.code}: ${link ? linkLabel(link) : tc('noLink')}${tested === 'pass' ? `, ${tc('testPassed')}` : tested === 'fail' ? `, ${tc('testFailed')}` : ''}`}
                         style={{ ...cellStyle(link, active), ...(tested === 'pass' ? { background: '#047857', color: '#fff' } : tested === 'fail' ? { background: '#b91c1c', color: '#fff' } : {}) }}
                         onClick={() => { if (canEdit) { setError(''); setPanel({ kind: 'cell', cause: c, effect: e }) } }}>
                         {linkLabel(link)}{tested === 'pass' ? ' ✓' : tested === 'fail' ? ' ✗' : ''}
@@ -170,25 +172,25 @@ export default function CeMatrixEditor({ projectId, projectName, matrix, causes,
               onSave={delay => run(() => setCeLink({ projectId, matrixId: matrix.id, causeId: panel.cause.id, effectId: panel.effect.id, delay }))} onClose={() => setPanel(null)} />}
             {panel.kind === 'cause' && panel.row && canEdit && linkedCauseIds.has(panel.row.id) && (
               <div style={{ marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid var(--border)', fontSize: '12px' }}>
-                <div style={{ marginBottom: '6px' }}><strong>Prueba:</strong> <CauseItrCell info={causeItrs[panel.row.id]} projectId={projectId} /></div>
+                <div style={{ marginBottom: '6px' }}><strong>{tc('test')}</strong> <CauseItrCell info={causeItrs[panel.row.id]} projectId={projectId} /></div>
                 <button type="button" style={secondary} onClick={() => setGenerate([{ id: panel.row!.id, label: panel.row!.code, revision: !!causeItrs[panel.row!.id] }])}>
-                  {causeItrs[panel.row.id] ? 'Generar revisión (R2…)' : 'Generar ITR de prueba'}
+                  {causeItrs[panel.row.id] ? tc('generateRevision') : tc('generateTest')}
                 </button>
               </div>
             )}
             {panel.kind === 'cause' && <CauseForm key={panel.row?.id ?? `new-${causes.length}`} row={panel.row} seq={nextSeq(causes)} pending={pending}
               onSave={input => run(() => saveCeCause({ projectId, matrixId: matrix.id, ...input }), !!panel.row)}
               onDelete={panel.row ? () => {
-                if (causeItrs[panel.row!.id]) { setError(`La causa ${panel.row!.code} tiene el ITR de prueba ${causeItrs[panel.row!.id].itrNumber}: no se puede borrar.`); return }
-                if (window.confirm(`¿Borrar la causa ${panel.row!.code} y sus cruces?`)) run(() => deleteCeRow({ projectId, matrixId: matrix.id, kind: 'cause', id: panel.row!.id }))
+                if (causeItrs[panel.row!.id]) { setError(tc('cannotDeleteCause', { code: panel.row!.code, itr: causeItrs[panel.row!.id].itrNumber })); return }
+                if (window.confirm(tc('deleteCauseConfirm', { code: panel.row!.code }))) run(() => deleteCeRow({ projectId, matrixId: matrix.id, kind: 'cause', id: panel.row!.id }))
               } : undefined}
               onClose={() => setPanel(null)} />}
             {panel.kind === 'effect' && <EffectForm key={panel.row?.id ?? `new-${effects.length}`} row={panel.row} seq={nextSeq(effects)} pending={pending}
               onSave={input => run(() => saveCeEffect({ projectId, matrixId: matrix.id, ...input }), !!panel.row)}
               onDelete={panel.row ? () => {
                 const n = effectItrs(panel.row!.id)
-                if (n > 0) { setError(`El efecto ${panel.row!.code} aparece en ${n} ITR de prueba C&E: no se puede borrar.`); return }
-                if (window.confirm(`¿Borrar el efecto ${panel.row!.code} y sus cruces?`)) run(() => deleteCeRow({ projectId, matrixId: matrix.id, kind: 'effect', id: panel.row!.id }))
+                if (n > 0) { setError(tc('cannotDeleteEffect', { code: panel.row!.code, n })); return }
+                if (window.confirm(tc('deleteEffectConfirm', { code: panel.row!.code }))) run(() => deleteCeRow({ projectId, matrixId: matrix.id, kind: 'effect', id: panel.row!.id }))
               } : undefined}
               onClose={() => setPanel(null)} />}
             {error && <p role="alert" style={{ color: '#b91c1c', fontSize: '12px', margin: '10px 0 0' }}>{error}</p>}
@@ -205,17 +207,18 @@ function CellPanel({ cause, effect, link, pending, onSave, onClose }: {
   cause: CeCause; effect: CeEffect; link: CeLink | undefined; pending: boolean
   onSave: (delay: string | null) => void; onClose: () => void
 }) {
+  const tc = useTranslations('CeMatrix')
   const [delay, setDelay] = useState(link?.delay_s != null ? String(link.delay_s) : '')
   return <>
-    <h2 style={{ fontSize: '14px', margin: '0 0 8px', color: 'var(--text-strong)' }}>Cruce {cause.code} × {effect.code}</h2>
-    <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 12px' }}>{cause.description} → {CE_ACTION_LABELS[effect.action].toLowerCase()} {effect.tag_number ?? effect.description}</p>
-    <label style={{ fontSize: '12px', display: 'block', marginBottom: '10px' }}>Retardo (s) — vacío = directo
-      <input style={field} inputMode="decimal" value={delay} onChange={e => setDelay(e.target.value)} placeholder="Directo" />
+    <h2 style={{ fontSize: '14px', margin: '0 0 8px', color: 'var(--text-strong)' }}>{tc('link', { cause: cause.code, effect: effect.code })}</h2>
+    <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 12px' }}>{cause.description} → {tc(`action.${effect.action}`).toLowerCase()} {effect.tag_number ?? effect.description}</p>
+    <label style={{ fontSize: '12px', display: 'block', marginBottom: '10px' }}>{tc('delay')}
+      <input style={field} inputMode="decimal" value={delay} onChange={e => setDelay(e.target.value)} placeholder={tc('direct')} />
     </label>
     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-      <button type="button" style={primary} disabled={pending} onClick={() => onSave(delay)}>{link ? 'Guardar cruce' : 'Marcar cruce'}</button>
-      {link && <button type="button" style={danger} disabled={pending} onClick={() => onSave(null)}>Quitar</button>}
-      <button type="button" style={secondary} onClick={onClose}>Cerrar</button>
+      <button type="button" style={primary} disabled={pending} onClick={() => onSave(delay)}>{link ? tc('saveLink') : tc('markLink')}</button>
+      {link && <button type="button" style={danger} disabled={pending} onClick={() => onSave(null)}>{tc('remove')}</button>}
+      <button type="button" style={secondary} onClick={onClose}>{tc('close')}</button>
     </div>
   </>
 }
@@ -226,29 +229,30 @@ function CauseForm({ row, seq, pending, onSave, onDelete, onClose }: {
   row: CeCause | null; seq: number; pending: boolean
   onSave: (input: CauseInput) => void; onDelete?: () => void; onClose: () => void
 }) {
+  const tc = useTranslations('CeMatrix')
   const [f, setF] = useState<CauseInput>({
     id: row?.id, seq: row?.seq ?? seq, code: row?.code ?? '', description: row?.description ?? '', tagNumber: row?.tag_number ?? '',
     signalTag: row?.signal_tag ?? '', condition: row?.condition ?? '', setpoint: row?.setpoint ?? '', voting: row?.voting ?? null, notes: row?.notes ?? '',
   })
   return <form onSubmit={e => { e.preventDefault(); onSave(f) }} style={{ display: 'grid', gap: '10px' }}>
-    <h2 style={{ fontSize: '14px', margin: 0, color: 'var(--text-strong)' }}>{row ? `Causa ${row.code}` : 'Nueva causa'}</h2>
+    <h2 style={{ fontSize: '14px', margin: 0, color: 'var(--text-strong)' }}>{row ? tc('cause', { code: row.code }) : tc('newCause')}</h2>
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px', gap: '8px' }}>
-      <label style={{ fontSize: '12px' }}>Código *<input required maxLength={30} style={field} value={f.code} onChange={e => setF({ ...f, code: e.target.value })} placeholder="C-01" /></label>
-      <label style={{ fontSize: '12px' }}>Orden<input type="number" style={field} value={f.seq} onChange={e => setF({ ...f, seq: Number(e.target.value) })} /></label>
+      <label style={{ fontSize: '12px' }}>{tc('code')}<input required maxLength={30} style={field} value={f.code} onChange={e => setF({ ...f, code: e.target.value })} placeholder="C-01" /></label>
+      <label style={{ fontSize: '12px' }}>{tc('order')}<input type="number" style={field} value={f.seq} onChange={e => setF({ ...f, seq: Number(e.target.value) })} /></label>
     </div>
-    <label style={{ fontSize: '12px' }}>Descripción *<input required maxLength={300} style={field} value={f.description} onChange={e => setF({ ...f, description: e.target.value })} placeholder="Muy alta presión en separador" /></label>
+    <label style={{ fontSize: '12px' }}>{tc('description')}<input required maxLength={300} style={field} value={f.description} onChange={e => setF({ ...f, description: e.target.value })} placeholder={tc('causePlaceholder')} /></label>
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-      <label style={{ fontSize: '12px' }}>Tag iniciador<input list="ce-tags" maxLength={100} style={field} value={f.tagNumber} onChange={e => setF({ ...f, tagNumber: e.target.value })} placeholder="PT-101" /></label>
-      <label style={{ fontSize: '12px' }}>Señal<input maxLength={100} style={field} value={f.signalTag} onChange={e => setF({ ...f, signalTag: e.target.value })} placeholder="PAHH-101" /></label>
-      <label style={{ fontSize: '12px' }}>Condición<input maxLength={100} style={field} value={f.condition} onChange={e => setF({ ...f, condition: e.target.value })} placeholder="HH" /></label>
-      <label style={{ fontSize: '12px' }}>Set point<input maxLength={100} style={field} value={f.setpoint} onChange={e => setF({ ...f, setpoint: e.target.value })} placeholder="9,5 barg" /></label>
+      <label style={{ fontSize: '12px' }}>{tc('initiatingTag')}<input list="ce-tags" maxLength={100} style={field} value={f.tagNumber} onChange={e => setF({ ...f, tagNumber: e.target.value })} placeholder="PT-101" /></label>
+      <label style={{ fontSize: '12px' }}>{tc('signal')}<input maxLength={100} style={field} value={f.signalTag} onChange={e => setF({ ...f, signalTag: e.target.value })} placeholder="PAHH-101" /></label>
+      <label style={{ fontSize: '12px' }}>{tc('condition')}<input maxLength={100} style={field} value={f.condition} onChange={e => setF({ ...f, condition: e.target.value })} placeholder="HH" /></label>
+      <label style={{ fontSize: '12px' }}>{tc('setpoint')}<input maxLength={100} style={field} value={f.setpoint} onChange={e => setF({ ...f, setpoint: e.target.value })} placeholder="9,5 barg" /></label>
     </div>
-    <label style={{ fontSize: '12px' }}>Votación
+    <label style={{ fontSize: '12px' }}>{tc('voting')}
       <select style={field} value={f.voting ?? ''} onChange={e => setF({ ...f, voting: (e.target.value || null) as CeVoting | null })}>
-        <option value="">—</option>{CE_VOTINGS.map(v => <option key={v} value={v}>{CE_VOTING_LABELS[v]}</option>)}
+        <option value="">—</option>{CE_VOTINGS.map(v => <option key={v} value={v}>{tc(`voting.${v}`)}</option>)}
       </select>
     </label>
-    <label style={{ fontSize: '12px' }}>Notas<textarea maxLength={1000} rows={2} style={field} value={f.notes} onChange={e => setF({ ...f, notes: e.target.value })} /></label>
+    <label style={{ fontSize: '12px' }}>{tc('notes')}<textarea maxLength={1000} rows={2} style={field} value={f.notes} onChange={e => setF({ ...f, notes: e.target.value })} /></label>
     <FormButtons row={!!row} pending={pending} onDelete={onDelete} onClose={onClose} />
   </form>
 }
@@ -259,46 +263,49 @@ function EffectForm({ row, seq, pending, onSave, onDelete, onClose }: {
   row: CeEffect | null; seq: number; pending: boolean
   onSave: (input: EffectInput) => void; onDelete?: () => void; onClose: () => void
 }) {
+  const tc = useTranslations('CeMatrix')
   const [f, setF] = useState<EffectInput>({
     id: row?.id, seq: row?.seq ?? seq, code: row?.code ?? '', description: row?.description ?? '', tagNumber: row?.tag_number ?? '', action: row?.action ?? 'close', notes: row?.notes ?? '',
   })
   return <form onSubmit={e => { e.preventDefault(); onSave(f) }} style={{ display: 'grid', gap: '10px' }}>
-    <h2 style={{ fontSize: '14px', margin: 0, color: 'var(--text-strong)' }}>{row ? `Efecto ${row.code}` : 'Nuevo efecto'}</h2>
+    <h2 style={{ fontSize: '14px', margin: 0, color: 'var(--text-strong)' }}>{row ? tc('effect', { code: row.code }) : tc('newEffect')}</h2>
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px', gap: '8px' }}>
-      <label style={{ fontSize: '12px' }}>Código *<input required maxLength={30} style={field} value={f.code} onChange={e => setF({ ...f, code: e.target.value })} placeholder="E-01" /></label>
-      <label style={{ fontSize: '12px' }}>Orden<input type="number" style={field} value={f.seq} onChange={e => setF({ ...f, seq: Number(e.target.value) })} /></label>
+      <label style={{ fontSize: '12px' }}>{tc('code')}<input required maxLength={30} style={field} value={f.code} onChange={e => setF({ ...f, code: e.target.value })} placeholder="E-01" /></label>
+      <label style={{ fontSize: '12px' }}>{tc('order')}<input type="number" style={field} value={f.seq} onChange={e => setF({ ...f, seq: Number(e.target.value) })} /></label>
     </div>
-    <label style={{ fontSize: '12px' }}>Descripción *<input required maxLength={300} style={field} value={f.description} onChange={e => setF({ ...f, description: e.target.value })} placeholder="Cierre de válvula de entrada" /></label>
+    <label style={{ fontSize: '12px' }}>{tc('description')}<input required maxLength={300} style={field} value={f.description} onChange={e => setF({ ...f, description: e.target.value })} placeholder={tc('effectPlaceholder')} /></label>
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-      <label style={{ fontSize: '12px' }}>Tag final<input list="ce-tags" maxLength={100} style={field} value={f.tagNumber} onChange={e => setF({ ...f, tagNumber: e.target.value })} placeholder="SDV-101" /></label>
-      <label style={{ fontSize: '12px' }}>Acción
+      <label style={{ fontSize: '12px' }}>{tc('finalTag')}<input list="ce-tags" maxLength={100} style={field} value={f.tagNumber} onChange={e => setF({ ...f, tagNumber: e.target.value })} placeholder="SDV-101" /></label>
+      <label style={{ fontSize: '12px' }}>{tc('actionLabel')}
         <select style={field} value={f.action} onChange={e => setF({ ...f, action: e.target.value as CeAction })}>
-          {CE_ACTIONS.map(a => <option key={a} value={a}>{CE_ACTION_LABELS[a]}</option>)}
+          {CE_ACTIONS.map(a => <option key={a} value={a}>{tc(`action.${a}`)}</option>)}
         </select>
       </label>
     </div>
-    <label style={{ fontSize: '12px' }}>Notas<textarea maxLength={1000} rows={2} style={field} value={f.notes} onChange={e => setF({ ...f, notes: e.target.value })} /></label>
+    <label style={{ fontSize: '12px' }}>{tc('notes')}<textarea maxLength={1000} rows={2} style={field} value={f.notes} onChange={e => setF({ ...f, notes: e.target.value })} /></label>
     <FormButtons row={!!row} pending={pending} onDelete={onDelete} onClose={onClose} />
   </form>
 }
 
 function FormButtons({ row, pending, onDelete, onClose }: { row: boolean; pending: boolean; onDelete?: () => void; onClose: () => void }) {
+  const tc = useTranslations('CeMatrix')
   return <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-    <button type="submit" style={primary} disabled={pending}>{pending ? 'Guardando…' : row ? 'Guardar' : 'Agregar'}</button>
-    {onDelete && <button type="button" style={danger} disabled={pending} onClick={onDelete}>Borrar</button>}
-    <button type="button" style={secondary} onClick={onClose}>Cerrar</button>
+    <button type="submit" style={primary} disabled={pending}>{pending ? tc('saving') : row ? tc('save') : tc('add')}</button>
+    {onDelete && <button type="button" style={danger} disabled={pending} onClick={onDelete}>{tc('delete')}</button>}
+    <button type="button" style={secondary} onClick={onClose}>{tc('close')}</button>
   </div>
 }
 
 /** Estado del ITR de prueba de una causa: número (enlace), estado y aviso si la matriz cambió después. */
 function CauseItrCell({ info, projectId }: { info: SourceItrInfo | undefined; projectId: string }) {
-  if (!info) return <span style={{ color: 'var(--gray-400)' }}>Sin ITR</span>
+  const tc = useTranslations('CeMatrix')
+  if (!info) return <span style={{ color: 'var(--gray-400)' }}>{tc('noItr')}</span>
   const color = info.status === 'approved' ? '#047857' : Object.values(info.rows).includes('fail') ? '#b91c1c' : 'var(--text-strong)'
   return (
     <span style={{ display: 'inline-flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
       <a href={info.tagId ? `/projects/${projectId}/tags/${info.tagId}/itrs/${info.id}` : '#'} style={{ fontFamily: 'monospace', fontWeight: 600, color }}>{info.itrNumber}</a>
-      <span style={{ color: 'var(--text-muted)' }}>{ITR_STATUS_LABELS[info.status] ?? info.status}</span>
-      {info.outdated && <span title="La causa cambió de efectos o de cruces después de generar el ITR" style={{ color: '#b45309', fontWeight: 600 }}>⚠ desactualizado</span>}
+      <span style={{ color: 'var(--text-muted)' }}>{ITR_STATUSES.includes(info.status) ? tc(`itrStatus.${info.status as 'approved'}`) : info.status}</span>
+      {info.outdated && <span title={tc('outdatedHint')} style={{ color: '#b45309', fontWeight: 600 }}>{tc('outdated')}</span>}
     </span>
   )
 }

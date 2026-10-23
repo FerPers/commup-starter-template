@@ -1,6 +1,6 @@
 'use client'
 
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 
 import { useState, useTransition } from 'react'
 import { createApiKey, revokeApiKey } from '@/app/actions/api-keys'
@@ -38,22 +38,29 @@ const labelStyle: React.CSSProperties = {
   textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4, display: 'block',
 }
 
-function fmtDate(s: string | null): string {
+function fmtDate(s: string | null, locale: string): string {
   if (!s) return '—'
-  return new Date(s).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' })
+  return new Date(s).toLocaleString(locale === 'en' ? 'en-US' : 'es-ES', { dateStyle: 'short', timeStyle: 'short' })
 }
 
-function keyStatus(k: ApiKey): { label: string; color: string; bg: string } {
-  if (k.revoked_at) return { label: 'REVOCADA', color: '#b91c1c', bg: '#fef2f2' }
+function keyStatus(k: ApiKey): { status: 'revoked' | 'expired' | 'active'; color: string; bg: string } {
+  if (k.revoked_at) return { status: 'revoked', color: '#b91c1c', bg: '#fef2f2' }
   if (k.expires_at && new Date(k.expires_at) < new Date()) {
-    return { label: 'EXPIRADA', color: '#b45309', bg: '#fef3c7' }
+    return { status: 'expired', color: '#b45309', bg: '#fef3c7' }
   }
-  return { label: 'ACTIVA', color: '#047857', bg: '#ecfdf5' }
+  return { status: 'active', color: '#047857', bg: '#ecfdf5' }
+}
+
+// Clave i18n de la descripción de un scope (los códigos ':' y '*' no van en la clave).
+function scopeKey(s: ApiScope): 'tags_read' | 'tags_write' | 'itrs_read' | 'itrs_write' | 'punches_read' | 'punches_write' | 'certificates_read' | 'systems_read' | 'events_read' | 'all' {
+  return s === '*' ? 'all' : (s.replace(':', '_') as 'tags_read')
 }
 
 export default function ApiKeysView({ keys: initialKeys }: { keys: ApiKey[] }) {
   // N0 (H-13): título = etiqueta del menú.
   const tNav = useTranslations('Sidebar.nav')
+  const tx = useTranslations('ApiKeys')
+  const locale = useLocale()
   const [keys, setKeys] = useState<ApiKey[]>(initialKeys)
   const [creating, setCreating] = useState(false)
   const [justCreated, setJustCreated] = useState<{ token: string; name: string; scopes: string[] } | null>(null)
@@ -61,7 +68,7 @@ export default function ApiKeysView({ keys: initialKeys }: { keys: ApiKey[] }) {
   const [error, setError] = useState<string | null>(null)
 
   const handleRevoke = (k: ApiKey) => {
-    if (!confirm(`¿Revocar la API key "${k.name}"? Esta acción no se puede deshacer.`)) return
+    if (!confirm(tx('revokeConfirm', { name: k.name }))) return
     setError(null)
     startTransition(async () => {
       const res = await revokeApiKey(k.id)
@@ -78,12 +85,13 @@ export default function ApiKeysView({ keys: initialKeys }: { keys: ApiKey[] }) {
             {tNav('apiKeys')}
           </h1>
           <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '4px 0 0' }}>
-            Credenciales para la{' '}
-            <a href="/api/v1/openapi" style={{ color: '#3b82f6' }} target="_blank" rel="noreferrer">API pública v1</a>.
-            Formato <code>sk_live_...</code> · el token solo se muestra una vez.
+            {tx.rich('subtitle', {
+              api: c => <a href="/api/v1/openapi" style={{ color: '#3b82f6' }} target="_blank" rel="noreferrer">{c}</a>,
+              code: c => <code>{c}</code>,
+            })}
           </p>
         </div>
-        <button onClick={() => { setCreating(true); setError(null) }} style={btnPrimary}>+ Nueva API key</button>
+        <button onClick={() => { setCreating(true); setError(null) }} style={btnPrimary}>{tx('newKey')}</button>
       </div>
 
       {error && (
@@ -94,7 +102,7 @@ export default function ApiKeysView({ keys: initialKeys }: { keys: ApiKey[] }) {
 
       {keys.length === 0 && (
         <div style={{ padding: 40, background: 'var(--gray-50)', border: '1px dashed #cbd5e1', borderRadius: 8, textAlign: 'center', color: 'var(--text-muted)', fontSize: 14 }}>
-          No hay API keys. Crea la primera para empezar a usar la API pública.
+          {tx('empty')}
         </div>
       )}
 
@@ -103,14 +111,14 @@ export default function ApiKeysView({ keys: initialKeys }: { keys: ApiKey[] }) {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
               <tr style={{ background: 'var(--gray-50)', borderBottom: '1px solid var(--border)' }}>
-                <th style={th}>Nombre</th>
-                <th style={th}>Prefijo</th>
-                <th style={th}>Scopes</th>
-                <th style={th}>Creada</th>
-                <th style={th}>Último uso</th>
-                <th style={th}>Expira</th>
-                <th style={th}>Estado</th>
-                <th style={{ ...th, textAlign: 'right' }}>Acciones</th>
+                <th style={th}>{tx('col.name')}</th>
+                <th style={th}>{tx('col.prefix')}</th>
+                <th style={th}>{tx('col.scopes')}</th>
+                <th style={th}>{tx('col.created')}</th>
+                <th style={th}>{tx('col.lastUsed')}</th>
+                <th style={th}>{tx('col.expires')}</th>
+                <th style={th}>{tx('col.status')}</th>
+                <th style={{ ...th, textAlign: 'right' }}>{tx('col.actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -131,21 +139,21 @@ export default function ApiKeysView({ keys: initialKeys }: { keys: ApiKey[] }) {
                         ))}
                       </div>
                     </td>
-                    <td style={td}>{fmtDate(k.created_at)}</td>
-                    <td style={td}>{fmtDate(k.last_used_at)}</td>
-                    <td style={td}>{fmtDate(k.expires_at)}</td>
+                    <td style={td}>{fmtDate(k.created_at, locale)}</td>
+                    <td style={td}>{fmtDate(k.last_used_at, locale)}</td>
+                    <td style={td}>{fmtDate(k.expires_at, locale)}</td>
                     <td style={td}>
                       <span style={{
                         display: 'inline-block', padding: '2px 8px', borderRadius: 4,
                         background: st.bg, color: st.color, fontSize: 10, fontWeight: 700, letterSpacing: '0.05em',
                       }}>
-                        {st.label}
+                        {tx(`status.${st.status}`)}
                       </span>
                     </td>
                     <td style={{ ...td, textAlign: 'right' }}>
                       {!k.revoked_at && (
                         <button onClick={() => handleRevoke(k)} disabled={isPending} style={btnDanger}>
-                          Revocar
+                          {tx('revoke')}
                         </button>
                       )}
                     </td>
@@ -201,6 +209,7 @@ function CreateKeyModal({
   onClose: () => void
   onCreated: (k: ApiKey, token: string) => void
 }) {
+  const tx = useTranslations('ApiKeys')
   const [name, setName] = useState('')
   const [scopes, setScopes] = useState<ApiScope[]>(['tags:read'])
   const [expiresAt, setExpiresAt] = useState<string>('')
@@ -223,7 +232,7 @@ function CreateKeyModal({
     })
     setSaving(false)
     if (res.error || !res.token || !res.id || !res.keyPrefix) {
-      return setErr(res.error ?? 'Error desconocido')
+      return setErr(res.error ?? tx('unknownError'))
     }
     onCreated(
       {
@@ -243,22 +252,22 @@ function CreateKeyModal({
   return (
     <div style={modalBackdrop}>
       <div style={{ ...modalBox, maxWidth: 560 }}>
-        <ModalHeader title="Nueva API key" onClose={onClose} />
+        <ModalHeader title={tx('create.title')} onClose={onClose} />
 
         {err && <ModalError msg={err} />}
 
         <div style={{ marginBottom: 14 }}>
-          <label style={labelStyle}>Nombre</label>
+          <label style={labelStyle}>{tx('create.name')}</label>
           <input
             style={input}
             value={name}
             onChange={e => setName(e.target.value)}
-            placeholder="Ej: Integración Power BI producción"
+            placeholder={tx('create.namePlaceholder')}
           />
         </div>
 
         <div style={{ marginBottom: 14 }}>
-          <label style={labelStyle}>Scopes</label>
+          <label style={labelStyle}>{tx('create.scopes')}</label>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
             {API_SCOPES.map(s => {
               const checked = scopes.includes(s.value)
@@ -280,7 +289,7 @@ function CreateKeyModal({
                   />
                   <div style={{ fontSize: 12 }}>
                     <div style={{ fontFamily: 'ui-monospace, monospace', fontWeight: 600, color: 'var(--text-strong)' }}>{s.label}</div>
-                    <div style={{ color: 'var(--text-muted)', marginTop: 1, fontSize: 11 }}>{s.description}</div>
+                    <div style={{ color: 'var(--text-muted)', marginTop: 1, fontSize: 11 }}>{tx(`scope.${scopeKey(s.value)}`)}</div>
                   </div>
                 </label>
               )
@@ -289,7 +298,7 @@ function CreateKeyModal({
         </div>
 
         <div style={{ marginBottom: 18 }}>
-          <label style={labelStyle}>Fecha de expiración (opcional)</label>
+          <label style={labelStyle}>{tx('create.expiry')}</label>
           <input
             style={input}
             type="date"
@@ -297,7 +306,7 @@ function CreateKeyModal({
             onChange={e => setExpiresAt(e.target.value)}
           />
           <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>
-            Vacío = la key nunca expira (solo se invalida al revocar).
+            {tx('create.expiryHint')}
           </div>
         </div>
 
@@ -306,7 +315,7 @@ function CreateKeyModal({
           canSave={name.trim().length > 0 && scopes.length > 0}
           onCancel={onClose}
           onSave={handleSave}
-          saveLabel="Crear key"
+          saveLabel={tx('create.submit')}
         />
       </div>
     </div>
@@ -322,6 +331,7 @@ function TokenRevealModal({
   scopes: string[]
   onClose: () => void
 }) {
+  const tx = useTranslations('ApiKeys')
   const [copied, setCopied] = useState(false)
   const [confirmed, setConfirmed] = useState(false)
 
@@ -339,21 +349,20 @@ function TokenRevealModal({
     <div style={modalBackdrop}>
       <div style={{ ...modalBox, maxWidth: 640 }}>
         <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 4px', color: 'var(--text-strong)' }}>
-          🔑 Tu API key está lista
+          {tx('reveal.title')}
         </h2>
         <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '0 0 16px' }}>
-          <strong>{name}</strong> · scopes: {scopes.join(', ')}
+          <strong>{name}</strong> · {tx('reveal.scopesLine', { scopes: scopes.join(', ') })}
         </p>
 
         <div style={{
           padding: 14, background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: 8,
           fontSize: 13, color: '#92400e', marginBottom: 16,
         }}>
-          <strong>⚠️ Copia esta key ahora.</strong> No podrás verla de nuevo — solo guardamos el hash.
-          Si la pierdes, revoca esta key y crea una nueva.
+          {tx.rich('reveal.warning', { strong: c => <strong>{c}</strong> })}
         </div>
 
-        <label style={labelStyle}>API key</label>
+        <label style={labelStyle}>{tx('reveal.label')}</label>
         <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
           <input
             readOnly
@@ -365,12 +374,12 @@ function TokenRevealModal({
             onClick={copy}
             style={{ ...btnPrimary, minWidth: 100, background: copied ? '#10b981' : '#3b82f6' }}
           >
-            {copied ? '✓ Copiada' : 'Copiar'}
+            {copied ? tx('reveal.copied') : tx('reveal.copy')}
           </button>
         </div>
 
         <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>
-          <div style={{ fontWeight: 600, marginBottom: 4 }}>Uso:</div>
+          <div style={{ fontWeight: 600, marginBottom: 4 }}>{tx('reveal.usage')}</div>
           <pre style={{
             background: 'var(--gray-900)', color: 'var(--gray-200)', padding: 12, borderRadius: 6,
             fontSize: 11, overflow: 'auto', margin: 0,
@@ -386,7 +395,7 @@ function TokenRevealModal({
             checked={confirmed}
             onChange={e => setConfirmed(e.target.checked)}
           />
-          He guardado la key en un lugar seguro
+          {tx('reveal.saved')}
         </label>
 
         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
@@ -395,7 +404,7 @@ function TokenRevealModal({
             disabled={!confirmed}
             style={{ ...btnPrimary, opacity: confirmed ? 1 : 0.5 }}
           >
-            Cerrar
+            {tx('close')}
           </button>
         </div>
       </div>
@@ -414,10 +423,11 @@ const modalBox: React.CSSProperties = {
 }
 
 function ModalHeader({ title, onClose }: { title: string; onClose: () => void }) {
+  const tx = useTranslations('ApiKeys')
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
       <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0, color: 'var(--text-strong)' }}>{title}</h2>
-      <button onClick={onClose} aria-label="Cerrar" style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: 'var(--text-muted)' }}>×</button>
+      <button onClick={onClose} aria-label={tx('close')} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: 'var(--text-muted)' }}>×</button>
     </div>
   )
 }
@@ -439,15 +449,16 @@ function ModalActions({
   onSave: () => void
   saveLabel: string
 }) {
+  const tx = useTranslations('ApiKeys')
   return (
     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
-      <button onClick={onCancel} style={btnOutline} disabled={saving}>Cancelar</button>
+      <button onClick={onCancel} style={btnOutline} disabled={saving}>{tx('cancel')}</button>
       <button
         onClick={onSave}
         style={{ ...btnPrimary, opacity: canSave && !saving ? 1 : 0.5 }}
         disabled={saving || !canSave}
       >
-        {saving ? 'Guardando…' : saveLabel}
+        {saving ? tx('saving') : saveLabel}
       </button>
     </div>
   )

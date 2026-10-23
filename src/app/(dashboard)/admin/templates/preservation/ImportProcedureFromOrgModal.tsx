@@ -1,18 +1,15 @@
 'use client'
 
 import { useEffect, useState, useTransition } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { listImportableProcedures, cloneProcedureToActiveOrg, type ImportableProcedure } from '@/app/actions/preservation'
 
-const FREQ_LABELS: Record<string, string> = {
-  daily: 'Diario',
-  weekly: 'Semanal',
-  biweekly: 'Quincenal',
-  monthly: 'Mensual',
-  quarterly: 'Trimestral',
-}
+const FREQS = ['daily', 'weekly', 'biweekly', 'monthly', 'quarterly']
 
 export default function ImportProcedureFromOrgModal({ onClose }: { onClose: () => void }) {
+  const ti = useTranslations('TemplateImport')
+  const tp = useTranslations('Preservation')
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -43,7 +40,7 @@ export default function ImportProcedureFromOrgModal({ onClose }: { onClose: () =
         setError(res.error)
         return
       }
-      setSuccess(`Procedimiento "${p.code}" importado exitosamente`)
+      setSuccess(ti('okProcedure', { code: p.code }))
       router.refresh()
     })
   }
@@ -78,25 +75,25 @@ export default function ImportProcedureFromOrgModal({ onClose }: { onClose: () =
         }}>
           <div>
             <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: 'var(--text-strong)' }}>
-              Importar procedimiento de otra organización
+              {ti('procTitle')}
             </h2>
             <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--text-muted)' }}>
-              Se clona en la org activa. Cada org evoluciona su copia de forma independiente.
+              {ti('cloneHelp')}
             </p>
           </div>
           <button
             onClick={onClose}
             style={{ background: 'none', border: 'none', fontSize: 24, color: 'var(--text-muted)', cursor: 'pointer', lineHeight: 1 }}
-            aria-label="Cerrar"
+            aria-label={ti('close')}
           >×</button>
         </div>
 
         <div style={{ overflowY: 'auto', padding: 20 }}>
-          {loading && <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>Cargando procedimientos…</p>}
+          {loading && <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>{ti('procLoading')}</p>}
 
           {!loading && procedures.length === 0 && !error && (
             <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>
-              No hay procedimientos disponibles en otras organizaciones de las que seas miembro.
+              {ti('procNone')}
             </p>
           )}
 
@@ -124,7 +121,7 @@ export default function ImportProcedureFromOrgModal({ onClose }: { onClose: () =
                     background: '#ecfdf5', color: '#059669', border: '1px solid #6ee7b7',
                     letterSpacing: '0.04em',
                   }}>
-                    CATÁLOGO PÚBLICO
+                    {ti('publicCatalog')}
                   </span>
                 )}
               </p>
@@ -140,10 +137,10 @@ export default function ImportProcedureFromOrgModal({ onClose }: { onClose: () =
                         {p.code} · {p.title}
                       </p>
                       <p style={{ margin: '2px 0 0', fontSize: 11, color: 'var(--text-muted)' }}>
-                        {FREQ_LABELS[p.frequency] ?? p.frequency} · {p.intervalDays}d
+                        {FREQS.includes(p.frequency) ? tp(`freq.${p.frequency as 'daily'}`) : p.frequency} · {p.intervalDays}d
                         {p.disciplineCode && ` · ${p.disciplineCode}`}
                         {p.equipmentTypeCode && ` · ${p.equipmentTypeCode}`}
-                        {' · '}{p.itemCount} ítems
+                        {' · '}{ti('items', { n: p.itemCount })}
                       </p>
                     </div>
                     <button
@@ -157,7 +154,7 @@ export default function ImportProcedureFromOrgModal({ onClose }: { onClose: () =
                         flexShrink: 0,
                       }}
                     >
-                      {isPending && importingId === p.id ? 'Importando…' : 'Importar'}
+                      {isPending && importingId === p.id ? ti('importing') : ti('import')}
                     </button>
                   </div>
                 ))}

@@ -180,9 +180,9 @@ export default function TemplateHeaderCard({
                     borderRadius: '8px', fontSize: '12px', color: '#1e40af', cursor: busy ? 'not-allowed' : 'pointer',
                     fontWeight: 600,
                   }}
-                  title="Renderiza el template como documento imprimible"
+                  title={t('viewDocHint')}
                 >
-                  Ver como documento
+                  {t('viewDoc')}
                 </button>
                 <button
                   onClick={onExportJson}
@@ -192,9 +192,9 @@ export default function TemplateHeaderCard({
                     borderRadius: '8px', fontSize: '12px', color: '#a16207', cursor: busy ? 'not-allowed' : 'pointer',
                     fontWeight: 500,
                   }}
-                  title="Descargar este template como JSON (backup individual)"
+                  title={t('exportJsonHint')}
                 >
-                  Exportar JSON
+                  {t('exportJson')}
                 </button>
                 <button
                   onClick={onPublishClick}

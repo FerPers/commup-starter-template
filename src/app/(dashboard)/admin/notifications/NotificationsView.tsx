@@ -1,6 +1,6 @@
 'use client'
 
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 
 import dynamic from 'next/dynamic'
 import { Bell } from 'lucide-react'
@@ -36,6 +36,8 @@ export default function NotificationsView({
 }) {
   // N0 (H-13): título = etiqueta del menú.
   const tNav = useTranslations('Sidebar.nav')
+  const tx = useTranslations('NotificationsAdmin')
+  const locale = useLocale()
   return (
     <div style={{ padding: '32px', maxWidth: '720px' }}>
       <header style={{ marginBottom: '24px' }}>
@@ -44,7 +46,7 @@ export default function NotificationsView({
           {tNav('notifications')}
         </h1>
         <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-sm)', margin: '4px 0 0' }}>
-          Gestiona notificaciones push de campo: ITRs devueltos, punches Cat A, certificados listos.
+          {tx('subtitle')}
         </p>
       </header>
 
@@ -57,7 +59,7 @@ export default function NotificationsView({
       {subscriptions.length > 0 && (
         <section style={{ marginTop: '32px' }}>
           <h2 style={{ fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--text-strong)', margin: '0 0 12px' }}>
-            Tus dispositivos ({subscriptions.length})
+            {tx('devices', { count: subscriptions.length })}
           </h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {subscriptions.map(sub => (
@@ -79,16 +81,16 @@ export default function NotificationsView({
                 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--text-strong)' }}>
-                    {((sub.device_info as Record<string, unknown> | null)?.platform as string) || 'Dispositivo'} ·{' '}
-                    {sub.topics.length} topic{sub.topics.length !== 1 ? 's' : ''}
+                    {((sub.device_info as Record<string, unknown> | null)?.platform as string) || tx('device')} ·{' '}
+                    {tx('topics', { count: sub.topics.length })}
                   </div>
                   <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', fontFamily: 'ui-monospace, monospace' }}>
-                    {new URL(sub.endpoint).hostname} · {new Date(sub.created_at).toLocaleDateString()}
+                    {new URL(sub.endpoint).hostname} · {new Date(sub.created_at).toLocaleDateString(locale === 'en' ? 'en-US' : 'es-CO')}
                   </div>
                 </div>
                 {sub.failure_count > 0 && (
                   <span style={{ fontSize: 'var(--text-xs)', color: 'var(--warning-700)' }}>
-                    {sub.failure_count} fallo{sub.failure_count !== 1 ? 's' : ''}
+                    {tx('failures', { count: sub.failure_count })}
                   </span>
                 )}
               </div>

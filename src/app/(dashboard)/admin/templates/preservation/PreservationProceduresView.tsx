@@ -2,6 +2,7 @@
 
 import type { Enums } from '@/types/supabase.generated'
 import { useState, useTransition } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { createProcedure, deleteProcedure } from '@/app/actions/preservation'
 import { exportPreservationProcedure } from '@/app/actions/templates-backup'
@@ -29,13 +30,7 @@ interface Props {
   canEdit: boolean
 }
 
-const FREQ_LABELS: Record<string, string> = {
-  daily: 'Diario',
-  weekly: 'Semanal',
-  biweekly: 'Quincenal',
-  monthly: 'Mensual',
-  quarterly: 'Trimestral',
-}
+const FREQS = ['daily', 'weekly', 'biweekly', 'monthly', 'quarterly']
 
 const FREQ_COLORS: Record<string, string> = {
   daily:     '#ef4444',
@@ -52,6 +47,9 @@ const DEFAULT_FORM = {
 }
 
 export default function PreservationProceduresView({ procedures, disciplines, canEdit }: Props) {
+  const t = useTranslations('PreservationTemplates')
+  const tp = useTranslations('Preservation')
+  const freqLabel = (f: string) => (FREQS.includes(f) ? tp(`freq.${f as 'daily'}`) : f)
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [activeDisc, setActiveDisc] = useState('all')
@@ -69,12 +67,12 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
 
   async function handleCreate() {
     if (!form.code.trim() || !form.title.trim() || !form.frequency) {
-      setFormError('Código, título y frecuencia son requeridos')
+      setFormError(t('required'))
       return
     }
     const days = parseInt(form.intervalDays)
     if (isNaN(days) || days < 1) {
-      setFormError('Intervalo debe ser un número positivo')
+      setFormError(t('badInterval'))
       return
     }
     setFormError(null)
@@ -98,7 +96,7 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('¿Eliminar este procedimiento? Solo es posible si no tiene planes asignados.')) return
+    if (!confirm(t('deleteConfirm'))) return
     setDeletingId(id)
     startTransition(async () => {
       const result = await deleteProcedure(id)
@@ -132,7 +130,7 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
               color: activeDisc === 'all' ? '#fff' : 'var(--text-muted)',
             }}
           >
-            Todos ({procedures.length})
+            {t('all', { n: procedures.length })}
           </button>
           {discTabs.map(d => (
             <button
@@ -159,7 +157,7 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
                 cursor: 'pointer', border: '1px solid var(--border)',
               }}
             >
-              Importar de otra org
+              {t('importFromOrg')}
             </button>
             <button
               onClick={() => setShowModal(true)}
@@ -169,7 +167,7 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
                 display: 'flex', alignItems: 'center', gap: '6px',
               }}
             >
-              + Nuevo procedimiento
+              {t('new')}
             </button>
           </div>
         )}
@@ -183,10 +181,10 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
         }}>
           <div style={{ fontSize: '32px', marginBottom: '12px' }}>◉</div>
           <div style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-strong)', marginBottom: '8px' }}>
-            Sin procedimientos
+            {t('emptyTitle')}
           </div>
           <div style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
-            Crea el primer procedimiento de preservación para esta disciplina
+            {t('emptyHelp')}
           </div>
         </div>
       ) : (
@@ -220,7 +218,7 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
                       onClick={e => { e.stopPropagation(); void handleDelete(proc.id) }}
                       disabled={deletingId === proc.id}
                       style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '16px', padding: '4px', flexShrink: 0 }}
-                      title="Eliminar"
+                      title={t('delete')}
                     >
                       ✕
                     </button>
@@ -238,7 +236,7 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
                     padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600,
                     background: freqColor + '20', color: freqColor,
                   }}>
-                    {FREQ_LABELS[proc.frequency] ?? proc.frequency} · {proc.interval_days}d
+                    {freqLabel(proc.frequency)} · {proc.interval_days}d
                   </span>
                   {proc.disciplines && (
                     <span style={{
@@ -253,7 +251,7 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
                     background: itemCount > 0 ? '#f0fdf4' : '#fef9c3',
                     color: itemCount > 0 ? '#16a34a' : '#854d0e',
                   }}>
-                    {itemCount} {itemCount === 1 ? 'ítem' : 'ítems'}
+                    {t('items', { n: itemCount })}
                   </span>
                 </div>
 
@@ -275,19 +273,19 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
                       e.stopPropagation()
                       startTransition(async () => {
                         const res = await exportPreservationProcedure(proc.id)
-                        if (res.error || !res.backup) { setPreviewError(res.error ?? 'Error al previsualizar'); return }
+                        if (res.error || !res.backup) { setPreviewError(res.error ?? t('previewError')); return }
                         setDocPreview(res.backup)
                       })
                     }}
                     disabled={isPending}
-                    title="Vista previa como documento imprimible"
+                    title={t('previewHint')}
                     style={{
                       padding: '4px 10px', borderRadius: '6px', background: '#eff6ff', color: '#1e40af',
                       border: '1px solid #bfdbfe', fontWeight: 600, fontSize: '11px', cursor: 'pointer',
                       whiteSpace: 'nowrap', flexShrink: 0,
                     }}
                   >
-                    👁 Vista previa
+                    {t('preview')}
                   </button>
                 </div>
               </div>
@@ -323,7 +321,7 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
               <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>
-                Nuevo procedimiento de preservación
+                {t('newTitle')}
               </h2>
               <button onClick={() => { setShowModal(false); setFormError(null); setForm(DEFAULT_FORM) }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px', color: 'var(--text-muted)' }}>✕</button>
             </div>
@@ -337,7 +335,7 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '12px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)', marginBottom: '6px' }}>Código *</label>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)', marginBottom: '6px' }}>{t('code')}</label>
                   <input
                     value={form.code}
                     onChange={e => setForm(f => ({ ...f, code: e.target.value.toUpperCase() }))}
@@ -346,60 +344,60 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)', marginBottom: '6px' }}>Título *</label>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)', marginBottom: '6px' }}>{t('title')}</label>
                   <input
                     value={form.title}
                     onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
-                    placeholder="Ej: Rotación de eje mensual"
+                    placeholder={t('titlePlaceholder')}
                     style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', boxSizing: 'border-box' }}
                   />
                 </div>
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)', marginBottom: '6px' }}>Descripción</label>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)', marginBottom: '6px' }}>{t('description')}</label>
                 <textarea
                   value={form.description}
                   onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                   rows={2}
-                  placeholder="Descripción opcional del procedimiento..."
+                  placeholder={t('descriptionPlaceholder')}
                   style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', resize: 'vertical', boxSizing: 'border-box' }}
                 />
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)', marginBottom: '6px' }}>Disciplina</label>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)', marginBottom: '6px' }}>{t('discipline')}</label>
                   <select
                     value={form.disciplineId}
                     onChange={e => setForm(f => ({ ...f, disciplineId: e.target.value }))}
                     style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', boxSizing: 'border-box' }}
                   >
-                    <option value="">— Sin disciplina —</option>
+                    <option value="">{t('noDiscipline')}</option>
                     {disciplines.map(d => (
                       <option key={d.id} value={d.id}>{d.code} — {d.name}</option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)', marginBottom: '6px' }}>Frecuencia *</label>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)', marginBottom: '6px' }}>{t('frequency')}</label>
                   <select
                     value={form.frequency}
                     onChange={e => handleFreqChange(e.target.value as Enums<'preservation_frequency'>)}
                     style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', boxSizing: 'border-box' }}
                   >
-                    <option value="daily">Diario</option>
-                    <option value="weekly">Semanal</option>
-                    <option value="biweekly">Quincenal</option>
-                    <option value="monthly">Mensual</option>
-                    <option value="quarterly">Trimestral</option>
+                    <option value="daily">{tp('freq.daily')}</option>
+                    <option value="weekly">{tp('freq.weekly')}</option>
+                    <option value="biweekly">{tp('freq.biweekly')}</option>
+                    <option value="monthly">{tp('freq.monthly')}</option>
+                    <option value="quarterly">{tp('freq.quarterly')}</option>
                   </select>
                 </div>
               </div>
 
               <div>
                 <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)', marginBottom: '6px' }}>
-                  Intervalo exacto (días) *
+                  {t('interval')}
                 </label>
                 <input
                   type="number"
@@ -409,7 +407,7 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
                   style={{ width: '140px', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px' }}
                 />
                 <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginLeft: '10px' }}>
-                  Define exactamente cada cuántos días aplica
+                  {t('intervalHelp')}
                 </span>
               </div>
 
@@ -420,7 +418,7 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
                     checked={form.requiresPhoto}
                     onChange={e => setForm(f => ({ ...f, requiresPhoto: e.target.checked }))}
                   />
-                  Requiere foto
+                  {t('requiresPhoto')}
                 </label>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', color: 'var(--text-strong)' }}>
                   <input
@@ -428,7 +426,7 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
                     checked={form.requiresSignature}
                     onChange={e => setForm(f => ({ ...f, requiresSignature: e.target.checked }))}
                   />
-                  Requiere firma
+                  {t('requiresSignature')}
                 </label>
               </div>
             </div>
@@ -438,14 +436,14 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
                 onClick={() => { setShowModal(false); setFormError(null); setForm(DEFAULT_FORM) }}
                 style={{ padding: '9px 18px', borderRadius: '8px', background: 'var(--gray-100)', color: 'var(--text-muted)', fontWeight: 600, fontSize: '14px', cursor: 'pointer', border: 'none' }}
               >
-                Cancelar
+                {t('cancel')}
               </button>
               <button
                 onClick={handleCreate}
                 disabled={isPending}
                 style={{ padding: '9px 20px', borderRadius: '8px', background: '#3b82f6', color: 'white', fontWeight: 600, fontSize: '14px', cursor: isPending ? 'wait' : 'pointer', border: 'none', opacity: isPending ? 0.7 : 1 }}
               >
-                {isPending ? 'Creando...' : 'Crear y editar ítems'}
+                {isPending ? t('creating') : t('create')}
               </button>
             </div>
           </div>

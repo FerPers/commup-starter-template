@@ -74,6 +74,7 @@ export default function PssrTemplateEditor({
 
   const grouped = groupByCategory(items)
   const tp = useTranslations('PSSR')
+  const tx = useTranslations('PssrTemplates')
 
   function openNew() {
     setEditingItem(null)
@@ -97,7 +98,7 @@ export default function PssrTemplateEditor({
 
   async function handleSave() {
     if (!form.category.trim() || !form.element.trim() || !form.requirement.trim()) {
-      setFormError('Categoría, elemento y requisito son obligatorios')
+      setFormError(tx('itemRequired'))
       return
     }
     setFormError(null)
@@ -119,7 +120,7 @@ export default function PssrTemplateEditor({
   }
 
   async function handleDelete(item: Item) {
-    if (!confirm(`¿Eliminar "${item.element}"?`)) return
+    if (!confirm(tx('deleteItemConfirm', { name: item.element }))) return
     setDeletingId(item.id)
     startTransition(async () => {
       const res = await deletePssrTemplateItem(item.id, template.id)
@@ -155,8 +156,7 @@ export default function PssrTemplateEditor({
     <>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
-          <strong style={{ color: 'var(--text-strong)' }}>{items.length}</strong> ítems en{' '}
-          <strong style={{ color: 'var(--text-strong)' }}>{grouped.length}</strong> categorías
+          {tx.rich('summary', { items: items.length, categories: grouped.length, strong: c => <strong style={{ color: 'var(--text-strong)' }}>{c}</strong> })}
         </span>
         {canEdit && (
           <div style={{ display: 'flex', gap: '8px' }}>
@@ -164,7 +164,7 @@ export default function PssrTemplateEditor({
               onClick={() => {
                 startTransition(async () => {
                   const res = await exportPssrTemplate(template.id)
-                  if (res.error || !res.backup) { setFormError(res.error ?? 'Error al previsualizar'); return }
+                  if (res.error || !res.backup) { setFormError(res.error ?? tx('previewError')); return }
                   setDocPreview(res.backup)
                 })
               }}
@@ -174,15 +174,15 @@ export default function PssrTemplateEditor({
                 background: '#eff6ff', color: '#1e40af', border: '1px solid #bfdbfe',
                 cursor: isPending ? 'not-allowed' : 'pointer',
               }}
-              title="Renderiza este template como documento imprimible"
+              title={tx('viewDocHint')}
             >
-              Ver como documento
+              {tx('viewDoc')}
             </button>
             <button
               onClick={() => {
                 startTransition(async () => {
                   const res = await exportPssrTemplate(template.id)
-                  if (res.error || !res.backup) { setFormError(res.error ?? 'Error al exportar'); return }
+                  if (res.error || !res.backup) { setFormError(res.error ?? tx('exportError')); return }
                   downloadJsonFile(`commup-pssr-${slugifySimple(template.name)}-${dateStamp()}.json`, res.backup)
                 })
               }}
@@ -192,9 +192,9 @@ export default function PssrTemplateEditor({
                 background: '#fef3c7', color: '#a16207', border: '1px solid #fde68a',
                 cursor: isPending ? 'not-allowed' : 'pointer',
               }}
-              title="Descargar este template como JSON"
+              title={tx('exportJsonHint')}
             >
-              Exportar JSON
+              {tx('exportJson')}
             </button>
             <button
               onClick={openNew}
@@ -203,7 +203,7 @@ export default function PssrTemplateEditor({
                 background: 'var(--primary-500)', color: '#fff', border: 'none', cursor: 'pointer',
               }}
             >
-              + Nuevo ítem
+              {tx('newItem')}
             </button>
           </div>
         )}
@@ -251,7 +251,7 @@ export default function PssrTemplateEditor({
                 {category}
               </span>
               <span style={{ fontSize: '12px', color: '#94a3b8', marginLeft: 'auto' }}>
-                {catItems.length} ítem{catItems.length !== 1 ? 's' : ''}
+                {tx('items', { n: catItems.length })}
               </span>
             </div>
 
@@ -285,7 +285,7 @@ export default function PssrTemplateEditor({
                     background: 'var(--gray-100)', padding: '2px 7px', borderRadius: '4px',
                     flexShrink: 0,
                   }}>
-                    OPCIONAL
+                    {tx('optional')}
                   </span>
                 )}
                 {canEdit && (
@@ -297,7 +297,7 @@ export default function PssrTemplateEditor({
                         background: 'var(--gray-50)', border: '1px solid var(--border)', color: 'var(--gray-700)', cursor: 'pointer',
                       }}
                     >
-                      Editar
+                      {tx('edit')}
                     </button>
                     <button
                       onClick={() => handleDelete(item)}
@@ -322,7 +322,7 @@ export default function PssrTemplateEditor({
             padding: '48px', textAlign: 'center',
           }}>
             <p style={{ color: 'var(--text-muted)', fontSize: '14px', margin: 0 }}>
-              Sin ítems. Agrega el primero o regresa al listado para cargar los 22 ítems estándar.
+              {tx('noItems')}
             </p>
           </div>
         )}
@@ -340,13 +340,13 @@ export default function PssrTemplateEditor({
             width: '100%', maxWidth: '560px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
           }} onClick={e => e.stopPropagation()}>
             <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 20px' }}>
-              {editingItem ? 'Editar ítem' : 'Nuevo ítem'}
+              {editingItem ? tx('editItem') : tx('newItemTitle')}
             </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div>
                   <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
-                    Categoría *
+                    {tx('category')}
                   </label>
                   <input
                     value={form.category}
@@ -364,36 +364,36 @@ export default function PssrTemplateEditor({
                 </div>
                 <div>
                   <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
-                    Elemento *
+                    {tx('element')}
                   </label>
                   <input
                     value={form.element}
                     onChange={e => setForm(f => ({ ...f, element: e.target.value }))}
-                    placeholder="Válvulas de Alivio (PSV)"
+                    placeholder={tx('elementPlaceholder')}
                     style={inputStyle}
                   />
                 </div>
               </div>
               <div>
                 <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
-                  Requisito de verificación *
+                  {tx('requirement')}
                 </label>
                 <textarea
                   value={form.requirement}
                   onChange={e => setForm(f => ({ ...f, requirement: e.target.value }))}
                   rows={3}
-                  placeholder="¿Se han inspeccionado y probado...?"
+                  placeholder={tx('requirementPlaceholder')}
                   style={{ ...inputStyle, resize: 'vertical' }}
                 />
               </div>
               <div>
                 <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
-                  Nota / guía de verificación
+                  {tx('note')}
                 </label>
                 <input
                   value={form.notes_hint}
                   onChange={e => setForm(f => ({ ...f, notes_hint: e.target.value }))}
-                  placeholder="Verificar cálculos de dimensionamiento..."
+                  placeholder={tx('notePlaceholder')}
                   style={inputStyle}
                 />
               </div>
@@ -403,7 +403,7 @@ export default function PssrTemplateEditor({
                   checked={form.is_required}
                   onChange={e => setForm(f => ({ ...f, is_required: e.target.checked }))}
                 />
-                <span>Ítem obligatorio (no se puede marcar N/A)</span>
+                <span>{tx('mandatory')}</span>
               </label>
               {formError && <p style={{ color: '#dc2626', fontSize: '13px', margin: 0 }}>{formError}</p>}
               <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '4px' }}>
@@ -414,7 +414,7 @@ export default function PssrTemplateEditor({
                     background: 'var(--gray-100)', border: 'none', cursor: 'pointer', color: 'var(--gray-700)',
                   }}
                 >
-                  Cancelar
+                  {tx('cancel')}
                 </button>
                 <button
                   onClick={handleSave}
@@ -425,7 +425,7 @@ export default function PssrTemplateEditor({
                     cursor: isPending ? 'not-allowed' : 'pointer', opacity: isPending ? 0.7 : 1,
                   }}
                 >
-                  {isPending ? 'Guardando...' : 'Guardar'}
+                  {isPending ? tx('saving') : tx('save')}
                 </button>
               </div>
             </div>

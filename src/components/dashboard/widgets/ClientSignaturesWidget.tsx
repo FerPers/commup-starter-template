@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { FileSignature } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
@@ -41,7 +42,7 @@ export default async function ClientSignaturesWidget({ userId }: { userId: strin
           if (!itr) return null
           const phase = itr.project_phases
           return (
-            <a key={itr.id} href={`/projects/${itr.project_id}/tags/${itr.tags?.id}/itrs/${itr.id}`} style={{ display: 'block', textDecoration: 'none' }}>
+            <Link key={itr.id} href={`/projects/${itr.project_id}/tags/${itr.tags?.id}/itrs/${itr.id}`} style={{ display: 'block', textDecoration: 'none' }}>
               <div style={{ padding: '12px 14px', background: 'var(--warning-50)', border: '1px solid #fde68a', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: 12 }}>
                 {phase && <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 'var(--radius-sm)', background: `${phase.color}18`, color: phase.color, whiteSpace: 'nowrap' }}>{phase.code}</span>}
                 <span style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--text-strong)', fontFamily: 'ui-monospace, monospace' }}>{itr.itr_number}</span>
@@ -49,7 +50,7 @@ export default async function ClientSignaturesWidget({ userId }: { userId: strin
                 <span style={{ fontSize: 'var(--text-xs)', color: 'var(--primary-500)', fontWeight: 600 }}>{itr.projects?.code}</span>
                 <span style={{ fontSize: 'var(--text-xs)', color: 'var(--warning-500)', fontWeight: 600 }}>{t('clientView.sign')}</span>
               </div>
-            </a>
+            </Link>
           )
         })}
       </div>

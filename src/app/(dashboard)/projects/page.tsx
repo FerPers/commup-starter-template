@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
@@ -74,11 +75,11 @@ export default async function ProjectsPage() {
           </p>
         </div>
         {canCreateProject && (
-          <a href="/setup?mode=project" style={{ textDecoration: 'none' }}>
+          <Link href="/setup?mode=project" style={{ textDecoration: 'none' }}>
             <Button variant="primary" leftIcon={<Plus size={16} aria-hidden="true" />}>
               {t('newProject')}
             </Button>
-          </a>
+          </Link>
         )}
       </div>
 
@@ -95,9 +96,9 @@ export default async function ProjectsPage() {
             title={t('empty.title')}
             description={t('empty.desc')}
             action={canCreateProject && (
-              <a href="/setup?mode=project" style={{ textDecoration: 'none' }}>
+              <Link href="/setup?mode=project" style={{ textDecoration: 'none' }}>
                 <Button variant="primary">{t('createFirst')}</Button>
-              </a>
+              </Link>
             )}
           />
         </div>

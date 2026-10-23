@@ -1,6 +1,6 @@
 'use client'
 
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 
 import { useState, useTransition, useMemo } from 'react'
 import {
@@ -59,9 +59,9 @@ const labelStyle: React.CSSProperties = {
   textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4, display: 'block',
 }
 
-function fmtDate(s: string | null): string {
+function fmtDate(s: string | null, locale: string): string {
   if (!s) return '—'
-  return new Date(s).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' })
+  return new Date(s).toLocaleString(locale === 'en' ? 'en-US' : 'es-ES', { dateStyle: 'short', timeStyle: 'short' })
 }
 
 function statusColors(st: string): { fg: string; bg: string } {
@@ -81,6 +81,8 @@ export default function WebhooksView({
 }) {
   // N0 (H-13): título = etiqueta del menú.
   const tNav = useTranslations('Sidebar.nav')
+  const tw = useTranslations('Webhooks')
+  const locale = useLocale()
   const [subs, setSubs] = useState<Sub[]>(initialSubs)
   const [creating, setCreating] = useState(false)
   const [justCreated, setJustCreated] = useState<{ secret: string; name: string } | null>(null)
@@ -113,7 +115,7 @@ export default function WebhooksView({
   }
 
   const handleDelete = (s: Sub) => {
-    if (!confirm(`¿Eliminar la subscription "${s.name}"? También se eliminarán sus deliveries pendientes.`)) return
+    if (!confirm(tw('confirmDelete', { name: s.name }))) return
     setError(null)
     startTransition(async () => {
       const res = await deleteWebhookSubscription(s.id)
@@ -131,13 +133,15 @@ export default function WebhooksView({
             {tNav('webhooks')}
           </h1>
           <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '4px 0 0' }}>
-            Endpoints HTTPS que reciben eventos de dominio (en menos de un minuto). Firmados con HMAC-SHA256 en{' '}
-            <code>X-CommUp-Signature</code> (<code>t=&lt;unix&gt;,v1=&lt;hex&gt;</code> sobre{' '}
-            <code>&lt;unix&gt;.&lt;body&gt;</code>); deduplica con <code>X-CommUp-Event-Id</code>. Reintentos
-            automáticos con backoff exponencial.
+            {tw.rich('intro', {
+              sig: () => <code>X-CommUp-Signature</code>,
+              format: () => <code>t=&lt;unix&gt;,v1=&lt;hex&gt;</code>,
+              payload: () => <code>&lt;unix&gt;.&lt;body&gt;</code>,
+              eventId: () => <code>X-CommUp-Event-Id</code>,
+            })}
           </p>
         </div>
-        <button onClick={() => { setCreating(true); setError(null) }} style={btnPrimary}>+ Nueva subscription</button>
+        <button onClick={() => { setCreating(true); setError(null) }} style={btnPrimary}>{tw('newButton')}</button>
       </div>
 
       {error && (
@@ -148,7 +152,7 @@ export default function WebhooksView({
 
       {subs.length === 0 && (
         <div style={{ padding: 40, background: 'var(--gray-50)', border: '1px dashed #cbd5e1', borderRadius: 8, textAlign: 'center', color: 'var(--text-muted)', fontSize: 14 }}>
-          No hay subscriptions. Crea la primera para empezar a recibir eventos.
+          {tw('empty')}
         </div>
       )}
 
@@ -161,7 +165,7 @@ export default function WebhooksView({
               <button
                 onClick={() => handleToggle(s)}
                 disabled={isPending}
-                title={s.enabled ? 'Desactivar' : 'Activar'}
+                title={tw(s.enabled ? 'deactivate' : 'activate')}
                 style={{
                   width: 32, height: 18, borderRadius: 9, border: 'none', cursor: 'pointer', flexShrink: 0,
                   background: s.enabled ? '#10b981' : '#cbd5e1', position: 'relative', padding: 0,
@@ -179,15 +183,15 @@ export default function WebhooksView({
                   {s.name}
                   {s.project_id
                     ? <span style={{ fontSize: 10, fontWeight: 600, background: '#eff6ff', color: '#1d4ed8', padding: '2px 6px', borderRadius: 4 }}>
-                        proyecto: {projectsById[s.project_id] ?? s.project_id.slice(0, 8)}
+                        {tw('projectBadge', { name: projectsById[s.project_id] ?? s.project_id.slice(0, 8) })}
                       </span>
                     : <span style={{ fontSize: 10, fontWeight: 600, background: 'var(--gray-100)', color: 'var(--text-muted)', padding: '2px 6px', borderRadius: 4 }}>
-                        todos los proyectos
+                        {tw('allProjects')}
                       </span>
                   }
                   {s.failure_count > 0 && (
                     <span style={{ fontSize: 10, fontWeight: 600, background: '#fef2f2', color: '#b91c1c', padding: '2px 6px', borderRadius: 4 }}>
-                      {s.failure_count} fallos
+                      {tw('failures', { n: s.failure_count })}
                     </span>
                   )}
                 </div>
@@ -195,9 +199,9 @@ export default function WebhooksView({
                   {s.endpoint_url}
                 </div>
                 <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                  <span>eventos: <strong style={{ color: 'var(--text-muted)' }}>{s.event_types.join(', ')}</strong></span>
-                  <span>último OK: <strong style={{ color: 'var(--text-muted)' }}>{fmtDate(s.last_success_at)}</strong></span>
-                  <span>último error: <strong style={{ color: s.last_error_at ? '#b91c1c' : 'var(--text-muted)' }}>{fmtDate(s.last_error_at)}</strong></span>
+                  <span>{tw('events')} <strong style={{ color: 'var(--text-muted)' }}>{s.event_types.join(', ')}</strong></span>
+                  <span>{tw('lastOk')} <strong style={{ color: 'var(--text-muted)' }}>{fmtDate(s.last_success_at, locale)}</strong></span>
+                  <span>{tw('lastError')} <strong style={{ color: s.last_error_at ? '#b91c1c' : 'var(--text-muted)' }}>{fmtDate(s.last_error_at, locale)}</strong></span>
                 </div>
               </div>
 
@@ -205,9 +209,9 @@ export default function WebhooksView({
                 onClick={() => setExpandedSubId(isExpanded ? null : s.id)}
                 style={btnOutline}
               >
-                {isExpanded ? 'Ocultar' : `Deliveries (${subDeliveries.length})`}
+                {isExpanded ? tw('hide') : tw('deliveriesCount', { n: subDeliveries.length })}
               </button>
-              <button onClick={() => handleDelete(s)} disabled={isPending} style={btnDanger}>Eliminar</button>
+              <button onClick={() => handleDelete(s)} disabled={isPending} style={btnDanger}>{tw('delete')}</button>
             </div>
 
             {isExpanded && (
@@ -242,26 +246,34 @@ export default function WebhooksView({
 
 // ──────────────────────────────────────────────────────────────
 function DeliveriesTable({ deliveries }: { deliveries: Delivery[] }) {
+  const tw = useTranslations('Webhooks')
+  const locale = useLocale()
   if (deliveries.length === 0) {
     return (
       <div style={{ padding: 20, borderTop: '1px solid #f1f5f9', fontSize: 13, color: '#94a3b8', textAlign: 'center' }}>
-        Sin deliveries registradas aún.
+        {tw('noDeliveries')}
       </div>
     )
   }
+
+  const statusLabel = (st: string) =>
+    st === 'pending' ? tw('status.pending')
+    : st === 'delivered' ? tw('status.delivered')
+    : st === 'abandoned' ? tw('status.abandoned')
+    : st
 
   return (
     <div style={{ borderTop: '1px solid #f1f5f9', maxHeight: 340, overflow: 'auto' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
         <thead style={{ position: 'sticky', top: 0, background: 'var(--gray-50)' }}>
           <tr>
-            <th style={th}>Estado</th>
-            <th style={th}>Creada</th>
-            <th style={th}>Entregada</th>
-            <th style={th}>Intentos</th>
-            <th style={th}>Siguiente retry</th>
-            <th style={th}>HTTP</th>
-            <th style={th}>Event ID</th>
+            <th style={th}>{tw('th.status')}</th>
+            <th style={th}>{tw('th.created')}</th>
+            <th style={th}>{tw('th.delivered')}</th>
+            <th style={th}>{tw('th.attempts')}</th>
+            <th style={th}>{tw('th.nextRetry')}</th>
+            <th style={th}>{tw('th.http')}</th>
+            <th style={th}>{tw('th.eventId')}</th>
           </tr>
         </thead>
         <tbody>
@@ -274,13 +286,13 @@ function DeliveriesTable({ deliveries }: { deliveries: Delivery[] }) {
                     display: 'inline-block', padding: '2px 8px', borderRadius: 4,
                     background: c.bg, color: c.fg, fontSize: 10, fontWeight: 700, letterSpacing: '0.05em',
                   }}>
-                    {d.status.toUpperCase()}
+                    {statusLabel(d.status).toUpperCase()}
                   </span>
                 </td>
-                <td style={td}>{fmtDate(d.created_at)}</td>
-                <td style={td}>{fmtDate(d.delivered_at)}</td>
+                <td style={td}>{fmtDate(d.created_at, locale)}</td>
+                <td style={td}>{fmtDate(d.delivered_at, locale)}</td>
                 <td style={td}>{d.attempts}</td>
-                <td style={td}>{d.status === 'pending' ? fmtDate(d.next_retry_at) : '—'}</td>
+                <td style={td}>{d.status === 'pending' ? fmtDate(d.next_retry_at, locale) : '—'}</td>
                 <td style={td}>
                   {d.last_response_code ? (
                     <code style={{
@@ -322,6 +334,7 @@ function CreateSubscriptionModal({
   onClose: () => void
   onCreated: (s: Sub, secret: string) => void
 }) {
+  const tw = useTranslations('Webhooks')
   const [name, setName] = useState('')
   const [endpointUrl, setEndpointUrl] = useState('https://')
   const [projectId, setProjectId] = useState<string>('')
@@ -348,7 +361,7 @@ function CreateSubscriptionModal({
     })
     setSaving(false)
     if (res.error || !res.id || !res.secret) {
-      return setErr(res.error ?? 'Error desconocido')
+      return setErr(res.error ?? tw('unknownError'))
     }
     onCreated(
       {
@@ -372,22 +385,22 @@ function CreateSubscriptionModal({
   return (
     <div style={modalBackdrop}>
       <div style={{ ...modalBox, maxWidth: 620 }}>
-        <ModalHeader title="Nueva subscription" onClose={onClose} />
+        <ModalHeader title={tw('newTitle')} onClose={onClose} />
 
         {err && <ModalError msg={err} />}
 
         <div style={{ marginBottom: 14 }}>
-          <label style={labelStyle}>Nombre</label>
+          <label style={labelStyle}>{tw('form.name')}</label>
           <input
             style={input}
             value={name}
             onChange={e => setName(e.target.value)}
-            placeholder="Ej: SAP integration webhook"
+            placeholder={tw('form.namePlaceholder')}
           />
         </div>
 
         <div style={{ marginBottom: 14 }}>
-          <label style={labelStyle}>Endpoint URL (https)</label>
+          <label style={labelStyle}>{tw('form.endpoint')}</label>
           <input
             style={{ ...input, fontFamily: 'ui-monospace, monospace', fontSize: 12 }}
             value={endpointUrl}
@@ -397,13 +410,13 @@ function CreateSubscriptionModal({
         </div>
 
         <div style={{ marginBottom: 14 }}>
-          <label style={labelStyle}>Proyecto (opcional)</label>
+          <label style={labelStyle}>{tw('form.project')}</label>
           <select
             style={input}
             value={projectId}
             onChange={e => setProjectId(e.target.value)}
           >
-            <option value="">Todos los proyectos del org</option>
+            <option value="">{tw('form.allOrgProjects')}</option>
             {projects.map(p => (
               <option key={p.id} value={p.id}>{p.name}</option>
             ))}
@@ -411,7 +424,7 @@ function CreateSubscriptionModal({
         </div>
 
         <div style={{ marginBottom: 18 }}>
-          <label style={labelStyle}>Event types</label>
+          <label style={labelStyle}>{tw('form.eventTypes')}</label>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4, maxHeight: 220, overflow: 'auto', padding: 2 }}>
             {WEBHOOK_EVENT_TYPES.map(ev => {
               const checked = eventTypes.includes(ev.value)
@@ -431,13 +444,13 @@ function CreateSubscriptionModal({
                     checked={checked}
                     onChange={() => toggleEvent(ev.value)}
                   />
-                  {ev.label}
+                  {ev.value === '*' ? tw('form.allEvents') : ev.label}
                 </label>
               )
             })}
           </div>
           <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>
-            Seleccionar <code>*</code> incluye todos los eventos actuales y futuros.
+            {tw.rich('form.wildcardHint', { code: () => <code>*</code> })}
           </div>
         </div>
 
@@ -446,7 +459,7 @@ function CreateSubscriptionModal({
           canSave={canSave}
           onCancel={onClose}
           onSave={handleSave}
-          saveLabel="Crear subscription"
+          saveLabel={tw('form.create')}
         />
       </div>
     </div>
@@ -461,6 +474,7 @@ function SecretRevealModal({
   name: string
   onClose: () => void
 }) {
+  const tw = useTranslations('Webhooks')
   const [copied, setCopied] = useState(false)
   const [confirmed, setConfirmed] = useState(false)
 
@@ -478,21 +492,23 @@ function SecretRevealModal({
     <div style={modalBackdrop}>
       <div style={{ ...modalBox, maxWidth: 640 }}>
         <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 4px', color: 'var(--text-strong)' }}>
-          🔐 Secret del webhook
+          {tw('secret.title')}
         </h2>
         <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '0 0 16px' }}>
-          Subscription: <strong>{name}</strong>
+          {tw.rich('secret.subscription', { name, strong: c => <strong>{c}</strong> })}
         </p>
 
         <div style={{
           padding: 14, background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: 8,
           fontSize: 13, color: '#92400e', marginBottom: 16,
         }}>
-          <strong>⚠️ Copia este secret ahora.</strong> No podrás verlo de nuevo. Lo necesitas en tu servidor
-          para verificar la firma <code>X-CommUp-Signature</code>.
+          {tw.rich('secret.warning', {
+            strong: c => <strong>{c}</strong>,
+            sig: () => <code>X-CommUp-Signature</code>,
+          })}
         </div>
 
-        <label style={labelStyle}>Secret (signing key)</label>
+        <label style={labelStyle}>{tw('secret.label')}</label>
         <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
           <input
             readOnly
@@ -504,12 +520,12 @@ function SecretRevealModal({
             onClick={copy}
             style={{ ...btnPrimary, minWidth: 100, background: copied ? '#10b981' : '#3b82f6' }}
           >
-            {copied ? '✓ Copiado' : 'Copiar'}
+            {tw(copied ? 'secret.copied' : 'secret.copy')}
           </button>
         </div>
 
         <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>
-          <div style={{ fontWeight: 600, marginBottom: 4 }}>Verificación de firma (Node.js):</div>
+          <div style={{ fontWeight: 600, marginBottom: 4 }}>{tw('secret.verify')}</div>
           <pre style={{
             background: 'var(--gray-900)', color: 'var(--gray-200)', padding: 12, borderRadius: 6,
             fontSize: 11, overflow: 'auto', margin: 0,
@@ -532,7 +548,7 @@ if (sig !== expected) return res.status(401).end()`}
             checked={confirmed}
             onChange={e => setConfirmed(e.target.checked)}
           />
-          He guardado el secret en un lugar seguro
+          {tw('secret.confirmed')}
         </label>
 
         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
@@ -541,7 +557,7 @@ if (sig !== expected) return res.status(401).end()`}
             disabled={!confirmed}
             style={{ ...btnPrimary, opacity: confirmed ? 1 : 0.5 }}
           >
-            Cerrar
+            {tw('close')}
           </button>
         </div>
       </div>
@@ -560,10 +576,11 @@ const modalBox: React.CSSProperties = {
 }
 
 function ModalHeader({ title, onClose }: { title: string; onClose: () => void }) {
+  const tw = useTranslations('Webhooks')
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
       <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0, color: 'var(--text-strong)' }}>{title}</h2>
-      <button onClick={onClose} aria-label="Cerrar" style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: 'var(--text-muted)' }}>×</button>
+      <button onClick={onClose} aria-label={tw('close')} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: 'var(--text-muted)' }}>×</button>
     </div>
   )
 }
@@ -585,15 +602,16 @@ function ModalActions({
   onSave: () => void
   saveLabel: string
 }) {
+  const tw = useTranslations('Webhooks')
   return (
     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
-      <button onClick={onCancel} style={btnOutline} disabled={saving}>Cancelar</button>
+      <button onClick={onCancel} style={btnOutline} disabled={saving}>{tw('cancel')}</button>
       <button
         onClick={onSave}
         style={{ ...btnPrimary, opacity: canSave && !saving ? 1 : 0.5 }}
         disabled={saving || !canSave}
       >
-        {saving ? 'Guardando…' : saveLabel}
+        {saving ? tw('saving') : saveLabel}
       </button>
     </div>
   )

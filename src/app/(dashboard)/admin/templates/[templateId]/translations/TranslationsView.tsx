@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import {
   proposeTranslations, saveTranslations,
   type TranslationReview, type TranslationItem, type TranslationFlag,
@@ -14,17 +15,18 @@ import {
 // revisado por una persona (source = human), salvo lo que se acepte tal cual
 // de la IA sin tocar, que se guarda como 'ai' para poder auditarlo después.
 
-const FLAG_LABEL: Record<TranslationFlag, { label: string; bg: string; color: string }> = {
-  empty:            { label: 'Sin traducir',      bg: '#fee2e2', color: '#991b1b' },
-  identical:        { label: 'Igual al inglés',   bg: '#fef3c7', color: '#92400e' },
-  anglicism:        { label: 'Posible anglicismo', bg: '#fef3c7', color: '#92400e' },
-  en_is_spanish:    { label: 'Inglés en español', bg: '#e0e7ff', color: '#3730a3' },
-  not_translatable: { label: 'Valor / código',    bg: 'var(--gray-100)', color: 'var(--text-muted)' },
+const FLAG_STYLE: Record<TranslationFlag, { bg: string; color: string }> = {
+  empty:            { bg: '#fee2e2', color: '#991b1b' },
+  identical:        { bg: '#fef3c7', color: '#92400e' },
+  anglicism:        { bg: '#fef3c7', color: '#92400e' },
+  en_is_spanish:    { bg: '#e0e7ff', color: '#3730a3' },
+  not_translatable: { bg: 'var(--gray-100)', color: 'var(--text-muted)' },
 }
 
 type Draft = { es: string; touched: boolean; fromAi: boolean }
 
 export default function TranslationsView({ initial, aiEnabled }: { initial: TranslationReview; aiEnabled: boolean }) {
+  const t = useTranslations('TemplateTranslations')
   const router = useRouter()
   const [titleEs, setTitleEs] = useState(initial.template.title_es ?? '')
   const [titleFromAi, setTitleFromAi] = useState(false)
@@ -69,7 +71,7 @@ export default function TranslationsView({ initial, aiEnabled }: { initial: Tran
       for (const it of res.items ?? []) { next[it.id] = { es: it.description_es, touched: false, fromAi: true }; n++ }
       return next
     })
-    setMsg(`La IA propuso ${res.items?.length ?? 0} traducciones${res.title_es ? ' y el título' : ''}. Revísalas y guarda.`)
+    setMsg(t(res.title_es ? 'proposedWithTitle' : 'proposed', { n: res.items?.length ?? 0 }))
     void n
   }
 
@@ -82,7 +84,7 @@ export default function TranslationsView({ initial, aiEnabled }: { initial: Tran
     const res = await saveTranslations(initial.template.id, { title_es: titleChanged ? titleEs : undefined, items })
     setBusy(null)
     if (res.error) { setError(res.error); return }
-    setMsg(`Guardado: ${res.saved ?? 0} ítems${titleChanged ? ' y título' : ''}.`)
+    setMsg(t(titleChanged ? 'savedWithTitle' : 'saved', { n: res.saved ?? 0 }))
     router.refresh()
   }
 
@@ -90,67 +92,68 @@ export default function TranslationsView({ initial, aiEnabled }: { initial: Tran
     setDrafts(prev => ({ ...prev, [id]: { ...prev[id], touched: true } }))
   }
 
-  const t = initial.template
+  const tpl = initial.template
   return (
     <div style={{ padding: '32px', maxWidth: '1200px' }}>
-      <Link href={`/admin/templates/${t.id}`} style={{ fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none' }}>← {t.code} · editor</Link>
+      <Link href={`/admin/templates/${tpl.id}`} style={{ fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none' }}>← {t('back', { code: tpl.code })}</Link>
 
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', margin: '12px 0 18px', flexWrap: 'wrap' }}>
         <div style={{ flex: 1, minWidth: 320 }}>
-          <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-strong)', margin: 0, letterSpacing: '-0.4px' }}>Traducción al español · <span style={{ fontFamily: 'ui-monospace, monospace' }}>{t.code}</span></h1>
-          <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '4px 0 10px' }}>{t.title}</p>
-          <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Título en español</label>
+          <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-strong)', margin: 0, letterSpacing: '-0.4px' }}>{t('title')} · <span style={{ fontFamily: 'ui-monospace, monospace' }}>{tpl.code}</span></h1>
+          <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '4px 0 10px' }}>{tpl.title}</p>
+          <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('titleEs')}</label>
           <input
             value={titleEs}
             onChange={e => { setTitleEs(e.target.value); setTitleFromAi(false) }}
-            placeholder="Ej.: FORMATO DE COMPLETACIÓN DE CONSTRUCCIÓN: Bombas centrífugas"
+            placeholder={t('titleEsPlaceholder')}
             style={{ ...input, width: '100%', marginTop: '4px', background: titleFromAi ? '#faf5ff' : 'var(--card-bg)' }}
           />
         </div>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          <button disabled={!!busy || !aiEnabled} onClick={() => propose('missing')} style={btn('#6d28d9', '#f5f3ff', '#ddd6fe', !!busy || !aiEnabled)} title={aiEnabled ? 'Traduce solo los ítems vacíos y el título si falta' : 'IA no configurada'}>
-            {busy === 'missing' ? 'Traduciendo…' : `✦ Traducir faltantes (${stats.empty})`}
+          <button disabled={!!busy || !aiEnabled} onClick={() => propose('missing')} style={btn('#6d28d9', '#f5f3ff', '#ddd6fe', !!busy || !aiEnabled)} title={aiEnabled ? t('missingHint') : t('aiOff')}>
+            {busy === 'missing' ? t('translating') : t('missing', { n: stats.empty })}
           </button>
-          <button disabled={!!busy || !aiEnabled} onClick={() => propose('flagged')} style={btn('#6d28d9', 'var(--card-bg)', '#ddd6fe', !!busy || !aiEnabled)} title="Vacíos + iguales al inglés + posibles anglicismos">
-            {busy === 'flagged' ? 'Traduciendo…' : `Revisar marcados (${stats.empty + stats.flagged})`}
+          <button disabled={!!busy || !aiEnabled} onClick={() => propose('flagged')} style={btn('#6d28d9', 'var(--card-bg)', '#ddd6fe', !!busy || !aiEnabled)} title={t('flaggedHint')}>
+            {busy === 'flagged' ? t('translating') : t('reviewFlagged', { n: stats.empty + stats.flagged })}
           </button>
-          <button disabled={!!busy || !aiEnabled} onClick={() => propose('all')} style={btn('#6d28d9', 'var(--card-bg)', '#ddd6fe', !!busy || !aiEnabled)} title="Vuelve a proponer todo (no se guarda hasta que aceptes)">
-            {busy === 'all' ? 'Traduciendo…' : 'Retraducir todo'}
+          <button disabled={!!busy || !aiEnabled} onClick={() => propose('all')} style={btn('#6d28d9', 'var(--card-bg)', '#ddd6fe', !!busy || !aiEnabled)} title={t('allHint')}>
+            {busy === 'all' ? t('translating') : t('retranslateAll')}
           </button>
           <button disabled={!!busy || (changed.length === 0 && !titleChanged)} onClick={save} style={btn('#fff', '#10b981', '#10b981', !!busy || (changed.length === 0 && !titleChanged))}>
-            {busy === 'save' ? 'Guardando…' : `Guardar ${changed.length + (titleChanged ? 1 : 0)} cambio${changed.length + (titleChanged ? 1 : 0) !== 1 ? 's' : ''}`}
+            {busy === 'save' ? t('saving') : t('save', { n: changed.length + (titleChanged ? 1 : 0) })}
           </button>
         </div>
       </div>
 
-      {!aiEnabled && <div style={note('#fffbeb', '#fde68a', '#92400e')}>La IA no está configurada en este entorno; puedes editar las traducciones a mano.</div>}
+      {!aiEnabled && <div style={note('#fffbeb', '#fde68a', '#92400e')}>{t('aiOffNote')}</div>}
       {error && <div style={note('#fef2f2', '#fecaca', '#dc2626')}>{error}</div>}
       {msg && <div style={note('#ecfdf5', '#6ee7b7', '#065f46')}>{msg}</div>}
 
       <div style={{ display: 'flex', gap: '8px', alignItems: 'center', margin: '4px 0 12px', flexWrap: 'wrap' }}>
-        {([['flagged', `Marcados (${stats.empty + stats.flagged})`], ['empty', `Sin traducir (${stats.empty})`], ['ai', `Traducidos por IA sin revisar (${stats.ai})`], ['all', `Todos (${initial.items.length})`]] as const).map(([f, label]) => (
+        {([['flagged', t('filter.flagged', { n: stats.empty + stats.flagged })], ['empty', t('filter.empty', { n: stats.empty })], ['ai', t('filter.ai', { n: stats.ai })], ['all', t('filter.all', { n: initial.items.length })]] as const).map(([f, label]) => (
           <button key={f} onClick={() => setFilter(f)} style={{ ...chip, background: filter === f ? '#0B1D3A' : 'var(--card-bg)', color: filter === f ? '#fff' : 'var(--text-muted)' }}>{label}</button>
         ))}
-        <span style={{ marginLeft: 'auto', fontSize: '12px', color: 'var(--text-muted)' }}>{visible.length} ítems · {stats.total} traducibles</span>
+        <span style={{ marginLeft: 'auto', fontSize: '12px', color: 'var(--text-muted)' }}>{t('counts', { n: visible.length, total: stats.total })}</span>
       </div>
 
       <div style={{ border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden', background: 'var(--card-bg)' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '56px 1fr 1fr 150px', gap: '0', background: 'var(--gray-50)', borderBottom: '1px solid var(--border)', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-          <div style={{ padding: '8px 10px' }}>#</div><div style={{ padding: '8px 10px' }}>Inglés (original)</div><div style={{ padding: '8px 10px' }}>Español</div><div style={{ padding: '8px 10px' }}>Estado</div>
+          <div style={{ padding: '8px 10px' }}>#</div><div style={{ padding: '8px 10px' }}>{t('col.en')}</div><div style={{ padding: '8px 10px' }}>{t('col.es')}</div><div style={{ padding: '8px 10px' }}>{t('col.state')}</div>
         </div>
-        {visible.length === 0 && <div style={{ padding: '24px', fontSize: '13px', color: 'var(--text-muted)', textAlign: 'center' }}>Nada que revisar con este filtro.</div>}
+        {visible.length === 0 && <div style={{ padding: '24px', fontSize: '13px', color: 'var(--text-muted)', textAlign: 'center' }}>{t('empty')}</div>}
         {visible.map((it, idx) => <Row key={it.id} item={it} draft={drafts[it.id]} first={idx === 0 || visible[idx - 1].section_title !== it.section_title}
           onChange={es => setDrafts(prev => ({ ...prev, [it.id]: { es, touched: true, fromAi: false } }))}
           onMarkReviewed={() => markReviewed(it.id)} />)}
       </div>
       <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '10px' }}>
-        Fondo violeta = propuesta de la IA aún no revisada. Editar una celda la marca como revisada por ti. «Aceptar» guarda la propuesta como revisada sin cambiarla.
+        {t('legend')}
       </p>
     </div>
   )
 }
 
 function Row({ item, draft, first, onChange, onMarkReviewed }: { item: TranslationItem; draft: Draft; first: boolean; onChange: (es: string) => void; onMarkReviewed: () => void }) {
+  const t = useTranslations('TemplateTranslations')
   const nt = item.flags.includes('not_translatable')
   return (
     <>
@@ -170,10 +173,10 @@ function Row({ item, draft, first, onChange, onMarkReviewed }: { item: Translati
           />
         </div>
         <div style={{ padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-start' }}>
-          {item.flags.map(f => <span key={f} style={{ padding: '1px 7px', borderRadius: '999px', fontSize: '10px', fontWeight: 700, background: FLAG_LABEL[f].bg, color: FLAG_LABEL[f].color, whiteSpace: 'nowrap' }}>{FLAG_LABEL[f].label}</span>)}
-          {item.source === 'ai' && !draft.touched && !draft.fromAi && <span style={{ padding: '1px 7px', borderRadius: '999px', fontSize: '10px', fontWeight: 700, background: '#ede9fe', color: '#5b21b6' }}>IA sin revisar</span>}
+          {item.flags.map(f => <span key={f} style={{ padding: '1px 7px', borderRadius: '999px', fontSize: '10px', fontWeight: 700, background: FLAG_STYLE[f].bg, color: FLAG_STYLE[f].color, whiteSpace: 'nowrap' }}>{t(`flag.${f}`)}</span>)}
+          {item.source === 'ai' && !draft.touched && !draft.fromAi && <span style={{ padding: '1px 7px', borderRadius: '999px', fontSize: '10px', fontWeight: 700, background: '#ede9fe', color: '#5b21b6' }}>{t('aiUnreviewed')}</span>}
           {(draft.fromAi || (item.source === 'ai' && !draft.touched)) && !nt && (
-            <button onClick={onMarkReviewed} style={{ fontSize: '11px', fontWeight: 600, color: '#166534', background: '#dcfce7', border: '1px solid #bbf7d0', borderRadius: '5px', padding: '2px 8px', cursor: 'pointer' }}>✓ Aceptar</button>
+            <button onClick={onMarkReviewed} style={{ fontSize: '11px', fontWeight: 600, color: '#166534', background: '#dcfce7', border: '1px solid #bbf7d0', borderRadius: '5px', padding: '2px 8px', cursor: 'pointer' }}>{t('accept')}</button>
           )}
         </div>
       </div>

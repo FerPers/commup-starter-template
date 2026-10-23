@@ -12,6 +12,7 @@
  * - Fallback graceful si no hay Speech API
  */
 
+import { useLocale, useTranslations } from 'next-intl';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 // ─── Tipos ─────────────────────────────────────────────────────────────────
@@ -80,7 +81,9 @@ export function useVoiceInput(options: {
   onResult: (text: string, isFinal: boolean) => void;
   onError: (error: string) => void;
 }) {
-  const { language = 'es-ES', onResult, onError } = options;
+  const tx = useTranslations('VoiceInput');
+  const locale = useLocale();
+  const { language = locale === 'en' ? 'en-US' : 'es-ES', onResult, onError } = options;
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const [state, setState] = useState<RecordState>('idle');
   const [isAvailable, setIsAvailable] = useState(false);
@@ -89,7 +92,6 @@ export function useVoiceInput(options: {
   useEffect(() => {
     const w = window as unknown as SpeechWindow;
     const SpeechRecognition = w.SpeechRecognition ?? w.webkitSpeechRecognition;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- Web Speech API detection requires window access, only available client-side
     setIsAvailable(!!SpeechRecognition);
   }, []);
 
@@ -98,7 +100,7 @@ export function useVoiceInput(options: {
     const SpeechRecognition = w.SpeechRecognition ?? w.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
-      onError('Dictado no disponible en este navegador. Use Chrome o Edge.');
+      onError(tx('unavailable'));
       return;
     }
 
@@ -106,7 +108,7 @@ export function useVoiceInput(options: {
     try {
       await navigator.mediaDevices.getUserMedia({ audio: true });
     } catch {
-      onError('Permiso de micrófono denegado.');
+      onError(tx('micDenied'));
       return;
     }
 
@@ -171,11 +173,11 @@ export function useVoiceInput(options: {
     recognition.onerror = (event: SpeechErrorEvent) => {
       setState('error');
       switch (event.error) {
-        case 'not-allowed': onError('Micrófono bloqueado por el navegador'); break;
-        case 'no-speech': onError('No se detectó voz. Intente de nuevo.'); break;
-        case 'network': onError('Error de red para reconocimiento de voz'); break;
+        case 'not-allowed': onError(tx('micBlocked')); break;
+        case 'no-speech': onError(tx('noSpeech')); break;
+        case 'network': onError(tx('network')); break;
         case 'aborted': break; // normal al detener
-        default: onError(`Error de dictado: ${event.error}`);
+        default: onError(tx('dictationError', { error: event.error }));
       }
     };
 
@@ -185,7 +187,7 @@ export function useVoiceInput(options: {
     };
 
     recognition.start();
-  }, [language, onResult, onError]);
+  }, [language, onResult, onError, tx]);
 
   const stop = useCallback(() => {
     recognitionRef.current?.stop();
@@ -237,14 +239,15 @@ function VoiceWaveform({ active }: { active: boolean }) {
 export default function VoiceInput({
   value,
   onChange,
-  placeholder = 'Ingrese texto o use el micrófono...',
+  placeholder,
   label,
   disabled = false,
   mode = 'append',
-  language = 'es-ES',
+  language,
   maxLength = 2000,
   className = '',
 }: VoiceInputProps) {
+  const tx = useTranslations('VoiceInput');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [interimDisplay, setInterimDisplay] = useState('');
@@ -308,7 +311,7 @@ export default function VoiceInput({
           ref={textareaRef}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
+          placeholder={placeholder ?? tx('placeholder')}
           disabled={disabled || isListening}
           maxLength={maxLength}
           rows={3}
@@ -375,14 +378,14 @@ export default function VoiceInput({
               {isListening ? (
                 <>
                   <span>■</span>
-                  <span>Detener</span>
+                  <span>{tx('stop')}</span>
                 </>
               ) : (
                 <>
                   <svg style={{ width: 14, height: 14 }} viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 1a4 4 0 0 1 4 4v6a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm0 2a2 2 0 0 0-2 2v6a2 2 0 0 0 4 0V5a2 2 0 0 0-2-2zm-1 13.93V19h-2v2h6v-2h-2v-2.07A7 7 0 0 0 19 11h-2a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.93z"/>
                   </svg>
-                  <span>Dictar</span>
+                  <span>{tx('dictate')}</span>
                 </>
               )}
             </button>
@@ -423,7 +426,7 @@ export default function VoiceInput({
       {isListening && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--primary-400)', fontSize: 'var(--text-xs)' }}>
           <span style={{ width: 8, height: 8, background: 'var(--primary-400)', borderRadius: 'var(--radius-pill)', animation: 'pulse 2s infinite' }} />
-          Escuchando... Hable claramente en español
+          {tx('listening')}
         </div>
       )}
 
@@ -437,7 +440,7 @@ export default function VoiceInput({
       {/* Fallback notice */}
       {!isAvailable && (
         <div style={{ color: 'var(--gray-500)', fontSize: 'var(--text-xs)' }}>
-          💡 Dictado disponible en Chrome y Edge
+          💡 {tx('fallback')}
         </div>
       )}
     </div>

@@ -4,7 +4,7 @@ import { redirect, notFound } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import { normalizeTag } from '@/lib/ce/import'
 
-export const metadata = { title: 'Tag 360° — CommUp' }
+export const metadata = { title: 'Tag 360°' }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const MAX_MATCHES = 20

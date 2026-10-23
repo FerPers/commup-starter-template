@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
 
 export default async function LinkErrorPage() {
@@ -31,20 +32,20 @@ export default async function LinkErrorPage() {
           {t('linkErrorDesc')}
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <a href="/forgot-password" style={{
+          <Link href="/forgot-password" style={{
             display: 'block', padding: '11px 16px', borderRadius: 10,
             background: 'linear-gradient(135deg, var(--primary-500), var(--primary-700))',
             color: '#fff', fontWeight: 700, fontSize: 'var(--text-base)', textDecoration: 'none',
           }}>
             {t('requestNew')}
-          </a>
-          <a href="/login" style={{
+          </Link>
+          <Link href="/login" style={{
             display: 'block', padding: '11px 16px', borderRadius: 10,
             background: 'var(--card-bg)', border: '1px solid var(--border)',
             color: 'var(--text-muted)', fontWeight: 600, fontSize: 'var(--text-base)', textDecoration: 'none',
           }}>
             {t('backToLogin')}
-          </a>
+          </Link>
         </div>
       </div>
     </div>

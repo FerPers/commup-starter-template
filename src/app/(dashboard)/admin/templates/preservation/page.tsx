@@ -7,6 +7,7 @@ import { ROLE_TIERS } from '@/lib/constants/roles'
 export default async function PreservationProceduresPage() {
   // N0 (H-13): título = etiqueta del menú.
   const tNav = await getTranslations('Sidebar.nav')
+  const t = await getTranslations('PreservationTemplates')
   const ctx = await getActiveMembership()
   if (!ctx) redirect('/login')
   const supabase = ctx.supabase
@@ -39,7 +40,7 @@ export default async function PreservationProceduresPage() {
           {tNav('preservationTemplates')}
         </h1>
         <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: '4px 0 0' }}>
-          Check sheets de preservación — define frecuencias, ítems de verificación y criterios de medición
+          {t('pageSubtitle')}
         </p>
       </div>
 

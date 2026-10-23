@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import { Card } from '@/components/ui'
@@ -29,7 +30,7 @@ export default async function ClientProjectsWidget({ orgId }: { orgId: string })
                   <div style={{ width: 38, height: 38, borderRadius: 'var(--radius-md)', background: 'var(--primary-50)', border: '1px solid var(--primary-200)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--primary-700)' }}>{p.code}</div>
                   <span style={{ fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--text-strong)' }}>{p.name}</span>
                 </div>
-                <a href={`/projects/${p.id}`} style={{ fontSize: 'var(--text-sm)', color: 'var(--primary-700)', textDecoration: 'none', fontWeight: 500 }}>{t('clientView.viewDetail')}</a>
+                <Link href={`/projects/${p.id}`} style={{ fontSize: 'var(--text-sm)', color: 'var(--primary-700)', textDecoration: 'none', fontWeight: 500 }}>{t('clientView.viewDetail')}</Link>
               </div>
             ))}
           </div>
@@ -37,7 +38,7 @@ export default async function ClientProjectsWidget({ orgId }: { orgId: string })
       </Card>
       <p style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-400)', marginTop: 16, textAlign: 'center' }}>
         {t.rich('clientView.viewItrs', {
-          link: (chunks) => <a href="/itrs" style={{ color: 'var(--primary-500)', textDecoration: 'none' }}>{chunks}</a>
+          link: (chunks) => <Link href="/itrs" style={{ color: 'var(--primary-500)', textDecoration: 'none' }}>{chunks}</Link>
         })}
       </p>
     </>

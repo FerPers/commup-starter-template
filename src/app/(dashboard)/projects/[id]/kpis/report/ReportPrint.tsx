@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect } from 'react'
+import Link from 'next/link'
+import { useLocale, useTranslations } from 'next-intl'
 import type { SubsystemKpi } from '@/app/actions/kpi-snapshots'
 
 type PhaseKpi = {
@@ -34,16 +36,17 @@ interface Props {
   subsystemKpis: SubsystemKpi[]
 }
 
-function formatDate(d: string | null) {
+function formatDate(d: string | null, locale: string) {
   if (!d) return '—'
-  return new Date(d + 'T00:00:00').toLocaleDateString('es-CO', {
+  return new Date(d + 'T00:00:00').toLocaleDateString(locale === 'en' ? 'en-US' : 'es-CO', {
     year: 'numeric', month: 'long', day: 'numeric',
   })
 }
 
 function TrafficLight({ pct, catA }: { pct: number; catA: number }) {
+  const tr = useTranslations('KpiReport')
   const color = catA > 0 ? '#ef4444' : pct === 100 ? '#10b981' : pct > 0 ? '#f59e0b' : '#ef4444'
-  const label = catA > 0 ? 'BLOQ' : pct === 100 ? '100%' : pct > 0 ? `${pct}%` : '0%'
+  const label = catA > 0 ? tr('blocked') : pct === 100 ? '100%' : pct > 0 ? `${pct}%` : '0%'
   return (
     <span style={{
       display: 'inline-block', padding: '2px 7px', borderRadius: '4px',
@@ -61,6 +64,8 @@ export default function ReportPrint({
   overallPct, totalItrs, totalApproved, openCatA, openCatB,
   phaseKpis, subsystemKpis,
 }: Props) {
+  const tr = useTranslations('KpiReport')
+  const locale = useLocale()
   useEffect(() => {
     const t = setTimeout(() => window.print(), 600)
     return () => clearTimeout(t)
@@ -94,7 +99,7 @@ export default function ReportPrint({
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px',
       }}>
         <span style={{ color: 'white', fontSize: '14px', fontWeight: 600 }}>
-          Reporte de Progreso — {projectCode}
+          {tr('toolbar', { code: projectCode })}
         </span>
         <div style={{ display: 'flex', gap: '8px' }}>
           <button
@@ -105,9 +110,9 @@ export default function ReportPrint({
               fontWeight: 600, cursor: 'pointer',
             }}
           >
-            Imprimir / Guardar PDF
+            {tr('print')}
           </button>
-          <a
+          <Link
             href={`/projects/${projectId}/kpis`}
             style={{
               padding: '7px 14px', background: 'rgba(255,255,255,0.1)', color: '#94a3b8',
@@ -115,8 +120,8 @@ export default function ReportPrint({
               textDecoration: 'none', fontWeight: 500,
             }}
           >
-            ← Volver a KPIs
-          </a>
+            ← {tr('back')}
+          </Link>
         </div>
       </div>
 
@@ -135,7 +140,7 @@ export default function ReportPrint({
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
                 <div style={{ fontSize: '11px', fontWeight: 600, color: '#64748b', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '6px' }}>
-                  Reporte de Progreso de Completamiento
+                  {tr('title')}
                 </div>
                 <h1 style={{ fontSize: '22px', fontWeight: 700, margin: '0 0 4px', color: 'white', letterSpacing: '-0.3px' }}>
                   {projectName}
@@ -148,7 +153,7 @@ export default function ReportPrint({
                 <div style={{ fontSize: '28px', fontWeight: 800, color: overallPct === 100 ? '#34d399' : '#60a5fa', letterSpacing: '-1px' }}>
                   {overallPct}%
                 </div>
-                <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>Avance global</div>
+                <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>{tr('overall')}</div>
               </div>
             </div>
 
@@ -159,11 +164,11 @@ export default function ReportPrint({
               border: '1px solid rgba(255,255,255,0.08)', overflow: 'hidden',
             }}>
               {[
-                { label: 'Código', value: projectCode },
-                { label: 'Inicio', value: formatDate(startDate) },
-                { label: 'Objetivo', value: formatDate(endDate) },
-                { label: 'Snapshot', value: `#${snapshotNum} · ${snapshotDate}` },
-                { label: 'Fecha reporte', value: reportDate },
+                { label: tr('meta.code'), value: projectCode },
+                { label: tr('meta.start'), value: formatDate(startDate, locale) },
+                { label: tr('meta.target'), value: formatDate(endDate, locale) },
+                { label: tr('meta.snapshot'), value: `#${snapshotNum} · ${snapshotDate}` },
+                { label: tr('meta.reportDate'), value: reportDate },
               ].map((item, i, arr) => (
                 <div key={item.label} style={{
                   flex: 1, padding: '10px 14px',
@@ -180,13 +185,13 @@ export default function ReportPrint({
 
             {/* ── Resumen ejecutivo ── */}
             <section style={{ marginBottom: '28px' }}>
-              <h2 style={sectionTitle}>Resumen Ejecutivo</h2>
+              <h2 style={sectionTitle}>{tr('summary')}</h2>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginTop: '12px' }}>
                 {[
-                  { label: 'Total ITRs', value: String(totalItrs), color: '#3b82f6' },
-                  { label: 'Aprobados', value: String(totalApproved), color: '#10b981' },
-                  { label: 'Punch A abiertos', value: String(openCatA), color: openCatA > 0 ? '#ef4444' : '#10b981' },
-                  { label: 'Punch B abiertos', value: String(openCatB), color: openCatB > 0 ? '#f59e0b' : '#10b981' },
+                  { label: tr('totalItrs'), value: String(totalItrs), color: '#3b82f6' },
+                  { label: tr('approved'), value: String(totalApproved), color: '#10b981' },
+                  { label: tr('openA'), value: String(openCatA), color: openCatA > 0 ? '#ef4444' : '#10b981' },
+                  { label: tr('openB'), value: String(openCatB), color: openCatB > 0 ? '#f59e0b' : '#10b981' },
                 ].map(c => (
                   <div key={c.label} style={{
                     padding: '14px 16px', border: `1px solid ${borderColor}`, borderRadius: '6px',
@@ -201,11 +206,11 @@ export default function ReportPrint({
 
             {/* ── KPI por Fase ── */}
             <section style={{ marginBottom: '28px' }}>
-              <h2 style={sectionTitle}>KPI por Fase</h2>
+              <h2 style={sectionTitle}>{tr('byPhase')}</h2>
               <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '12px', fontSize: '13px' }}>
                 <thead>
                   <tr style={{ background: '#f8fafc' }}>
-                    {['Fase', 'Nombre', 'Total ITRs', 'Aprobados', 'Pendientes', '% Completado'].map(h => (
+                    {[tr('col.phase'), tr('col.name'), tr('totalItrs'), tr('approved'), tr('col.pending'), tr('col.pctDone')].map(h => (
                       <th key={h} style={th}>{h}</th>
                     ))}
                   </tr>
@@ -238,7 +243,7 @@ export default function ReportPrint({
                   ))}
                   {/* Total row */}
                   <tr style={{ background: '#f8fafc', borderTop: `2px solid ${borderColor}` }}>
-                    <td colSpan={2} style={{ ...td, fontWeight: 700, color: '#0f172a' }}>TOTAL</td>
+                    <td colSpan={2} style={{ ...td, fontWeight: 700, color: '#0f172a' }}>{tr('total')}</td>
                     <td style={{ ...td, textAlign: 'center', fontWeight: 700 }}>{totalItrs}</td>
                     <td style={{ ...td, textAlign: 'center', fontWeight: 700, color: '#10b981' }}>{totalApproved}</td>
                     <td style={{ ...td, textAlign: 'center', fontWeight: 700, color: '#f59e0b' }}>{totalItrs - totalApproved}</td>
@@ -260,11 +265,11 @@ export default function ReportPrint({
             {/* ── Completamiento por Subsistema ── */}
             {subsystemKpis.length > 0 && (
               <section style={{ marginBottom: '28px' }}>
-                <h2 style={sectionTitle}>Completamiento por Subsistema</h2>
+                <h2 style={sectionTitle}>{tr('bySubsystem')}</h2>
                 <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '12px', fontSize: '12px' }}>
                   <thead>
                     <tr style={{ background: '#f8fafc' }}>
-                      {['Sistema', 'Subsistema', 'ITRs', 'Aprobados', '% Avance', 'Punch A', 'Punch B', 'Estado'].map(h => (
+                      {[tr('col.system'), tr('col.subsystem'), 'ITRs', tr('approved'), tr('col.pctProgress'), 'Punch A', 'Punch B', tr('col.status')].map(h => (
                         <th key={h} style={th}>{h}</th>
                       ))}
                     </tr>
@@ -310,17 +315,17 @@ export default function ReportPrint({
 
             {/* ── Firmas ── */}
             <section style={{ marginTop: '36px' }}>
-              <h2 style={sectionTitle}>Firmas y Aprobaciones</h2>
+              <h2 style={sectionTitle}>{tr('signatures')}</h2>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', marginTop: '16px' }}>
-                {['Project Manager', 'Inspector / QC', 'Cliente'].map(role => (
+                {[tr('role.pm'), tr('role.qc'), tr('role.client')].map(role => (
                   <div key={role} style={{ borderTop: `2px solid ${borderColor}`, paddingTop: '12px' }}>
                     <div style={{ height: '48px' }} />
                     <div style={{ borderTop: `1px solid ${borderColor}`, paddingTop: '6px' }}>
                       <div style={{ fontSize: '11px', fontWeight: 600, color: '#475569' }}>{role}</div>
-                      <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '2px' }}>Nombre / Firma</div>
+                      <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '2px' }}>{tr('nameSignature')}</div>
                     </div>
                     <div style={{ marginTop: '14px', display: 'flex', justifyContent: 'space-between', borderTop: `1px solid ${borderColor}`, paddingTop: '6px' }}>
-                      <div style={{ fontSize: '10px', color: '#94a3b8' }}>Fecha</div>
+                      <div style={{ fontSize: '10px', color: '#94a3b8' }}>{tr('date')}</div>
                       <div style={{ fontSize: '10px', color: '#94a3b8' }}>____/____/________</div>
                     </div>
                   </div>
@@ -335,7 +340,7 @@ export default function ReportPrint({
               display: 'flex', justifyContent: 'space-between', alignItems: 'center',
             }}>
               <span style={{ fontSize: '10px', color: '#94a3b8' }}>
-                Generado por CommUp · {reportDate}
+                {tr('generated', { date: reportDate })}
               </span>
               <span style={{ fontSize: '10px', color: '#94a3b8' }}>
                 {projectCode} · Snapshot #{snapshotNum}

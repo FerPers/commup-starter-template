@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { FolderOpen } from 'lucide-react'
 import type { ExplorerArea, ExplorerSystem, ExplorerSubsystem } from '@/types/database'
 
@@ -157,6 +158,7 @@ function SystemRow({
 }
 
 export default function ExplorerTree({ explorerData, projectId }: Props) {
+  const tx = useTranslations('ExplorerTree')
   const [openAreas, setOpenAreas] = useState<Set<string>>(new Set(explorerData.map(a => a.id)))
   const [openSystems, setOpenSystems] = useState<Set<string>>(new Set())
 
@@ -185,8 +187,8 @@ export default function ExplorerTree({ explorerData, projectId }: Props) {
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
           <FolderOpen size={32} aria-hidden="true" />
         </div>
-        <div style={{ fontWeight: 500 }}>No hay áreas definidas en este proyecto</div>
-        <div style={{ fontSize: '13px', marginTop: '4px' }}>Importa tags para generar la jerarquía automáticamente</div>
+        <div style={{ fontWeight: 500 }}>{tx('emptyTitle')}</div>
+        <div style={{ fontSize: '13px', marginTop: '4px' }}>{tx('emptyHint')}</div>
       </div>
     )
   }

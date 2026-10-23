@@ -174,10 +174,10 @@ export default async function TagsPage({
         }}>
           <div style={{ fontSize: '32px', marginBottom: '12px', opacity: 0.3 }}>⊟</div>
           <p style={{ fontSize: '15px', fontWeight: 500, color: 'var(--text-muted)', margin: '0 0 6px' }}>
-            Aún no hay tags importados
+            {t('empty.title')}
           </p>
           <p style={{ fontSize: '13px', color: '#94a3b8', margin: '0 0 20px' }}>
-            Carga tu lista de equipos desde Excel para comenzar.
+            {t('empty.hint')}
           </p>
           {canEdit && (
             <Link
@@ -188,7 +188,7 @@ export default async function TagsPage({
                 fontSize: '13px', fontWeight: 500, textDecoration: 'none',
               }}
             >
-              Importar lista de equipos
+              {t('empty.import')}
             </Link>
           )}
         </div>

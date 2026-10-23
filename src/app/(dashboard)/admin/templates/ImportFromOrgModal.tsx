@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState, useTransition } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import {
   listImportableTemplates,
@@ -21,6 +22,8 @@ import {
 type StateFilter = '' | 'new' | 'outdated' | 'same'
 
 export default function ImportFromOrgModal({ onClose }: { onClose: () => void }) {
+  // `ti` (no `t`): las plantillas se recorren como `t`.
+  const ti = useTranslations('TemplateImport')
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -94,11 +97,7 @@ export default function ImportFromOrgModal({ onClose }: { onClose: () => void })
         setError(res.error)
         return
       }
-      setSuccess(res.kind === 'revision'
-        ? `"${t.code}": revisión nueva creada (inactiva). Revísala y pulsa «Activar esta revisión».`
-        : res.kind === 'unchanged'
-          ? `"${t.code}" ya estaba al día.`
-          : `Template "${t.code}" importado exitosamente`)
+      setSuccess(ti(res.kind === 'revision' ? 'okRevision' : res.kind === 'unchanged' ? 'okUnchanged' : 'okImported', { code: t.code }))
       await reload()
       router.refresh()
     })
@@ -114,10 +113,10 @@ export default function ImportFromOrgModal({ onClose }: { onClose: () => void })
       const res = await cloneTemplatesToActiveOrg(pending.map(t => t.id), { updateExisting: true })
       setBulkOrgId(null)
       if (res.error || !res.result) {
-        setError(res.error ?? 'No se pudo importar')
+        setError(res.error ?? ti('error'))
         return
       }
-      setSuccess(describeBulk(res.result))
+      setSuccess(describeBulk(res.result, ti))
       if (res.result.errors.length > 0) {
         setError(res.result.errors.slice(0, 5).map(e => `${e.code}: ${e.reason}`).join(' · '))
       }
@@ -150,16 +149,16 @@ export default function ImportFromOrgModal({ onClose }: { onClose: () => void })
         }}>
           <div>
             <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: 'var(--text-strong)' }}>
-              Importar templates del catálogo
+              {ti('title')}
             </h2>
             <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--text-muted)' }}>
-              Los códigos nuevos se clonan activos. Los que ya existen con contenido distinto reciben una revisión inactiva para revisar y activar; los idénticos no se tocan.
+              {ti('subtitle')}
             </p>
           </div>
           <button
             onClick={onClose}
             style={{ background: 'none', border: 'none', fontSize: 24, color: 'var(--text-muted)', cursor: 'pointer', lineHeight: 1 }}
-            aria-label="Cerrar"
+            aria-label={ti('close')}
           >×</button>
         </div>
 
@@ -169,7 +168,7 @@ export default function ImportFromOrgModal({ onClose }: { onClose: () => void })
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Buscar por código o título…"
+              placeholder={ti('search')}
               style={{ flex: 1, minWidth: 200, padding: '7px 10px', fontSize: 13, border: '1px solid var(--border)', borderRadius: 7, background: 'var(--card-bg)', color: 'var(--text-strong)' }}
             />
             <select
@@ -177,7 +176,7 @@ export default function ImportFromOrgModal({ onClose }: { onClose: () => void })
               onChange={e => setDiscipline(e.target.value)}
               style={{ padding: '7px 10px', fontSize: 13, border: '1px solid var(--border)', borderRadius: 7, background: 'var(--card-bg)', color: 'var(--text-strong)' }}
             >
-              <option value="">Todas las disciplinas</option>
+              <option value="">{ti('allDisciplines')}</option>
               {disciplines.map(d => <option key={d} value={d}>{d}</option>)}
             </select>
             <select
@@ -185,21 +184,21 @@ export default function ImportFromOrgModal({ onClose }: { onClose: () => void })
               onChange={e => setStateFilter(e.target.value as StateFilter)}
               style={{ padding: '7px 10px', fontSize: 13, border: '1px solid var(--border)', borderRadius: 7, background: 'var(--card-bg)', color: 'var(--text-strong)' }}
             >
-              <option value="">Todos los estados</option>
-              <option value="new">Nuevos ({counts.new})</option>
-              <option value="outdated">Actualizables ({counts.outdated})</option>
-              <option value="same">Al día ({counts.same})</option>
+              <option value="">{ti('allStates')}</option>
+              <option value="new">{ti('stateNew', { n: counts.new })}</option>
+              <option value="outdated">{ti('stateOutdated', { n: counts.outdated })}</option>
+              <option value="same">{ti('stateSame', { n: counts.same })}</option>
             </select>
-            <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{filtered.length} de {templates.length}</span>
+            <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{ti('of', { n: filtered.length, total: templates.length })}</span>
           </div>
         )}
 
         <div style={{ overflowY: 'auto', padding: 20 }}>
-          {loading && <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>Cargando templates…</p>}
+          {loading && <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>{ti('loading')}</p>}
 
           {!loading && templates.length === 0 && !error && (
             <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>
-              No hay templates disponibles: ninguna organización está marcada como catálogo público y no eres miembro de otra org con templates.
+              {ti('none')}
             </p>
           )}
 
@@ -230,14 +229,14 @@ export default function ImportFromOrgModal({ onClose }: { onClose: () => void })
                       background: '#ecfdf5', color: '#059669', border: '1px solid #6ee7b7',
                       letterSpacing: '0.04em',
                     }}>
-                      CATÁLOGO PÚBLICO
+                      {ti('publicCatalog')}
                     </span>
                   )}
                 </p>
                 <button
                   onClick={() => handleImportAll(orgId, list)}
                   disabled={isPending || pending.length === 0}
-                  title="Clona los códigos nuevos y crea una revisión inactiva para los que difieren del catálogo"
+                  title={ti('importAllHint')}
                   style={{
                     padding: '6px 12px', fontSize: 12, fontWeight: 600,
                     background: 'var(--card-bg)', color: '#2563eb', border: '1px solid #bfdbfe', borderRadius: 6,
@@ -247,10 +246,10 @@ export default function ImportFromOrgModal({ onClose }: { onClose: () => void })
                   }}
                 >
                   {bulkOrgId === orgId
-                    ? `Importando ${pending.length}…`
+                    ? ti('importingN', { n: pending.length })
                     : pending.length === 0
-                      ? 'Todo al día'
-                      : `Importar nuevos y actualizar ${discipline || search || stateFilter ? 'los filtrados' : 'todos'} (${pending.length})`}
+                      ? ti('allUpToDate')
+                      : ti(discipline || search || stateFilter ? 'importFiltered' : 'importAll', { n: pending.length })}
                 </button>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -266,7 +265,7 @@ export default function ImportFromOrgModal({ onClose }: { onClose: () => void })
                         <StateBadge t={t} />
                       </p>
                       <p style={{ margin: '2px 0 0', fontSize: 11, color: 'var(--text-muted)' }}>
-                        {t.disciplineCode} / fase {t.phaseCode} · v{t.version} · {t.sectionCount} secciones · {t.itemCount} ítems
+                        {t.disciplineCode} / {ti('phase', { code: t.phaseCode ?? '' })} · v{t.version} · {ti('sections', { n: t.sectionCount })} · {ti('items', { n: t.itemCount })}
                       </p>
                     </div>
                     <button
@@ -281,7 +280,7 @@ export default function ImportFromOrgModal({ onClose }: { onClose: () => void })
                         flexShrink: 0,
                       }}
                     >
-                      {isPending && importingId === t.id ? 'Importando…' : t.localState === 'same' ? 'Al día' : t.localState === 'outdated' ? 'Actualizar' : 'Importar'}
+                      {isPending && importingId === t.id ? ti('importing') : t.localState === 'same' ? ti('upToDate') : t.localState === 'outdated' ? ti('update') : ti('import')}
                     </button>
                   </div>
                 ))}
@@ -296,17 +295,18 @@ export default function ImportFromOrgModal({ onClose }: { onClose: () => void })
 }
 
 function StateBadge({ t }: { t: ImportableTemplate }) {
+  const ti = useTranslations('TemplateImport')
   const style = { fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 999, letterSpacing: '0.04em', whiteSpace: 'nowrap' as const }
-  if (t.localState === 'new') return <span style={{ ...style, background: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe' }}>NUEVO</span>
-  if (t.localState === 'outdated') return <span style={{ ...style, background: '#fffbeb', color: '#b45309', border: '1px solid #fde68a' }} title="Tu copia local difiere del catálogo">ACTUALIZABLE · local v{t.localVersion}</span>
-  return <span style={{ ...style, background: '#ecfdf5', color: '#059669', border: '1px solid #6ee7b7' }}>AL DÍA · v{t.localVersion}</span>
+  if (t.localState === 'new') return <span style={{ ...style, background: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe' }}>{ti('badgeNew')}</span>
+  if (t.localState === 'outdated') return <span style={{ ...style, background: '#fffbeb', color: '#b45309', border: '1px solid #fde68a' }} title={ti('badgeOutdatedHint')}>{ti('badgeOutdated', { v: t.localVersion ?? '' })}</span>
+  return <span style={{ ...style, background: '#ecfdf5', color: '#059669', border: '1px solid #6ee7b7' }}>{ti('badgeSame', { v: t.localVersion ?? '' })}</span>
 }
 
-function describeBulk(r: BulkCloneResult): string {
-  const parts = [`${r.created} importado${r.created !== 1 ? 's' : ''}`]
-  if (r.revisions > 0) parts.push(`${r.revisions} revisión${r.revisions !== 1 ? 'es' : ''} nueva${r.revisions !== 1 ? 's' : ''} (inactivas, para revisar y activar)`)
-  if (r.unchanged > 0) parts.push(`${r.unchanged} ya al día`)
-  if (r.skipped > 0) parts.push(`${r.skipped} ya existía${r.skipped !== 1 ? 'n' : ''}`)
-  if (r.errors.length > 0) parts.push(`${r.errors.length} con error`)
+function describeBulk(r: BulkCloneResult, ti: (key: string, values?: Record<string, number>) => string): string {
+  const parts = [ti('bulk.created', { n: r.created })]
+  if (r.revisions > 0) parts.push(ti('bulk.revisions', { n: r.revisions }))
+  if (r.unchanged > 0) parts.push(ti('bulk.unchanged', { n: r.unchanged }))
+  if (r.skipped > 0) parts.push(ti('bulk.skipped', { n: r.skipped }))
+  if (r.errors.length > 0) parts.push(ti('bulk.errors', { n: r.errors.length }))
   return parts.join(' · ')
 }

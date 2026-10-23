@@ -24,6 +24,7 @@ const PRESET_COLORS = [
 ]
 
 function ColorPicker({ value, onChange }: { value: string; onChange: (c: string) => void }) {
+  const t = useTranslations('Config')
   return (
     <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
       {PRESET_COLORS.map(c => (
@@ -42,7 +43,7 @@ function ColorPicker({ value, onChange }: { value: string; onChange: (c: string)
         type="color"
         value={value}
         onChange={e => onChange(e.target.value)}
-        title="Color personalizado"
+        title={t('customColor')}
         style={{ width: 22, height: 22, border: 'none', borderRadius: '50%', padding: 0, cursor: 'pointer', background: 'none' }}
       />
     </div>
@@ -319,8 +320,8 @@ export default function OrgConfigView({
         setIsCatalog(!value)
       } else {
         setCatalogMsg(value
-          ? 'Esta org ahora es catálogo público — sus templates son visibles a cualquier user de CommUp.'
-          : 'Catálogo desactivado — los templates vuelven a ser solo de miembros.'
+          ? t('org.catalog.enabledMsg')
+          : t('org.catalog.disabledMsg')
         )
       }
     })
@@ -372,7 +373,7 @@ export default function OrgConfigView({
               }}>
                 {orgLogoUrl
                   // eslint-disable-next-line @next/next/no-img-element -- Supabase Storage signed URL, no optimization benefit on Workers
-                  ? <img src={orgLogoUrl} alt="logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                  ? <img src={orgLogoUrl} alt={t('org.logoAlt')} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                   : <span style={{ fontSize: '24px', color: '#cbd5e1' }}>◈</span>
                 }
               </div>
@@ -425,13 +426,10 @@ export default function OrgConfigView({
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-strong)', marginBottom: '4px' }}>
-                Catálogo público de templates
+                {t('org.catalog.title')}
               </div>
               <div style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.5 }}>
-                Si activas esta opción, los templates ITR, procedimientos de preservación y templates PSSR de
-                esta org serán visibles a cualquier usuario autenticado de CommUp como banco de plantillas.
-                Los demás usuarios podrán <strong>importar (clonar)</strong> tus templates a su org pero no
-                modificar los originales. Solo el owner de la org puede activar este modo.
+                {t.rich('org.catalog.help', { strong: c => <strong>{c}</strong> })}
               </div>
             </div>
             <label style={{
@@ -449,12 +447,12 @@ export default function OrgConfigView({
                 onChange={e => handleToggleCatalog(e.target.checked)}
                 style={{ cursor: isOwner ? 'pointer' : 'not-allowed' }}
               />
-              {isCatalog ? 'Catálogo activo' : 'Activar catálogo'}
+              {t(isCatalog ? 'org.catalog.active' : 'org.catalog.activate')}
             </label>
           </div>
           {!isOwner && (
             <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '8px 0 0', fontStyle: 'italic' }}>
-              Solo el owner de la org puede modificar este flag.
+              {t('org.catalog.ownerOnly')}
             </p>
           )}
           {catalogMsg && (
@@ -464,10 +462,10 @@ export default function OrgConfigView({
           {/* ── Glosario de traducción ITR ── */}
           <div style={{ borderTop: '1px solid var(--border)', marginTop: '18px', paddingTop: '16px' }}>
             <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-strong)', marginBottom: '4px' }}>
-              Glosario de traducción de ITRs (inglés → español)
+              {t('org.glossary.title')}
             </div>
             <div style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.5, marginBottom: '10px' }}>
-              La IA respeta estos términos al traducir plantillas. Una línea por término, formato <code>inglés = español</code>. Vacío = glosario estándar de CommUp.
+              {t.rich('org.glossary.help', { code: c => <code>{c}</code> })}
             </div>
             <textarea
               value={glossary}
@@ -480,12 +478,12 @@ export default function OrgConfigView({
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '8px' }}>
               <button
                 disabled={isPending}
-                onClick={() => act(async () => { const r = await saveOrgGlossary(glossary); if (!r.error) setGlossaryMsg('Glosario guardado'); return r })}
+                onClick={() => act(async () => { const r = await saveOrgGlossary(glossary); if (!r.error) setGlossaryMsg(t('org.glossary.saved')); return r })}
                 style={btnPrimary}
               >
-                Guardar glosario
+                {t('org.glossary.save')}
               </button>
-              <button onClick={() => setGlossary(DEFAULT_ITR_GLOSSARY)} style={btnOutline}>Cargar glosario estándar</button>
+              <button onClick={() => setGlossary(DEFAULT_ITR_GLOSSARY)} style={btnOutline}>{t('org.glossary.loadDefault')}</button>
               {glossaryMsg && <span style={{ fontSize: '12px', color: '#10b981' }}>{glossaryMsg}</span>}
             </div>
           </div>
@@ -493,10 +491,10 @@ export default function OrgConfigView({
           {/* ── Límite de punches Cat B por subsistema ── */}
           <div style={{ borderTop: '1px solid var(--border)', marginTop: '18px', paddingTop: '16px' }}>
             <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-strong)', marginBottom: '4px' }}>
-              Máximo de punches Cat B abiertos por subsistema
+              {t('org.catB.title')}
             </div>
             <div style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.5, marginBottom: '10px' }}>
-              Hasta este número, los Cat B abiertos permiten pasar el gate con justificación (listo con condiciones). Por encima, el subsistema queda bloqueado para emitir certificados y en Control Tower. Cat C nunca bloquea.
+              {t('org.catB.help')}
             </div>
             <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
               <input
@@ -506,23 +504,23 @@ export default function OrgConfigView({
                 value={catBValue}
                 disabled={catBUnlimited}
                 onChange={e => setCatBValue(e.target.value)}
-                aria-label="Máximo de punches Cat B abiertos por subsistema"
+                aria-label={t('org.catB.title')}
                 style={{ ...inputStyle, width: '90px' }}
               />
               <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--text-strong)' }}>
                 <input type="checkbox" checked={catBUnlimited} onChange={e => setCatBUnlimited(e.target.checked)} />
-                Sin límite
+                {t('org.catB.unlimited')}
               </label>
               <button
                 disabled={isPending}
                 onClick={() => act(async () => {
                   const r = await saveCatBLimit(catBUnlimited ? null : Number(catBValue))
-                  if (!r.error) setCatBMsg('Límite guardado')
+                  if (!r.error) setCatBMsg(t('org.catB.saved'))
                   return r
                 })}
                 style={btnPrimary}
               >
-                Guardar límite
+                {t('org.catB.save')}
               </button>
               {catBMsg && <span style={{ fontSize: '12px', color: '#10b981' }}>{catBMsg}</span>}
             </div>
@@ -760,7 +758,7 @@ function ExportSection({ projects, t }: { projects: Project[]; t: (key: string) 
       const res = await fetch(`/api/admin/export?projectId=${selectedProject}`)
       if (!res.ok) {
         const err = await res.json() as { error?: string }
-        alert(err.error ?? 'Export failed')
+        alert(err.error ?? t('export.failed'))
         return
       }
       const blob = await res.blob()

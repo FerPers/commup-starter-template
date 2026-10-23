@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { addDaysIso, browserToday } from '@/lib/time/zone'
@@ -208,13 +209,13 @@ export default function PreservationGlobal({
                 {/* Project */}
                 <div>
                   {proj && (
-                    <a
+                    <Link
                       href={`/projects/${proj.id}`}
                       title={proj.name}
                       style={{ fontSize: '10px', fontWeight: 700, color: '#3b82f6', background: '#eff6ff', padding: '2px 7px', borderRadius: '4px', textDecoration: 'none', display: 'inline-block', maxWidth: '94px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                     >
                       {proj.code}
-                    </a>
+                    </Link>
                   )}
                 </div>
 
@@ -222,14 +223,14 @@ export default function PreservationGlobal({
                 <div>
                   {/* H-08 (S08): la fila lleva al tag y a ejecutar el plan */}
                   {plan.tags ? (
-                    <a href={`/projects/${plan.project_id}/tags/${plan.tags.id}?tab=preservation`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)', fontFamily: 'ui-monospace, monospace', textDecoration: 'none' }}>
+                    <Link href={`/projects/${plan.project_id}/tags/${plan.tags.id}?tab=preservation`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)', fontFamily: 'ui-monospace, monospace', textDecoration: 'none' }}>
                       {plan.tags.tag_number}
-                    </a>
+                    </Link>
                   ) : <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>—</div>}
                   {plan.tags && plan.status === 'active' && (
-                    <a href={`/projects/${plan.project_id}/tags/${plan.tags.id}/preservation/${plan.id}`} style={{ marginLeft: '8px', fontSize: '11px', fontWeight: 600, color: '#2563eb', textDecoration: 'none' }}>
+                    <Link href={`/projects/${plan.project_id}/tags/${plan.tags.id}/preservation/${plan.id}`} style={{ marginLeft: '8px', fontSize: '11px', fontWeight: 600, color: '#2563eb', textDecoration: 'none' }}>
                       {t('table.execute')} →
-                    </a>
+                    </Link>
                   )}
                   <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '1px' }}>
                     {plan.tags?.description ?? ''}

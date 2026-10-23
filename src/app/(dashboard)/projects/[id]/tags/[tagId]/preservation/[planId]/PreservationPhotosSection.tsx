@@ -176,7 +176,7 @@ export default function PreservationPhotosSection({
                     {/* eslint-disable-next-line @next/next/no-img-element -- signed URLs 1h TTL; Image optimizer would cache stale */}
                     <img
                       src={att.signed_url}
-                      alt="preservation evidence"
+                      alt={t('evidenceAlt')}
                       style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                     />
                   </a>

@@ -3,7 +3,6 @@
 import { useState, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 import GenerateSourceItrsModal, { type GenerationMember, type GenerationTemplate } from '@/components/itr/GenerateSourceItrsModal'
-import { ITR_STATUS_LABELS } from '@/lib/ce/test-status'
 import type { SourceItrInfo } from '@/lib/itr/source-itrs-server'
 
 const STATUS_COLORS: Record<string, string> = {
@@ -34,14 +33,11 @@ type LoopSignal = {
   tags: { tag_number: string } | null
 }
 
-const CHAIN: { key: keyof LoopSignal; label: string }[] = [
-  { key: 'junction_box', label: 'JB' },
-  { key: 'marshalling', label: 'Marshalling' },
-  { key: 'io_card', label: 'Tarjeta I/O' },
-  { key: 'io_channel', label: 'Canal' },
-  { key: 'dcs_tag', label: 'Tag DCS' },
-  { key: 'hmi_display', label: 'HMI' },
+// Etiquetas en Signals.loopsChain.<key>.
+const CHAIN: { key: 'junction_box' | 'marshalling' | 'io_card' | 'io_channel' | 'dcs_tag' | 'hmi_display' }[] = [
+  { key: 'junction_box' }, { key: 'marshalling' }, { key: 'io_card' }, { key: 'io_channel' }, { key: 'dcs_tag' }, { key: 'hmi_display' },
 ]
+const ITR_STATUSES = ['not_started', 'in_progress', 'completed', 'approved', 'rejected', 'on_hold']
 
 type LoopRow = {
   id: string
@@ -114,8 +110,8 @@ export default function LoopsView({
 
       {canEdit && missing.length > 0 && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '12px', fontSize: '13px', color: 'var(--text-muted)' }}>
-          {missing.length} lazo{missing.length === 1 ? '' : 's'} con señales sin ITR de loop check.
-          <button type="button" onClick={() => setGenerate(missing.map(l => ({ id: l.id, label: l.loop_number })))} style={{ padding: '7px 12px', borderRadius: '8px', border: 0, background: 'var(--primary-600, #2563eb)', color: '#fff', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>Generar faltantes ({missing.length})</button>
+          {t('loops.missing', { n: missing.length })}
+          <button type="button" onClick={() => setGenerate(missing.map(l => ({ id: l.id, label: l.loop_number })))} style={{ padding: '7px 12px', borderRadius: '8px', border: 0, background: 'var(--primary-600, #2563eb)', color: '#fff', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>{t('loops.generateMissing', { n: missing.length })}</button>
         </div>
       )}
 
@@ -218,7 +214,7 @@ export default function LoopsView({
                       </td>
                       <td style={{ padding: '10px 12px', color: 'var(--text-muted)' }}>
                         {loop.signals.length}
-                        {loop.signals.some(s => CHAIN.some(c => !s[c.key])) && <span title="Cadena incompleta: faltan datos para el loop check" style={{ color: '#b45309', marginLeft: '4px' }}>⚠</span>}
+                        {loop.signals.some(s => CHAIN.some(c => !s[c.key])) && <span title={t('loops.chainIncomplete')} style={{ color: '#b45309', marginLeft: '4px' }}>⚠</span>}
                       </td>
                       <td style={{ padding: '10px 12px', whiteSpace: 'nowrap' }} onClick={e => e.stopPropagation()}>
                         <LoopItrCell info={loopItrs[loop.id]} projectId={projectId} />
@@ -251,15 +247,15 @@ export default function LoopsView({
                 <button onClick={() => setSelected(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', fontSize: '16px' }}>✕</button>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '12px', fontSize: '12px' }}>
-                <strong style={{ color: 'var(--text-strong)' }}>Loop check:</strong>
+                <strong style={{ color: 'var(--text-strong)' }}>{t('loops.loopCheck')}</strong>
                 <LoopItrCell info={loopItrs[selected.id]} projectId={projectId} />
                 {canEdit && selected.signals.length > 0 && (
                   <button type="button" onClick={() => setGenerate([{ id: selected.id, label: selected.loop_number, revision: !!loopItrs[selected.id] }])} style={{ padding: '6px 10px', borderRadius: '7px', border: '1px solid var(--border)', background: 'var(--card-bg)', fontSize: '12px', cursor: 'pointer' }}>
-                    {loopItrs[selected.id] ? 'Generar revisión (R2…)' : 'Generar ITR de loop check'}
+                    {loopItrs[selected.id] ? t('loops.generateRevision') : t('loops.generateItr')}
                   </button>
                 )}
               </div>
-              {selected.loop_tags.length === 0 && <p style={{ fontSize: '12px', color: 'var(--gray-400)', margin: 0 }}>Sin instrumentos asociados.</p>}
+              {selected.loop_tags.length === 0 && <p style={{ fontSize: '12px', color: 'var(--gray-400)', margin: 0 }}>{t('loops.noInstruments')}</p>}
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 {selected.loop_tags.map(lt => lt.tags && (
                   <span key={lt.id} style={{
@@ -272,14 +268,14 @@ export default function LoopsView({
                 ))}
               </div>
 
-              <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-strong)', margin: '18px 0 8px' }}>Señales y cadena del loop check</div>
+              <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-strong)', margin: '18px 0 8px' }}>{t('loops.signalsChain')}</div>
               {selected.signals.length === 0 ? (
-                <p style={{ fontSize: '12px', color: 'var(--gray-400)', margin: 0 }}>Sin señales en este lazo. Impórtalas con la columna LAZO en «Importar señales».</p>
+                <p style={{ fontSize: '12px', color: 'var(--gray-400)', margin: 0 }}>{t('loops.noSignals')}</p>
               ) : (
                 <div style={{ overflowX: 'auto' }}>
                   <table style={{ borderCollapse: 'collapse', fontSize: '12px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', minWidth: '100%' }}>
                     <thead><tr>
-                      {['Señal', 'Tipo', 'Instrumento', ...CHAIN.map(c => c.label)].map(h => (
+                      {[t('loops.col.signal'), t('loops.col.type'), t('loops.col.instrument'), ...CHAIN.map(c => t(`loopsChain.${c.key}`))].map(h => (
                         <th key={h} style={{ padding: '7px 10px', textAlign: 'left', color: 'var(--text-muted)', fontSize: '11px', whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>{h}</th>
                       ))}
                     </tr></thead>
@@ -312,7 +308,8 @@ export default function LoopsView({
 
 /** Estado del ITR de loop check de un lazo: número (enlace), estado y aviso si la foto quedó desactualizada. */
 function LoopItrCell({ info, projectId }: { info: SourceItrInfo | undefined; projectId: string }) {
-  if (!info) return <span style={{ color: 'var(--gray-400)', fontSize: '12px' }}>Sin ITR</span>
+  const t = useTranslations('Signals')
+  if (!info) return <span style={{ color: 'var(--gray-400)', fontSize: '12px' }}>{t('loops.noItr')}</span>
   const results = Object.values(info.rows)
   const failed = results.filter(r => r === 'fail').length
   const passed = results.filter(r => r === 'pass').length
@@ -320,8 +317,8 @@ function LoopItrCell({ info, projectId }: { info: SourceItrInfo | undefined; pro
   return (
     <span style={{ fontSize: '12px', display: 'inline-flex', gap: '6px', alignItems: 'center' }}>
       <a href={info.tagId ? `/projects/${projectId}/tags/${info.tagId}/itrs/${info.id}` : '#'} style={{ fontFamily: 'monospace', fontWeight: 600, color }}>{info.itrNumber}</a>
-      <span style={{ color: 'var(--text-muted)' }}>{ITR_STATUS_LABELS[info.status] ?? info.status} · {passed}/{results.length}{failed ? ` · ${failed} ✗` : ''}</span>
-      {info.outdated && <span title="El lazo cambió (señales o cadena) después de generar el ITR" style={{ color: '#b45309', fontWeight: 600 }}>⚠ desactualizado</span>}
+      <span style={{ color: 'var(--text-muted)' }}>{ITR_STATUSES.includes(info.status) ? t(`loops.itrStatus.${info.status as 'approved'}`) : info.status} · {passed}/{results.length}{failed ? ` · ${failed} ✗` : ''}</span>
+      {info.outdated && <span title={t('loops.outdatedHint')} style={{ color: '#b45309', fontWeight: 600 }}>{t('loops.outdated')}</span>}
     </span>
   )
 }

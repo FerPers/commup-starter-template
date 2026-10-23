@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { ShieldCheck } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
 import type { ComponentProps } from 'react'
@@ -47,9 +48,9 @@ export default async function PssrListPage({
   return (
     <div style={{ padding: '32px' }}>
       <div style={{ marginBottom: '28px' }}>
-        <a href={`/projects/${projectId}`} style={{ fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none' }}>
+        <Link href={`/projects/${projectId}`} style={{ fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none' }}>
           ← {project.name}
-        </a>
+        </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '8px' }}>
           <div style={{
             width: '40px', height: '40px', borderRadius: 'var(--radius-md)', flexShrink: 0,

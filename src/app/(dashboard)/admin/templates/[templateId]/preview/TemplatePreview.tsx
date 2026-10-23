@@ -5,6 +5,7 @@ import { itemDescription } from '@/lib/itr/item-text'
 
 import type { Json } from '@/types/supabase.generated'
 import { useState } from 'react'
+import { useLocale, useTranslations } from 'next-intl'
 
 type ItrItemType = 'checkbox' | 'text' | 'number' | 'measurement' | 'select' | 'photo' | 'signature' | 'date' | 'yes_no' | 'continuity' | 'table'
 
@@ -46,24 +47,42 @@ interface TemplateData {
   itr_template_sections: PreviewSection[]
 }
 
-// ── Item type labels ────────────────────────────────────────────
-const TYPE_LABEL: Record<ItrItemType, string> = {
-  continuity: 'Continuidad por conductor',
-  table:       'Tabla de registro',
-  checkbox:    'Verificación',
-  yes_no:      'Sí / No',
-  number:      'Número',
-  measurement: 'Medición',
-  text:        'Texto',
-  select:      'Selección',
-  photo:       'Foto',
-  signature:   'Firma',
-  date:        'Fecha',
+// ── Textos del formulario simulado ──────────────────────────────
+// V2: la vista previa muestra el ITR en el idioma del selector ES/EN (el del documento, no el de la interfaz).
+type Lang = 'es' | 'en'
+const DOC = {
+  es: {
+    type: { continuity: 'Continuidad por conductor', table: 'Tabla de registro', checkbox: 'Verificación', yes_no: 'Sí / No', number: 'Número', measurement: 'Medición', text: 'Texto', select: 'Selección', photo: 'Foto', signature: 'Firma', date: 'Fecha' } as Record<ItrItemType, string>,
+    tableInvalid: 'Tabla sin configuración válida.', row: 'Fila', auto: 'Automático', resultOptions: 'Aceptado / Rechazado / N.A.', computed: 'calculado', datetime: 'AAAA-MM-DD hh:mm',
+    sourceNote: (src: string, unit: string) => `Filas desde ${src}: se arman al generar el ITR (una por ${unit}); los datos ‹entre comillas› se toman de esa foto.`,
+    signal: 'señal', effect: 'efecto',
+    variableNote: (min: number, max: number) => `Filas variables: el inspector declara entre ${min} y ${max}.`,
+    stability: (n: number) => `Estabilidad: las últimas ${n} lecturas`,
+    continuity: 'Registro por pares o conductores: terminales, resultados, pantallas y lecturas según el procedimiento. Las filas se configuran al ejecutar el ITR.',
+    verify: 'Marcar como verificado', yesNo: ['Sí', 'No', 'N/A'], measured: 'Valor medido', result: 'Resultado: —', acceptance: 'Criterio de aceptación:', criterion: 'Criterio:',
+    observation: 'Ingrese observación…', select: '— Seleccionar —', photo: 'Tomar / adjuntar foto', signArea: 'Área de firma',
+    remarks: 'Observaciones', remarksPh: 'Observaciones opcionales…', digitalSig: 'Firma digital', name: 'Nombre', date: 'Fecha',
+    critical: 'Crítico', required: 'Requerido', photoReq: 'Requiere foto', docReq: 'Requiere documento (PDF)',
+  },
+  en: {
+    type: { continuity: 'Continuity per conductor', table: 'Record table', checkbox: 'Check', yes_no: 'Yes / No', number: 'Number', measurement: 'Measurement', text: 'Text', select: 'Select', photo: 'Photo', signature: 'Signature', date: 'Date' } as Record<ItrItemType, string>,
+    tableInvalid: 'Table without a valid configuration.', row: 'Row', auto: 'Automatic', resultOptions: 'Accepted / Rejected / N.A.', computed: 'computed', datetime: 'YYYY-MM-DD hh:mm',
+    sourceNote: (src: string, unit: string) => `Rows from ${src}: built when the ITR is generated (one per ${unit}); the ‹quoted› data comes from that snapshot.`,
+    signal: 'signal', effect: 'effect',
+    variableNote: (min: number, max: number) => `Variable rows: the inspector declares between ${min} and ${max}.`,
+    stability: (n: number) => `Stability: the last ${n} readings`,
+    continuity: 'Record by pairs or conductors: terminals, results, screens and readings per the procedure. Rows are configured when the ITR is executed.',
+    verify: 'Mark as verified', yesNo: ['Yes', 'No', 'N/A'], measured: 'Measured value', result: 'Result: —', acceptance: 'Acceptance criterion:', criterion: 'Criterion:',
+    observation: 'Enter a remark…', select: '— Select —', photo: 'Take / attach photo', signArea: 'Signature area',
+    remarks: 'Remarks', remarksPh: 'Optional remarks…', digitalSig: 'Digital signature', name: 'Name', date: 'Date',
+    critical: 'Critical', required: 'Required', photoReq: 'Photo required', docReq: 'Document required (PDF)',
+  },
 }
+type Doc = (typeof DOC)[Lang]
 
 // ── Mock controls per item type ─────────────────────────────────
 
-function ItemControl({ item }: { item: PreviewItem }) {
+function ItemControl({ item, d }: { item: PreviewItem; d: Doc }) {
   const inputBase: React.CSSProperties = {
     width: '100%', padding: '8px 12px', border: '1px solid var(--border)',
     borderRadius: '8px', fontSize: '14px', color: 'var(--text-strong)', background: 'var(--card-bg)',
@@ -72,28 +91,28 @@ function ItemControl({ item }: { item: PreviewItem }) {
 
   if (item.item_type === 'table') {
     const config = parseTableConfig(item.options)
-    if (!config) return <p style={{ color: '#b91c1c' }}>Tabla sin configuración válida.</p>
+    if (!config) return <p style={{ color: '#b91c1c' }}>{d.tableInvalid}</p>
     const rows = config.rows.mode === 'fixed' ? config.rows.labels : [`${config.rows.label} 1`, `${config.rows.label} 2`, '…']
     const source = config.rows.mode === 'source' ? config.rows.source : null
     return (
       <div style={{ overflowX: 'auto' }}>
         <table style={{ borderCollapse: 'collapse', fontSize: '12px', width: '100%' }}>
-          <thead><tr><th style={{ textAlign: 'left', padding: '4px 8px', color: 'var(--text-muted)' }}>{config.rows.mode === 'fixed' ? 'Fila' : config.rows.label}</th>{config.columns.map(c => <th key={c.key} style={{ textAlign: 'left', padding: '4px 8px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{c.label}{c.unit ? ` (${c.unit})` : ''}</th>)}</tr></thead>
-          <tbody>{rows.map(label => <tr key={label}><td style={{ padding: '4px 8px', fontWeight: 600 }}>{label}</td>{config.columns.map(c => <td key={c.key} style={{ padding: '4px 8px', color: 'var(--gray-400)' }}>{c.type === 'reference' && source ? `‹${SOURCE_REFS[source][c.ref ?? ''] ?? c.ref}›` : c.type === 'result' ? (c.auto_from ? 'Automático' : 'Aceptado / Rechazado / N.A.') : c.type === 'computed' ? `calculado${c.tolerance !== null && c.tolerance !== undefined ? ` ±${c.tolerance}` : ''}${c.pass === 'as_found' ? ' (as found)' : ''}` : c.type === 'datetime' ? 'AAAA-MM-DD hh:mm' : c.type === 'select' ? (c.options ?? []).join(' / ') : c.type === 'number' ? '0.00' : '…'}</td>)}</tr>)}</tbody>
+          <thead><tr><th style={{ textAlign: 'left', padding: '4px 8px', color: 'var(--text-muted)' }}>{config.rows.mode === 'fixed' ? d.row : config.rows.label}</th>{config.columns.map(c => <th key={c.key} style={{ textAlign: 'left', padding: '4px 8px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{c.label}{c.unit ? ` (${c.unit})` : ''}</th>)}</tr></thead>
+          <tbody>{rows.map(label => <tr key={label}><td style={{ padding: '4px 8px', fontWeight: 600 }}>{label}</td>{config.columns.map(c => <td key={c.key} style={{ padding: '4px 8px', color: 'var(--gray-400)' }}>{c.type === 'reference' && source ? `‹${SOURCE_REFS[source][c.ref ?? ''] ?? c.ref}›` : c.type === 'result' ? (c.auto_from ? d.auto : d.resultOptions) : c.type === 'computed' ? `${d.computed}${c.tolerance !== null && c.tolerance !== undefined ? ` ±${c.tolerance}` : ''}${c.pass === 'as_found' ? ' (as found)' : ''}` : c.type === 'datetime' ? d.datetime : c.type === 'select' ? (c.options ?? []).join(' / ') : c.type === 'number' ? '0.00' : '…'}</td>)}</tr>)}</tbody>
         </table>
-        {source && <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Filas desde {TABLE_SOURCE_LABELS[source].toLowerCase()}: se arman al generar el ITR (una por {source === 'loop_signals' ? 'señal' : 'efecto'}); los datos ‹entre comillas› se toman de esa foto.</p>}
-        {config.rows.mode === 'variable' && <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Filas variables: el inspector declara entre {config.rows.min} y {config.rows.max}.</p>}
-        {config.stability && <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Estabilidad: las últimas {config.stability.last_n} lecturas{config.stability.min !== null ? ` ≥ ${config.stability.min}` : ''}{config.stability.max !== null ? ` ≤ ${config.stability.max}` : ''}.</p>}
+        {source && <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{d.sourceNote(TABLE_SOURCE_LABELS[source].toLowerCase(), source === 'loop_signals' ? d.signal : d.effect)}</p>}
+        {config.rows.mode === 'variable' && <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{d.variableNote(config.rows.min, config.rows.max)}</p>}
+        {config.stability && <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{d.stability(config.stability.last_n)}{config.stability.min !== null ? ` ≥ ${config.stability.min}` : ''}{config.stability.max !== null ? ` ≤ ${config.stability.max}` : ''}.</p>}
       </div>
     )
   }
-  if (item.item_type === 'continuity') return <p>Registro por pares o conductores: terminales, resultados, pantallas y lecturas según el procedimiento. Las filas se configuran al ejecutar el ITR.</p>
+  if (item.item_type === 'continuity') return <p>{d.continuity}</p>
 
   if (item.item_type === 'checkbox') {
     return (
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
         <input type="checkbox" disabled style={{ width: 18, height: 18, accentColor: '#3b82f6', cursor: 'not-allowed' }} />
-        <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Marcar como verificado</span>
+        <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{d.verify}</span>
       </div>
     )
   }
@@ -101,7 +120,7 @@ function ItemControl({ item }: { item: PreviewItem }) {
   if (item.item_type === 'yes_no') {
     return (
       <div style={{ display: 'flex', gap: '8px' }}>
-        {['Sí', 'No', 'N/A'].map(opt => (
+        {d.yesNo.map(opt => (
           <button key={opt} disabled style={{
             padding: '6px 20px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
             background: 'var(--gray-50)', border: '1px solid var(--border)', color: 'var(--text-muted)',
@@ -136,15 +155,15 @@ function ItemControl({ item }: { item: PreviewItem }) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <input type="number" disabled placeholder="Valor medido" style={{ ...inputBase, width: '160px' }} />
+          <input type="number" disabled placeholder={d.measured} style={{ ...inputBase, width: '160px' }} />
           {item.unit && <span style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500 }}>{item.unit}</span>}
           <span style={{ fontSize: '12px', padding: '3px 8px', borderRadius: '6px', background: 'var(--gray-50)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}>
-            Resultado: —
+            {d.result}
           </span>
         </div>
         {(item.acceptance_min !== null || item.acceptance_max !== null) && (
           <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-            Criterio de aceptación:{' '}
+            {d.acceptance}{' '}
             <strong>
               {item.acceptance_min !== null && item.acceptance_max !== null
                 ? `${item.acceptance_min} – ${item.acceptance_max} ${item.unit ?? ''}`
@@ -155,21 +174,21 @@ function ItemControl({ item }: { item: PreviewItem }) {
           </div>
         )}
         {item.acceptance_text && (
-          <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Criterio: <strong>{item.acceptance_text}</strong></div>
+          <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{d.criterion} <strong>{item.acceptance_text}</strong></div>
         )}
       </div>
     )
   }
 
   if (item.item_type === 'text') {
-    return <textarea disabled placeholder="Ingrese observación..." rows={2} style={{ ...inputBase, resize: 'vertical' }} />
+    return <textarea disabled placeholder={d.observation} rows={2} style={{ ...inputBase, resize: 'vertical' }} />
   }
 
   if (item.item_type === 'select') {
     const opts = Array.isArray(item.options) ? item.options.filter((o): o is string => typeof o === 'string') : []
     return (
       <select disabled style={{ ...inputBase, width: 'auto', minWidth: '200px' }}>
-        <option value="">— Seleccionar —</option>
+        <option value="">{d.select}</option>
         {opts.map((o: string) => <option key={o} value={o}>{o}</option>)}
       </select>
     )
@@ -183,7 +202,7 @@ function ItemControl({ item }: { item: PreviewItem }) {
         background: 'var(--gray-50)', color: 'var(--text-muted)', fontSize: '13px',
       }}>
         <span style={{ fontSize: '22px' }}>📷</span>
-        <span>Tomar / adjuntar foto</span>
+        <span>{d.photo}</span>
       </div>
     )
   }
@@ -196,7 +215,7 @@ function ItemControl({ item }: { item: PreviewItem }) {
         color: 'var(--gray-400)', fontSize: '13px', gap: '8px',
       }}>
         <span style={{ fontSize: '20px' }}>✍️</span>
-        <span>Área de firma</span>
+        <span>{d.signArea}</span>
       </div>
     )
   }
@@ -210,15 +229,15 @@ function ItemControl({ item }: { item: PreviewItem }) {
 
 // ── Remarks field (shared) ──────────────────────────────────────
 
-function RemarksField() {
+function RemarksField({ d }: { d: Doc }) {
   return (
     <div style={{ marginTop: '8px' }}>
       <label style={{ fontSize: '11px', color: 'var(--gray-400)', fontWeight: 500, display: 'block', marginBottom: '4px' }}>
-        Observaciones / Remarks
+        {d.remarks}
       </label>
       <textarea
         disabled
-        placeholder="Observaciones opcionales..."
+        placeholder={d.remarksPh}
         rows={1}
         style={{
           width: '100%', padding: '6px 10px', border: '1px solid var(--border)',
@@ -232,7 +251,7 @@ function RemarksField() {
 
 // ── Signature block ─────────────────────────────────────────────
 
-function SignatureBlock({ role, label }: { role: string; label: string }) {
+function SignatureBlock({ role, label, d }: { role: string; label: string; d: Doc }) {
   return (
     <div style={{
       flex: '1 1 200px', border: '1px solid var(--border)', borderRadius: '10px',
@@ -246,11 +265,11 @@ function SignatureBlock({ role, label }: { role: string; label: string }) {
         background: 'var(--gray-50)', display: 'flex', alignItems: 'center', justifyContent: 'center',
         color: 'var(--gray-400)', fontSize: '12px',
       }}>
-        Firma digital
+        {d.digitalSig}
       </div>
       <div style={{ marginTop: '8px', display: 'flex', gap: '8px' }}>
-        <div style={{ flex: 1, borderBottom: '1px solid var(--border)', paddingBottom: '2px', fontSize: '11px', color: 'var(--gray-400)' }}>Nombre</div>
-        <div style={{ flex: 1, borderBottom: '1px solid var(--border)', paddingBottom: '2px', fontSize: '11px', color: 'var(--gray-400)' }}>Fecha</div>
+        <div style={{ flex: 1, borderBottom: '1px solid var(--border)', paddingBottom: '2px', fontSize: '11px', color: 'var(--gray-400)' }}>{d.name}</div>
+        <div style={{ flex: 1, borderBottom: '1px solid var(--border)', paddingBottom: '2px', fontSize: '11px', color: 'var(--gray-400)' }}>{d.date}</div>
       </div>
     </div>
   )
@@ -259,7 +278,10 @@ function SignatureBlock({ role, label }: { role: string; label: string }) {
 // ── Main preview component ──────────────────────────────────────
 
 export default function TemplatePreview({ template }: { template: TemplateData }) {
-  const [lang, setLang] = useState<'es' | 'en'>('es')
+  const t = useTranslations('TemplatePreview')
+  const locale = useLocale()
+  const [lang, setLang] = useState<Lang>(locale === 'en' ? 'en' : 'es')
+  const d = DOC[lang]
 
   const disc = template.disciplines
   const phase = template.project_phases
@@ -293,13 +315,13 @@ export default function TemplatePreview({ template }: { template: TemplateData }
           </a>
           <span style={{ color: 'var(--border)' }}>|</span>
           <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-strong)' }}>
-            Vista de campo — Preview
+            {t('title')}
           </span>
           <span style={{
             padding: '2px 8px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
             background: '#f5f3ff', color: '#7c3aed', border: '1px solid #ddd6fe',
           }}>
-            Solo vista
+            {t('readOnly')}
           </span>
         </div>
         {/* Language toggle */}
@@ -499,16 +521,16 @@ export default function TemplatePreview({ template }: { template: TemplateData }
                           {/* Flags */}
                           <span style={{ display: 'inline-flex', gap: '4px', flexShrink: 0 }}>
                             {item.is_critical && (
-                              <span title="Crítico" style={{ color: '#ef4444', fontSize: '13px', fontWeight: 700 }}>★</span>
+                              <span title={d.critical} style={{ color: '#ef4444', fontSize: '13px', fontWeight: 700 }}>★</span>
                             )}
                             {item.is_required && !item.is_critical && (
-                              <span title="Requerido" style={{ color: '#f59e0b', fontSize: '13px', fontWeight: 700 }}>*</span>
+                              <span title={d.required} style={{ color: '#f59e0b', fontSize: '13px', fontWeight: 700 }}>*</span>
                             )}
                             {item.requires_photo && (
-                              <span title="Requiere foto" style={{ fontSize: '13px' }}>📷</span>
+                              <span title={d.photoReq} style={{ fontSize: '13px' }}>📷</span>
                             )}
                             {item.requires_document && (
-                              <span title="Requiere documento (PDF)" style={{ fontSize: '13px' }}>📄</span>
+                              <span title={d.docReq} style={{ fontSize: '13px' }}>📄</span>
                             )}
                           </span>
                         </div>
@@ -519,14 +541,14 @@ export default function TemplatePreview({ template }: { template: TemplateData }
                         padding: '2px 8px', borderRadius: '999px', fontSize: '10px', fontWeight: 600,
                         background: 'var(--gray-100)', color: 'var(--text-muted)', whiteSpace: 'nowrap', flexShrink: 0,
                       }}>
-                        {TYPE_LABEL[item.item_type]}
+                        {d.type[item.item_type]}
                       </span>
                     </div>
 
                     {/* Control */}
                     <div style={{ paddingLeft: item.item_number ? '50px' : '0' }}>
-                      <ItemControl item={item} />
-                      <RemarksField />
+                      <ItemControl item={item} d={d} />
+                      <RemarksField d={d} />
                     </div>
                   </div>
                 )
@@ -545,9 +567,9 @@ export default function TemplatePreview({ template }: { template: TemplateData }
             {lang === 'es' ? 'Firmas de aprobación' : 'Approval signatures'}
           </h3>
           <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-            <SignatureBlock role={lang === 'es' ? 'Ejecutor / Inspector' : 'Executor / Inspector'} label={lang === 'es' ? 'Firma' : 'Signature'} />
-            <SignatureBlock role={lang === 'es' ? 'Supervisor / Líder' : 'Supervisor / Leader'} label={lang === 'es' ? 'Firma' : 'Signature'} />
-            <SignatureBlock role={lang === 'es' ? 'Cliente' : 'Client'} label={lang === 'es' ? 'Firma' : 'Signature'} />
+            <SignatureBlock role={lang === 'es' ? 'Ejecutor / Inspector' : 'Executor / Inspector'} label={lang === 'es' ? 'Firma' : 'Signature'} d={d} />
+            <SignatureBlock role={lang === 'es' ? 'Supervisor / Líder' : 'Supervisor / Leader'} label={lang === 'es' ? 'Firma' : 'Signature'} d={d} />
+            <SignatureBlock role={lang === 'es' ? 'Cliente' : 'Client'} label={lang === 'es' ? 'Firma' : 'Signature'} d={d} />
           </div>
         </div>
 

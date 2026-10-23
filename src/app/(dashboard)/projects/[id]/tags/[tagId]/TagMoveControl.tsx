@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 // C-16 (D9): mover un tag de subsistema con lo suyo. La BD calcula qué arrastra
 // (tag_subsystem_move_preview) y la RPC mueve en una transacción: ITR sin firmar y punches abiertos.
 // Un ITR firmado bloquea hasta reabrirlo. Líder+, con motivo (≥ 10).
@@ -87,7 +88,7 @@ export default function TagMoveControl({ projectId, tagId, currentSubsystemId, s
             <div role="alert" style={{ ...warnBox, background: 'var(--danger-50)', border: '1px solid var(--danger-200)', color: 'var(--danger-800)' }}>
               {t('blocked')}{' '}
               {preview.signed_itrs.map((i, n) => (
-                <span key={i.id}>{n > 0 && ', '}<a href={`/projects/${projectId}/tags/${tagId}/itrs/${i.id}`} style={{ color: 'var(--danger-800)', fontWeight: 600 }}>{i.itr_number}</a></span>
+                <span key={i.id}>{n > 0 && ', '}<Link href={`/projects/${projectId}/tags/${tagId}/itrs/${i.id}`} style={{ color: 'var(--danger-800)', fontWeight: 600 }}>{i.itr_number}</Link></span>
               ))}
             </div>
           )}

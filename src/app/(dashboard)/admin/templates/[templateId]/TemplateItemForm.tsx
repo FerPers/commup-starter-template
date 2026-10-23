@@ -77,7 +77,7 @@ export default function TemplateItemForm({
       const checked = checkTableConfig(tableConfig)
       options = checked.config
       if (!options) {
-        setError(`Tabla inválida: ${checked.issue ?? 'revisa columnas y filas'}.`)
+        setError(t('tableInvalid', { issue: checked.issue ?? t('tableInvalidDefault') }))
         return
       }
     }
@@ -155,7 +155,7 @@ export default function TemplateItemForm({
 
       {isSelect && (
         <div style={{ marginBottom: '14px' }}>
-          <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Define el efecto de cada opción. Una selección informativa no implica aceptación ni rechazo. «No aplica» requiere justificación al diligenciar.</p>
+          <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{t('outcomeHelp')}</p>
           {[...new Set(optionsText.split(',').map(s => s.trim()).filter(Boolean))].map(label => (
             <label key={label} style={{ ...fieldLabel, marginBottom: '8px' }}>
               {label}
@@ -168,10 +168,10 @@ export default function TemplateItemForm({
                   return { ...f, option_outcomes: outcomes }
                 })
               }}>
-                <option value="">Informativa — sin resultado de aceptación</option>
-                <option value="pass">Aceptación</option>
-                <option value="fail">Rechazo</option>
-                <option value="not_applicable">No aplica — requiere justificación</option>
+                <option value="">{t('outcomeInfo')}</option>
+                <option value="pass">{t('outcomePass')}</option>
+                <option value="fail">{t('outcomeFail')}</option>
+                <option value="not_applicable">{t('outcomeNa')}</option>
               </select>
             </label>
           ))}
@@ -217,7 +217,7 @@ export default function TemplateItemForm({
         <input
           value={form.acceptance_text ?? ''}
           onChange={e => setForm(f => ({ ...f, acceptance_text: e.target.value }))}
-          placeholder="Ej: Lectura dentro del ±0.1% del span"
+          placeholder={t('criterionPlaceholder')}
           style={fieldInput}
         />
       </label>

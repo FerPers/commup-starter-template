@@ -14,6 +14,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { Bell, BellOff } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { DEFAULT_TOPICS, type NotificationTopic } from '@/lib/notifications/topics';
 
 // ─── Tipos ─────────────────────────────────────────────────────────────────
@@ -57,6 +58,7 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
 
 // ─── Hook: Push Subscription ──────────────────────────────────────────────
 export function usePushNotifications(userId: string) {
+  const tp = useTranslations('PushManager');
   const [permission, setPermission] = useState<NotificationPermission>('default');
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -86,7 +88,7 @@ export function usePushNotifications(userId: string) {
       const result = await Notification.requestPermission();
       setPermission(result);
       if (result !== 'granted') {
-        setError('Permiso de notificaciones denegado');
+        setError(tp('permissionDenied'));
         return false;
       }
 
@@ -129,19 +131,19 @@ export function usePushNotifications(userId: string) {
 
       if (!response.ok) {
         const detail = (await response.json().catch(() => ({}))) as { error?: string };
-        throw new Error(detail.error ?? `HTTP ${response.status} registrando subscription`);
+        throw new Error(detail.error ?? tp('subscribeHttp', { status: response.status }));
       }
 
       setIsSubscribed(true);
       return true;
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
-      setError(msg || 'Error activando notificaciones');
+      setError(msg || tp('subscribeError'));
       return false;
     } finally {
       setIsLoading(false);
     }
-  }, [userId, topics]);
+  }, [userId, topics, tp]);
 
   const unsubscribe = useCallback(async () => {
     setIsLoading(true);
@@ -204,14 +206,14 @@ export function usePushNotifications(userId: string) {
       const sent = json.sent ?? 0;
       const total = json.total ?? 0;
       if (sent === 0) {
-        setTestStatus({ kind: 'error', msg: `0/${total} enviadas — revisa Cloudflare logs` });
+        setTestStatus({ kind: 'error', msg: tp('testNone', { total }) });
       } else {
-        setTestStatus({ kind: 'ok', msg: `${sent}/${total} enviada${sent !== 1 ? 's' : ''}` });
+        setTestStatus({ kind: 'ok', msg: tp('testSent', { sent, total }) });
       }
     } catch (err) {
       setTestStatus({ kind: 'error', msg: (err as Error).message });
     }
-  }, [userId]);
+  }, [userId, tp]);
 
   const isSupported = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
 
@@ -231,41 +233,30 @@ export function usePushNotifications(userId: string) {
 }
 
 // ─── Topic Configuration ──────────────────────────────────────────────────
-const TOPIC_CONFIG: Record<NotificationTopic, { label: string; icon: string; description: string; priority: 'high' | 'normal' | 'low' }> = {
+// Etiqueta y descripción en PushManager.topic.<tema>.
+const TOPIC_CONFIG: Record<NotificationTopic, { icon: string; priority: 'high' | 'normal' | 'low' }> = {
   assignments: {
-    label: 'Asignaciones',
     icon: '🔧',
-    description: 'Te asignan un ITR, un punch o una acción',
     priority: 'normal',
   },
   signatures: {
-    label: 'Firmas',
     icon: '✍️',
-    description: 'Un gate, traspaso, certificado o PSSR espera tu firma',
     priority: 'high',
   },
   field: {
-    label: 'Campo',
     icon: '⏸️',
-    description: 'Hold points por liberar, hitos por atestiguar, registros y acciones por verificar, TQ respondidas',
     priority: 'high',
   },
   readiness: {
-    label: 'Readiness',
     icon: '🚦',
-    description: 'Un gate quedó listo o en regresión; certificados y PSSR emitidos o revocados',
     priority: 'normal',
   },
   overdue: {
-    label: 'Vencidos',
     icon: '⏰',
-    description: 'Preservación, restricciones y PSSR vencidos',
     priority: 'normal',
   },
   punch_cat_a: {
-    label: 'Punch Cat A (todo el equipo)',
     icon: '🚨',
-    description: 'Cada punch categoría A nuevo, aunque no sea tuyo (líderes y superiores)',
     priority: 'high',
   },
 };
@@ -276,6 +267,7 @@ export default function PushNotificationManager({ userId, onSubscriptionChange }
     isSupported, permission, isSubscribed, isLoading, error,
     topics, subscribe, unsubscribe, updateTopics, sendTestNotification, testStatus,
   } = usePushNotifications(userId);
+  const tp = useTranslations('PushManager');
 
   // Surface test-send status from the hook
   // (ya viene de usePushNotifications a través de testStatus en el hook)
@@ -288,7 +280,7 @@ export default function PushNotificationManager({ userId, onSubscriptionChange }
     return (
       <div style={{ padding: 16, background: 'var(--gray-800)', borderRadius: 'var(--radius-lg)', color: 'var(--gray-400)', fontSize: 'var(--text-sm)', display: 'flex', alignItems: 'center', gap: 8 }}>
         <Bell size={16} aria-hidden="true" />
-        Notificaciones push no disponibles en este dispositivo/navegador
+        {tp('unsupported')}
       </div>
     );
   }
@@ -317,12 +309,12 @@ export default function PushNotificationManager({ userId, onSubscriptionChange }
             </div>
             <div>
               <div style={{ fontWeight: 600, color: '#fff' }}>
-                {isSubscribed ? 'Notificaciones Activas' : 'Notificaciones Inactivas'}
+                {isSubscribed ? tp('active') : tp('inactive')}
               </div>
               <div style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-200)' }}>
                 {isSubscribed
-                  ? `${topics.length} categorías activas`
-                  : 'Active para recibir alertas de campo'}
+                  ? tp('activeTopics', { n: topics.length })
+                  : tp('enableHint')}
               </div>
             </div>
           </div>
@@ -347,8 +339,7 @@ export default function PushNotificationManager({ userId, onSubscriptionChange }
 
         {permission === 'denied' && (
           <div style={{ marginTop: 12, padding: 12, background: 'rgba(127, 29, 29, 0.3)', borderRadius: 'var(--radius-lg)', fontSize: 'var(--text-sm)', color: 'var(--danger-500)' }}>
-            🚫 Notificaciones bloqueadas en el navegador.
-            Ve a Configuración del sitio y habilítalas.
+            🚫 {tp('blocked')}
           </div>
         )}
       </div>
@@ -357,7 +348,7 @@ export default function PushNotificationManager({ userId, onSubscriptionChange }
       {isSubscribed && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--gray-200)' }}>Alertas configuradas</span>
+            <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--gray-200)' }}>{tp('configured')}</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               {testStatus.kind === 'ok' && (
                 <span style={{ fontSize: 'var(--text-xs)', color: 'var(--success-500)' }}>✓ {testStatus.msg}</span>
@@ -379,7 +370,7 @@ export default function PushNotificationManager({ userId, onSubscriptionChange }
                   transition: 'color 0.15s',
                 }}
               >
-                {testStatus.kind === 'loading' ? 'Enviando…' : 'Enviar prueba →'}
+                {testStatus.kind === 'loading' ? tp('sending') : tp('sendTest')}
               </button>
             </div>
           </div>
@@ -393,12 +384,12 @@ export default function PushNotificationManager({ userId, onSubscriptionChange }
                 <span style={{ fontSize: 'var(--text-lg)', marginTop: 2 }}>{config.icon}</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontWeight: 500, fontSize: 'var(--text-sm)', color: '#fff' }}>{config.label}</span>
+                    <span style={{ fontWeight: 500, fontSize: 'var(--text-sm)', color: '#fff' }}>{tp(`topic.${topic}.label`)}</span>
                     {config.priority === 'high' && (
-                      <span style={{ fontSize: 'var(--text-xs)', background: 'rgba(127, 29, 29, 0.5)', color: 'var(--danger-500)', padding: '2px 6px', borderRadius: 'var(--radius-sm)' }}>ALTA</span>
+                      <span style={{ fontSize: 'var(--text-xs)', background: 'rgba(127, 29, 29, 0.5)', color: 'var(--danger-500)', padding: '2px 6px', borderRadius: 'var(--radius-sm)' }}>{tp('high')}</span>
                     )}
                   </div>
-                  <p style={{ fontSize: 'var(--text-xs)', color: 'var(--gray-200)', marginTop: 4, margin: 0 }}>{config.description}</p>
+                  <p style={{ fontSize: 'var(--text-xs)', color: 'var(--gray-200)', marginTop: 4, margin: 0 }}>{tp(`topic.${topic}.description`)}</p>
                 </div>
                 <label style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', cursor: 'pointer', marginTop: 2 }}>
                   <input

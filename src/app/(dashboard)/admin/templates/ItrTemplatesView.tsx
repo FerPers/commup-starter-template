@@ -45,11 +45,11 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
   const [trProgress, setTrProgress] = useState<{ done: number; total: number; items: number; log: string[] } | null>(null)
 
   async function translateAllMissing() {
-    setTrProgress({ done: 0, total: 0, items: 0, log: ['Buscando plantillas con traducciones pendientes…'] })
+    setTrProgress({ done: 0, total: 0, items: 0, log: [t('tr.searching')] })
     const res = await listTranslationGaps()
     if (res.error || !res.gaps) { setTrProgress({ done: 0, total: 0, items: 0, log: [res.error ?? 'Error'] }); return }
     const gaps = res.gaps
-    if (gaps.length === 0) { setTrProgress({ done: 0, total: 0, items: 0, log: ['Todo el catálogo tiene título e ítems en español.'] }); return }
+    if (gaps.length === 0) { setTrProgress({ done: 0, total: 0, items: 0, log: [t('tr.nothing')] }); return }
     const log: string[] = []
     let items = 0
     setTrProgress({ done: 0, total: gaps.length, items, log: [...log] })
@@ -57,10 +57,10 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
       const g = gaps[i]
       const r = await translateTemplateMissing(g.id)
       if (r.error) log.push(`✕ ${g.code}: ${r.error}`)
-      else { items += r.items; log.push(`✓ ${g.code}: ${r.items} ítems${r.title ? ' + título' : ''}`) }
+      else { items += r.items; log.push(`✓ ${g.code}: ${t(r.title ? 'tr.itemsTitle' : 'tr.items', { n: r.items })}`) }
       setTrProgress({ done: i + 1, total: gaps.length, items, log: log.slice(-8) })
     }
-    log.push(`Listo: ${items} ítems traducidos en ${gaps.length} plantillas. Revísalos en cada plantilla (ES · Traducción).`)
+    log.push(t('tr.done', { items, templates: gaps.length }))
     setTrProgress({ done: gaps.length, total: gaps.length, items, log: log.slice(-8) })
     router.refresh()
   }
@@ -163,9 +163,9 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
                 borderRadius: '8px', fontSize: '13px', fontWeight: 500,
                 border: '1px solid #fde68a', cursor: 'pointer',
               }}
-              title="Exportar/Restaurar todos los templates"
+              title={t('backupHint')}
             >
-              Backup / Restore
+              {t('backup')}
             </button>
             <button
               onClick={translateAllMissing}
@@ -175,9 +175,9 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
                 borderRadius: '8px', fontSize: '13px', fontWeight: 500,
                 border: '1px solid #ddd6fe', cursor: 'pointer',
               }}
-              title="Traduce con IA solo lo que falta (títulos e ítems sin español). Nada existente se toca."
+              title={t('tr.hint')}
             >
-              ES · Traducir faltantes
+              {t('tr.button')}
             </button>
             <button
               onClick={() => router.push('/admin/templates/matrix')}
@@ -186,9 +186,9 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
                 borderRadius: '8px', fontSize: '13px', fontWeight: 500,
                 border: '1px solid #ddd6fe', cursor: 'pointer',
               }}
-              title="Qué ITRs aplican a cada tipo de equipo (propuesto por IA, aprobado por ti)"
+              title={t('matrixHint')}
             >
-              Matriz por tipo de equipo
+              {t('matrix')}
             </button>
             <button
               onClick={() => setShowImportFromOrg(true)}
@@ -198,7 +198,7 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
                 border: '1px solid #bfdbfe', cursor: 'pointer',
               }}
             >
-              Importar de otra org
+              {t('importFromOrg')}
             </button>
             <button
               onClick={() => setShowBulkImport(true)}

@@ -21,7 +21,7 @@ export type MatrixRow = {
   gaps: number
 }
 
-const SOURCE_LABELS: Record<string, string> = { manual: 'Manual', import: 'Importada', ai: 'IA (revisada)' }
+const SOURCES = ['manual', 'import', 'ai']
 
 export default function CeMatricesView({ project, matrices, systems, canEdit }: {
   project: { id: string; code: string; name: string }
@@ -31,6 +31,7 @@ export default function CeMatricesView({ project, matrices, systems, canEdit }: 
 }) {
   // N0 (H-13): título = etiqueta del menú.
   const tNav = useTranslations('Sidebar.nav')
+  const tc = useTranslations('CeMatrix.list')
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState({ code: '', title: '', systemId: '', revision: '', sourceDocument: '' })
@@ -45,7 +46,7 @@ export default function CeMatricesView({ project, matrices, systems, canEdit }: 
     setError('')
     start(async () => {
       const res = await saveCeMatrix({ projectId: project.id, ...form, systemId: form.systemId || null })
-      if (res.error || !res.id) { setError(res.error ?? 'No se pudo crear'); return }
+      if (res.error || !res.id) { setError(res.error ?? tc('createError')); return }
       router.push(`/projects/${project.id}/ce-matrices/${res.id}`)
     })
   }
@@ -56,42 +57,42 @@ export default function CeMatricesView({ project, matrices, systems, canEdit }: 
         <div>
           <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 4px' }}>{tNav('ceMatrices')}</h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '14px', margin: 0, maxWidth: '720px' }}>
-            Lógica de paro y enclavamientos (SIS/ESD/PSD): cada causa con los efectos que dispara. Cada causa se prueba con su propio ITR, y el cruce probado queda como evidencia.
+            {tc('intro')}
           </p>
         </div>
         {canEdit && <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          <Link href={`/projects/${project.id}/ce-matrices/import`} style={{ padding: '9px 14px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--card-bg)', color: 'var(--text-strong)', fontSize: '13px', fontWeight: 600, textDecoration: 'none' }}>✨ Importar con IA</Link>
-          <button type="button" onClick={() => setOpen(v => !v)} style={{ padding: '9px 14px', borderRadius: '8px', border: 0, background: 'var(--primary-600, #2563eb)', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>{open ? 'Cancelar' : '+ Nueva matriz'}</button>
+          <Link href={`/projects/${project.id}/ce-matrices/import`} style={{ padding: '9px 14px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--card-bg)', color: 'var(--text-strong)', fontSize: '13px', fontWeight: 600, textDecoration: 'none' }}>{tc('importAi')}</Link>
+          <button type="button" onClick={() => setOpen(v => !v)} style={{ padding: '9px 14px', borderRadius: '8px', border: 0, background: 'var(--primary-600, #2563eb)', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>{open ? tc('cancel') : tc('new')}</button>
         </div>}
       </div>
 
       {open && (
         <form onSubmit={create} style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '12px', padding: '16px', marginBottom: '20px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', alignItems: 'end' }}>
-          <label style={{ fontSize: '12px' }}>Código *<input required maxLength={60} style={field} value={form.code} onChange={e => setForm({ ...form, code: e.target.value })} placeholder="CE-A100-S02" /></label>
-          <label style={{ fontSize: '12px', gridColumn: 'span 2' }}>Título *<input required maxLength={200} style={field} value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="Paro de emergencia — separador de producción" /></label>
-          <label style={{ fontSize: '12px' }}>Sistema
+          <label style={{ fontSize: '12px' }}>{tc('code')}<input required maxLength={60} style={field} value={form.code} onChange={e => setForm({ ...form, code: e.target.value })} placeholder="CE-A100-S02" /></label>
+          <label style={{ fontSize: '12px', gridColumn: 'span 2' }}>{tc('titleField')}<input required maxLength={200} style={field} value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder={tc('titlePlaceholder')} /></label>
+          <label style={{ fontSize: '12px' }}>{tc('system')}
             <select style={field} value={form.systemId} onChange={e => setForm({ ...form, systemId: e.target.value })}>
               <option value="">—</option>
               {systems.map(s => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}
             </select>
           </label>
-          <label style={{ fontSize: '12px' }}>Revisión<input maxLength={30} style={field} value={form.revision} onChange={e => setForm({ ...form, revision: e.target.value })} placeholder="B" /></label>
-          <label style={{ fontSize: '12px' }}>Documento fuente<input maxLength={200} style={field} value={form.sourceDocument} onChange={e => setForm({ ...form, sourceDocument: e.target.value })} placeholder="N° de plano / documento" /></label>
-          <button type="submit" disabled={pending} style={{ padding: '9px 14px', borderRadius: '8px', border: 0, background: 'var(--primary-600, #2563eb)', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>{pending ? 'Creando…' : 'Crear y abrir'}</button>
+          <label style={{ fontSize: '12px' }}>{tc('revision')}<input maxLength={30} style={field} value={form.revision} onChange={e => setForm({ ...form, revision: e.target.value })} placeholder="B" /></label>
+          <label style={{ fontSize: '12px' }}>{tc('sourceDocument')}<input maxLength={200} style={field} value={form.sourceDocument} onChange={e => setForm({ ...form, sourceDocument: e.target.value })} placeholder={tc('sourcePlaceholder')} /></label>
+          <button type="submit" disabled={pending} style={{ padding: '9px 14px', borderRadius: '8px', border: 0, background: 'var(--primary-600, #2563eb)', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>{pending ? tc('creating') : tc('create')}</button>
           {error && <p role="alert" style={{ gridColumn: '1 / -1', color: '#b91c1c', fontSize: '12px', margin: 0 }}>{error}</p>}
         </form>
       )}
 
       {matrices.length === 0 ? (
         <div style={{ background: 'var(--card-bg)', borderRadius: '14px', border: '1px solid var(--border)', padding: '56px 32px', textAlign: 'center' }}>
-          <p style={{ fontSize: '15px', fontWeight: 500, color: 'var(--text-strong)', margin: '0 0 6px' }}>Sin matrices causa-efecto</p>
-          <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>Crea una matriz por sistema o por documento C&E y carga sus causas, efectos y cruces.</p>
+          <p style={{ fontSize: '15px', fontWeight: 500, color: 'var(--text-strong)', margin: '0 0 6px' }}>{tc('emptyTitle')}</p>
+          <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>{tc('emptyHelp')}</p>
         </div>
       ) : (
         <div style={{ background: 'var(--card-bg)', borderRadius: '14px', border: '1px solid var(--border)', overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
             <thead><tr style={{ background: 'var(--gray-50)', borderBottom: '1px solid var(--border)' }}>
-              {['Código', 'Título', 'Sistema', 'Rev.', 'Causas', 'Efectos', 'Cruces', 'Revisar', 'Origen'].map(h => <th key={h} style={th}>{h}</th>)}
+              {[tc('col.code'), tc('col.title'), tc('col.system'), tc('col.rev'), tc('col.causes'), tc('col.effects'), tc('col.links'), tc('col.review'), tc('col.source')].map(h => <th key={h} style={th}>{h}</th>)}
             </tr></thead>
             <tbody>{matrices.map(m => (
               <tr key={m.id} style={{ borderBottom: '1px solid var(--border)' }}>
@@ -102,8 +103,8 @@ export default function CeMatricesView({ project, matrices, systems, canEdit }: 
                 <td style={{ padding: '10px 12px', fontVariantNumeric: 'tabular-nums' }}>{m.causes}</td>
                 <td style={{ padding: '10px 12px', fontVariantNumeric: 'tabular-nums' }}>{m.effects}</td>
                 <td style={{ padding: '10px 12px', fontVariantNumeric: 'tabular-nums' }}>{m.links}</td>
-                <td style={{ padding: '10px 12px', color: m.gaps ? '#b45309' : 'var(--text-muted)', whiteSpace: 'nowrap' }}>{m.gaps ? `⚠ ${m.gaps} sin cruce` : '—'}</td>
-                <td style={{ padding: '10px 12px', color: 'var(--text-muted)' }}>{SOURCE_LABELS[m.source] ?? m.source}</td>
+                <td style={{ padding: '10px 12px', color: m.gaps ? '#b45309' : 'var(--text-muted)', whiteSpace: 'nowrap' }}>{m.gaps ? tc('gaps', { n: m.gaps }) : '—'}</td>
+                <td style={{ padding: '10px 12px', color: 'var(--text-muted)' }}>{SOURCES.includes(m.source) ? tc(`source.${m.source as 'manual'}`) : m.source}</td>
               </tr>
             ))}</tbody>
           </table>

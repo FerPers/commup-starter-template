@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import * as XLSX from 'xlsx'
 import { importSignals, type SignalRow, type SignalImportResult } from '@/app/actions/import-signals'
 import { pickBestSheet, detectHeaderRow, cellText } from '@/lib/excel/detect-header'
@@ -11,11 +13,15 @@ const SIGNAL_TYPES = ['AI', 'AO', 'DI', 'DO', 'PI', 'PO']
 
 type Step = 'upload' | 'preview' | 'result'
 
-/** Columnas de la cadena del loop check (y el lazo) que se conservan si el archivo no las trae. */
-const PRESERVED_LABELS: Array<[string, string]> = [
-  ['loop_number', 'Lazo'], ['junction_box', 'Caja de conexiones'], ['marshalling', 'Marshalling'], ['io_card', 'Tarjeta I/O'],
-  ['io_channel', 'Canal I/O'], ['dcs_tag', 'Tag DCS'], ['hmi_display', 'Despliegue HMI'], ['alarms', 'Alarmas'],
-]
+/** Columnas de la cadena del loop check (y el lazo) que se conservan si el archivo no las trae (SignalImport.kept.<col>). */
+const PRESERVED = ['loop_number', 'junction_box', 'marshalling', 'io_card', 'io_channel', 'dcs_tag', 'hmi_display', 'alarms'] as const
+const COLUMN_GUIDE = [
+  ['TAG DE SEÑAL', true, 'signalTag'], ['TAG INSTRUMENTO', false, 'instrumentTag'], ['DESCRIPCION', false, 'description'],
+  ['TIPO DE SEÑAL', true, 'signalType'], ['DISCIPLINA', true, 'discipline'], ['SERVICIO', false, 'service'],
+  ['INF. / SUP. / UNIDAD', false, 'range'], ['ALARMAS / Set Point', false, 'alarms'], ['ORIGEN / DESTINO', false, 'originDest'],
+  ['P&ID / DIAGRAMAS', false, 'drawings'], ['LAZO', false, 'loop'], ['JB / MARSHALLING', false, 'jb'],
+  ['TARJETA I/O / CANAL', false, 'io'], ['TAG DCS / HMI', false, 'dcs'], ['NOTAS', false, 'notes'],
+] as const
 
 export default function ImportSignalsWizard({
   projectId,
@@ -24,6 +30,8 @@ export default function ImportSignalsWizard({
   projectId: string
   disciplines: { code: string; name: string; color: string }[]
 }) {
+  const ts = useTranslations('SignalImport')
+  const ti = useTranslations('TagImport')
   const [step, setStep]                   = useState<Step>('upload')
   const [dragging, setDragging]           = useState(false)
   const [fileName, setFileName]           = useState<string | null>(null)
@@ -56,14 +64,14 @@ export default function ImportSignalsWizard({
         const { rows: rawRows } = pickBestSheet(wb, SIGNAL_COLS)
 
         if (rawRows.length === 0) {
-          setValidationErrors(['El archivo está vacío.'])
+          setValidationErrors([ti('warn.empty')])
           return
         }
 
         const { headerRowIdx, colIndex } = detectHeaderRow(rawRows, SIGNAL_COLS)
 
         if (colIndex.signal_tag === undefined || colIndex.signal_type === undefined) {
-          setValidationErrors([`Columnas requeridas no encontradas. Se esperan: TAG DE SEÑAL, TIPO DE SEÑAL, DISCIPLINA (o sus equivalentes en inglés). El encabezado puede estar en cualquiera de las primeras 15 filas.`])
+          setValidationErrors([ts('warn.missingColumns')])
           return
         }
 
@@ -101,10 +109,10 @@ export default function ImportSignalsWizard({
           // Filas vacías o de totales/notas al pie: sin tag, se ignoran en silencio
           if (!signalTag) return
           if (!SIGNAL_TYPES.includes(signalType)) {
-            errors.push(`Fila ${rowNum}: TIPO_DE_SEÑAL "${signalType}" inválido (válidos: ${SIGNAL_TYPES.join(', ')}) — tag: ${signalTag}`)
+            errors.push(ts('warn.badType', { row: rowNum, value: signalType, valid: SIGNAL_TYPES.join(', '), tag: signalTag }))
           }
           if (!disciplineCodes.has(discipline)) {
-            errors.push(`Fila ${rowNum}: DISCIPLINA "${discipline}" no existe — tag: ${signalTag}`)
+            errors.push(ts('warn.badDiscipline', { row: rowNum, value: discipline, tag: signalTag }))
           }
 
           parsed.push({
@@ -146,7 +154,7 @@ export default function ImportSignalsWizard({
         setFileName(file.name)
         setStep('preview')
       } catch {
-        setValidationErrors(['Error leyendo el archivo. Verifica que sea un .xlsx o .xls válido.'])
+        setValidationErrors([ti('warn.readError')])
       }
     }
     reader.readAsArrayBuffer(file)
@@ -176,7 +184,7 @@ export default function ImportSignalsWizard({
     if (res.error && !res.result) {
       setImportError(res.error)
     } else {
-      if (res.error) setImportError(`Se detuvo a mitad: ${res.error}. Lo importado hasta ahí quedó guardado; vuelve a importar el archivo para completar.`)
+      if (res.error) setImportError(ti('stoppedMidway', { error: res.error }))
       setResult(res.result!)
       setStep('result')
     }
@@ -233,17 +241,17 @@ export default function ImportSignalsWizard({
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', flexWrap: 'wrap' }}>
           <div>
             <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>
-              Importar Lista de Señales
+              {ts('title')}
             </h2>
             <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginTop: '4px' }}>
-              Carga tu Signal List (I&C) desde Excel. Incluye rango, alarmas, P&IDs y diagramas.
+              {ts('subtitle')}
             </p>
           </div>
           <button onClick={downloadTemplate} style={{
             padding: '8px 16px', background: 'var(--card-bg)', border: '1px solid var(--border)',
             borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)', cursor: 'pointer',
           }}>
-            ↓ Descargar plantilla
+            ↓ {ti('downloadTemplate')}
           </button>
         </div>
       </div>
@@ -264,7 +272,7 @@ export default function ImportSignalsWizard({
       {/* Steps */}
       <div style={{ display: 'flex', gap: '8px', marginBottom: '28px' }}>
         {(['upload', 'preview', 'result'] as Step[]).map((s, i) => {
-          const labels = ['Cargar archivo', 'Vista previa', 'Resultado']
+          const labels = [ti('step.upload'), ti('step.preview'), ti('step.result')]
           const done = step === 'preview' ? i < 1 : step === 'result' ? i < 2 : false
           const active = step === s
           return (
@@ -300,9 +308,9 @@ export default function ImportSignalsWizard({
           >
             <div style={{ fontSize: '48px', marginBottom: '16px', opacity: 0.5 }}>📋</div>
             <p style={{ fontWeight: 600, color: 'var(--text-strong)', fontSize: '16px', marginBottom: '6px' }}>
-              Arrastra tu Signal List aquí
+              {ts('drop')}
             </p>
-            <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '8px' }}>o haz click para seleccionar</p>
+            <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '8px' }}>{ts('orClick')}</p>
             <p style={{ color: 'var(--gray-400)', fontSize: '12px' }}>.xlsx · .xls</p>
             <input id="sig-file-input" type="file" accept=".xlsx,.xls" onChange={handleFileInput} style={{ display: 'none' }} />
           </div>
@@ -310,25 +318,9 @@ export default function ImportSignalsWizard({
           {/* Column reference */}
           <div style={{ background: 'var(--card-bg)', borderRadius: '14px', border: '1px solid var(--border)', padding: '20px' }}>
             <h3 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-strong)', margin: '0 0 12px' }}>
-              Columnas soportadas
+              {ts('columnsTitle')}
             </h3>
-            {[
-              { col: 'TAG DE SEÑAL', req: true,  desc: 'Identificador de la señal (ej: FT-201)' },
-              { col: 'TAG INSTRUMENTO', req: false, desc: 'Instrumento padre (si difiere del tag)' },
-              { col: 'DESCRIPCION', req: false, desc: 'Descripción de la señal' },
-              { col: 'TIPO DE SEÑAL', req: true,  desc: 'AI / AO / DI / DO / PI / PO' },
-              { col: 'DISCIPLINA', req: true,  desc: 'INST / ELEC / SAFE …' },
-              { col: 'SERVICIO', req: false, desc: 'Servicio del proceso' },
-              { col: 'INF. / SUP. / UNIDAD', req: false, desc: 'Rango de medición' },
-              { col: 'ALARMAS / Set Point', req: false, desc: 'Niveles de alarma y setpoints' },
-              { col: 'ORIGEN / DESTINO', req: false, desc: 'Origen y destino de la señal' },
-              { col: 'P&ID / DIAGRAMAS', req: false, desc: 'Referencias de planos' },
-              { col: 'LAZO', req: false, desc: 'N° de lazo: crea el lazo si no existe y le asocia el instrumento' },
-              { col: 'JB / MARSHALLING', req: false, desc: 'Caja de conexiones y gabinete de marshalling' },
-              { col: 'TARJETA I/O / CANAL', req: false, desc: 'Tarjeta (rack-slot) y canal del sistema de control' },
-              { col: 'TAG DCS / HMI', req: false, desc: 'Tag en el sistema de control y despliegue HMI' },
-              { col: 'NOTAS', req: false, desc: 'Notas adicionales' },
-            ].map(item => (
+            {COLUMN_GUIDE.map(([col, req, note]) => ({ col, req, desc: ts(`colNote.${note}`) })).map(item => (
               <div key={item.col} style={{ display: 'flex', gap: '8px', marginBottom: '8px', alignItems: 'flex-start' }}>
                 <span style={{
                   padding: '1px 5px', borderRadius: '4px', fontSize: '9px', fontWeight: 700,
@@ -336,7 +328,7 @@ export default function ImportSignalsWizard({
                   color: item.req ? '#3b82f6' : 'var(--gray-400)',
                   border: `1px solid ${item.req ? '#3b82f630' : 'var(--border)'}`,
                   flexShrink: 0, marginTop: '2px', whiteSpace: 'nowrap',
-                }}>{item.req ? 'REQ' : 'OPC'}</span>
+                }}>{item.req ? 'REQ' : 'OPT'}</span>
                 <div>
                   <div style={{ fontSize: '11px', color: 'var(--text-strong)', fontWeight: 500, fontFamily: 'monospace' }}>{item.col}</div>
                   <div style={{ fontSize: '10px', color: 'var(--gray-400)' }}>{item.desc}</div>
@@ -345,11 +337,11 @@ export default function ImportSignalsWizard({
             ))}
             <div style={{ marginTop: '10px', padding: '8px', background: '#f0fdf4', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
               <p style={{ fontSize: '11px', color: '#166534', margin: 0 }}>
-                Disciplinas: {disciplines.map(d => d.code).join(', ')}
+                {ts('disciplines', { list: disciplines.map(d => d.code).join(', ') })}
               </p>
             </div>
             <p style={{ fontSize: '11px', color: 'var(--gray-400)', margin: '10px 0 0' }}>
-              El encabezado puede estar en cualquier fila y la hoja se detecta automáticamente. Si el TAG INSTRUMENTO ya existe en el proyecto, se conserva tal cual.
+              {ts('headerHint')}
             </p>
           </div>
         </div>
@@ -361,32 +353,32 @@ export default function ImportSignalsWizard({
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <div>
               <span style={{ fontWeight: 600, color: 'var(--text-strong)' }}>{fileName}</span>
-              <span style={{ color: 'var(--text-muted)', fontSize: '14px', marginLeft: '12px' }}>{rows.length} señales detectadas</span>
+              <span style={{ color: 'var(--text-muted)', fontSize: '14px', marginLeft: '12px' }}>{ts('detected', { n: rows.length })}</span>
             </div>
             <button onClick={() => { setStep('upload'); setRows([]); setValidationErrors([]) }}
               style={{ fontSize: '13px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>
-              ← Cambiar archivo
+              ← {ti('changeFile')}
             </button>
           </div>
 
           {/* S07 (F-06, D9): lo que este archivo no trae se conserva en las señales que ya existen */}
           {(() => {
-            const kept = PRESERVED_LABELS.filter(([k]) => !columns.includes(k)).map(([, label]) => label)
+            const kept = PRESERVED.filter(k => !columns.includes(k)).map(k => ts(`kept.${k}`))
             return kept.length > 0 && (
               <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '10px', padding: '12px 16px', marginBottom: '16px', fontSize: '12px', color: '#1e40af' }}>
-                Este archivo no trae: <strong>{kept.join(', ')}</strong>. En las señales que ya existen <strong>se conservan</strong> (y no se desvinculan de su lazo). Las celdas vacías tampoco borran datos.
+                {ts.rich('keptNotice', { list: kept.join(', '), strong: c => <strong>{c}</strong> })}
               </div>
             )
           })()}
 
           {validationErrors.length > 0 && (
             <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '10px', padding: '14px 16px', marginBottom: '16px' }}>
-              <p style={{ fontWeight: 600, color: '#dc2626', fontSize: '13px', marginBottom: '6px' }}>⚠ {validationErrors.length} advertencia(s)</p>
+              <p style={{ fontWeight: 600, color: '#dc2626', fontSize: '13px', marginBottom: '6px' }}>⚠ {ts('warningsN', { n: validationErrors.length })}</p>
               <ul style={{ margin: 0, paddingLeft: '16px' }}>
                 {validationErrors.slice(0, 8).map((e, i) => (
                   <li key={i} style={{ fontSize: '12px', color: '#dc2626', marginBottom: '2px' }}>{e}</li>
                 ))}
-                {validationErrors.length > 8 && <li style={{ fontSize: '12px', color: '#dc2626' }}>... y {validationErrors.length - 8} más</li>}
+                {validationErrors.length > 8 && <li style={{ fontSize: '12px', color: '#dc2626' }}>{ti('andMore', { n: validationErrors.length - 8 })}</li>}
               </ul>
             </div>
           )}
@@ -396,7 +388,7 @@ export default function ImportSignalsWizard({
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
                 <thead>
                   <tr style={{ background: 'var(--gray-50)', borderBottom: '1px solid var(--border)' }}>
-                    {['#', 'Tag Señal', 'Tag Instr.', 'Tipo', 'Descripción', 'Servicio', 'Rango', 'Unidad', 'Alarmas', 'Origen → Destino', 'P&ID', 'Lazo', 'Cadena'].map(h => (
+                    {['#', ts('col.signalTag'), ts('col.instrumentTag'), ts('col.type'), ts('col.description'), ts('col.service'), ts('col.range'), ts('col.unit'), ts('col.alarms'), ts('col.originDest'), 'P&ID', ts('col.loop'), ts('col.chain')].map(h => (
                       <th key={h} style={{ padding: '9px 10px', textAlign: 'left', fontWeight: 600, color: 'var(--text-muted)', fontSize: '10px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</th>
                     ))}
                   </tr>
@@ -439,7 +431,7 @@ export default function ImportSignalsWizard({
             </div>
             {rows.length > 25 && (
               <div style={{ padding: '10px 16px', background: 'var(--gray-50)', borderTop: '1px solid #f1f5f9', fontSize: '12px', color: 'var(--gray-400)', textAlign: 'center' }}>
-                Mostrando 25 de {rows.length} señales
+                {ts('showing', { total: rows.length })}
               </div>
             )}
           </div>
@@ -451,7 +443,7 @@ export default function ImportSignalsWizard({
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
             <button onClick={() => { setStep('upload'); setRows([]); setValidationErrors([]) }}
               style={{ padding: '10px 20px', background: 'var(--gray-100)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '14px', color: 'var(--text-muted)', cursor: 'pointer' }}>
-              Cancelar
+              {ti('cancel')}
             </button>
             <button onClick={handleImport} disabled={loading || rows.length === 0}
               style={{
@@ -460,7 +452,7 @@ export default function ImportSignalsWizard({
                 background: loading || rows.length === 0 ? 'var(--border)' : '#10b981',
                 color: loading || rows.length === 0 ? 'var(--gray-400)' : 'var(--card-bg)',
               }}>
-              {loading ? (progress ? `Importando… ${progress.done} / ${progress.total}` : 'Importando...') : `✓ Importar ${rows.length} señal${rows.length !== 1 ? 'es' : ''}`}
+              {loading ? (progress ? ti('importingProgress', { done: progress.done, total: progress.total }) : ti('importing')) : `✓ ${ts('importN', { n: rows.length })}`}
             </button>
           </div>
         </div>
@@ -471,35 +463,35 @@ export default function ImportSignalsWizard({
         <div style={{ maxWidth: '560px', margin: '0 auto', textAlign: 'center' }}>
           <div style={{ fontSize: '56px', marginBottom: '16px' }}>{result.errors.length === 0 ? '✅' : '⚠️'}</div>
           <h2 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-strong)', marginBottom: '6px' }}>
-            {result.errors.length === 0 ? 'Importación completada' : 'Importación con advertencias'}
+            {result.errors.length === 0 ? ti('done') : ts('doneWithWarnings')}
           </h2>
           <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', margin: '24px 0', flexWrap: 'wrap' }}>
             <div style={{ padding: '16px 28px', background: '#f0fdf4', borderRadius: '12px', border: '1px solid #bbf7d0' }}>
               <div style={{ fontSize: '32px', fontWeight: 700, color: '#10b981' }}>{result.imported}</div>
-              <div style={{ fontSize: '13px', color: '#166534' }}>Señales nuevas</div>
+              <div style={{ fontSize: '13px', color: '#166534' }}>{ts('new')}</div>
             </div>
             {result.updated > 0 && (
               <div style={{ padding: '16px 28px', background: '#eff6ff', borderRadius: '12px', border: '1px solid #bfdbfe' }}>
                 <div style={{ fontSize: '32px', fontWeight: 700, color: '#2563eb' }}>{result.updated}</div>
-                <div style={{ fontSize: '13px', color: '#1e40af' }}>Actualizadas</div>
+                <div style={{ fontSize: '13px', color: '#1e40af' }}>{ts('updated')}</div>
               </div>
             )}
             {result.tagsCreated > 0 && (
               <div style={{ padding: '16px 28px', background: '#f5f3ff', borderRadius: '12px', border: '1px solid #ddd6fe' }}>
                 <div style={{ fontSize: '32px', fontWeight: 700, color: '#7c3aed' }}>{result.tagsCreated}</div>
-                <div style={{ fontSize: '13px', color: '#5b21b6' }}>Tags instrumento creados</div>
+                <div style={{ fontSize: '13px', color: '#5b21b6' }}>{ts('tagsCreated')}</div>
               </div>
             )}
             {result.loopsCreated > 0 && (
               <div style={{ padding: '16px 28px', background: '#ecfeff', borderRadius: '12px', border: '1px solid #a5f3fc' }}>
                 <div style={{ fontSize: '32px', fontWeight: 700, color: '#0891b2' }}>{result.loopsCreated}</div>
-                <div style={{ fontSize: '13px', color: '#155e75' }}>Lazos creados</div>
+                <div style={{ fontSize: '13px', color: '#155e75' }}>{ts('loopsCreated')}</div>
               </div>
             )}
             {result.skipped > 0 && (
               <div style={{ padding: '16px 28px', background: '#fef2f2', borderRadius: '12px', border: '1px solid #fecaca' }}>
                 <div style={{ fontSize: '32px', fontWeight: 700, color: '#ef4444' }}>{result.skipped}</div>
-                <div style={{ fontSize: '13px', color: '#dc2626' }}>Omitidas</div>
+                <div style={{ fontSize: '13px', color: '#dc2626' }}>{ts('skipped')}</div>
               </div>
             )}
           </div>
@@ -514,24 +506,24 @@ export default function ImportSignalsWizard({
             <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '10px', padding: '14px', marginBottom: '20px', textAlign: 'left' }}>
               {result.errors.slice(0, 20).map((e, i) => (
                 <div key={i} style={{ fontSize: '12px', color: '#dc2626', marginBottom: '4px' }}>
-                  Fila {e.row} · <strong>{e.tag}</strong>: {e.reason}
+                  {ts('rowLabel', { row: e.row })} · <strong>{e.tag}</strong>: {e.reason}
                 </div>
               ))}
-              {result.errors.length > 20 && <div style={{ fontSize: '12px', color: '#dc2626' }}>… y {result.errors.length - 20} más.</div>}
+              {result.errors.length > 20 && <div style={{ fontSize: '12px', color: '#dc2626' }}>{ti('andMore', { n: result.errors.length - 20 })}</div>}
               <button onClick={() => {
-                const ws = XLSX.utils.json_to_sheet(result.errors.map(e => ({ Fila: e.row, Señal: e.tag, Motivo: e.reason })))
-                const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Errores')
-                XLSX.writeFile(wb, `errores-${(fileName ?? 'senales').replace(/\.[^.]+$/, '')}.xlsx`)
-              }} style={{ marginTop: '8px', padding: '6px 12px', fontSize: '12px', borderRadius: '6px', border: '1px solid #fecaca', background: 'var(--card-bg)', color: '#b91c1c', cursor: 'pointer' }}>⬇ Descargar errores (Excel)</button>
+                const ws = XLSX.utils.json_to_sheet(result.errors.map(e => ({ [ti('xlsx.row')]: e.row, [ts('col.signalTag')]: e.tag, [ti('xlsx.reason')]: e.reason })))
+                const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, ti('xlsx.sheet'))
+                XLSX.writeFile(wb, `${ti('xlsx.file')}-${(fileName ?? 'signals').replace(/\.[^.]+$/, '')}.xlsx`)
+              }} style={{ marginTop: '8px', padding: '6px 12px', fontSize: '12px', borderRadius: '6px', border: '1px solid #fecaca', background: 'var(--card-bg)', color: '#b91c1c', cursor: 'pointer' }}>⬇ {ti('downloadErrors')}</button>
             </div>
           )}
           <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
-            <a href={`/projects/${projectId}`} style={{ padding: '10px 24px', background: '#3b82f6', color: '#fff', borderRadius: '8px', fontSize: '14px', fontWeight: 500, textDecoration: 'none' }}>
-              Ver proyecto
-            </a>
+            <Link href={`/projects/${projectId}`} style={{ padding: '10px 24px', background: '#3b82f6', color: '#fff', borderRadius: '8px', fontSize: '14px', fontWeight: 500, textDecoration: 'none' }}>
+              {ts('viewProject')}
+            </Link>
             <button onClick={() => { setStep('upload'); setRows([]); setValidationErrors([]); setResult(null) }}
               style={{ padding: '10px 20px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '14px', color: 'var(--text-muted)', cursor: 'pointer' }}>
-              Importar más
+              {ti('importMore')}
             </button>
           </div>
         </div>

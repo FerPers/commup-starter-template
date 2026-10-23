@@ -1,10 +1,12 @@
 'use client'
 
 import { useEffect, useState, useTransition } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { listImportablePssrTemplates, clonePssrTemplateToActiveOrg, type ImportablePssrTemplate } from '@/app/actions/pssr'
 
 export default function ImportPssrFromOrgModal({ onClose }: { onClose: () => void }) {
+  const ti = useTranslations('TemplateImport')
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -35,7 +37,7 @@ export default function ImportPssrFromOrgModal({ onClose }: { onClose: () => voi
         setError(res.error)
         return
       }
-      setSuccess(`Template "${t.name}" importado exitosamente`)
+      setSuccess(ti('okImported', { code: t.name }))
       router.refresh()
     })
   }
@@ -70,25 +72,25 @@ export default function ImportPssrFromOrgModal({ onClose }: { onClose: () => voi
         }}>
           <div>
             <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: 'var(--text-strong)' }}>
-              Importar template PSSR de otra organización
+              {ti('pssrTitle')}
             </h2>
             <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--text-muted)' }}>
-              Se clona en la org activa. Cada org evoluciona su copia de forma independiente.
+              {ti('cloneHelp')}
             </p>
           </div>
           <button
             onClick={onClose}
             style={{ background: 'none', border: 'none', fontSize: 24, color: 'var(--text-muted)', cursor: 'pointer', lineHeight: 1 }}
-            aria-label="Cerrar"
+            aria-label={ti('close')}
           >×</button>
         </div>
 
         <div style={{ overflowY: 'auto', padding: 20 }}>
-          {loading && <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>Cargando templates…</p>}
+          {loading && <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>{ti('loading')}</p>}
 
           {!loading && templates.length === 0 && !error && (
             <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>
-              No hay templates PSSR disponibles en otras organizaciones de las que seas miembro.
+              {ti('pssrNone')}
             </p>
           )}
 
@@ -116,7 +118,7 @@ export default function ImportPssrFromOrgModal({ onClose }: { onClose: () => voi
                     background: '#ecfdf5', color: '#059669', border: '1px solid #6ee7b7',
                     letterSpacing: '0.04em',
                   }}>
-                    CATÁLOGO PÚBLICO
+                    {ti('publicCatalog')}
                   </span>
                 )}
               </p>
@@ -132,7 +134,7 @@ export default function ImportPssrFromOrgModal({ onClose }: { onClose: () => voi
                         {t.name}
                       </p>
                       <p style={{ margin: '2px 0 0', fontSize: 11, color: 'var(--text-muted)' }}>
-                        {t.itemCount} ítems{t.isActive ? '' : ' · inactivo'}
+                        {ti('items', { n: t.itemCount })}{t.isActive ? '' : ` · ${ti('inactive')}`}
                         {t.description ? ` · ${t.description}` : ''}
                       </p>
                     </div>
@@ -147,7 +149,7 @@ export default function ImportPssrFromOrgModal({ onClose }: { onClose: () => voi
                         flexShrink: 0,
                       }}
                     >
-                      {isPending && importingId === t.id ? 'Importando…' : 'Importar'}
+                      {isPending && importingId === t.id ? ti('importing') : ti('import')}
                     </button>
                   </div>
                 ))}
