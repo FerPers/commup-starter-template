@@ -14,6 +14,12 @@ const TOOLS: { tool: Tool; icon: string }[] = [
   { tool: 'pin', icon: 'M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11z' },
 ]
 
+const RL_TOOLS: { tool: Tool; icon: string }[] = [
+  { tool: 'rl_cloud', icon: 'M7 18a4 4 0 0 1-.6-7.95A5.5 5.5 0 0 1 17 8.5a4.5 4.5 0 0 1 .5 9z' },
+  { tool: 'rl_pen', icon: 'M3 17c3-6 5 2 8-4s5 2 10-6' },
+  { tool: 'rl_text', icon: 'M5 6h14M12 6v13M9 19h6' },
+]
+
 export default function ToolRail({
   tool,
   onTool,
@@ -45,6 +51,26 @@ export default function ToolRail({
               <path d={icon} />
             </svg>
             <span style={{ fontSize: 10, lineHeight: 1.1, textAlign: 'center' }}>{t(`markups.tool_${id}`)}</span>
+          </button>
+        )
+      })}
+      {/* F-21a: red-line (nube, trazo, texto) en rojo, separado de las marcas de límites */}
+      <span aria-hidden="true" style={{ width: 48, height: 1, background: 'var(--border)', margin: '6px 0 2px' }} />
+      <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.05em', color: 'var(--danger-700)' }}>{t('redline.group')}</span>
+      {RL_TOOLS.map(({ tool: id, icon }) => {
+        const on = id === tool
+        return (
+          <button key={id} type="button" aria-pressed={on} onClick={() => onTool(id)} aria-label={t(`redline.tool_${id}`)} title={t(`redline.hint_${id}`)}
+            style={{
+              width: 60, minHeight: 52, padding: '6px 2px', borderRadius: 8, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, cursor: 'pointer',
+              border: `${on ? 2 : 1}px solid ${on ? 'var(--danger-600)' : 'var(--danger-200)'}`,
+              background: on ? 'var(--danger-50)' : 'transparent',
+              color: 'var(--danger-700)', fontWeight: on ? 700 : 400,
+            }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d={icon} />
+            </svg>
+            <span style={{ fontSize: 10, lineHeight: 1.1, textAlign: 'center' }}>{t(`redline.tool_${id}`)}</span>
           </button>
         )
       })}

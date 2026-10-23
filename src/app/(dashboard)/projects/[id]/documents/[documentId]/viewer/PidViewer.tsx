@@ -2,11 +2,13 @@
 
 import { useState, useEffect, useEffectEvent, useMemo, useRef, useTransition, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import TagQuickViewModal from '@/components/TagQuickViewModal'
 import { upsertHotspot, deleteHotspot, confirmHotspots } from '@/app/actions/pid-hotspots'
 import { createMarkup, updateMarkup, deleteMarkup, confirmMarkups } from '@/app/actions/pid-markups'
+import { createRedline } from '@/app/actions/pid-redlines'
+import type { RedlineMark } from '@/lib/pid/redlines'
 import { NO_SYSTEM_COLOR } from '@/lib/systems/colors'
 import { pinStatusColor } from '@/lib/pid/pins'
 import { bounds, clampPct, snapOrthogonal, type Pt } from '@/lib/pid/geometry'
@@ -22,7 +24,9 @@ import PidLegend from './PidLegend'
 import ToolRail from './ToolRail'
 import TagSelector from './TagSelector'
 import { ConnectorDraftPanel, LimitDraftPanel, SelectedMarkupPanel, type ConnectorInfo } from './MarkupPanel'
-import type { ApprovedGates, ColorBy, Hotspot, IncomingConnector, MarkupView, PageInfo, PidDoc, SystemRef, SystemStates, TagItem, Tool } from './types'
+import RedlineLayer from './RedlineLayer'
+import { RedlineDraftPanel, RedlineListPanel, RedlineTextPrompt, uploadPhotos } from './RedlinePanel'
+import type { ApprovedGates, ColorBy, Hotspot, IncomingConnector, Layers, MarkupView, PageInfo, PidDoc, RedlineView, SystemRef, SystemStates, TagItem, Tool } from './types'
 
 // P1: el visor se separó en lienzo (PidCanvas), capa de pines (PinLayer), leyenda (PidLegend) y selector de tags.
 // P2 (maqueta aprobada): barra de herramientas a la izquierda (Elegir · Mover · Resaltar línea · Límite · Etiqueta ·
@@ -38,6 +42,9 @@ import type { ApprovedGates, ColorBy, Hotspot, IncomingConnector, MarkupView, Pa
 // conector lleva a la otra hoja enfocando el conector de vuelta (`?mk=`) o, si no tiene, a la página destino con el
 // sistema aislado; «Controles de esta hoja» lista los conectores sin par y los pines que caen sobre el resalte de
 // otro sistema (solo avisa, también al colocar un pin).
+// F-21a (maquetas aprobadas): red-line de campo. Herramientas Nube (dos toques: esquinas), Trazo (toques; «Terminar
+// trazo») y Texto (un toque y el texto en el panel); las marcas se juntan y «Terminar marcas» abre el formulario
+// (qué cambió, sistema, tag, fotos). Crea Líder en adelante (los editores); capas Pines · Límites · Red-line.
 
 interface Props {
   signedUrl: string
@@ -65,6 +72,11 @@ interface Props {
   documentId: string
   revisionId: string
   canEdit: boolean
+  /** F-21a: red-lines de la revisión abierta, nombres de las personas, usuario actual y zona del proyecto. */
+  redlines: RedlineView[]
+  names: Record<string, string>
+  userId: string
+  timezone: string | null
 }
 
 type MarkupPatch = { system_id?: string; other_system_id?: string | null; label?: string | null; points?: Pt[]; target_document_id?: string | null; target_page?: number }
@@ -82,12 +94,14 @@ const floatBtn: React.CSSProperties = {
   color: 'var(--text-strong)', fontSize: 13, cursor: 'pointer',
 }
 const DRAW_TOOLS: Tool[] = ['line', 'limit', 'label', 'connector']
+const RL_TOOLS: Tool[] = ['rl_cloud', 'rl_pen', 'rl_text']
 
 export default function PidViewer({
   signedUrl, hotspots: initialHotspots, markups: initialMarkups, systems: systemList, approvedGates, systemStates, focusSystemId, placeTag,
-  focusMarkupId, initialPage, pidDocs, incoming, projectId, documentId, revisionId, canEdit,
+  focusMarkupId, initialPage, pidDocs, incoming, projectId, documentId, revisionId, canEdit, redlines, names, userId, timezone,
 }: Props) {
   const t = useTranslations('PidDocuments')
+  const router = useRouter()
   const searchParams = useSearchParams()
   const highlightTagId = searchParams.get('tag')
 
@@ -118,6 +132,13 @@ export default function PidViewer({
   const [legendOpen, setLegendOpen] = useState(true)
   const [isPending, startTransition] = useTransition()
   const [isTouch, setIsTouch] = useState(false)
+  // F-21a: capas visibles, red-line en curso (marcas, esquina de la nube, texto por escribir), formulario y elegido.
+  const [layers, setLayers] = useState<Layers>({ pins: true, losh: true, redline: true })
+  const [rlMarks, setRlMarks] = useState<RedlineMark[]>([])
+  const [cloudStart, setCloudStart] = useState<Pt | null>(null)
+  const [pendingText, setPendingText] = useState<Pt | null>(null)
+  const [rlForm, setRlForm] = useState(false)
+  const [selectedRedlineId, setSelectedRedlineId] = useState<string | null>(null)
   const [wide, setWide] = useState(true)
   // Ids de las marcas optimistas mientras el servidor responde.
   const tempSeq = useRef(0)
@@ -212,13 +233,20 @@ export default function PidViewer({
 
   const resetDrawing = useCallback(() => {
     setDraft([]); setHover(null); setPendingLimit(null); setPendingConnector(null); setRedrawOf(null); setPendingPos(null)
+    setCloudStart(null); setPendingText(null)
   }, [])
+
+  /** Descarta el red-line en curso (marcas y formulario). */
+  function discardRedline() {
+    resetDrawing(); setRlMarks([]); setRlForm(false)
+  }
 
   function pickTool(next: Tool) {
     resetDrawing()
     setError(null)
     if (next !== 'pin') setPlacingTag(null)
     if (DRAW_TOOLS.includes(next) && !activeSystem && isolated) setActiveSystem(isolated)
+    if (RL_TOOLS.includes(next)) { setLayers(l => ({ ...l, redline: true })); setRlForm(false) }
     setTool(next)
   }
 
@@ -374,6 +402,12 @@ export default function PidViewer({
 
   function undo() {
     if (draft.length) { setDraft(d => d.slice(0, -1)); return }
+    if (RL_TOOLS.includes(tool)) {
+      if (cloudStart) { setCloudStart(null); return }
+      if (pendingText) { setPendingText(null); return }
+      setRlMarks(m => m.slice(0, -1))
+      return
+    }
     const op = undoStack[undoStack.length - 1]
     if (!op) return
     setUndoStack(s => s.slice(0, -1))
@@ -441,6 +475,15 @@ export default function PidViewer({
     setError(null)
     if (tool === 'pin') { if (placingTag) setPendingPos({ x: clampPct(u.x * 100), y: clampPct(u.y * 100) }); return }
     if (!size) return
+    if (tool === 'rl_cloud') {
+      if (!cloudStart) { setCloudStart(u); return }
+      if (Math.abs(u.x - cloudStart.x) * size.w < 4 || Math.abs(u.y - cloudStart.y) * size.h < 4) return
+      setRlMarks(m => [...m, { k: 'cloud', p: [cloudStart, u] }])
+      setCloudStart(null); setHover(null)
+      return
+    }
+    if (tool === 'rl_pen') { setDraft(d => [...d, u]); return }
+    if (tool === 'rl_text') { setPendingText(u); return }
     if (tool === 'limit') {
       const lines = pageMarkups.filter(m => m.kind === 'line').map(m => ({ ...m, points: displayPoints(m, page!.rotation) }))
       const hit = nearestLine(u, lines, size, markupMetrics(size).hit)
@@ -460,8 +503,46 @@ export default function PidViewer({
   }
 
   function handleHover(u: Pt | null) {
+    if ((tool === 'rl_pen' && draft.length) || (tool === 'rl_cloud' && cloudStart)) { setHover(u); return }
     if (tool !== 'line' || !draft.length || !size) { if (hover) setHover(null); return }
     setHover(u ? snapOrthogonal(draft[draft.length - 1], u, size) : null)
+  }
+
+  /** Cierra el trazo en curso como una marca del red-line. */
+  function finishPen() {
+    if (!size) return
+    const pts = finishLine(draft, size)
+    if (!pts) { setError(t('markups.lineTooShort')); return }
+    setRlMarks(m => [...m, { k: 'pen', p: pts }])
+    setDraft([]); setHover(null)
+  }
+
+  /** «Terminar marcas»: cierra lo que esté en curso y abre el formulario. */
+  function finishRedlineMarks() {
+    if (draft.length >= 2 && tool === 'rl_pen') finishPen()
+    setCloudStart(null); setPendingText(null)
+    setRlForm(true)
+  }
+
+  function saveRedline(v: { description: string; system_id: string | null; tag: TagItem | null; photos: File[] }) {
+    if (!page || !rlMarks.length) return
+    setError(null)
+    startTransition(async () => {
+      const res = await createRedline({
+        project_id: projectId, document_id: documentId, revision_id: revisionId, page_num: currentPage,
+        description: v.description, system_id: v.system_id, tag_id: v.tag?.id ?? null, marks: rlMarks,
+        page_width: page.w, page_height: page.h, page_rotation: page.rotation,
+      })
+      if (!res.id) { setError(res.error ?? t('redline.saveError')); return }
+      if (v.photos.length) {
+        const err = await uploadPhotos(v.photos, { projectId, documentId, redlineId: res.id }, name => t('redline.photoTooBig', { name }))
+        if (err) setError(err)
+      }
+      discardRedline()
+      setTool('select')
+      setSelectedRedlineId(res.id)
+      router.refresh()
+    })
   }
 
   // Teclado mientras se dibuja: Enter termina, Esc cancela, Retroceso quita el último vértice.
@@ -469,10 +550,10 @@ export default function PidViewer({
     const el = e.target as HTMLElement | null
     if (el && (el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) return
     if (e.key === 'Escape') { resetDrawing(); setSelectedMarkupId(null) }
-    else if (e.key === 'Enter' && draft.length) { e.preventDefault(); finishDraft() }
+    else if (e.key === 'Enter' && draft.length) { e.preventDefault(); if (tool === 'rl_pen') finishPen(); else finishDraft() }
     else if (e.key === 'Backspace' && draft.length) { e.preventDefault(); setDraft(d => d.slice(0, -1)) }
   })
-  const listening = draft.length > 0 || !!pendingLimit || !!pendingConnector || !!selectedMarkupId
+  const listening = draft.length > 0 || !!pendingLimit || !!pendingConnector || !!selectedMarkupId || !!cloudStart
   useEffect(() => {
     if (!listening) return
     const handler = (e: KeyboardEvent) => onKey(e)
@@ -553,12 +634,17 @@ export default function PidViewer({
   const pageOrphans = orphanIncoming.filter(c => (c.target_page ?? 1) === currentPage)
 
   const effectiveTool: Tool = canDraw ? tool : 'select'
+  const rlTool = RL_TOOLS.includes(effectiveTool)
   const interaction = effectiveTool === 'pan' ? 'pan'
-    : DRAW_TOOLS.includes(effectiveTool) || (effectiveTool === 'pin' && !!placingTag) ? 'point'
+    : DRAW_TOOLS.includes(effectiveTool) || rlTool || (effectiveTool === 'pin' && !!placingTag) ? 'point'
       : 'none'
   const needsSystem = DRAW_TOOLS.includes(effectiveTool)
-  const hint = redrawOf ? t('markups.hint_redraw') : t(`markups.hint_${effectiveTool}`)
+  const hint = redrawOf ? t('markups.hint_redraw')
+    : rlTool ? t(`redline.hint_${effectiveTool}${effectiveTool === 'rl_cloud' && cloudStart ? '_second' : ''}`)
+      : t(`markups.hint_${effectiveTool}` as Parameters<typeof t>[0])
   const touchDrawing = isTouch && canDraw && DRAW_TOOLS.includes(effectiveTool)
+  const pageRedlines = redlines.filter(r => r.page_num === currentPage)
+  const rlBusy = rlMarks.length > 0 || draft.length > 0 || !!cloudStart
   const bigBtn: React.CSSProperties = { minWidth: 112, height: 56, padding: '0 16px', borderRadius: 12, fontSize: 16, fontWeight: 600, cursor: 'pointer', border: '1px solid var(--border)', background: 'var(--card-bg)', color: 'var(--text-strong)' }
 
   return (
@@ -589,6 +675,28 @@ export default function PidViewer({
                 </label>
               )}
               <strong style={{ color: 'var(--text-strong)', fontWeight: 600 }}>{hint}</strong>
+              {rlTool && !isTouch && (
+                <>
+                  {effectiveTool === 'rl_pen' && draft.length >= 2 && (
+                    <button type="button" onClick={finishPen}
+                      style={{ minHeight: 30, padding: '0 10px', border: '1px solid var(--danger-200)', borderRadius: 6, background: 'var(--card-bg)', color: 'var(--danger-700)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                      {t('redline.finishPen')}
+                    </button>
+                  )}
+                  {(rlMarks.length > 0 || draft.length >= 2) && !rlForm && (
+                    <button type="button" onClick={finishRedlineMarks}
+                      style={{ minHeight: 30, padding: '0 10px', border: 0, borderRadius: 6, background: 'var(--danger-600)', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                      {t('redline.finishMarks', { count: rlMarks.length + (draft.length >= 2 ? 1 : 0) })}
+                    </button>
+                  )}
+                  {rlBusy && (
+                    <button type="button" onClick={discardRedline}
+                      style={{ minHeight: 30, padding: '0 10px', border: '1px solid var(--border)', borderRadius: 6, background: 'var(--card-bg)', color: 'var(--text-strong)', fontSize: 12, cursor: 'pointer' }}>
+                      {t('viewer.cancel')}
+                    </button>
+                  )}
+                </>
+              )}
               {effectiveTool === 'line' && draft.length > 0 && !isTouch && (
                 <>
                   <button type="button" onClick={finishDraft} disabled={isPending}
@@ -634,7 +742,20 @@ export default function PidViewer({
           onPageInfo={setPage}
           focus={focus}
         >
-          {page && (
+          {page && (layers.redline || rlBusy) && (
+            <RedlineLayer
+              page={page}
+              redlines={layers.redline ? pageRedlines : []}
+              selectedId={selectedRedlineId}
+              selectable={effectiveTool === 'select'}
+              onSelect={id => { setSelectedRedlineId(id); setSelectedMarkupId(null); setSelectedHotspot(null) }}
+              draftMarks={rlMarks}
+              cloudStart={cloudStart}
+              penDraft={effectiveTool === 'rl_pen' ? draft : []}
+              hover={hover}
+            />
+          )}
+          {page && layers.losh && (
             <MarkupLayer
               page={page}
               markups={pageMarkups}
@@ -654,7 +775,7 @@ export default function PidViewer({
               unpaired={unpaired}
             />
           )}
-          <PinLayer
+          {layers.pins && <PinLayer
             pins={pageHotspots}
             colorOf={pinColor}
             dimmed={dimmed}
@@ -669,7 +790,7 @@ export default function PidViewer({
             pendingWarning={pendingCross && placingTag?.system
               ? t('markups.pinCrossedPending', { system: placingTag.system.code, other: codeOf(pendingCross.other_system_id) })
               : null}
-          />
+          />}
         </PidCanvas>
 
         <div style={{ position: 'absolute', bottom: 12, left: 12, zIndex: 30, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
@@ -684,6 +805,18 @@ export default function PidViewer({
             </div>
           )}
         </div>
+        {/* F-21a: en tableta, Deshacer · Cancelar · Terminar marcas grandes mientras se dibuja un red-line. */}
+        {isTouch && canDraw && rlTool && rlBusy && !rlForm && (
+          <div style={{ position: 'absolute', bottom: 18, left: '50%', transform: 'translateX(-50%)', zIndex: 35, display: 'flex', gap: 10, background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 16, padding: 10, boxShadow: '0 10px 30px rgba(13,30,50,.18)' }}>
+            <button type="button" onClick={undo} style={bigBtn}>{t('markups.undo')}</button>
+            <button type="button" onClick={discardRedline} style={bigBtn}>{t('viewer.cancel')}</button>
+            {effectiveTool === 'rl_pen' && draft.length >= 2 && <button type="button" onClick={finishPen} style={bigBtn}>{t('redline.finishPen')}</button>}
+            <button type="button" onClick={finishRedlineMarks} disabled={!rlMarks.length && draft.length < 2}
+              style={{ ...bigBtn, minWidth: 160, border: 0, fontWeight: 700, background: 'var(--danger-600)', color: '#ffffff' }}>
+              {t('redline.finishMarks', { count: rlMarks.length + (draft.length >= 2 ? 1 : 0) })}
+            </button>
+          </div>
+        )}
         {/* P3: en tableta, Deshacer · Cancelar · Terminar grandes mientras se dibuja una línea. */}
         {touchDrawing && effectiveTool === 'line' && (draft.length > 0 || undoStack.length > 0) && (
           <div style={{ position: 'absolute', bottom: 18, left: '50%', transform: 'translateX(-50%)', zIndex: 35, display: 'flex', gap: 10, background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 16, padding: 10, boxShadow: '0 10px 30px rgba(13,30,50,.18)' }}>
@@ -712,6 +845,32 @@ export default function PidViewer({
           <p role="status" style={{ margin: '8px 16px 0', fontSize: 12, color: 'var(--text-muted)' }}>
             {t('markups.focusMissing', { system: systems.get(focusSystemId)?.code ?? '' })}
           </p>
+        )}
+        {/* F-21a: capas que se ven en el plano */}
+        <div role="group" aria-label={t('redline.layers')} style={{ display: 'flex', gap: 4, margin: '12px 16px 0', padding: 4, background: 'var(--gray-100)', borderRadius: 10 }}>
+          {(['pins', 'losh', 'redline'] as const).map(k => (
+            <button key={k} type="button" aria-pressed={layers[k]} onClick={() => setLayers(l => ({ ...l, [k]: !l[k] }))}
+              style={{ flex: 1, minHeight: 34, border: 0, borderRadius: 8, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit',
+                background: layers[k] ? 'var(--card-bg)' : 'transparent', fontWeight: layers[k] ? 700 : 400,
+                color: k === 'redline' ? 'var(--danger-700)' : layers[k] ? 'var(--text-strong)' : 'var(--text-muted)' }}>
+              {t(`redline.layer_${k}`)}
+            </button>
+          ))}
+        </div>
+        {pendingText && (
+          <RedlineTextPrompt
+            onAdd={text => { setRlMarks(m => [...m, { k: 'text', p: [pendingText], t: text }]); setPendingText(null) }}
+            onCancel={() => setPendingText(null)}
+          />
+        )}
+        {rlForm && rlMarks.length > 0 && (
+          <RedlineDraftPanel markCount={rlMarks.length} systemList={systemList} defaultSystemId={activeSystem ?? isolated} projectId={projectId}
+            busy={isPending} onSave={saveRedline} onDiscard={discardRedline} onBack={() => setRlForm(false)} />
+        )}
+        {layers.redline && (
+          <RedlineListPanel redlines={redlines} selectedId={selectedRedlineId} onSelect={setSelectedRedlineId} currentPage={currentPage}
+            onGoToPage={changePage} systems={systems} names={names} userId={userId} canEdit={canEdit}
+            projectId={projectId} documentId={documentId} timezone={timezone} />
         )}
         <PidLegend colorBy={colorBy} onColorBy={setColorBy} systems={sheetSystems} counts={counts} isolated={isolated} onIsolate={setIsolated}
           states={systemStates} onFocus={id => { setIsolated(id); focusOn(id, currentPage) }} />

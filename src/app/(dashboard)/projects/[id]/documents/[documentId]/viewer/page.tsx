@@ -6,10 +6,11 @@ import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
 import { fetchAllRows } from '@/lib/list/fetch-all'
 import { fromStoredPoints, type MarkupKind } from '@/lib/pid/markups'
+import { fromStoredMarks, type RedlineStatus } from '@/lib/pid/redlines'
 import { normalizeRotation } from '@/lib/pid/geometry'
 import { nextGate, rowState } from '@/lib/readiness/matrix'
 import type { MatrixGate } from '@/lib/readiness/gates'
-import type { ApprovedGates, Hotspot, IncomingConnector, MarkupView, PidDoc, SystemRef, SystemStates, TagItem } from './types'
+import type { ApprovedGates, Hotspot, IncomingConnector, MarkupView, PidDoc, RedlineView, SystemRef, SystemStates, TagItem } from './types'
 
 // N2d: visor de un documento P&ID (doc_type = 'pid'). Abre la revisión vigente o la de `?rev=`; los pines son de esa
 // revisión. Al emitirse una revisión nueva, los de la anterior llegan copiados y «por revisar» hasta confirmarlos.
@@ -36,7 +37,7 @@ export default async function PidViewerPage({
   // Verify project belongs to org
   const { data: project } = await supabase
     .from('projects')
-    .select('id, name')
+    .select('id, name, timezone')
     .eq('id', id)
     .eq('org_id', membership.org_id)
     .single()
@@ -82,7 +83,8 @@ export default async function PidViewerPage({
   // pertenece una marca, y liberaciones aprobadas por sistema (editar sus marcas queda registrado).
   // Topes = el de PostgREST (1000): una revisión de un plano no llega a mil marcas, ni un proyecto a mil sistemas.
   // P4: P&ID del proyecto (destino de los conectores) y conectores de otras hojas vigentes que apuntan a esta.
-  const [{ data: rawMarkups }, { data: projectSystems }, { data: approvals }, { data: gateRows }, { data: placeRow }, { data: pidDocRows }, { data: incomingRows }] = await Promise.all([
+  // F-21a: red-lines de la revisión con sus comentarios y fotos (tope: una revisión no llega a mil red-lines).
+  const [{ data: rawMarkups }, { data: projectSystems }, { data: approvals }, { data: gateRows }, { data: placeRow }, { data: pidDocRows }, { data: incomingRows }, { data: rawRedlines }] = await Promise.all([
     supabase
       .from('pid_markups')
       .select('id, page_num, kind, system_id, other_system_id, points, page_width, page_height, page_rotation, label, needs_review, target_document_id, target_page')
@@ -108,7 +110,24 @@ export default async function PidViewerPage({
     supabase.from('documents').select('id, number, title, current_revision_id').eq('project_id', id).eq('doc_type', 'pid').order('number').limit(1000),
     supabase.from('pid_markups').select('id, revision_id, page_num, system_id, target_document_id, target_page')
       .eq('project_id', id).eq('layer', 'losh').eq('kind', 'connector').eq('target_document_id', documentId).limit(1000),
+    supabase.from('pid_redlines')
+      .select('id, number, page_num, status, description, system_id, tag_id, marks, page_width, page_height, page_rotation, created_by, created_at, reviewed_by, reviewed_at, review_note, pid_redline_comments(id, body, created_by, created_at), pid_redline_photos(id)')
+      .eq('revision_id', revision.id).eq('project_id', id).order('seq').limit(1000),
   ])
+  const redlines: RedlineView[] = (rawRedlines ?? []).map(r => ({
+    id: r.id, number: r.number, page_num: r.page_num, status: r.status as RedlineStatus, description: r.description,
+    system_id: r.system_id, tag_id: r.tag_id, marks: fromStoredMarks(r.marks),
+    page_width: Number(r.page_width), page_height: Number(r.page_height), page_rotation: normalizeRotation(r.page_rotation),
+    created_by: r.created_by, created_at: r.created_at, reviewed_by: r.reviewed_by, reviewed_at: r.reviewed_at, review_note: r.review_note,
+    comments: [...(r.pid_redline_comments ?? [])].sort((a, b) => a.created_at.localeCompare(b.created_at)),
+    photo_count: (r.pid_redline_photos ?? []).length,
+  }))
+  // Nombres de quien creó, revisó o comentó.
+  const personIds = [...new Set(redlines.flatMap(r => [r.created_by, r.reviewed_by, ...r.comments.map(c => c.created_by)]).filter((x): x is string => !!x))]
+  const { data: people } = personIds.length
+    ? await supabase.from('profiles').select('id, full_name').in('id', personIds.slice(0, 500))
+    : { data: [] as { id: string; full_name: string | null }[] }
+  const names: Record<string, string> = Object.fromEntries((people ?? []).map(p => [p.id, p.full_name ?? '—']))
   const pidDocs: PidDoc[] = (pidDocRows ?? []).map(d => ({ id: d.id, number: d.number, title: d.title }))
   const currentDocOf = new Map((pidDocRows ?? []).filter(d => d.current_revision_id && d.id !== documentId).map(d => [d.current_revision_id!, d.id]))
   const incoming: IncomingConnector[] = (incomingRows ?? []).flatMap(c => {
@@ -279,6 +298,9 @@ export default async function PidViewerPage({
         )}
         <div style={{ marginLeft: 'auto', fontSize: '12px', color: 'var(--text-muted)' }}>
           {t('pins', { count: hotspots.length })} · {t('markups', { count: markups.length })}
+          {redlines.some(r => r.status === 'open') && (
+            <span style={{ marginLeft: 8, fontWeight: 600, color: 'var(--danger-700)' }}>· {t('redlinesOpen', { count: redlines.filter(r => r.status === 'open').length })}</span>
+          )}
         </div>
       </div>
 
@@ -300,6 +322,10 @@ export default async function PidViewerPage({
         documentId={documentId}
         revisionId={revision.id}
         canEdit={canEdit}
+        redlines={redlines}
+        names={names}
+        userId={ctx.userId}
+        timezone={project.timezone}
       />
     </div>
   )

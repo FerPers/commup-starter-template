@@ -5500,6 +5500,303 @@ export type Database = {
           },
         ]
       }
+      pid_redline_comments: {
+        Row: {
+          body: string
+          created_at: string
+          created_by: string
+          id: string
+          project_id: string
+          redline_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          created_by: string
+          id?: string
+          project_id: string
+          redline_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          project_id?: string
+          redline_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pid_redline_comments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pid_redline_comments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pid_redline_comments_redline_id_fkey"
+            columns: ["redline_id"]
+            isOneToOne: false
+            referencedRelation: "pid_redlines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pid_redline_photos: {
+        Row: {
+          created_at: string
+          created_by: string
+          file_name: string
+          file_path: string
+          id: string
+          mime_type: string | null
+          project_id: string
+          redline_id: string
+          size_bytes: number | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          file_name: string
+          file_path: string
+          id?: string
+          mime_type?: string | null
+          project_id: string
+          redline_id: string
+          size_bytes?: number | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          file_name?: string
+          file_path?: string
+          id?: string
+          mime_type?: string | null
+          project_id?: string
+          redline_id?: string
+          size_bytes?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pid_redline_photos_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pid_redline_photos_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pid_redline_photos_redline_id_fkey"
+            columns: ["redline_id"]
+            isOneToOne: false
+            referencedRelation: "pid_redlines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pid_redlines: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string
+          document_id: string
+          id: string
+          incorporated_at: string | null
+          incorporated_by: string | null
+          incorporated_revision_id: string | null
+          marks: Json
+          number: string
+          org_id: string
+          page_height: number
+          page_num: number
+          page_rotation: number
+          page_width: number
+          project_id: string
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          revision_id: string
+          seq: number
+          status: string
+          system_id: string | null
+          tag_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description: string
+          document_id: string
+          id?: string
+          incorporated_at?: string | null
+          incorporated_by?: string | null
+          incorporated_revision_id?: string | null
+          marks: Json
+          number: string
+          org_id: string
+          page_height: number
+          page_num: number
+          page_rotation: number
+          page_width: number
+          project_id: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          revision_id: string
+          seq: number
+          status?: string
+          system_id?: string | null
+          tag_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string
+          document_id?: string
+          id?: string
+          incorporated_at?: string | null
+          incorporated_by?: string | null
+          incorporated_revision_id?: string | null
+          marks?: Json
+          number?: string
+          org_id?: string
+          page_height?: number
+          page_num?: number
+          page_rotation?: number
+          page_width?: number
+          project_id?: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          revision_id?: string
+          seq?: number
+          status?: string
+          system_id?: string | null
+          tag_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pid_redlines_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pid_redlines_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pid_redlines_incorporated_by_fkey"
+            columns: ["incorporated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pid_redlines_incorporated_revision_id_fkey"
+            columns: ["incorporated_revision_id"]
+            isOneToOne: false
+            referencedRelation: "document_revisions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pid_redlines_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pid_redlines_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pid_redlines_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pid_redlines_revision_id_fkey"
+            columns: ["revision_id"]
+            isOneToOne: false
+            referencedRelation: "document_revisions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pid_redlines_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_bottlenecks"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "pid_redlines_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_subsystem_progress"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "pid_redlines_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "systems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pid_redlines_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "pid_redlines_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["tag_id"]
+          },
+          {
+            foreignKeyName: "pid_redlines_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tag_list_v"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pid_redlines_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       preservation_attachments: {
         Row: {
           captured_at: string
@@ -12969,6 +13266,20 @@ export type Database = {
         }
         Returns: undefined
       }
+      add_pid_redline_comment: {
+        Args: { p_body: string; p_id: string }
+        Returns: string
+      }
+      add_pid_redline_photo: {
+        Args: {
+          p_file_name: string
+          p_file_path: string
+          p_id: string
+          p_mime_type?: string
+          p_size_bytes?: number
+        }
+        Returns: string
+      }
       add_startup_event_param: {
         Args: {
           p_event_id: string
@@ -13402,6 +13713,20 @@ export type Database = {
           p_title: string
         }
         Returns: string
+      }
+      create_pid_redline: {
+        Args: {
+          p_description: string
+          p_marks: Json
+          p_page_height: number
+          p_page_num: number
+          p_page_rotation: number
+          p_page_width: number
+          p_revision_id: string
+          p_system_id?: string
+          p_tag_id?: string
+        }
+        Returns: Json
       }
       create_procedure: {
         Args: {
@@ -14000,6 +14325,7 @@ export type Database = {
         Args: { p_kind: string; p_points: Json }
         Returns: boolean
       }
+      pid_redline_marks_ok: { Args: { p_marks: Json }; Returns: boolean }
       preservation_due_counts: {
         Args: { p_days?: number; p_project_ids: string[] }
         Returns: {
@@ -14261,6 +14587,10 @@ export type Database = {
       revalidate_document_references: {
         Args: { p_document_id: string; p_reason: string }
         Returns: Json
+      }
+      review_pid_redline: {
+        Args: { p_accept: boolean; p_id: string; p_note?: string }
+        Returns: undefined
       }
       review_punch_category: {
         Args: {
@@ -14888,6 +15218,15 @@ export type Database = {
           p_primary_system_id: string
           p_test_id: string
           p_title: string
+        }
+        Returns: undefined
+      }
+      update_pid_redline: {
+        Args: {
+          p_description: string
+          p_id: string
+          p_system_id?: string
+          p_tag_id?: string
         }
         Returns: undefined
       }

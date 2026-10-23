@@ -1,6 +1,7 @@
 import type { PidTagHit } from '@/app/actions/tag-search'
 import type { PageSize, Rotation } from '@/lib/pid/geometry'
 import type { Markup } from '@/lib/pid/markups'
+import type { Redline } from '@/lib/pid/redlines'
 import type { RowState } from '@/lib/readiness/matrix'
 
 /** P1: el sistema trae su color estable del proyecto (`systems.color`). */
@@ -27,8 +28,20 @@ export type ColorBy = 'status' | 'system'
 /** P2: marca LOSH de la revisión abierta (pid_markups). */
 export type MarkupView = Markup
 
-/** Herramientas del visor (maqueta P2): elegir, mover, resaltar línea, límite, etiqueta, conector (P4), pin de tag. */
-export type Tool = 'select' | 'pan' | 'line' | 'limit' | 'label' | 'connector' | 'pin'
+/**
+ * Herramientas del visor (maqueta P2): elegir, mover, resaltar línea, límite, etiqueta, conector (P4), pin de tag.
+ * F-21a: red-line = nube, trazo y texto (Líder en adelante).
+ */
+export type Tool = 'select' | 'pan' | 'line' | 'limit' | 'label' | 'connector' | 'pin' | 'rl_cloud' | 'rl_pen' | 'rl_text'
+
+/** F-21a: red-line de la revisión abierta con sus comentarios y la cantidad de fotos. */
+export type RedlineView = Redline & {
+  comments: { id: string; body: string; created_by: string; created_at: string }[]
+  photo_count: number
+}
+
+/** Capas que se ven en el plano. */
+export type Layers = { pins: boolean; losh: boolean; redline: boolean }
 
 /** P4: P&ID del proyecto (destino de un conector). */
 export type PidDoc = { id: string; number: string; title: string | null }
