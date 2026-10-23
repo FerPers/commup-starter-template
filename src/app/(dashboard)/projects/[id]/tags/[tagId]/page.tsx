@@ -12,6 +12,7 @@ import { loadPidDrawings } from '@/lib/documents/pid'
 import { normalizePidRef } from '@/lib/excel/normalize'
 import { parseTagTab } from './tag-detail-shared'
 import { ROLE_TIERS } from '@/lib/constants/roles'
+import { normDesc, tagPrefix } from '@/lib/tags/type-signature'
 
 export default async function TagDetailPage({
   params,
@@ -223,6 +224,16 @@ export default async function TagDetailPage({
     client_code: clientCode.get(r.template_code.toUpperCase()) ?? null,
     discipline: r.discipline_id ? discName.get(r.discipline_id) ?? '—' : '—',
   }))
+  // R4: ajustes de la IA por decidir para la firma de este tag (tipo + prefijo + disciplina + descripción).
+  let aiReview = tag.equipment_type_id
+    ? supabase.from('tag_itr_ai_reviews').select('tag_itr_ai_proposals(template_code, action, status)')
+        .eq('project_id', projectId).eq('equipment_type_id', tag.equipment_type_id)
+        .eq('prefix', tagPrefix(tag.tag_number)).eq('desc_norm', normDesc(tag.description))
+    : null
+  if (aiReview) aiReview = tag.disciplines?.id ? aiReview.eq('discipline_id', tag.disciplines.id) : aiReview.is('discipline_id', null)
+  const { data: aiRow } = aiReview ? await aiReview.maybeSingle() : { data: null }
+  const aiProposals = ((aiRow?.tag_itr_ai_proposals ?? []) as { template_code: string; action: string; status: string }[])
+    .filter(p => p.status === 'proposed').map(p => ({ code: p.template_code, action: p.action as 'add' | 'exclude' }))
   const scopeTemplates = [...new Map((scopeTpls ?? []).map(x => [x.code, { code: x.code, title: x.title_es?.trim() ? x.title_es : x.title }])).values()]
 
   // S14 (I-25): con representantes del cliente designados, la firma Cliente del ITR va solo a ellos.
@@ -268,6 +279,7 @@ export default async function TagDetailPage({
           projectId={projectId}
           tagId={tag.id}
           reqs={tagReqs}
+          aiProposals={aiProposals}
           phaseCodes={(phases ?? []).map(p => p.code)}
           phaseIds={(phases ?? []).map(p => p.id)}
           scopeTemplates={scopeTemplates}

@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { AI_FEATURES, AI_MODELS, aiBudget, aiCostUsd } from './pricing'
 
 describe('IA: modelo por tarea y coste (S15)', () => {
-  it('Opus solo para matriz ITR e importación C&E', () => {
-    expect(AI_FEATURES.filter(f => AI_MODELS[f] === 'claude-opus-5-5')).toEqual(['itr_matrix', 'ce_import'])
+  it('Opus solo para matriz ITR, importación C&E y ajustes por firma (R4)', () => {
+    expect(AI_FEATURES.filter(f => AI_MODELS[f] === 'claude-opus-5-5')).toEqual(['itr_matrix', 'ce_import', 'itr_adjust'])
   })
 
   it('coste por tokens, incluida la caché', () => {

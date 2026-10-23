@@ -203,7 +203,8 @@
       "decisions": "Decisiones",
       "lineups": "Line-ups",
       "requirements": "Requisitos ITR",
-      "untyped": "Sin tipo"
+      "untyped": "Sin tipo",
+      "ai": "Ajustes con IA"
     },
     "entity": {
       "tag": "Tag",
@@ -6450,7 +6451,8 @@
       },
       "total": "Total"
     },
-    "untyped": "Clasificar sin tipo ({count})"
+    "untyped": "Clasificar sin tipo ({count})",
+    "aiAdjust": "Ajustes con IA"
   },
   "TagRequirements": {
     "title": "ITR requeridos",
@@ -6586,5 +6588,62 @@
       "confirm": "Cambiar el tipo",
       "saving": "Guardando…"
     }
+  },
+  "ItrAiAdjust": {
+    "back": "Requisitos ITR",
+    "title": "Ajustes con IA",
+    "subtitle": "La matriz aceptada da la base de cada tipo. Para cada firma (tipo + prefijo + disciplina + descripción) la IA propone solo agregar o excluir códigos, con motivo; una persona decide. Aceptar crea excepciones en los tags de la firma y nunca pisa lo decidido a mano.",
+    "noRules": "{groups, plural, one {# firma} other {# firmas}} ({tags} tags) son de tipos sin reglas aceptadas: la IA no las ajusta hasta que la matriz tenga su base.",
+    "reviewMatrix": "Revisar la matriz ›",
+    "summary": {
+      "groups": "{count, plural, one {# firma con base} other {# firmas con base}} · {tags} tags",
+      "detail": "· {reviewed} revisadas · {pending} sin revisar · {stale} desactualizadas · {open} propuestas por decidir"
+    },
+    "run": {
+      "start": "Revisar {count, plural, one {# firma} other {# firmas}} con IA (≈ US$ {cost})",
+      "hint": "Opus 5.5 revisa por lotes; puedes pausar y reanudar: lo ya revisado no se vuelve a enviar. Nada cambia hasta que alguien acepta.",
+      "progress": "Revisadas {reviewed} de {total}…",
+      "pause": "Pausar",
+      "done": "{reviewed, plural, one {# firma revisada} other {# firmas revisadas}} · {proposals, plural, one {# ajuste propuesto} other {# ajustes propuestos}} · US$ {cost}"
+    },
+    "readOnly": "Solo lectura: los ajustes los decide un líder o superior.",
+    "filtersLabel": "Filtro",
+    "filter": {
+      "open": "Por decidir",
+      "pending": "Sin revisar",
+      "all": "Todas"
+    },
+    "empty": "Nada con este filtro.",
+    "emptyAll": "Ninguna firma tiene base todavía: acepta reglas en la matriz.",
+    "noDescription": "sin descripción",
+    "tags": "{count, plural, one {# tag} other {# tags}}",
+    "state": {
+      "pending": "Sin revisar",
+      "stale": "Desactualizada",
+      "reviewed": "Revisada"
+    },
+    "base": "Base de la matriz:",
+    "noAdjusts": "La IA no propone ajustes: la base de la matriz aplica.",
+    "add": "Agregar",
+    "exclude": "Excluir",
+    "confidence": "confianza {value}",
+    "accept": "Aceptar para {count, plural, one {# tag} other {# tags}}",
+    "reject": "Rechazar",
+    "acceptAll": "Aceptar todas ({count})",
+    "rejectAll": "Rechazar todas ({count})",
+    "accepted": "Aceptada · {applied, plural, one {# tag} other {# tags}}{skipped, plural, =0 {} one { · # decidido a mano} other { · # decididos a mano}}",
+    "rejected": "Rechazada",
+    "prev": "Anterior",
+    "next": "Siguiente",
+    "pageOf": "Página {page} de {pages}",
+    "error": {
+      "already_decided": "Otra persona ya decidió esta propuesta.",
+      "out_of_scope": "La disciplina de esa plantilla salió del alcance del proyecto.",
+      "template_not_found": "La plantilla ya no está activa.",
+      "template_by_source": "Esa plantilla se genera desde lazos o matrices C&E, no por tag.",
+      "proposal_not_found": "La propuesta ya no existe."
+    },
+    "tagBox": "La IA propone para este grupo de tags:",
+    "tagBoxLink": "Revisar en Ajustes con IA ›"
   }
 }

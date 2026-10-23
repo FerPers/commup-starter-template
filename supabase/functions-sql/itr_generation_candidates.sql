@@ -41,7 +41,7 @@ BEGIN
       WHERE m.status = 'accepted' AND a.phase_id = ANY (p_phase_ids)
     ),
     ov AS (
-      SELECT o.tag_id, o.template_code, o.action FROM tag_itr_overrides o
+      SELECT o.tag_id, o.template_code, o.action, o.source FROM tag_itr_overrides o
       WHERE o.project_id = p_project_id AND (p_tag_ids IS NULL OR o.tag_id = ANY (p_tag_ids))
     ),
     -- R2b (bench 50k): «excluido» e «ITR ya existe» por join en vez de subconsultas correlacionadas (con el plan
@@ -55,7 +55,7 @@ BEGIN
       SELECT s.id AS tag_id, r.template_id, r.code, r.title, r.discipline_id, r.phase_id, r.in_scope, 'matrix'::text AS origin
       FROM scope s JOIN rules r ON r.equipment_type_id = s.equipment_type_id
       UNION ALL
-      SELECT s.id, a.id, a.code, a.title, a.discipline_id, a.phase_id, a.in_scope, 'manual'::text
+      SELECT s.id, a.id, a.code, a.title, a.discipline_id, a.phase_id, a.in_scope, ov.source
       FROM scope s JOIN ov ON ov.tag_id = s.id AND ov.action = 'add'
       JOIN active a ON a.code = ov.template_code AND a.phase_id = ANY (p_phase_ids)
       WHERE NOT EXISTS (SELECT 1 FROM rules r WHERE r.equipment_type_id = s.equipment_type_id AND r.code = a.code)

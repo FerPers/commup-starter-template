@@ -1,8 +1,9 @@
 // S15 (I-19): modelo por tarea y precios para estimar el coste (USD por millón de tokens, tarifas de la API de
 // Anthropic; escritura de caché = 1,25 × entrada). Decisión de Luis (2026-10-20): Opus solo donde la calidad del
-// razonamiento lo justifica (matriz ITR e importación C&E); Sonnet para redactar y traducir.
+// razonamiento lo justifica (matriz ITR, importación C&E y, desde R4, ajustes de ITR por firma); Sonnet para redactar y
+// traducir; Haiku para clasificar tipos (R3).
 
-export const AI_FEATURES = ['itr_matrix', 'ce_import', 'daily_report', 'itr_translations', 'systems', 'tag_types'] as const
+export const AI_FEATURES = ['itr_matrix', 'ce_import', 'daily_report', 'itr_translations', 'systems', 'tag_types', 'itr_adjust'] as const
 export type AiFeature = (typeof AI_FEATURES)[number]
 
 export const AI_MODELS: Record<AiFeature, string> = {
@@ -13,6 +14,8 @@ export const AI_MODELS: Record<AiFeature, string> = {
   systems: 'claude-sonnet-5-5',
   // R3: clasificar firmas de tags es una tarea corta y repetida; Haiku si la prueba de precisión alcanza.
   tag_types: 'claude-haiku-5-5',
+  // R4: ajustar los ITR requeridos de cada firma pide criterio de ingeniería (plan referente: Opus 5.5).
+  itr_adjust: 'claude-opus-5-5',
 }
 
 type Price = { input: number; output: number; cacheRead: number; cacheWrite: number }

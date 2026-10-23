@@ -203,7 +203,8 @@
       "decisions": "Decisions",
       "lineups": "Line-ups",
       "requirements": "ITR requirements",
-      "untyped": "Without type"
+      "untyped": "Without type",
+      "ai": "AI adjustments"
     },
     "entity": {
       "tag": "Tag",
@@ -6450,7 +6451,8 @@
       },
       "total": "Total"
     },
-    "untyped": "Classify untyped ({count})"
+    "untyped": "Classify untyped ({count})",
+    "aiAdjust": "AI adjustments"
   },
   "TagRequirements": {
     "title": "Required ITRs",
@@ -6586,5 +6588,62 @@
       "confirm": "Change the type",
       "saving": "Saving…"
     }
+  },
+  "ItrAiAdjust": {
+    "back": "ITR requirements",
+    "title": "AI adjustments",
+    "subtitle": "The accepted matrix gives each type its baseline. For each signature (type + prefix + discipline + description) the AI only proposes adding or excluding codes, with a reason; a person decides. Accepting creates exceptions on the signature's tags and never overrides what someone decided by hand.",
+    "noRules": "{groups, plural, one {# signature} other {# signatures}} ({tags} tags) belong to types without accepted rules: the AI does not adjust them until the matrix has their baseline.",
+    "reviewMatrix": "Review the matrix ›",
+    "summary": {
+      "groups": "{count, plural, one {# signature with baseline} other {# signatures with baseline}} · {tags} tags",
+      "detail": "· {reviewed} reviewed · {pending} not reviewed · {stale} outdated · {open} proposals to decide"
+    },
+    "run": {
+      "start": "Review {count, plural, one {# signature} other {# signatures}} with AI (≈ US$ {cost})",
+      "hint": "Opus 5.5 reviews in batches; you can pause and resume: what was reviewed is not sent again. Nothing changes until someone accepts.",
+      "progress": "Reviewed {reviewed} of {total}…",
+      "pause": "Pause",
+      "done": "{reviewed, plural, one {# signature reviewed} other {# signatures reviewed}} · {proposals, plural, one {# adjustment proposed} other {# adjustments proposed}} · US$ {cost}"
+    },
+    "readOnly": "Read only: adjustments are decided by a leader or above.",
+    "filtersLabel": "Filter",
+    "filter": {
+      "open": "To decide",
+      "pending": "Not reviewed",
+      "all": "All"
+    },
+    "empty": "Nothing with this filter.",
+    "emptyAll": "No signature has a baseline yet: accept rules in the matrix.",
+    "noDescription": "no description",
+    "tags": "{count, plural, one {# tag} other {# tags}}",
+    "state": {
+      "pending": "Not reviewed",
+      "stale": "Outdated",
+      "reviewed": "Reviewed"
+    },
+    "base": "Matrix baseline:",
+    "noAdjusts": "The AI proposes no adjustments: the matrix baseline applies.",
+    "add": "Add",
+    "exclude": "Exclude",
+    "confidence": "confidence {value}",
+    "accept": "Accept for {count, plural, one {# tag} other {# tags}}",
+    "reject": "Reject",
+    "acceptAll": "Accept all ({count})",
+    "rejectAll": "Reject all ({count})",
+    "accepted": "Accepted · {applied, plural, one {# tag} other {# tags}}{skipped, plural, =0 {} one { · # decided by hand} other { · # decided by hand}}",
+    "rejected": "Rejected",
+    "prev": "Previous",
+    "next": "Next",
+    "pageOf": "Page {page} of {pages}",
+    "error": {
+      "already_decided": "Someone else already decided this proposal.",
+      "out_of_scope": "That template's discipline left the project scope.",
+      "template_not_found": "The template is no longer active.",
+      "template_by_source": "That template is generated from loops or C&E matrices, not per tag.",
+      "proposal_not_found": "The proposal no longer exists."
+    },
+    "tagBox": "The AI proposes for this group of tags:",
+    "tagBoxLink": "Review in AI adjustments ›"
   }
 }

@@ -140,7 +140,7 @@ Las rutas, los nombres de tablas y la API no se renombran (`readiness`, `gates`,
   - Vista previa «gana X, quedan fuera Y» antes de cambiar el tipo.
   - Primero la detección por prefijo (gratis) y después la IA barata (Haiku 5.5, o Sonnet si la prueba de precisión no alcanza) sobre **firmas** de tags: tipo + prefijo + disciplina + descripción normalizada.
   - Tabla `tag_type_proposals`, aceptación por grupo («23 tags "bomba centrífuga agua de enfriamiento" → P») en modo masivo (`createAdminClient({ bulk })` + `emitImportSummary`, sin 20 mil eventos).
-- **R4. Ajustes con IA por firma** (Opus 5.5):
+- **R4. Ajustes con IA por firma** (Opus 5.5): ✅ hecho 2026-10-23 (migraciones `20261210120000` + `20261210130000` + `20261210140000`; decisiones de Luis: solo tipos con reglas aceptadas; corre Arq+, decide Líder+; en DEMO se aceptaron las reglas propuestas de XV, TT y P). Pantalla `/projects/[id]/itrs/requirements/ai`.
   - El modelo ve la base calculada y propone solo agregar o excluir.
   - Muestra el costo estimado antes de correr, se puede reanudar y respeta la cuota de `runAi`.
   - Reemplaza la sugerencia efímera de `suggestItrsForTag`.

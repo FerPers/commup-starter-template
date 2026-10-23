@@ -87,6 +87,8 @@ export default async function RequirementsPage({ params, searchParams }: {
         <Link href={`/projects/${id}/scope`} style={btn('outline')}>{t('scope')}</Link>
         {/* R3: los tags sin tipo se clasifican por firma (gratis por prefijo/nombre, luego IA) en su propia página. */}
         {summary.tags_no_type > 0 && <Link href={`${base}/untyped`} style={btn('outline')}>{t('untyped', { count: summary.tags_no_type })}</Link>}
+        {/* R4: ajustes con IA por firma (Opus propone agregar/excluir; una persona decide). */}
+        <Link href={`${base}/ai`} style={btn('outline')}>{t('aiAdjust')}</Link>
         {/* R2b: el Excel es el plan completo del nodo del árbol (los chips de filtro no aplican). */}
         <a href={`${base}/export${reqQuery({ area: p.area, system: p.system, subsystem: p.subsystem })}`} download
           title={t('exportHint', { node: nodeLabel ?? project.code })} style={btn('outline')}>{t('export')}</a>

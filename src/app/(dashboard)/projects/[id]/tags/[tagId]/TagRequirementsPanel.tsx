@@ -19,10 +19,12 @@ const MIN_REASON = 10
  * eslabón que falta; Líder en adelante genera lo que falta, excluye con motivo, agrega un código del alcance o quita
  * una excepción. El resto lo ve en solo lectura.
  */
-export default function TagRequirementsPanel({ projectId, tagId, reqs, phaseCodes, phaseIds, scopeTemplates, canEdit, hasSubsystem }: {
+export default function TagRequirementsPanel({ projectId, tagId, reqs, aiProposals = [], phaseCodes, phaseIds, scopeTemplates, canEdit, hasSubsystem }: {
   projectId: string
   tagId: string
   reqs: TagReq[]
+  /** R4: ajustes de la IA por decidir para la firma de este tag. */
+  aiProposals?: { code: string; action: 'add' | 'exclude' }[]
   /** Códigos de fase de la org en orden (A, B, C, SU…): columnas de la cadena. */
   phaseCodes: string[]
   /** Ids de todas las fases (la generación del tag cubre todas). */
@@ -34,6 +36,7 @@ export default function TagRequirementsPanel({ projectId, tagId, reqs, phaseCode
 }) {
   const t = useTranslations('TagRequirements')
   const ts = useTranslations('ItrRequirements')
+  const ta = useTranslations('ItrAiAdjust')
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -103,6 +106,18 @@ export default function TagRequirementsPanel({ projectId, tagId, reqs, phaseCode
           <button type="submit" disabled={!addCode || isPending} style={btn('primary')}>{t('addConfirm')}</button>
           <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>{t('addHint')}</span>
         </form>
+      )}
+
+      {aiProposals.length > 0 && (
+        <div role="status" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, padding: '8px 16px', borderBottom: '1px solid var(--border)', background: 'var(--violet-50)', fontSize: 'var(--text-sm)', color: 'var(--violet-800)' }}>
+          <span>✦ {ta('tagBox')}</span>
+          {aiProposals.map(p => (
+            <span key={`${p.action}${p.code}`} style={{ padding: '1px 7px', borderRadius: 5, fontSize: 12, fontWeight: 600, fontFamily: 'ui-monospace, monospace', background: 'var(--card-bg)', border: '1px solid var(--violet-200)' }}>
+              {p.action === 'add' ? '+' : '−'}{p.code}
+            </span>
+          ))}
+          <Link href={`/projects/${projectId}/itrs/requirements/ai?filter=open`} style={{ marginLeft: 'auto', fontWeight: 600, color: 'var(--violet-800)' }}>{ta('tagBoxLink')}</Link>
+        </div>
       )}
 
       {error && <p role="alert" style={{ margin: 0, padding: '8px 16px', color: 'var(--danger-700)', fontSize: 'var(--text-sm)' }}>{error}</p>}

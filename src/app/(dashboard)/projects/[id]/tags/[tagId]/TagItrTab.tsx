@@ -4,7 +4,6 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { createItrAssignment, deleteItr } from '@/app/actions/itr-instances'
-import { suggestItrsForTag, type TagAiSuggestion } from '@/app/actions/itr-matrix'
 import { detectTagType, sortTemplatesByRelevance } from '@/lib/tag-types'
 import AddToWorkPlanModal, { type ModalItr } from '@/components/AddToWorkPlanModal'
 import type { TagItr, ItrTemplate, OrgMember } from './TagDetail'
@@ -84,18 +83,6 @@ export default function TagItrTab({
   const tagType = detectTagType(tagNumber)
   const sortedTemplates = sortTemplatesByRelevance(templates, tagType, equipmentTypeId, matrixTemplateIds)
 
-  // IA por tag (respaldo): propone, nunca asigna. El usuario elige y confirma.
-  const [aiLoading, setAiLoading] = useState(false)
-  const [aiError, setAiError] = useState<string | null>(null)
-  const [aiSuggestions, setAiSuggestions] = useState<TagAiSuggestion[] | null>(null)
-
-  async function handleAiSuggest() {
-    setAiLoading(true); setAiError(null)
-    const res = await suggestItrsForTag(tagId)
-    setAiLoading(false)
-    if (res.error) { setAiError(res.error); return }
-    setAiSuggestions(res.suggestions ?? [])
-  }
   const recommended = sortedTemplates.filter(x => x.recommended)
   const others       = sortedTemplates.filter(x => !x.recommended)
 
@@ -155,14 +142,6 @@ export default function TagItrTab({
         {canEdit && (
           <div style={{ display: 'flex', gap: '8px' }}>
             <button
-              onClick={handleAiSuggest}
-              disabled={aiLoading}
-              title={t('aiHint')}
-              style={{ padding: '8px 14px', background: 'var(--violet-50)', color: 'var(--violet-700)', border: '1px solid var(--violet-200)', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: aiLoading ? 'wait' : 'pointer' }}
-            >
-              {aiLoading ? t('aiLoading') : `✦ ${t('aiSuggest')}`}
-            </button>
-            <button
               onClick={() => setShowAssign(true)}
               style={{ padding: '8px 16px', background: 'var(--primary-500)', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
             >
@@ -172,48 +151,6 @@ export default function TagItrTab({
         )}
       </div>
 
-      {/* Sugerencias de IA (respaldo de la matriz) */}
-      {aiError && (
-        <div style={{ padding: '10px 14px', background: 'var(--danger-50)', border: '1px solid var(--danger-200)', borderRadius: '8px', color: 'var(--danger-600)', fontSize: '13px', marginBottom: '14px' }}>{aiError}</div>
-      )}
-      {aiSuggestions && (
-        <div style={{ background: 'var(--accent-50)', border: '1px solid var(--violet-200)', borderRadius: '10px', padding: '14px 16px', marginBottom: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <p style={{ margin: 0, fontSize: '13px', fontWeight: 700, color: 'var(--violet-800)' }}>
-              ✦ {t('aiTitle', { tag: tagNumber, count: aiSuggestions.length })}
-            </p>
-            <button onClick={() => setAiSuggestions(null)} style={{ background: 'none', border: 'none', color: 'var(--violet-600)', fontSize: '12px', cursor: 'pointer' }}>{t('close')}</button>
-          </div>
-          {aiSuggestions.length === 0 && <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-muted)' }}>{t('aiEmpty')}</p>}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            {aiSuggestions.map(sg => {
-              const inList = templates.some(x => x.id === sg.template_id)
-              return (
-                <div key={sg.template_id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px' }}>
-                  <span style={{ padding: '2px 8px', borderRadius: '5px', fontSize: '11px', fontWeight: 700, background: 'var(--violet-100)', color: 'var(--violet-800)', whiteSpace: 'nowrap' }}>{t('phase', { code: sg.phase_code ?? '?' })}</span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-strong)' }}>
-                      <span style={{ fontFamily: 'monospace' }}>{sg.template_code}</span> · {sg.title}
-                      {sg.discipline_code && <span style={{ marginLeft: '6px', fontSize: '10px', color: 'var(--text-muted)' }}>{sg.discipline_code}</span>}
-                    </div>
-                    <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{sg.reason}</div>
-                  </div>
-                  <span title={t('confidence')} style={{ fontSize: '11px', fontWeight: 700, color: sg.confidence >= 0.7 ? 'var(--success-700)' : sg.confidence >= 0.4 ? 'var(--warning-700)' : 'var(--danger-600)', whiteSpace: 'nowrap' }}>{Math.round(sg.confidence * 100)}%</span>
-                  <button
-                    onClick={() => { setSelectedTemplate(sg.template_id); setShowAssign(true) }}
-                    disabled={!inList}
-                    title={inList ? t('useHint') : t('otherDiscipline')}
-                    style={{ padding: '5px 10px', fontSize: '12px', fontWeight: 600, background: inList ? 'var(--primary-500)' : 'var(--gray-100)', color: inList ? '#fff' : 'var(--text-muted)', border: 'none', borderRadius: '6px', cursor: inList ? 'pointer' : 'not-allowed' }}
-                  >
-                    {t('use')}
-                  </button>
-                </div>
-              )
-            })}
-          </div>
-          <p style={{ margin: '8px 0 0', fontSize: '11px', color: 'var(--text-muted)' }}>{t('aiFooter')}</p>
-        </div>
-      )}
 
       {/* ITR list */}
       {tagItrs.length > 0 && (

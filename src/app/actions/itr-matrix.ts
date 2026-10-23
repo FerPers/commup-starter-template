@@ -14,7 +14,8 @@ import { textOr, textOrNull } from '@/lib/excel/normalize'
 // ── Matriz "tipo de equipo × plantilla ITR" (híbrida) ───────────────────────
 // La IA cura la matriz una vez por org (propone filas con motivo y confianza);
 // un editor acepta o rechaza. El día a día (sugerir ITRs a un tag) es
-// determinista: lee las filas aceptadas. La IA por tag queda como respaldo.
+// determinista: lee las filas aceptadas. R4: los ajustes por firma (agregar/excluir) viven en itr-ai-adjust.ts;
+// la sugerencia efímera por tag se retiró.
 //
 // Reglas fijas: la IA nunca asigna; siempre sugiere por fase (la fase va en la
 // plantilla); puede cruzar disciplinas si lo justifica en el motivo; una
@@ -98,14 +99,6 @@ Reglas:
 const MatrixOutput = z.object({
   assignments: z.array(z.object({
     equipment_type_code: z.string(),
-    template_code: z.string(),
-    confidence: z.number().min(0).max(1),
-    reason: z.string(),
-  })),
-})
-
-const TagOutput = z.object({
-  suggestions: z.array(z.object({
     template_code: z.string(),
     confidence: z.number().min(0).max(1),
     reason: z.string(),
@@ -369,105 +362,5 @@ export const importMatrixRows = withAuthOnly(
     }
     revalidatePath('/admin/templates/matrix')
     return { result }
-  },
-)
-
-// ── Respaldo: IA por tag (no persiste; el usuario decide qué asignar) ───────
-
-export interface TagAiSuggestion {
-  template_id: string
-  template_code: string
-  title: string
-  phase_code: string | null
-  discipline_code: string | null
-  confidence: number
-  reason: string
-}
-
-export const suggestItrsForTag = withAuthOnly(
-  { role: EDITOR_ROLES },
-  async (ctx, tagId: string): Promise<{ suggestions?: TagAiSuggestion[]; error?: string }> => {
-    if (!isAiConfigured()) return { error: AI_NOT_CONFIGURED }
-
-    const { data: tag } = await ctx.supabase
-      .from('tags')
-      .select(`
-        id, tag_number, description, manufacturer, model, fluid_type, mounting_typical, signal_type, sil_level, pid_drawing,
-        disciplines(code, name), equipment_types(code, name, category),
-        subsystems(code, name, systems(code, name)),
-        projects!inner(org_id, name),
-        signals(signal_tag, signal_type, service)
-      `)
-      .eq('id', tagId)
-      .single()
-    type RawTag = {
-      tag_number: string; description: string; manufacturer: string | null; model: string | null
-      fluid_type: string | null; mounting_typical: string | null; signal_type: string | null; sil_level: string | null; pid_drawing: string | null
-      disciplines: { code: string; name: string } | null
-      equipment_types: { code: string; name: string; category: string | null } | null
-      subsystems: { code: string; name: string; systems: { code: string; name: string } | null } | null
-      projects: { org_id: string; name: string }
-      signals: { signal_tag: string; signal_type: string; service: string | null }[] | null
-    }
-    const t = tag as unknown as RawTag | null
-    if (!t || t.projects.org_id !== ctx.orgId) return { error: 'Tag no encontrado' }
-
-    const [{ data: phases }, templates] = await Promise.all([
-      ctx.supabase.from('project_phases').select('code, name, order_index').eq('org_id', ctx.orgId).order('order_index'),
-      loadTemplates(ctx),
-    ])
-    if (templates.length === 0) return { error: 'La organización no tiene plantillas ITR activas.' }
-
-    const facts = [
-      `Tag: ${t.tag_number}`,
-      `Descripción: ${t.description}`,
-      `Disciplina: ${t.disciplines?.code ?? '?'} (${t.disciplines?.name ?? ''})`,
-      t.equipment_types ? `Tipo de equipo: ${t.equipment_types.code} — ${t.equipment_types.name}${t.equipment_types.category ? ` (${t.equipment_types.category})` : ''}` : 'Tipo de equipo: sin asignar',
-      t.manufacturer || t.model ? `Fabricante/modelo: ${[t.manufacturer, t.model].filter(Boolean).join(' ')}` : null,
-      t.fluid_type ? `Fluido: ${t.fluid_type}` : null,
-      t.mounting_typical ? `Típico de montaje: ${t.mounting_typical}` : null,
-      t.signal_type ? `Tipo de señal: ${t.signal_type}` : null,
-      t.sil_level && t.sil_level !== 'None' ? `SIL: ${t.sil_level}` : null,
-      t.pid_drawing ? `P&ID: ${t.pid_drawing}` : null,
-      t.subsystems ? `Sistema/subsistema: ${t.subsystems.systems?.code ?? ''} ${t.subsystems.systems?.name ?? ''} / ${t.subsystems.code} ${t.subsystems.name}` : null,
-      t.signals?.length ? `Señales asociadas: ${t.signals.slice(0, 12).map(s => `${s.signal_tag} (${s.signal_type}${s.service ? `, ${s.service}` : ''})`).join('; ')}` : null,
-    ].filter(Boolean).join('\n')
-
-    const run = await runAi({ orgId: ctx.orgId, userId: ctx.userId, feature: 'itr_matrix' }, (client, model) => client.messages.parse({
-      model,
-      max_tokens: 8000,
-      output_config: { effort: 'medium', format: zodOutputFormat(TagOutput) },
-      system: [
-        { type: 'text', text: SYSTEM_RULES },
-        { type: 'text', text: `CATÁLOGO DE PLANTILLAS ITR (código | título — descripción | disciplina | fase | secciones):\n${catalogText(templates)}`, cache_control: { type: 'ephemeral' } },
-      ],
-      messages: [{
-        role: 'user',
-        content: `Fases de la organización: ${(phases ?? []).map(p => `${p.code} = ${p.name}`).join('; ')}\n\nAnaliza este tag concreto y propone las plantillas ITR que le aplican, por fase (máximo 8):\n${facts}`,
-      }],
-    }))
-    if (!run.response) return { error: run.error }
-    const parsed = run.response.parsed_output
-    if (!parsed) return { error: 'La respuesta de la IA no pudo interpretarse. Intenta de nuevo.' }
-
-    const byCode = new Map(templates.map(tpl => [tpl.code.toUpperCase(), tpl]))
-    const seen = new Set<string>()
-    const suggestions: TagAiSuggestion[] = []
-    for (const s of parsed.suggestions) {
-      const tpl = byCode.get(s.template_code.toUpperCase())
-      if (!tpl || seen.has(tpl.id)) continue
-      seen.add(tpl.id)
-      suggestions.push({
-        template_id: tpl.id,
-        template_code: tpl.code,
-        title: tpl.title,
-        phase_code: tpl.phase_code,
-        discipline_code: tpl.discipline_code,
-        confidence: Math.round(s.confidence * 100) / 100,
-        reason: s.reason.slice(0, 300),
-      })
-    }
-    suggestions.sort((a, b) => (a.phase_code ?? '').localeCompare(b.phase_code ?? '') || b.confidence - a.confidence)
-    return { suggestions }
   },
 )

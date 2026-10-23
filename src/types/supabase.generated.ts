@@ -10063,6 +10063,157 @@ export type Database = {
           },
         ]
       }
+      tag_itr_ai_proposals: {
+        Row: {
+          action: string
+          applied_tags: number | null
+          confidence: number | null
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          id: string
+          org_id: string
+          project_id: string
+          reason: string
+          review_id: string
+          skipped_tags: number | null
+          status: string
+          template_code: string
+        }
+        Insert: {
+          action: string
+          applied_tags?: number | null
+          confidence?: number | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          id?: string
+          org_id: string
+          project_id: string
+          reason: string
+          review_id: string
+          skipped_tags?: number | null
+          status?: string
+          template_code: string
+        }
+        Update: {
+          action?: string
+          applied_tags?: number | null
+          confidence?: number | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          id?: string
+          org_id?: string
+          project_id?: string
+          reason?: string
+          review_id?: string
+          skipped_tags?: number | null
+          status?: string
+          template_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tag_itr_ai_proposals_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tag_itr_ai_proposals_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tag_itr_ai_proposals_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "tag_itr_ai_reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tag_itr_ai_reviews: {
+        Row: {
+          base_codes: string[]
+          created_at: string
+          created_by: string | null
+          desc_norm: string
+          discipline_id: string | null
+          equipment_type_id: string
+          id: string
+          model: string | null
+          org_id: string
+          prefix: string
+          project_id: string
+        }
+        Insert: {
+          base_codes: string[]
+          created_at?: string
+          created_by?: string | null
+          desc_norm: string
+          discipline_id?: string | null
+          equipment_type_id: string
+          id?: string
+          model?: string | null
+          org_id: string
+          prefix: string
+          project_id: string
+        }
+        Update: {
+          base_codes?: string[]
+          created_at?: string
+          created_by?: string | null
+          desc_norm?: string
+          discipline_id?: string | null
+          equipment_type_id?: string
+          id?: string
+          model?: string | null
+          org_id?: string
+          prefix?: string
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tag_itr_ai_reviews_discipline_id_fkey"
+            columns: ["discipline_id"]
+            isOneToOne: false
+            referencedRelation: "disciplines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tag_itr_ai_reviews_discipline_id_fkey"
+            columns: ["discipline_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["discipline_id"]
+          },
+          {
+            foreignKeyName: "tag_itr_ai_reviews_equipment_type_id_fkey"
+            columns: ["equipment_type_id"]
+            isOneToOne: false
+            referencedRelation: "equipment_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tag_itr_ai_reviews_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tag_itr_ai_reviews_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tag_itr_overrides: {
         Row: {
           action: string
@@ -13329,6 +13480,10 @@ export type Database = {
           severity: string
         }[]
       }
+      decide_tag_itr_ai_proposal: {
+        Args: { p_decision: string; p_proposal_id: string }
+        Returns: Json
+      }
       decide_vendor_recommendation: {
         Args: {
           p_decision: string
@@ -14479,6 +14634,15 @@ export type Database = {
       system_pssr_status: { Args: { p_system_id: string }; Returns: Json }
       system_staffing: {
         Args: { p_level: number; p_system_id: string }
+        Returns: Json
+      }
+      tag_ai_signatures: {
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_project_id: string
+          p_status?: string
+        }
         Returns: Json
       }
       tag_desc_norm: { Args: { p: string }; Returns: string }
