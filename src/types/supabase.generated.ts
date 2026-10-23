@@ -5329,6 +5329,164 @@ export type Database = {
           },
         ]
       }
+      pid_markups: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          kind: string
+          label: string | null
+          layer: string
+          needs_review: boolean
+          org_id: string
+          other_system_id: string | null
+          page_height: number
+          page_num: number
+          page_rotation: number
+          page_width: number
+          points: Json
+          project_id: string
+          revision_id: string
+          system_id: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          kind: string
+          label?: string | null
+          layer?: string
+          needs_review?: boolean
+          org_id: string
+          other_system_id?: string | null
+          page_height: number
+          page_num?: number
+          page_rotation?: number
+          page_width: number
+          points: Json
+          project_id: string
+          revision_id: string
+          system_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          kind?: string
+          label?: string | null
+          layer?: string
+          needs_review?: boolean
+          org_id?: string
+          other_system_id?: string | null
+          page_height?: number
+          page_num?: number
+          page_rotation?: number
+          page_width?: number
+          points?: Json
+          project_id?: string
+          revision_id?: string
+          system_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pid_markups_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pid_markups_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pid_markups_other_system_id_fkey"
+            columns: ["other_system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_bottlenecks"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "pid_markups_other_system_id_fkey"
+            columns: ["other_system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_subsystem_progress"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "pid_markups_other_system_id_fkey"
+            columns: ["other_system_id"]
+            isOneToOne: false
+            referencedRelation: "systems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pid_markups_other_system_id_fkey"
+            columns: ["other_system_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "pid_markups_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pid_markups_revision_id_fkey"
+            columns: ["revision_id"]
+            isOneToOne: false
+            referencedRelation: "document_revisions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pid_markups_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_bottlenecks"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "pid_markups_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_subsystem_progress"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "pid_markups_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "systems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pid_markups_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "tag_360"
+            referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "pid_markups_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       preservation_attachments: {
         Row: {
           captured_at: string
@@ -13573,6 +13731,10 @@ export type Database = {
       person_system_level: {
         Args: { p_person_id: string; p_system_id: string }
         Returns: number
+      }
+      pid_markup_points_ok: {
+        Args: { p_kind: string; p_points: Json }
+        Returns: boolean
       }
       preservation_due_counts: {
         Args: { p_days?: number; p_project_ids: string[] }

@@ -5,7 +5,8 @@ import { useTranslations } from 'next-intl'
 import { Document, Page, pdfjs } from 'react-pdf'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
-import { pointerToPct, type Pt } from '@/lib/pid/geometry'
+import { normalizeRotation, pointerToUnit, type Pt } from '@/lib/pid/geometry'
+import type { PageInfo } from './types'
 
 // Point to the worker we copied to public/ — safe for Cloudflare Workers runtime
 pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs'
@@ -13,17 +14,22 @@ pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs'
 export const MIN_SCALE = 0.5
 export const MAX_SCALE = 3
 
-// Lienzo del visor: la hoja del PDF, el desplazamiento (arrastrar con el mouse mientras se ubica, un dedo nativo) y
-// el pellizco de dos dedos. Las capas (pines y, desde P2, marcas) van como hijos encima de la hoja, en la misma
-// caja, así que se posicionan en porcentaje de la página.
+// Lienzo del visor: la hoja del PDF, el desplazamiento (arrastrar con el mouse, un dedo nativo) y el pellizco de dos
+// dedos. Las capas (pines y, desde P2, marcas) van como hijos encima de la hoja, en la misma caja, así que se
+// posicionan en porcentaje (pines) o en unidad 0..1 (marcas) de la página.
+// P2: `interaction` = 'none' (scroll nativo; los hijos reciben los clics), 'pan' (arrastrar mueve) o 'point' (un clic
+// devuelve el punto en unidad 0..1 y arrastrar mueve). `onPageInfo` da el tamaño y la rotación de la hoja.
 export default function PidCanvas({
   signedUrl,
   pageNumber,
   scale,
   onScale,
   onNumPages,
-  placing,
-  onPlace,
+  interaction,
+  onPoint,
+  onDoublePoint,
+  onHover,
+  onPageInfo,
   children,
 }: {
   signedUrl: string
@@ -31,9 +37,13 @@ export default function PidCanvas({
   scale: number
   onScale: (update: (s: number) => number) => void
   onNumPages: (n: number) => void
-  /** Ubicando un pin: el clic sobre la hoja devuelve su posición en porcentaje (acotada a 0..100). */
-  placing: boolean
-  onPlace: (pct: Pt) => void
+  interaction: 'none' | 'pan' | 'point'
+  /** Clic sin arrastre sobre la hoja: posición en unidad 0..1 (acotada al borde). */
+  onPoint?: (unit: Pt) => void
+  onDoublePoint?: (unit: Pt) => void
+  /** Puntero sobre la hoja (null al salir): la línea elástica mientras se dibuja. */
+  onHover?: (unit: Pt | null) => void
+  onPageInfo?: (info: PageInfo) => void
   children?: ReactNode
 }) {
   const t = useTranslations('PidDocuments')
@@ -56,8 +66,10 @@ export default function PidCanvas({
     return () => obs.disconnect()
   }, [])
 
+  const active = interaction !== 'none'
+
   function handleOverlayMouseDown(e: React.MouseEvent<HTMLDivElement>) {
-    if (!placing) return
+    if (!active) return
     wasDraggingRef.current = false
     dragRef.current = {
       startX: e.clientX,
@@ -68,7 +80,10 @@ export default function PidCanvas({
   }
 
   function handleOverlayMouseMove(e: React.MouseEvent<HTMLDivElement>) {
-    if (!dragRef.current) return
+    if (!dragRef.current) {
+      if (interaction === 'point') onHover?.(pointerToUnit(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect()))
+      return
+    }
     const dx = e.clientX - dragRef.current.startX
     const dy = e.clientY - dragRef.current.startY
     if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
@@ -86,6 +101,11 @@ export default function PidCanvas({
   function handleOverlayMouseUp() {
     dragRef.current = null
     if (wasDraggingRef.current) setDragCursor(false)
+  }
+
+  function handleOverlayMouseLeave() {
+    handleOverlayMouseUp()
+    onHover?.(null)
   }
 
   // Pinch-to-zoom: preview via CSS transform durante el gesto (barato),
@@ -125,8 +145,13 @@ export default function PidCanvas({
       wasDraggingRef.current = false
       return
     }
-    if (!placing) return
-    onPlace(pointerToPct(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect()))
+    if (interaction !== 'point') return
+    onPoint?.(pointerToUnit(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect()))
+  }
+
+  function handleOverlayDoubleClick(e: React.MouseEvent<HTMLDivElement>) {
+    if (interaction !== 'point') return
+    onDoublePoint?.(pointerToUnit(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect()))
   }
 
   return (
@@ -169,21 +194,27 @@ export default function PidCanvas({
             width={Math.round(pageWidth * scale)}
             renderTextLayer={false}
             renderAnnotationLayer={false}
+            onLoadSuccess={page => {
+              const vp = page.getViewport({ scale: 1 })
+              onPageInfo?.({ w: vp.width, h: vp.height, rotation: normalizeRotation(page.rotate) })
+            }}
           />
         </Document>
 
-        {/* Click-capture overlay — pointer-events:none when not placing so native scroll/pan works */}
+        {/* Capa de captura: sin pointer-events en 'none' para que el scroll nativo y los clics sobre pines y marcas
+            funcionen; activa, queda encima de pines y marcas (dibujar sobre un pin no lo abre). */}
         <div
           onClick={handleOverlayClick}
+          onDoubleClick={handleOverlayDoubleClick}
           onMouseDown={handleOverlayMouseDown}
           onMouseMove={handleOverlayMouseMove}
           onMouseUp={handleOverlayMouseUp}
-          onMouseLeave={handleOverlayMouseUp}
+          onMouseLeave={handleOverlayMouseLeave}
           style={{
             position: 'absolute', inset: 0,
-            cursor: placing ? (dragCursor ? 'grabbing' : 'crosshair') : 'default',
-            pointerEvents: placing ? 'auto' : 'none',
-            zIndex: 5,
+            cursor: dragCursor ? 'grabbing' : interaction === 'point' ? 'crosshair' : interaction === 'pan' ? 'grab' : 'default',
+            pointerEvents: active ? 'auto' : 'none',
+            zIndex: 15,
           }}
         />
 

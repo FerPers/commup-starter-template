@@ -1,4 +1,6 @@
 import type { PidTagHit } from '@/app/actions/tag-search'
+import type { PageSize, Rotation } from '@/lib/pid/geometry'
+import type { Markup } from '@/lib/pid/markups'
 
 /** P1: el sistema trae su color estable del proyecto (`systems.color`). */
 export type SystemRef = { id: string; code: string; name: string; color: string }
@@ -20,3 +22,15 @@ export type Hotspot = {
 export type TagItem = PidTagHit
 
 export type ColorBy = 'status' | 'system'
+
+/** P2: marca LOSH de la revisión abierta (pid_markups). */
+export type MarkupView = Markup
+
+/** Herramientas del visor (maqueta P2): elegir, mover, resaltar línea, límite, etiqueta, pin de tag. */
+export type Tool = 'select' | 'pan' | 'line' | 'limit' | 'label' | 'pin'
+
+/** Hoja abierta: tamaño en puntos PDF ya rotada y su rotación (las marcas se guardan con esto). */
+export type PageInfo = PageSize & { rotation: Rotation }
+
+/** Liberaciones aprobadas (sin revocar) por sistema: editar sus marcas queda registrado. */
+export type ApprovedGates = Record<string, string[]>

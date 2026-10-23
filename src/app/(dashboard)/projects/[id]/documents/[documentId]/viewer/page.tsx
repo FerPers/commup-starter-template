@@ -5,7 +5,9 @@ import PidViewer from './PidViewer'
 import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
 import { fetchAllRows } from '@/lib/list/fetch-all'
-import type { Hotspot, SystemRef } from './types'
+import { fromStoredPoints, type MarkupKind } from '@/lib/pid/markups'
+import { normalizeRotation } from '@/lib/pid/geometry'
+import type { ApprovedGates, Hotspot, MarkupView, SystemRef } from './types'
 
 // N2d: visor de un documento P&ID (doc_type = 'pid'). Abre la revisión vigente o la de `?rev=`; los pines son de esa
 // revisión. Al emitirse una revisión nueva, los de la anterior llegan copiados y «por revisar» hasta confirmarlos.
@@ -70,6 +72,48 @@ export default async function PidViewerPage({
     .createSignedUrl(revision.file_path, 3600)
 
   if (!signedData?.signedUrl) notFound()
+
+  // P2: marcas LOSH de la revisión (capa losh; redline llega con F-21), sistemas del proyecto para elegir a cuál
+  // pertenece una marca, y liberaciones aprobadas por sistema (editar sus marcas queda registrado).
+  // Topes = el de PostgREST (1000): una revisión de un plano no llega a mil marcas, ni un proyecto a mil sistemas.
+  const [{ data: rawMarkups }, { data: projectSystems }, { data: approvals }] = await Promise.all([
+    supabase
+      .from('pid_markups')
+      .select('id, page_num, kind, system_id, other_system_id, points, page_width, page_height, page_rotation, label, needs_review')
+      .eq('revision_id', revision.id)
+      .eq('project_id', id)
+      .eq('layer', 'losh')
+      .order('created_at')
+      .limit(1000),
+    supabase.from('systems').select('id, code, name, color').eq('project_id', id).order('code').limit(1000),
+    supabase
+      .from('system_gate_approvals')
+      .select('system_id, readiness_gates(code, order_index)')
+      .eq('project_id', id)
+      .is('revoked_at', null)
+      .limit(1000),
+  ])
+  const markups: MarkupView[] = (rawMarkups ?? []).flatMap(m => (m.system_id ? [{
+    id: m.id,
+    page_num: m.page_num,
+    kind: m.kind as MarkupKind,
+    system_id: m.system_id,
+    other_system_id: m.other_system_id,
+    points: fromStoredPoints(m.points),
+    page_width: Number(m.page_width),
+    page_height: Number(m.page_height),
+    page_rotation: normalizeRotation(m.page_rotation),
+    label: m.label,
+    needs_review: m.needs_review,
+  }] : []))
+  const systems: SystemRef[] = projectSystems ?? []
+  const approvedGates: ApprovedGates = {}
+  for (const a of [...(approvals ?? [])].sort((x, y) => (x.readiness_gates?.order_index ?? 0) - (y.readiness_gates?.order_index ?? 0))) {
+    const code = a.readiness_gates?.code
+    if (!code) continue
+    const list = (approvedGates[a.system_id] ??= [])
+    if (!list.includes(code)) list.push(code)
+  }
 
   // S09 (B-07, F-08): el estado de cada pin se calcula SOLO con los tags que tienen pin en este plano
   // (antes se leían todos los tags/punches/ITR del proyecto y PostgREST cortaba en 1000 filas, así que
@@ -166,7 +210,8 @@ export default async function PidViewerPage({
   })
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', overflow: 'hidden' }}>
+    // P2: alto = pantalla menos el Topbar (56 px); con 100dvh los controles de zoom de abajo quedaban fuera.
+    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100dvh - 56px)', overflow: 'hidden' }}>
       {/* Top bar */}
       <div style={{
         display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 20px', flexWrap: 'wrap',
@@ -193,8 +238,8 @@ export default async function PidViewerPage({
         {revision.id !== doc.current_revision_id && (
           <span style={{ fontSize: 12, fontWeight: 600, color: '#b45309' }}>{t('notCurrent')}</span>
         )}
-        <div style={{ marginLeft: 'auto', fontSize: '12px', color: '#94a3b8' }}>
-          {t('pins', { count: hotspots.length })}
+        <div style={{ marginLeft: 'auto', fontSize: '12px', color: 'var(--text-muted)' }}>
+          {t('pins', { count: hotspots.length })} · {t('markups', { count: markups.length })}
         </div>
       </div>
 
@@ -202,6 +247,9 @@ export default async function PidViewerPage({
       <PidViewer
         signedUrl={signedData.signedUrl}
         hotspots={hotspots}
+        markups={markups}
+        systems={systems}
+        approvedGates={approvedGates}
         projectId={id}
         documentId={documentId}
         revisionId={revision.id}

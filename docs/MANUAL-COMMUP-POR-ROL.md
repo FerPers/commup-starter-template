@@ -462,7 +462,9 @@ Todo en *Proyecto › Señales y lazos* (pestañas Señales · Lazos · Matrices
 3. Generar pruebas con la plantilla I30C: una por causa; cada celda muestra el resultado.
 - Una matriz, causa o efecto con pruebas generadas no se puede borrar.
 
-**P&ID** (líder+): *Documentos* → «+ Nuevo», tipo P&ID, con su número de plano → nueva revisión con el PDF → **«Visor»** para poner los pines de los tags. Al pasar a vigente una revisión nueva, los pines se copian marcados «por revisar» hasta confirmarlos o moverlos. El filtro «P&ID (con visor)» muestra también los planos citados por tags que aún no tienen documento.
+**P&ID** (líder+): *Documentos* → «+ Nuevo», tipo P&ID, con su número de plano → nueva revisión con el PDF → **«Visor»** para poner los pines de los tags. Al pasar a vigente una revisión nueva, los pines se copian marcados «por revisar» hasta confirmarlos o moverlos.
+
+**Límites de sistema en el P&ID** (líder+ y arquitecto, en escritorio): en el visor, la barra de la izquierda tiene **Resaltar línea** (elige el sistema arriba; cada clic agrega un vértice, que se ajusta a 90°; doble clic o Enter termina), **Límite** (clic sobre la línea en el punto de aislamiento; elige el sistema de cada lado o «límite de batería») y **Etiqueta** (el código del sistema donde hagas clic). **Elegir** abre una marca para cambiar su sistema, redibujarla o borrarla; **Deshacer** revierte lo último. La derecha lista los **sistemas en esta hoja** con su color del proyecto; «Aislar» atenúa los demás. Si el sistema ya tiene una liberación aprobada, editar sus marcas no se bloquea pero queda registrado. Con una revisión nueva vigente, las marcas se copian «por revisar»: confírmalas o redibújalas. En el teléfono el plano solo se ve. El filtro «P&ID (con visor)» muestra también los planos citados por tags que aún no tienen documento.
 
 ### 5.18 Registro de documentos y referencias
 1. *Proyecto › Documentos › + Nuevo* (líder+): número único, tipo, título, disciplina, empresa emisora, sistemas.
