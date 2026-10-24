@@ -21,12 +21,20 @@ DECLARE
   v_prev    text;
   v_next    text;
   v_type    text;
+  v_ops     text;
+  v_service boolean := COALESCE(NULLIF(current_setting('request.jwt.claims', true), '')::jsonb ->> 'role', '') = 'service_role';
+  v_headers jsonb := COALESCE(NULLIF(current_setting('request.headers', true), '')::jsonb, '{}'::jsonb);
+  v_ctx     jsonb;
 BEGIN
   -- S21 (B-03): import masivo. Solo el service role puede pedirlo (un usuario no puede ocultar sus cambios de la
   -- auditoría); la acción emite un evento de resumen.
-  IF COALESCE(NULLIF(current_setting('request.jwt.claims', true), '')::jsonb ->> 'role', '') = 'service_role'
-     AND COALESCE(NULLIF(current_setting('request.headers', true), '')::jsonb ->> 'x-commup-bulk', '') <> '' THEN
+  IF v_service AND COALESCE(v_headers ->> 'x-commup-bulk', '') <> '' THEN
     RETURN NULL;
+  END IF;
+  -- A04: la BD es el único productor de estos eventos. La API v1 (service role) declara su origen y su llave por
+  -- cabecera y viaja en `payload.context`; un usuario no puede fingirlo.
+  IF v_service AND COALESCE(v_headers ->> 'x-commup-source', '') <> '' THEN
+    v_ctx := jsonb_strip_nulls(jsonb_build_object('source', v_headers ->> 'x-commup-source', 'api_key_id', NULLIF(v_headers ->> 'x-commup-key-id', '')));
   END IF;
 
   IF TG_OP <> 'INSERT' THEN v_old := to_jsonb(OLD); END IF;
@@ -82,6 +90,16 @@ BEGIN
        AND v_new -> 'assigned_to' IS DISTINCT FROM v_old -> 'assigned_to' THEN
       v_type := 'punch.assigned';
     END IF;
+    -- A04: seguimiento en Operaciones (transfer_punch_to_ops / update_punch_ops_status), venga de la app o de la API.
+    IF v_agg = 'punch' AND v_new -> 'post_handover_status' IS DISTINCT FROM v_old -> 'post_handover_status' THEN
+      v_ops := CASE v_new ->> 'post_handover_status' WHEN 'transferred_to_ops' THEN 'punch.transferred_to_ops'
+                                                     WHEN 'closed_final' THEN 'punch.ops_closed' ELSE 'punch.ops_updated' END;
+      v_events := v_events || jsonb_build_array(jsonb_build_object('t', v_ops, 'p', jsonb_strip_nulls(jsonb_build_object(
+        'id', v_id, 'project_id', v_project, 'number', v_new ->> 'punch_number', 'tag_id', v_new ->> 'tag_id',
+        'status', v_new ->> 'post_handover_status', 'previous_status', COALESCE(v_old ->> 'post_handover_status', 'active'),
+        'transferred_to', v_new ->> 'transferred_to_user_id', 'ops_target_date', v_new ->> 'ops_target_date',
+        'notes', v_new ->> 'ops_notes'))));
+    END IF;
   END IF;
 
   IF v_type IS NOT NULL THEN
@@ -94,7 +112,8 @@ BEGIN
   END IF;
 
   INSERT INTO domain_events (org_id, project_id, aggregate_type, aggregate_id, event_type, payload, actor_id)
-  SELECT v_org, v_project, v_agg, v_id, e ->> 't', e -> 'p', auth.uid()
+  SELECT v_org, v_project, v_agg, v_id, e ->> 't',
+         CASE WHEN v_ctx IS NULL THEN e -> 'p' ELSE (e -> 'p') || jsonb_build_object('context', v_ctx) END, auth.uid()
   FROM jsonb_array_elements(v_events) e;
   RETURN NULL;
 END;

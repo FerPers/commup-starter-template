@@ -28,7 +28,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ error: 'status is required' }, { status: 422, headers: apiHeaders() })
   }
 
-  const admin = createAdminClient()
+  const admin = createAdminClient({ apiKeyId: auth.keyId })
 
   const { data: punch } = await admin
     .from('punches').select('id, project_id, projects!inner(org_id)')
@@ -48,15 +48,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (error) {
     return apiDbError(400, error)
   }
-
-  const eventType = body.status === 'closed_final' ? 'punch.ops_closed' : 'punch.ops_updated'
-  await admin.from('domain_events').insert({
-    org_id: auth.orgId, project_id: punch.project_id,
-    aggregate_type: 'punch', aggregate_id: punchId,
-    event_type: eventType,
-    payload: { status: body.status, notes: body.notes ?? null, source: 'api_v1', key_id: auth.keyId },
-    actor_id: null,
-  })
 
   return NextResponse.json({ data: { id: punchId, post_handover_status: body.status } }, { headers: apiHeaders() })
 }

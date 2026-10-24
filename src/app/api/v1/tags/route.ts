@@ -114,7 +114,7 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  const admin = createAdminClient()
+  const admin = createAdminClient({ apiKeyId: auth.keyId })
 
   // Verify project, subsystem and discipline all belong to this org/project.
   // Prevents cross-tenant inserts where an OrgA key references OrgB sub-resources.
@@ -151,17 +151,6 @@ export async function POST(req: NextRequest) {
   if (error) {
     return apiDbError(400, error)
   }
-
-  // Publish domain event
-  await admin.from('domain_events').insert({
-    org_id:         auth.orgId,
-    project_id:     project_id as string,
-    aggregate_type: 'tag',
-    aggregate_id:   data.id,
-    event_type:     'tag.created',
-    payload:        { tag_number: tag_number as string, source: 'api_v1', key_id: auth.keyId },
-    actor_id:       null,
-  })
 
   return NextResponse.json({ data }, { status: 201, headers: apiHeaders() })
 }

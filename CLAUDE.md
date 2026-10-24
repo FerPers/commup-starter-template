@@ -141,6 +141,7 @@ Rules for every new page/query/action:
 
 - `domain_events` es un **outbox**: los triggers solo insertan (`emit_domain_event` para cambios de fila + transiciones de estado; `emit_business_event` para gates y traspasos) y `outbox_dispatch()` (pg_cron `domain-events-outbox`, cada minuto) reparte: entregas de webhook y llamadas a `evaluate-workflow` solo si hay una regla activa. **Nunca agregar un `net.http_post` por fila.**
 - Catálogo v1 único en `src/lib/constants/domain-events.ts` (entidades en singular, eventos de negocio); un evento nuevo va en la función SQL y en el catálogo (test de paridad).
+- A04: **la API v1 nunca inserta en `domain_events`**: escribe con `createAdminClient({ apiKeyId: auth.keyId })` (cabeceras `x-commup-source` / `x-commup-key-id`, solo valen con service role) y el trigger deja `payload.context` = `{source, api_key_id}`. Los eventos de Operaciones del punch (`punch.transferred_to_ops` / `ops_updated` / `ops_closed`) salen del trigger al cambiar `post_handover_status`.
 - Importaciones masivas: `createAdminClient({ bulk: '<tipo>' })` (sin eventos por fila) + `emitImportSummary`. La cabecera solo vale con service role.
 - Webhooks firmados `X-CommUp-Signature: t=<unix>,v1=<hmac>` sobre `<unix>.<body>`; dedupe por `X-CommUp-Event-Id`. Retención diaria `cleanup_event_retention()` (eventos 365 días).
 

@@ -3,7 +3,8 @@
  * - cambios de fila (`emit_domain_event`): `<entidad>.created|updated|deleted`, entidad en singular;
  * - eventos de negocio derivados de transiciones de estado (`emit_domain_event` / `emit_business_event` /
  *   `gate_status_transition_trg`, S22);
- * - eventos que escriben a mano la API v1 y el handover.
+ * - `handover.issued` (lo escribe el paquete) e `import.completed` (resumen de una importación masiva).
+ * A04: la API v1 no escribe eventos; declara su origen por cabecera y el trigger lo deja en `payload.context`.
  * Un test compara este catálogo con los literales de esas funciones en `supabase/functions-sql`.
  * S22: el push sale de `notifications` (src/lib/notifications/topics.ts), no de estos eventos.
  */

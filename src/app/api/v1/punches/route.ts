@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'category must be A, B, or C' }, { status: 422, headers: apiHeaders() })
   }
 
-  const admin = createAdminClient()
+  const admin = createAdminClient({ apiKeyId: auth.keyId })
 
   // Cross-tenant FK guards: project (org), tag (project), subsystem (project, optional).
   const projectCheck = await requireProjectAccess(admin, auth.orgId, project_id as string)
@@ -180,14 +180,6 @@ export async function POST(req: NextRequest) {
     .single()
 
   if (error) return apiDbError(400, error)
-
-  await admin.from('domain_events').insert({
-    org_id: auth.orgId, project_id: project_id as string,
-    aggregate_type: 'punch', aggregate_id: data.id,
-    event_type: 'punch.created',
-    payload: { punch_number: data.punch_number, category: cat, tag_id: tag_id as string, source: 'api_v1', key_id: auth.keyId },
-    actor_id: null,
-  })
 
   return NextResponse.json({ data }, { status: 201, headers: apiHeaders() })
 }

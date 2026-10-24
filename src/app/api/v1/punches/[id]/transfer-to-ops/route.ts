@@ -28,7 +28,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: 'transferred_to is required' }, { status: 422, headers: apiHeaders() })
   }
 
-  const admin = createAdminClient()
+  const admin = createAdminClient({ apiKeyId: auth.keyId })
 
   const { data: punch } = await admin
     .from('punches').select('id, project_id, projects!inner(org_id)')
@@ -48,14 +48,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (error) {
     return apiDbError(400, error)
   }
-
-  await admin.from('domain_events').insert({
-    org_id: auth.orgId, project_id: punch.project_id,
-    aggregate_type: 'punch', aggregate_id: punchId,
-    event_type: 'punch.transferred_to_ops',
-    payload: { transferred_to: body.transferred_to, ops_target_date: body.ops_target_date ?? null, source: 'api_v1', key_id: auth.keyId },
-    actor_id: null,
-  })
 
   return NextResponse.json({ data: { id: punchId, post_handover_status: 'transferred_to_ops' } }, { headers: apiHeaders() })
 }

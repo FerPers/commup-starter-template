@@ -96,7 +96,7 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  const admin = createAdminClient()
+  const admin = createAdminClient({ apiKeyId: auth.keyId })
 
   // Cross-tenant FK guards: project (org), tag (project), template (org+is_global), phase (org).
   const projectCheck = await requireProjectAccess(admin, auth.orgId, project_id as string)
@@ -150,14 +150,6 @@ export async function POST(req: NextRequest) {
     .single()
 
   if (error) return apiDbError(400, error)
-
-  await admin.from('domain_events').insert({
-    org_id: auth.orgId, project_id: project_id as string,
-    aggregate_type: 'itr', aggregate_id: data.id,
-    event_type: 'itr.created',
-    payload: { itr_number: data.itr_number, tag_id: tag_id as string, source: 'api_v1', key_id: auth.keyId },
-    actor_id: null,
-  })
 
   return NextResponse.json({ data }, { status: 201, headers: apiHeaders() })
 }

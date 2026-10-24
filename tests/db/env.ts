@@ -7,6 +7,7 @@
  * deriva de funciones, que solo lee md5 y también corre contra prod en la CI (job «Deriva de funciones»).
  */
 export type DbEnvKey =
+  | 'TEST_SUPABASE_SERVICE_ROLE_KEY'
   | 'TEST_USER_A_EMAIL' | 'TEST_USER_A_PASSWORD' | 'TEST_USER_B_EMAIL' | 'TEST_USER_B_PASSWORD' | 'TEST_PROJECT_A_ID'
   | `TEST_ROLE_${'OWNER' | 'ADMIN' | 'ARCHITECT' | 'LEADER' | 'INSPECTOR' | 'CLIENT'}_${'EMAIL' | 'PASSWORD'}`
 

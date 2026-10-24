@@ -8,11 +8,11 @@ import { execFileSync, spawnSync } from 'node:child_process'
 
 function supabaseEnv() {
   if (process.env.E2E_SUPABASE_URL && process.env.E2E_ANON_KEY) {
-    return { url: process.env.E2E_SUPABASE_URL, anon: process.env.E2E_ANON_KEY }
+    return { url: process.env.E2E_SUPABASE_URL, anon: process.env.E2E_ANON_KEY, service: process.env.E2E_SERVICE_ROLE_KEY }
   }
   const out = execFileSync('supabase', ['status', '-o', 'env', '--agent', 'no'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] })
   const env = Object.fromEntries(out.split('\n').map(l => l.match(/^([A-Z_]+)="?(.*?)"?$/)).filter(Boolean).map(m => [m[1], m[2]]))
-  return { url: env.API_URL, anon: env.ANON_KEY }
+  return { url: env.API_URL, anon: env.ANON_KEY, service: env.SERVICE_ROLE_KEY }
 }
 
 const sb = supabaseEnv()
@@ -31,6 +31,9 @@ const env = {
   ...process.env,
   TEST_SUPABASE_URL: sb.url,
   TEST_SUPABASE_ANON_KEY: sb.anon,
+  // A04: la llave de servicio de la Supabase LOCAL (la que usan la API v1 y los crons), para probar lo que solo el
+  // service role puede hacer. Nunca la de prod: este lanzador se niega a correr fuera de localhost.
+  ...(sb.service ? { TEST_SUPABASE_SERVICE_ROLE_KEY: sb.service } : {}),
   TEST_USER_A_EMAIL: roles.OWNER.email,
   TEST_USER_A_PASSWORD: password,
   TEST_USER_B_EMAIL: actor('outsider').email,
