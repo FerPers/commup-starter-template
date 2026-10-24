@@ -19,6 +19,14 @@
         "--serve"
       ],
       "port": 3100
+    },
+    {
+      "name": "bench",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "scripts/loadtest/serve-bench.mjs"
+      ],
+      "port": 3100
     }
   ]
 }
