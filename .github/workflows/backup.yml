@@ -1,0 +1,65 @@
+name: Respaldo
+
+# A14 (decisión de Luis 2026-10-24): el plan gratuito de Supabase no tiene copias y el Storage nunca entra en ellas.
+# Cada noche: volcado de la BD (roles, esquema, datos, historial de migraciones) + todos los archivos del Storage,
+# cifrados con BACKUP_PASSPHRASE (AES-256 + PBKDF2) y guardados 7 días como artefacto. Pérdida máxima ≤ 24 h.
+# El ensayo mensual (restore-drill.yml) restaura la última copia en una Supabase en blanco y la verifica.
+# Runbook: docs/RUNBOOK-RESPALDO-RESTAURACION.md.
+#
+# Secretos: SUPABASE_DB_URL (cadena de conexión de prod, pooler de sesión), BACKUP_PASSPHRASE (guárdala también fuera
+# de GitHub: sin ella la copia no se abre), NEXT_PUBLIC_SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY (ya existen).
+
+on:
+  schedule:
+    - cron: '30 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency: backup
+
+jobs:
+  backup:
+    name: Respaldo cifrado (BD + Storage)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+      DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      STORAGE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      STORAGE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+    steps:
+      - name: Secretos
+        run: |
+          for v in DB_URL STORAGE_URL STORAGE_SERVICE_KEY BACKUP_PASSPHRASE; do
+            [ -n "${!v}" ] || { echo "::error::falta el secreto de $v (ver docs/RUNBOOK-RESPALDO-RESTAURACION.md)"; exit 1; }
+          done
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+      - run: npm ci
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.90.0
+      - name: Respaldo
+        run: |
+          name="commup-backup-$(date -u +%Y%m%d-%H%M)"
+          echo "NAME=$name" >> "$GITHUB_ENV"
+          scripts/backup/make-backup.sh "$RUNNER_TEMP/$name"
+          node -e '
+            const c = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")); const k = c.counts ?? c
+            const pub = Object.entries(k.tables).filter(([t]) => t.startsWith("public.")).reduce((s, [, n]) => s + Number(n), 0)
+            console.log(`### Respaldo ${process.argv[2]}\n\n${Object.keys(k.tables).length} tablas · ${pub} filas en public · ${k.cron_jobs.length} jobs de pg_cron · migración ${k.last_migration}`)
+          ' "$RUNNER_TEMP/$name/counts.json" "$name" >> "$GITHUB_STEP_SUMMARY"
+          jq -r '"Storage: \(.objects | length) objetos en \(.buckets | length) buckets"' "$RUNNER_TEMP/$name/storage/storage-manifest.json" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.NAME }}
+          path: ${{ runner.temp }}/${{ env.NAME }}.tar.gz.enc
+          retention-days: 7
+          compression-level: 0
+          if-no-files-found: error

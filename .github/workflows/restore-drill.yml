@@ -1,0 +1,59 @@
+name: Ensayo de restauración
+
+# A14: una vez al mes (y a mano) restaura la última copia de backup.yml en una Supabase EN BLANCO dentro del runner
+# (como un proyecto nuevo tras un incidente) y verifica: tablas y filas idénticas, funciones, última migración, jobs
+# de pg_cron y cada archivo del Storage por sha256. El resumen deja la antigüedad de la copia (pérdida real) y los
+# tiempos (la parte técnica de la recuperación). Si algo no cuadra, el job falla.
+
+on:
+  schedule:
+    - cron: '30 6 1 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  drill:
+    name: Restaurar la última copia y verificar
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+      BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+      - run: npm ci
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.90.0
+      - name: Última copia
+        run: |
+          run=$(gh run list --workflow backup.yml --status success --limit 1 --json databaseId,createdAt -q '.[0].databaseId')
+          [ -n "$run" ] || { echo "::error::no hay copias (backup.yml sin corridas correctas)"; exit 1; }
+          gh run download "$run" --dir "$RUNNER_TEMP/bk"
+          file=$(find "$RUNNER_TEMP/bk" -name '*.tar.gz.enc' | head -1)
+          echo "BACKUP_FILE=$file" >> "$GITHUB_ENV"
+          mkdir -p "$RUNNER_TEMP/peek"
+          openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -pass env:BACKUP_PASSPHRASE -in "$file" | tar -C "$RUNNER_TEMP/peek" -xzf - ./versions.json ./counts.json
+      - name: Supabase en blanco
+        run: scripts/backup/drill-target.sh "$RUNNER_TEMP/target" "$RUNNER_TEMP/peek/versions.json"
+      - name: Restaurar y verificar
+        run: |
+          set -a; . "$RUNNER_TEMP/target/target.env"; set +a
+          t0=$(date +%s)
+          scripts/backup/restore-into.sh "$BACKUP_FILE" | tee "$RUNNER_TEMP/drill.log"
+          taken=$(jq -r '(.counts // .).taken_at' "$RUNNER_TEMP/peek/counts.json")
+          {
+            echo "### Ensayo de restauración"
+            echo
+            echo "Copia del $taken · restaurada en $(( $(date +%s) - t0 )) s"
+            echo
+            echo '```'; cat "$RUNNER_TEMP/drill.log"; echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
