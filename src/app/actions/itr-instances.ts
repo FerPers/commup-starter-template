@@ -16,6 +16,7 @@ import type { TablesUpdate } from '@/types/supabase.generated'
 import type { ResponseConflict } from '@/lib/sync/response-utils'
 import type { ActiveContext } from '@/lib/supabase/membership'
 import { createItrRecord, isRequestId } from '@/lib/itr/create'
+import { logActivity } from '@/lib/log-activity'
 
 // NOTA sobre roles: las funciones de EJECUCIÓN de campo (upsertResponse,
 // saveItrAttachment, deleteItrAttachment, signItr) son auth-only a propósito —
@@ -131,8 +132,9 @@ export const deleteItr = withAuthOnly(
     const { data: deleted, error } = await ctx.supabase.from('itrs').delete().eq('id', itrId).eq('project_id', projectId).select('id, itr_number')
     if (error) return { error: /signed ITR/i.test(error.message) ? t('itrInstances.deleteSigned') : error.message }
     if (!deleted?.length) return { error: t('itrInstances.deleteFailed') }
-    await ctx.supabase.from('activity_log').insert({
-      org_id: ctx.orgId, user_id: ctx.userId, entity_type: 'itr', entity_id: itrId, action: 'deleted',
+    // A09: el borrado ya ocurrió; la auditoría revisa su error y no se pierde en silencio.
+    await logActivity(ctx.supabase, {
+      orgId: ctx.orgId, userId: ctx.userId, entityType: 'itr', entityId: itrId, action: 'deleted',
       payload: { itrNumber: deleted[0].itr_number, projectId, tagId },
     })
 

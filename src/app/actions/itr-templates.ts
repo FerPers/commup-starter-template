@@ -12,6 +12,7 @@ import { checkTableConfig, type TableConfig } from '@/lib/itr/table'
 import { conditionRemaps, itemInsertRow, localState, orderedSections, templateContentHash, type CloneSectionSource, type LocalState } from '@/lib/itr/clone'
 import { detectItrPhase } from '@/lib/utils'
 import { normalizeRequired } from '@/lib/itr/signatures'
+import { logActivity } from '@/lib/log-activity'
 import type { Enums } from '@/types/supabase.generated'
 
 const TIPO_ESPECIAL = 'Especial / Matriz'
@@ -792,8 +793,8 @@ async function cloneTemplateInternal(
       }
     }
 
-    await ctx.supabase.from('activity_log').insert({
-      org_id: ctx.orgId, user_id: ctx.userId, entity_type: 'itr_template', entity_id: cloned.id, action: 'template_imported',
+    await logActivity(ctx.supabase, {
+      orgId: ctx.orgId, userId: ctx.userId, entityType: 'itr_template', entityId: cloned.id, action: 'template_imported',
       payload: { code: newCode, version, kind, source_org_id: source.org_id, source_template_id: source.id, source_version: source.version, content_hash: sourceHash, matrix_rows: matrixRows },
     })
 
