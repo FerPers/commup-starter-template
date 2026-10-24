@@ -36,11 +36,11 @@ export default async function StartupEventPage({ params }: { params: Promise<{ i
 
   const names: Record<string, string> = {}
   for (const m of members ?? []) {
-    const p = m.profiles as unknown as { full_name: string | null } | null
+    const p = m.profiles
     if (p?.full_name) names[m.user_id] = p.full_name
   }
-  const sys = ev.systems as unknown as { code: string; name: string } | null
-  const run = ev.procedure_runs as unknown as { id: string; number: string } | null
+  const sys = ev.systems
+  const run = ev.procedure_runs
 
   return (
     <EventDetail
@@ -51,7 +51,7 @@ export default async function StartupEventPage({ params }: { params: Promise<{ i
         system: sys ? `${sys.code} — ${sys.name}` : '—', systemId: ev.system_id, run,
         recordedBy: ev.recorded_by, recordedAt: ev.recorded_at, witnessCapacity: ev.witness_capacity, witnessBy: ev.witness_by, witnessAt: ev.witness_at,
         voidedBy: ev.voided_by, voidedAt: ev.voided_at, voidReason: ev.void_reason, backdateReason: ev.backdate_reason,
-        tags: (tags ?? []).map(x => (x.tags as unknown as { tag_number: string } | null)?.tag_number).filter((x): x is string => !!x),
+        tags: (tags ?? []).map(x => (x.tags)?.tag_number).filter((x): x is string => !!x),
       }}
       params={(paramsRows ?? []).map(p => ({ ...p, value: p.value === null ? null : Number(p.value) }))}
       series={(series ?? []).map(s => ({ signalId: s.signal_id as string, bucket: s.bucket as string, value: s.avg_val === null ? null : Number(s.avg_val) }))}

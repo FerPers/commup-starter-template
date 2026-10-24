@@ -9,6 +9,7 @@ import {
   ACTIVITY_KINDS, ACTIVITY_RESULTS, CHECKLIST_PHASES, INTERFACE_STATUSES, PUNCH_CATEGORIES, REPORT_KINDS, VENDOR_CHECKLIST,
   type ActivityKind, type ActivityResult, type ChecklistPhase, type InterfaceStatus, type PunchCategory, type ReportKind,
 } from '@/lib/vendors/catalog'
+import { sqlArg } from '@/lib/supabase/casts'
 
 // Paquetes de vendor (fase 8 plan readiness, sesión 2; migración 20261022120000). Toda escritura pasa por RPC
 // SECURITY DEFINER (roles, estados del paquete, gate de movilización, checklists, Cat A, MOC). Aquí: guards del
@@ -16,9 +17,9 @@ import {
 
 const projectGuard = [{ resource: 'project' as const, field: 'projectId' }]
 const txt = (v: string | null | undefined, max: number) => (v ?? '').trim().slice(0, max)
-const opt = (v: string | null | undefined) => ((v ?? '') === '' ? null : v) as unknown as string
+const opt = (v: string | null | undefined) => sqlArg<string>(((v ?? '') === '' ? null : v))
 const DATE = /^\d{4}-\d{2}-\d{2}$/
-const date = (v: string | null | undefined) => (v && DATE.test(v) ? v : (null as unknown as string))
+const date = (v: string | null | undefined) => (v && DATE.test(v) ? v : (sqlArg<string>(null)))
 
 function revalidate(projectId: string, packageId?: string) {
   revalidatePath(`/projects/${projectId}/vendors`)
@@ -193,7 +194,7 @@ export const addVendorReport = withAuth(
     if (!DATE.test(input.reportDate)) return { error: t('vendors.invalidDate') }
     if (!txt(input.activities, 8000)) return { error: t('vendors.activitiesRequired') }
     if (!(await owned(ctx.supabase, 'vendor_packages', input.packageId, input.projectId))) return { error: t('vendors.packageNotFound') }
-    const num = (v: number | null | undefined) => (v === null || v === undefined || Number.isNaN(v) ? (null as unknown as number) : v)
+    const num = (v: number | null | undefined) => (v === null || v === undefined || Number.isNaN(v) ? (sqlArg<number>(null)) : v)
     const { data, error } = await ctx.supabase.rpc('add_vendor_report', {
       p_package_id: input.packageId, p_kind: input.kind, p_report_date: input.reportDate,
       p_headcount: num(input.headcount), p_hours: num(input.hours), p_activities: txt(input.activities, 8000), p_issues: opt(txt(input.issues, 8000)),
@@ -227,7 +228,7 @@ export const decideVendorRecommendation = withAuth(
     if (!(await owned(ctx.supabase, 'vendor_recommendations', input.id, input.projectId))) return { error: t('vendors.recommendationNotFound') }
     const { error } = await ctx.supabase.rpc('decide_vendor_recommendation', {
       p_id: input.id, p_decision: input.decision, p_reason: opt(txt(input.reason, 2000)),
-      p_requires_moc: (input.requiresMoc ?? null) as unknown as boolean,
+      p_requires_moc: sqlArg<boolean>((input.requiresMoc ?? null)),
     })
     if (error) return { error: error.message }
     revalidate(input.projectId, input.packageId)

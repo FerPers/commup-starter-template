@@ -20,7 +20,7 @@ export default async function HandoversPage({ params }: { params: Promise<{ id: 
   ])
   const names: Record<string, string> = {}
   for (const m of members ?? []) {
-    const p = m.profiles as unknown as { full_name: string | null } | null
+    const p = m.profiles
     if (p?.full_name) names[m.user_id] = p.full_name
   }
   const who = (u: string | null) => (u ? names[u] ?? '—' : null)

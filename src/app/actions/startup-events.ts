@@ -3,6 +3,7 @@
 import { getTranslations } from 'next-intl/server'
 import { revalidatePath } from 'next/cache'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '@/types/supabase.generated'
 import { withAuth } from '@/lib/auth/withAuth'
 import type { Json } from '@/types/supabase.generated'
 import { EVENT_CATEGORIES, MILESTONES, type EventCategory, type Milestone } from '@/lib/startup/catalog'
@@ -20,7 +21,7 @@ function revalidate(projectId: string, eventId?: string) {
   revalidatePath('/projects/[id]', 'layout')
 }
 
-async function owned(db: SupabaseClient, id: string, projectId: string) {
+async function owned(db: SupabaseClient<Database>, id: string, projectId: string) {
   const { data } = await db.from('startup_events').select('id').eq('id', id).eq('project_id', projectId).maybeSingle()
   return !!data
 }

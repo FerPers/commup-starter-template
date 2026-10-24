@@ -6,6 +6,7 @@ import { ROLE_TIERS } from '@/lib/constants/roles'
 import { catalogPrompt, estimateAdjustUsd, type AiSignaturePage } from '@/lib/itr/ai-adjust'
 import { loadAdjustCandidates } from '@/lib/itr/ai-adjust-server'
 import AiAdjustView from './AiAdjustView'
+import { fromJson } from '@/lib/supabase/casts'
 
 // R4 (plan referente; decisiones de Luis 2026-10-23): «Ajustes con IA». La base de requisitos de cada firma sale de la
 // matriz aceptada de su tipo; Opus propone agregar o excluir códigos por firma y una persona decide. Solo firmas de
@@ -29,7 +30,7 @@ export default async function AiAdjustPage({ params, searchParams }: {
   // Sin filtro en la URL: lo que hay por decidir si existe; si no, todo.
   const head = await supabase.rpc('tag_ai_signatures', { p_project_id: id, p_status: 'open', p_limit: 0, p_offset: 0 })
   if (head.error) throw new Error(head.error.message)
-  const openCount = (head.data as unknown as AiSignaturePage).filtered
+  const openCount = (fromJson<AiSignaturePage>(head.data)).filtered
   const filter: Filter = (FILTERS as readonly string[]).includes(sp.filter ?? '') ? (sp.filter as Filter) : openCount > 0 ? 'open' : 'all'
   const page = Math.max(1, Number.parseInt(sp.page ?? '1', 10) || 1)
 
@@ -39,7 +40,7 @@ export default async function AiAdjustPage({ params, searchParams }: {
     getTranslations('ItrAiAdjust'),
   ])
   if (res.error) throw new Error(res.error.message)
-  const data = res.data as unknown as AiSignaturePage
+  const data = fromJson<AiSignaturePage>(res.data)
   const toReview = data.pending + data.stale
   const canRun = ROLE_TIERS.privileged.includes(ctx.role)
   const pages = Math.max(1, Math.ceil(data.filtered / PAGE_SIZE))

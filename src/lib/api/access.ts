@@ -8,6 +8,7 @@
  */
 import { NextResponse } from 'next/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '@/types/supabase.generated'
 import { apiHeaders } from '@/lib/api/auth'
 import {
   checkDisciplineAccess,
@@ -21,7 +22,7 @@ import {
   type AccessResult as RawAccessResult,
 } from '@/lib/auth/access'
 
-type Admin = SupabaseClient
+type Admin = SupabaseClient<Database>
 
 export type AccessOk = { ok: true }
 export type AccessFail = { ok: false; response: NextResponse }

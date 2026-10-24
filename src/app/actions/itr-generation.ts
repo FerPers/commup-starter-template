@@ -6,7 +6,7 @@ import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { withAuth } from '@/lib/auth/withAuth'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { cleanAssignment, scopeIds, type Assignment, type GenerationScope, type GenerationSummary } from '@/lib/itr/generation'
-import type { Json } from '@/types/supabase.generated'
+import { fromJson } from '@/lib/supabase/casts'
 
 // S19 (C-14, decisión de Luis 2026-10-20): generar ITR por alcance × fase desde la matriz aprobada. La vista previa
 // y cada lote los calcula la BD (SECURITY INVOKER: RLS, numeración atómica, firmas congeladas y guardas de
@@ -29,7 +29,7 @@ export const previewItrGeneration = withAuth(
     if (!scopeIds(input.phaseIds)) return { error: t('itrGeneration.phaseRequired') }
     const { data, error } = await ctx.supabase.rpc('itr_generation_summary', rpcScope(input))
     if (error) return { error: error.message }
-    return { summary: data as unknown as GenerationSummary }
+    return { summary: fromJson<GenerationSummary>(data) }
   },
 )
 
@@ -42,10 +42,10 @@ export const runItrGenerationBatch = withAuth(
     if ('error' in clean) return { error: t('itrGeneration.samePerson') }
 
     const { data, error } = await ctx.supabase.rpc('generate_itrs', {
-      ...rpcScope(input), p_assign: clean.assign as unknown as Json, p_limit: 300,
+      ...rpcScope(input), p_assign: clean.assign, p_limit: 300,
     })
     if (error) return { error: error.message }
-    const res = data as unknown as { created: number; remaining: number; assigned: Record<string, number> }
+    const res = fromJson<{ created: number; remaining: number; assigned: Record<string, number> }>(data)
 
     // Un aviso por persona y lote (no uno por ITR).
     const rows = Object.entries(res.assigned ?? {})

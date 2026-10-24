@@ -38,7 +38,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 
   const t = await getTranslations('Daily')
   const names = new Map<string, string>()
-  for (const m of members ?? []) names.set(m.user_id, (m.profiles as unknown as { full_name: string | null } | null)?.full_name ?? '')
+  for (const m of members ?? []) names.set(m.user_id, (m.profiles)?.full_name ?? '')
   const who = (uid: string | null) => (uid ? names.get(uid) ?? '' : '')
   const code = (v: unknown) => (v as { code: string } | null)?.code ?? ''
   const day = (iso: string | null) => (iso ? iso.slice(0, 10) : '')
@@ -76,7 +76,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 
   const safeCode = project.code.replace(/[^a-zA-Z0-9-]/g, '_')
   const filename = `${safeCode}-gestion-diaria-${new Date().toISOString().slice(0, 10)}.xlsx`
-  return new Response(bytes as unknown as BodyInit, {
+  return new Response(new Uint8Array(bytes), {
     status: 200,
     headers: {
       'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',

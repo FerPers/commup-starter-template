@@ -108,6 +108,7 @@ export async function fetchItrPage(
     .range(from, to)
   if (error) throw new Error(error.message)
 
+  // eslint-disable-next-line no-restricted-syntax -- G-18: select armado en tiempo de ejecución (supabase-js no lo puede tipar)
   const rows = (data ?? []) as unknown as Array<Omit<ItrListRow, 'assignments' | 'signatures' | 'required_signatures'>>
   const ids = rows.map(r => r.id)
   const [assignRes, sigRes, reqRes] = ids.length === 0

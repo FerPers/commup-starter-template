@@ -55,21 +55,6 @@ type PunchRow = {
   target_date: string | null; project_id: string
   projects: { code: string } | null; tags: { tag_number: string } | null
 }
-type PlanItemRow = {
-  id: string; title: string | null; status: string; planned_finish: string | null
-  work_plans: { plan_date: string; project_id: string; projects: { code: string } | null } | null
-  itrs: { itr_number: string; tags: { tag_number: string } | null } | null
-}
-type CertRow = {
-  id: string; certificate_number: string; title: string; issued_date: string | null; project_id: string
-  projects: { code: string } | null; certificate_signatures: { role: string }[]
-}
-type PreservationRow = {
-  id: string; next_due_date: string; project_id: string
-  tags: { id: string; tag_number: string; description: string } | null
-  preservation_procedures: { code: string; title: string } | null
-  projects: { code: string } | null
-}
 
 export default async function MyWorkPage({ searchParams }: { searchParams: Promise<{ project?: string }> }) {
   const ctx = await getActiveMembership()
@@ -263,57 +248,35 @@ export default async function MyWorkPage({ searchParams }: { searchParams: Promi
   ])
 
   const counts = parseCounts(countsRaw)
-  const queues = splitAssignments((assignments ?? []) as unknown as AssignmentRow[], projectSet, userId)
-  const myPunches = sortPunches((punches ?? []) as unknown as PunchRow[])
-  const plan = ((planItems ?? []) as unknown as PlanItemRow[])
+  const queues = splitAssignments((assignments ?? []), projectSet, userId)
+  const myPunches = sortPunches((punches ?? []))
+  const plan = ((planItems ?? []))
     .filter(i => !i.work_plans || i.work_plans.plan_date <= todayOf(i.work_plans.project_id))
-  const pendingCerts = ((certs ?? []) as unknown as CertRow[]).filter(c => !c.certificate_signatures.some(s => s.role === 'completion'))
-  const overduePres = ((preservation ?? []) as unknown as PreservationRow[]).filter(p => p.next_due_date < todayOf(p.project_id))
-  const verifyRows = (toVerify ?? []) as unknown as PunchRow[]
-  const reviewRows = (toReview ?? []) as unknown as (PunchRow & { impact: string | null })[]
-  type ActionQueueRow = { id: string; number: string; title: string; priority: string; due_date: string | null; project_id: string; projects: { code: string } | null }
-  const actionRows = (myActions ?? []) as unknown as ActionQueueRow[]
-  const actionVerifyRows = (actionsVerify ?? []) as unknown as ActionQueueRow[]
-  const redlineRows = (redlinesRaw ?? []) as unknown as {
-    id: string; number: string; description: string; project_id: string; document_id: string; revision_id: string
-    projects: { code: string } | null; documents: { number: string } | null
-  }[]
-  const constraintRows = (myConstraints ?? []) as unknown as {
-    id: string; number: string; title: string; escalation_level: number; need_date: string; project_id: string
-    projects: { code: string } | null; systems: { code: string } | null
-  }[]
-  const handoverRows = (handovers ?? []) as unknown as {
-    id: string; number: string; shift_date: string; shift_label: string; handed_at: string; project_id: string; projects: { code: string } | null
-  }[]
+  const pendingCerts = ((certs ?? [])).filter(c => !c.certificate_signatures.some(s => s.role === 'completion'))
+  const overduePres = ((preservation ?? [])).filter(p => p.next_due_date < todayOf(p.project_id))
+  const verifyRows = (toVerify ?? [])
+  const reviewRows = (toReview ?? [])
+  const actionRows = (myActions ?? [])
+  const actionVerifyRows = (actionsVerify ?? [])
+  const redlineRows = (redlinesRaw ?? [])
+  const constraintRows = (myConstraints ?? [])
+  const handoverRows = (handovers ?? [])
   // S14 (D14): quién libera, atestigua o firma depende de la capacidad en cada proyecto (designado o respaldo).
   const capsByProject = await loadMyCapacitiesByProject(supabase, [
     ...((holds ?? []) as { project_id: string }[]), ...((pendingMilestones ?? []) as { project_id: string }[]),
     ...((pendingTransfers ?? []) as { project_id: string }[]), ...((perfCerts ?? []) as { project_id: string }[]),
   ].map(r => r.project_id))
   const capsOf = (projectId: string) => capsByProject.get(projectId) ?? fallbackCapacities('')
-  const holdRows = ((holds ?? []) as unknown as {
-    run_id: string; ord: number; project_id: string; procedure_steps: { action: string; hold_capacity: string } | null
-    procedure_runs: { number: string; status: string } | null; projects: { code: string } | null
-  }[]).filter(h => {
+  const holdRows = ((holds ?? [])).filter(h => {
     const cap = h.procedure_steps?.hold_capacity as HoldCapacity | undefined
     // D-23: misma regla que my_work_counts (solo ejecuciones detenidas en el hold o paradas).
     return !!cap && ['at_hold', 'stopped'].includes(h.procedure_runs?.status ?? '') && canReleaseHold(capsOf(h.project_id), cap, userId, null)
   })
-  const lineupRows = ((lineupItems ?? []) as unknown as {
-    id: string; label: string | null; sheet_id: string; project_id: string; tags: { tag_number: string } | null
-    lineup_sheets: { number: string; status: string } | null; projects: { code: string } | null
-  }[]).filter(i => i.lineup_sheets && ['issued', 'in_progress'].includes(i.lineup_sheets.status))
-  const milestoneRows = ((pendingMilestones ?? []) as unknown as {
-    id: string; number: string; title: string; witness_capacity: string; project_id: string; projects: { code: string } | null; systems: { code: string } | null
-  }[]).filter(m => canReleaseHold(capsOf(m.project_id), m.witness_capacity as HoldCapacity, userId, null))
-  const transferRows = ((pendingTransfers ?? []) as unknown as {
-    id: string; number: string; to_stage: string; is_reversal: boolean; commissioning_signed_by: string | null; operations_signed_by: string | null
-    project_id: string; projects: { code: string } | null; systems: { code: string } | null
-  }[]).filter(x => signableCapacities(capsOf(x.project_id), userId, x).length > 0)
-  const perfDecideRows = (perfToDecide ?? []) as unknown as {
-    id: string; number: string; early_close: boolean; project_id: string; projects: { code: string } | null; performance_tests: { title: string } | null
-  }[]
-  const perfSignRows = ((perfCerts ?? []) as unknown as (CertSigners & {
+  const lineupRows = ((lineupItems ?? [])).filter(i => i.lineup_sheets && ['issued', 'in_progress'].includes(i.lineup_sheets.status))
+  const milestoneRows = ((pendingMilestones ?? [])).filter(m => canReleaseHold(capsOf(m.project_id), m.witness_capacity as HoldCapacity, userId, null))
+  const transferRows = ((pendingTransfers ?? [])).filter(x => signableCapacities(capsOf(x.project_id), userId, x).length > 0)
+  const perfDecideRows = (perfToDecide ?? [])
+  const perfSignRows = ((perfCerts ?? []) as (CertSigners & {
     id: string; number: string; run_id: string; project_id: string; projects: { code: string } | null; systems: { code: string } | null
   })[]).filter(c => canSignCertificate(c, 'operations', capsOf(c.project_id), userId) || canSignCertificate(c, 'client', capsOf(c.project_id), userId))
   const dailyHref = (projectId: string | undefined, tab: 'actions' | 'constraints') => (projectId ? dailyTabHref(projectId, tab) : '/projects')

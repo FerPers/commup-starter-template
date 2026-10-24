@@ -89,8 +89,6 @@ function toMarkup(m: MarkupRow): Markup | null {
   }
 }
 
-type PinRow = { id: string; revision_id: string; tag_id: string; page_num: number; x_pct: number; y_pct: number; tags: { tag_number: string; subsystems: { system_id: string } | null } | null }
-
 /** Rotación y tamaño (como se ve) de cada página: los de su marca más reciente ya revisada, o de la más reciente. */
 function pageFrames(rows: MarkupRow[]): Map<string, { rotation: Rotation; size: PageSize }> {
   const best = new Map<string, MarkupRow>()
@@ -123,7 +121,7 @@ export async function loadSystemLosh(db: Db, x: { projectId: string; systemId: s
     fetchAllRows(() => db.from('pid_hotspots').select('id, revision_id, tags!inner(subsystems!inner(system_id))')
       .eq('project_id', x.projectId).eq('tags.subsystems.system_id', x.systemId)),
   ])
-  const marks = (ownMarks as unknown as MarkupRow[]).filter(m => docOfRev.has(m.revision_id))
+  const marks = (ownMarks).filter(m => docOfRev.has(m.revision_id))
   const revIds = [...new Set([...marks.map(m => m.revision_id), ...(ownPins as { revision_id: string }[]).map(p => p.revision_id)])]
     .filter(r => docOfRev.has(r))
   if (revIds.length === 0) return { system, sheets: [], conflicts: [], unpaired: [], codes, pidNumbers }
@@ -136,7 +134,7 @@ export async function loadSystemLosh(db: Db, x: { projectId: string; systemId: s
       .in('revision_id', revIds).eq('project_id', x.projectId)),
   ])
   const revOf = new Map((revs ?? []).map(r => [r.id, r]))
-  const lineRows = allLines as unknown as MarkupRow[]
+  const lineRows = allLines
   const frames = pageFrames([...lineRows, ...marks])
 
   // Hojas: páginas con marcas del sistema.
@@ -156,7 +154,7 @@ export async function loadSystemLosh(db: Db, x: { projectId: string; systemId: s
 
   // Pines cruzados que tocan al sistema, por revisión.
   const conflicts: LoshConflict[] = []
-  const pins = (allPins as unknown as PinRow[])
+  const pins = (allPins)
   for (const revId of revIds) {
     const doc = docOfRev.get(revId)!
     const frameOf = (page: number) => frames.get(`${revId}:${page}`) ?? null

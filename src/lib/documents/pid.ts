@@ -25,7 +25,7 @@ export async function loadPidDrawings(
     .eq('doc_type', 'pid')
     .in('number', numbers.slice(0, 500))
     .limit(500)
-  const rows = (data ?? []).map(d => ({ ...d, current: d.current as unknown as { id: string; rev: string; file_path: string | null } | null }))
+  const rows = (data ?? []).map(d => ({ ...d, current: d.current }))
   const paths = rows.map(r => r.current?.file_path).filter((p): p is string => !!p)
   const { data: signed } = paths.length
     ? await supabase.storage.from('project-documents').createSignedUrls(paths, ttlSeconds)

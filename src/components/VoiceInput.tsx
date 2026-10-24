@@ -90,13 +90,13 @@ export function useVoiceInput(options: {
   const [interimText, setInterimText] = useState('');
 
   useEffect(() => {
-    const w = window as unknown as SpeechWindow;
+    const w = window as SpeechWindow;
     const SpeechRecognition = w.SpeechRecognition ?? w.webkitSpeechRecognition;
     setIsAvailable(!!SpeechRecognition);
   }, []);
 
   const start = useCallback(async () => {
-    const w = window as unknown as SpeechWindow;
+    const w = window as SpeechWindow;
     const SpeechRecognition = w.SpeechRecognition ?? w.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {

@@ -37,14 +37,14 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
   ])
   const names: Record<string, string> = {}
   for (const m of members ?? []) {
-    const p = m.profiles as unknown as { full_name: string | null } | null
+    const p = m.profiles
     if (p?.full_name) names[m.user_id] = p.full_name
   }
   const revById = new Map((revisions ?? []).map(r => [r.id, r.rev]))
 
   const usage: UsageRow[] = refs.map(r => {
-    const itr = r.itrs as unknown as { id: string; itr_number: string; tag_id: string; status: string; itr_signatures: { count: number }[] } | null
-    const pr = r.procedure_revisions as unknown as { id: string; rev: number; status: string; procedure_id: string; procedures: { number: string; title: string } | null } | null
+    const itr = r.itrs
+    const pr = r.procedure_revisions
     const outdated = !!doc.current_revision_id && doc.current_revision_id !== r.revision_id
     const locked = itr ? (itr.itr_signatures?.[0]?.count ?? 0) > 0 : pr ? pr.status !== 'draft' : false
     return {
@@ -97,7 +97,7 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
       doc={{
         id: doc.id, number: doc.number, title: doc.title, docType: doc.doc_type as DocType, disciplineId: doc.discipline_id ?? '',
         companyId: doc.company_id ?? '', currentRevisionId: doc.current_revision_id,
-        systemIds: ((doc.document_systems as unknown as { system_id: string }[] | null) ?? []).map(s => s.system_id),
+        systemIds: ((doc.document_systems) ?? []).map(s => s.system_id),
       }}
       revisions={(revisions ?? []).map(r => ({ ...r, status: r.status as RevisionRowStatus })) as RevisionRow[]}
       usage={usage}

@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { loadSigningKey, toBase64 } from '@/lib/handover/sign'
 import { formatInZone } from '@/lib/time/zone'
 import VerifyFiles from './VerifyFiles'
+import { fromJson } from '@/lib/supabase/casts'
 
 export const dynamic = 'force-dynamic'
 export async function generateMetadata(): Promise<Metadata> {
@@ -42,7 +43,7 @@ export default async function VerifyPage({ params }: { params: Promise<{ hash: s
     valid ? admin.rpc('verify_handover_package', { p_hash: hash }) : Promise.resolve({ data: null }),
     loadSigningKey().catch(() => null),
   ])
-  const pkg = data as unknown as Verified | null
+  const pkg = fromJson<Verified | null>(data)
   const ed = pkg?.signature_alg === 'ed25519'
   const sameKey = !!(ed && key && pkg?.key_id === key.keyId)
 

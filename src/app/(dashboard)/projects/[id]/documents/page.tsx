@@ -47,13 +47,13 @@ export default async function DocumentsPage({ params, searchParams }: { params: 
   }
 
   const rows: DocRow[] = docs.map(d => {
-    const cur = d.current as unknown as { id: string; rev: string; status: RevisionStatus; issued_on: string | null; file_path: string | null } | null
-    const revs = (d.document_revisions as unknown as { status: string }[] | null) ?? []
+    const cur = d.current as { id: string; rev: string; status: RevisionStatus; issued_on: string | null; file_path: string | null } | null
+    const revs = (d.document_revisions) ?? []
     return {
       id: d.id, number: d.number, title: d.title, docType: d.doc_type as DocType, disciplineId: d.discipline_id, companyId: d.company_id,
       currentRev: cur?.rev ?? null, currentStatus: cur?.status ?? null, issuedOn: cur?.issued_on ?? null,
       hasDraft: revs.some(r => r.status === 'draft'),
-      systemIds: ((d.document_systems as unknown as { system_id: string }[] | null) ?? []).map(s => s.system_id),
+      systemIds: ((d.document_systems) ?? []).map(s => s.system_id),
       refs: refsByDoc.get(d.id)?.total ?? 0, outdatedRefs: refsByDoc.get(d.id)?.outdated ?? 0,
       currentHasFile: !!cur?.file_path,
     }

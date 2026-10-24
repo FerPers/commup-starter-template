@@ -42,17 +42,17 @@ export default async function Tag360Resolver({
   let matches: Match[] = []
   if (UUID.test(decoded)) {
     const { data } = await base().eq('id', decoded).limit(1)
-    matches = (data ?? []) as unknown as Match[]
+    matches = (data ?? [])
   } else {
     const key = normalizeTag(decoded)
     if (key) {
       const { data } = await base().eq('tag_key', key).order('tag_number').limit(MAX_MATCHES)
-      matches = (data ?? []) as unknown as Match[]
+      matches = (data ?? [])
     }
     // NFC UID: los lectores emiten UIDs hex que no calzan con el número de tag.
     if (!matches.length) {
       const { data } = await base().eq('nfc_uid', decoded).limit(MAX_MATCHES)
-      matches = (data ?? []) as unknown as Match[]
+      matches = (data ?? [])
     }
   }
 

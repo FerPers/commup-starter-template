@@ -60,13 +60,7 @@ async function loadTemplates(ctx: Ctx): Promise<TemplateLite[]> {
     .eq('org_id', ctx.orgId)
     .eq('is_active', true)
     .order('code')
-  type Raw = {
-    id: string; code: string; title: string; description: string | null
-    disciplines: { code: string } | null
-    project_phases: { code: string } | null
-    itr_template_sections: { title: string; order_index: number }[] | null
-  }
-  return ((data ?? []) as unknown as Raw[]).map(t => ({
+  return ((data ?? [])).map(t => ({
     id: t.id,
     code: t.code,
     title: t.title,
@@ -117,11 +111,7 @@ export const listMatrix = withAuthOnly(
       .eq('org_id', ctx.orgId)
       .order('proposed_at', { ascending: false })
     if (error) return { error: error.message }
-    type Raw = Omit<MatrixRow, 'template' | 'status' | 'source'> & {
-      status: string; source: string
-      itr_templates: { code: string; title: string; disciplines: { code: string } | null; project_phases: { code: string } | null } | null
-    }
-    const rows: MatrixRow[] = ((data ?? []) as unknown as Raw[]).map(r => ({
+    const rows: MatrixRow[] = ((data ?? [])).map(r => ({
       id: r.id,
       equipment_type_id: r.equipment_type_id,
       itr_template_id: r.itr_template_id,

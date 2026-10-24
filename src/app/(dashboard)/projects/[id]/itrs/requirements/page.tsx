@@ -8,6 +8,7 @@ import {
   type ReqChip, type ReqPage, type ReqParams, type ReqSummary,
 } from '@/lib/itr/requirements'
 import { REQ_CHIP_STYLE as CHIP_STYLE } from '@/lib/itr/requirements-style'
+import { fromJson } from '@/lib/supabase/casts'
 
 // R2a (maquetas M, 2026-10-22): registro «Requisitos ITR». Qué ITR debe tener cada tag (matriz aceptada del tipo,
 // alcance de disciplinas del proyecto y excepciones decididas por una persona) y en qué estado está cada uno. Todo
@@ -43,8 +44,8 @@ export default async function RequirementsPage({ params, searchParams }: {
   ])
   if (summaryRes.error) throw new Error(summaryRes.error.message)
   if (pageRes.error) throw new Error(pageRes.error.message)
-  const summary = summaryRes.data as unknown as ReqSummary
-  const page = pageRes.data as unknown as ReqPage
+  const summary = fromJson<ReqSummary>(summaryRes.data)
+  const page = fromJson<ReqPage>(pageRes.data)
   const canGenerate = ROLE_TIERS.editor.includes(ctx.role)
   const canMatrix = ROLE_TIERS.privileged.includes(ctx.role)
 

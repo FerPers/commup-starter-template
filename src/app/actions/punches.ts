@@ -413,7 +413,7 @@ export const deletePunch = withAuth(
       .eq('project_id', input.projectId)
       .maybeSingle()
     if (!punch) return { error: t('punches.notFound') }
-    const blocker = punchDeleteBlocker({ ...punch, attachments: (punch.punch_attachments as unknown as { count: number }[])[0]?.count ?? 0 })
+    const blocker = punchDeleteBlocker({ ...punch, attachments: (punch.punch_attachments)[0]?.count ?? 0 })
     if (blocker) return { error: t('punches.deleteBlocked', { reason: blocker }) }
 
     const { data: deleted, error } = await supabase

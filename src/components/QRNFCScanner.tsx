@@ -95,7 +95,7 @@ function useNFCScan(
     }
     try {
       abortRef.current = new AbortController();
-      const Ctor = (window as unknown as { NDEFReader: NDEFReaderCtor }).NDEFReader;
+      const Ctor = (window as { NDEFReader: NDEFReaderCtor }).NDEFReader;
       const ndef = new Ctor();
       await ndef.scan({ signal: abortRef.current.signal });
       setNfcActive(true);

@@ -77,11 +77,7 @@ async function loadTemplate(ctx: Ctx, templateId: string): Promise<TranslationRe
     .eq('id', templateId)
     .eq('org_id', ctx.orgId)
     .single()
-  type Raw = {
-    id: string; code: string; title: string; title_es: string | null
-    itr_template_sections: { id: string; title: string; order_index: number; itr_template_items: { id: string; item_number: string | null; description: string; description_es: string | null; description_es_source: string | null; order_index: number }[] }[]
-  }
-  const t = data as unknown as Raw | null
+  const t = data
   if (!t) return null
   const items: TranslationItem[] = []
   for (const s of [...(t.itr_template_sections ?? [])].sort((a, b) => a.order_index - b.order_index)) {
@@ -249,9 +245,8 @@ export const listTranslationGaps = withAuthOnly(
       .eq('is_active', true)
       .order('code')
     if (error) return { error: error.message }
-    type Raw = { id: string; code: string; title: string; title_es: string | null; itr_template_items: { description: string; description_es: string | null }[] }
     const gaps: TranslationGap[] = []
-    for (const t of (data ?? []) as unknown as Raw[]) {
+    for (const t of (data ?? [])) {
       const missingItems = (t.itr_template_items ?? []).filter(i => isTranslatable(i.description) && !(i.description_es ?? '').trim()).length
       const missingTitle = !t.title_es?.trim()
       if (missingItems > 0 || missingTitle) gaps.push({ id: t.id, code: t.code, title: t.title, missingTitle, missingItems })

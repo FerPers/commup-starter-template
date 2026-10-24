@@ -1,6 +1,7 @@
 import { getLocale } from 'next-intl/server'
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { renderHandoverPdf, type HandoverSnapshot } from '@/lib/pdf/daily-report'
+import { fromJson } from '@/lib/supabase/casts'
 
 export const dynamic = 'force-dynamic'
 
@@ -31,7 +32,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     shiftDate: h.shift_date,
     shiftLabel: h.shift_label as 'day' | 'night' | 'other',
     status: h.status as 'draft' | 'handed_over' | 'accepted',
-    snapshot: h.snapshot as unknown as HandoverSnapshot,
+    snapshot: fromJson<HandoverSnapshot>(h.snapshot),
     pending: h.pending_items,
     safety: h.safety_notes,
     handedBy: name(h.handed_by),

@@ -7,6 +7,7 @@ import { ROLE_TIERS } from '@/lib/constants/roles'
 import { detectFree, learnedMap, signatureKey, type CatalogType, type LearnedPrefix, type TypeGroup } from '@/lib/tags/type-signature'
 import { estimateClassifyUsd } from '@/lib/tags/type-ai'
 import UntypedTagsView, { type UntypedGroup } from './UntypedTagsView'
+import { fromJson } from '@/lib/supabase/casts'
 
 // R3 (maquetas M, 2026-10-22): «Tags sin tipo». Los tags sin tipo de equipo no reciben ningún ITR; se agrupan por firma
 // (prefijo + disciplina + descripción) y cada grupo trae su propuesta: gratis (código, prefijo aprendido, nombre del
@@ -31,7 +32,7 @@ export default async function UntypedTagsPage({ params }: { params: Promise<{ id
     getTranslations('TagTypes'),
   ])
   if (groupsRes.error) throw new Error(groupsRes.error.message)
-  const data = groupsRes.data as unknown as { untyped: number; groups: TypeGroup[]; learned: LearnedPrefix[] }
+  const data = fromJson<{ untyped: number; groups: TypeGroup[]; learned: LearnedPrefix[] }>(groupsRes.data)
   const cat = (catalog ?? []) as CatalogType[]
   const learned = learnedMap(data.learned)
   const open = new Map((proposals ?? []).filter(p => p.status === 'proposed').map(p => [signatureKey(p), p]))

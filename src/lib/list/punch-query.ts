@@ -113,6 +113,7 @@ export async function fetchPunchPage(
     .order('id', { ascending: true })
     .range(from, to)
   if (error) throw new Error(error.message)
+  // eslint-disable-next-line no-restricted-syntax -- G-18: select armado en tiempo de ejecución (supabase-js no lo puede tipar)
   return { rows: (data ?? []) as unknown as PunchListRow[], total: count ?? 0, searchCapped: (tagIds?.length ?? 0) >= SEARCH_TAG_CAP }
 }
 

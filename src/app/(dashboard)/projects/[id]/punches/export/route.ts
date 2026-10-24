@@ -38,7 +38,7 @@ export async function GET(
   const today = new Date().toISOString().slice(0, 10)
   const filename = `${safeCode}-punch-list-${today}.xlsx`
 
-  return new Response(bytes as unknown as BodyInit, {
+  return new Response(new Uint8Array(bytes), {
     status: 200,
     headers: {
       'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',

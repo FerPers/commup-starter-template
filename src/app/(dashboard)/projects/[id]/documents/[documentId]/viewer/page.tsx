@@ -11,6 +11,7 @@ import { normalizeRotation } from '@/lib/pid/geometry'
 import { nextGate, rowState } from '@/lib/readiness/matrix'
 import type { MatrixGate } from '@/lib/readiness/gates'
 import type { ApprovedGates, Hotspot, IncomingConnector, MarkupView, PidDoc, RedlineView, SystemRef, SystemStates, TagItem } from './types'
+import { fromJson } from '@/lib/supabase/casts'
 
 // N2d: visor de un documento P&ID (doc_type = 'pid'). Abre la revisión vigente o la de `?rev=`; los pines son de esa
 // revisión. Al emitirse una revisión nueva, los de la anterior llegan copiados y «por revisar» hasta confirmarlos.
@@ -157,7 +158,7 @@ export default async function PidViewerPage({
   const systems: SystemRef[] = projectSystems ?? []
   const systemStates: SystemStates = {}
   for (const r of gateRows ?? []) {
-    const gates = (r.gates ?? []) as unknown as MatrixGate[]
+    const gates = fromJson<MatrixGate[]>((r.gates ?? []))
     systemStates[r.system_id] = { state: rowState(gates), gate: nextGate(gates)?.code ?? null }
   }
   const focusSystemId = sp.system && systems.some(s => s.id === sp.system) ? sp.system : null

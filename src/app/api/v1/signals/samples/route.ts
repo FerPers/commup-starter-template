@@ -29,6 +29,7 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { authenticateApiKey, apiHeaders } from '@/lib/api/auth'
+import { sqlArg } from '@/lib/supabase/casts'
 
 const MAX_SAMPLES_PER_BATCH = 5000
 
@@ -93,11 +94,11 @@ export async function POST(req: NextRequest) {
     p_org_id:          auth.orgId,
     p_source:          source,
     // los args text del RPC aceptan SQL NULL aunque el tipo generado diga string
-    p_source_system:   sourceSystem as unknown as string,
-    p_idempotency_key: batchKey as unknown as string,
+    p_source_system:   sqlArg<string>(sourceSystem),
+    p_idempotency_key: sqlArg<string>(batchKey),
     p_api_key_id:      auth.keyId,
     p_samples:         samples,
-    p_project_id:      projectId as unknown as string,
+    p_project_id:      sqlArg<string>(projectId),
     p_upsert:          body.upsert === true,
   })
 

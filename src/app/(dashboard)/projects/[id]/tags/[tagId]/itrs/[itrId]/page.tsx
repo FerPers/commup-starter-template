@@ -109,7 +109,7 @@ export default async function ItrExecutionPage({
   // S04 (C-01): los editores completan o cambian asignaciones de roles sin firmar.
   const canAssign = ROLE_TIERS.editor.includes(membership.role)
 
-  const signed = ((itr.itr_signatures as unknown as unknown[] | null) ?? []).length > 0
+  const signed = ((itr.itr_signatures) ?? []).length > 0
 
   return (
     <>

@@ -15,6 +15,7 @@ import {
   ADJUST_RULES, AdjustOutput, SIGNATURES_PER_CALL, buildAdjustPrompt, catalogPrompt, reconcileAdjust,
   type AiSignaturePage,
 } from '@/lib/itr/ai-adjust'
+import { fromJson } from '@/lib/supabase/casts'
 
 // R4 (plan referente; decisiones de Luis 2026-10-23): ajustes con IA por firma. Correr la IA = Propietario,
 // Administrador o Arquitecto (gasta Opus; escribe revisiones y propuestas con service role). Aceptar o rechazar =
@@ -28,7 +29,7 @@ export const runItrAdjustBatch = withAuth(
     if (!isAiConfigured()) return { error: await aiNotConfigured() }
     const { data, error } = await ctx.supabase.rpc('tag_ai_signatures', { p_project_id: input.projectId, p_status: 'pending', p_limit: SIGNATURES_PER_CALL, p_offset: 0 })
     if (error) return { error: error.message }
-    const page = data as unknown as AiSignaturePage
+    const page = fromJson<AiSignaturePage>(data)
     if (!page.groups.length) return { reviewed: 0, proposals: 0, remaining: 0, costUsd: 0 }
 
     const candidates = await loadAdjustCandidates(ctx.supabase, ctx.orgId, input.projectId)
@@ -113,7 +114,7 @@ export const decideItrAdjust = withAuth(
     for (const { id } of own ?? []) {
       const { data, error } = await ctx.supabase.rpc('decide_tag_itr_ai_proposal', { p_proposal_id: id, p_decision: input.decision })
       if (error) return { error: DECIDE_ERRORS.find(c => error.message.includes(c)) ?? error.message, applied, skipped, decided }
-      const r = data as unknown as { applied: number; skipped: number }
+      const r = fromJson<{ applied: number; skipped: number }>(data)
       applied += r.applied; skipped += r.skipped; decided++
     }
     revalidatePath(`/projects/${input.projectId}/itrs/requirements`, 'layout')

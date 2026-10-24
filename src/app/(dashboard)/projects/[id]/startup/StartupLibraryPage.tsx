@@ -48,7 +48,7 @@ export default async function StartupLibraryPage({ projectId: id, tab }: { proje
         const revs = ((p.procedure_revisions ?? []) as Rev[]).sort((a, b) => b.rev - a.rev)
         const current = revs.find(r => r.id === p.current_revision_id) ?? null
         return {
-          id: p.id, number: p.number, title: p.title, kind: p.kind, system: (p.systems as unknown as { code: string } | null)?.code ?? null,
+          id: p.id, number: p.number, title: p.title, kind: p.kind, system: (p.systems)?.code ?? null,
           currentRev: current?.rev ?? null, fieldVerified: !!current?.field_verified_at,
           openRev: revs.find(r => r.status === 'draft' || r.status === 'in_review') ?? null,
           liveRuns: runs.filter(r => r.procedure_id === p.id).length,
@@ -56,11 +56,11 @@ export default async function StartupLibraryPage({ projectId: id, tab }: { proje
       })}
       sheets={sheets.map(s => ({
         id: s.id, number: s.number, title: s.title, purpose: s.purpose, status: s.status, verifiedAt: s.verified_at,
-        system: (s.systems as unknown as { code: string } | null)?.code ?? null,
+        system: (s.systems)?.code ?? null,
         items: (s.lineup_items ?? []) as { is_critical: boolean; set_at: string | null; verified_at: string | null; found_position: string | null; required_position: string | null }[],
       }))}
       systems={systems ?? []}
-      otherProcedures={(others ?? []).map(o => ({ id: o.id, label: `${(o.projects as unknown as { code: string } | null)?.code ?? '?'} · ${o.number} — ${o.title}` }))}
+      otherProcedures={(others ?? []).map(o => ({ id: o.id, label: `${(o.projects)?.code ?? '?'} · ${o.number} — ${o.title}` }))}
       canEdit={ctx.role !== 'client'}
     />
     </>

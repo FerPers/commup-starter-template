@@ -211,7 +211,7 @@ export default async function TagDetailPage({
     supabase.rpc('template_client_codes_for', { p_project_id: projectId }),
   ])
   const clientCode = new Map((clientCodes ?? []).map(c => [c.template_code, c.client_code]))
-  const discName = new Map((scopeDiscs ?? []).map(d => [d.discipline_id, (d.disciplines as unknown as { name: string } | null)?.name ?? '—']))
+  const discName = new Map((scopeDiscs ?? []).map(d => [d.discipline_id, (d.disciplines)?.name ?? '—']))
   const phaseCode = new Map((phases ?? []).map(p => [p.id, p.code]))
   const { data: scopeTpls } = discName.size
     ? await supabase.from('itr_templates').select('code, title, title_es').eq('org_id', membership.org_id).eq('is_active', true)

@@ -160,6 +160,7 @@ async function prepareTagImport(
       .eq('project_id', projectId)
       .in('tag_number', numbers.slice(i, i + CHUNK))
     if (error) return { error: error.message }
+    // eslint-disable-next-line no-restricted-syntax -- G-18: select armado en tiempo de ejecución (supabase-js no lo puede tipar)
     const found = (data ?? []) as unknown as Array<Record<string, unknown> & { id: string; tag_number: string; subsystem_id: string }>
     const ids = found.map(t => t.id)
     const [{ data: withItr }, { data: withPunch }] = ids.length

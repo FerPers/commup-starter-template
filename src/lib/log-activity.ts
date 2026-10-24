@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Database, Json } from '@/types/supabase.generated'
 
 interface LogInput {
   orgId: string
@@ -6,10 +7,10 @@ interface LogInput {
   entityType: string
   entityId?: string
   action: string
-  payload?: Record<string, unknown>
+  payload?: { [key: string]: Json | undefined }
 }
 
-export async function logActivity(supabase: SupabaseClient, input: LogInput) {
+export async function logActivity(supabase: SupabaseClient<Database>, input: LogInput) {
   // Fire-and-forget — don't throw if it fails
   await supabase
     .from('activity_log')

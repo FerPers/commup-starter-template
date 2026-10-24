@@ -58,10 +58,10 @@ export default async function DailyTabPage({ projectId, tab }: { projectId: stri
         project={project}
         tab={tab}
         counts={{ actions: nActions, constraints: nConstraints, tqs: nTqs, decisions: nDecisions }}
-        actions={actionsRes.rows.map(a => ({ ...a, system: code(a.systems) }) as unknown as ActionRow)}
-        constraints={constraintsRes.rows.map(c => ({ ...c, system: code(c.systems), gate: code(c.readiness_gates) }) as unknown as ConstraintRow)}
-        tqs={tqsRes.rows.map(q => ({ ...q, system: code(q.systems), discipline: code(q.disciplines) }) as unknown as TqRow)}
-        decisions={decisionsRes.rows.map(d => ({ ...d, system: code(d.systems) }) as unknown as DecisionRow)}
+        actions={actionsRes.rows.map(a => ({ ...a, system: code(a.systems) }) as ActionRow)}
+        constraints={constraintsRes.rows.map(c => ({ ...c, system: code(c.systems), gate: code(c.readiness_gates) }) as ConstraintRow)}
+        tqs={tqsRes.rows.map(q => ({ ...q, system: code(q.systems), discipline: code(q.disciplines) }) as TqRow)}
+        decisions={decisionsRes.rows.map(d => ({ ...d, system: code(d.systems) }) as DecisionRow)}
         names={names}
         userId={ctx.userId}
         canCreate={ctx.role !== 'client'}

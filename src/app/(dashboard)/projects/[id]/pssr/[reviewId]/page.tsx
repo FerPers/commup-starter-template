@@ -5,11 +5,9 @@ import { loadMyCapacities } from '@/lib/capacities/server'
 import { ROLE_TIERS } from '@/lib/constants/roles'
 import { PSSR_CAPACITIES, type PssrCapacity } from '@/lib/constants/pssr'
 import type { ItemStatus, ReviewStatus } from './pssr-review-shared'
-import type { SystemPunch } from './PssrPunchDisposition'
 
 export default async function PssrReviewPage({
-  params,
-}: {
+  params }: {
   params: Promise<{ id: string; reviewId: string }>
 }) {
   const { id: projectId, reviewId } = await params
@@ -97,7 +95,7 @@ export default async function PssrReviewPage({
         canApprove={canApprove}
         signableCaps={signableCaps}
         totalItems={totalItems}
-        systemPunches={(systemPunches ?? []) as unknown as SystemPunch[]}
+        systemPunches={(systemPunches ?? [])}
         canEditPunches={ctx.role !== 'client'}
         itemActions={itemActions}
       />

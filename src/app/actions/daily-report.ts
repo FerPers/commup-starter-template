@@ -6,12 +6,14 @@ import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod'
 import { getLocale } from 'next-intl/server'
 import { revalidatePath } from 'next/cache'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '@/types/supabase.generated'
 import { withAuth } from '@/lib/auth/withAuth'
 import { logActivity } from '@/lib/log-activity'
 import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { aiNotConfigured, isAiConfigured } from '@/lib/ai/claude'
 import { runAi } from '@/lib/ai/run'
 import { REPORT_SECTIONS, reportFacts, type ReportData, type ReportSections } from '@/lib/daily/report'
+import { fromJson } from '@/lib/supabase/casts'
 
 // Reporte diario y relevo de turno (fase 5 plan readiness, sesión 3). Toda escritura pasa por RPC
 // SECURITY DEFINER (migración 20261017180000). Los DATOS del reporte los arma la BD; aquí solo se pide a
@@ -27,7 +29,7 @@ function revalidate(projectId: string, id?: string, kind: 'reports' | 'handovers
   if (kind === 'handovers') revalidatePath('/my-work')
 }
 
-async function belongs(db: SupabaseClient, table: 'daily_reports' | 'shift_handovers', id: string, projectId: string) {
+async function belongs(db: SupabaseClient<Database>, table: 'daily_reports' | 'shift_handovers', id: string, projectId: string) {
   const { data } = await db.from(table).select('id').eq('id', id).eq('project_id', projectId).maybeSingle()
   return !!data
 }
@@ -104,7 +106,7 @@ export const generateDailyReportAi = withAuth(
         max_tokens: 6000,
         output_config: { effort: 'medium', format: zodOutputFormat(ReportOutput) },
         system: REPORT_RULES(locale === 'en' ? 'English' : 'español'),
-        messages: [{ role: 'user', content: `DATOS:\n\n${reportFacts(report.data as unknown as ReportData)}\n\nRedacta las 5 secciones del reporte diario.` }],
+        messages: [{ role: 'user', content: `DATOS:\n\n${reportFacts(fromJson<ReportData>(report.data))}\n\nRedacta las 5 secciones del reporte diario.` }],
       }))
     if (!run.response) return { error: run.error }
     const response = run.response

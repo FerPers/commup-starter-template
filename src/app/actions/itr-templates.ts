@@ -565,15 +565,6 @@ const CLONE_SELECT = `
   )
 `
 
-type CloneSource = {
-  id: string; code: string; title: string; title_es: string | null; description: string | null; version: number
-  org_id: string; is_global: boolean
-  disciplines: { code: string } | { code: string }[] | null
-  project_phases: { code: string } | { code: string }[] | null
-  equipment_types: { code: string } | { code: string }[] | null
-  itr_template_sections: CloneSectionSource[]
-}
-
 const codeOf = (rel: { code: string } | { code: string }[] | null | undefined) =>
   Array.isArray(rel) ? rel[0]?.code ?? null : rel?.code ?? null
 
@@ -621,7 +612,7 @@ export const listImportableTemplates = withAuthOnly(
       if (!prev || t.version > prev.version) localLatest.set(t.code, { version: t.version, hash: templateContentHash(t.itr_template_sections) })
     }
 
-    const templates: ImportableTemplate[] = ((data ?? []) as unknown as CloneSource[]).map(t => {
+    const templates: ImportableTemplate[] = ((data ?? [])).map(t => {
       const info = orgInfo.get(t.org_id)
       const mine = localLatest.get(t.code) ?? null
       return {
@@ -672,7 +663,7 @@ async function cloneTemplateInternal(
       .select(CLONE_SELECT)
       .eq('id', sourceTemplateId)
       .single()
-    const source = raw as unknown as CloneSource | null
+    const source = raw
 
     if (!source) return { error: t('itrTemplates.sourceNotFound') }
     if (source.org_id === ctx.orgId) return { error: t('itrTemplates.alreadyInOrg') }
@@ -711,7 +702,7 @@ async function cloneTemplateInternal(
       .eq('org_id', ctx.orgId)
       .eq('code', newCode)
       .order('version', { ascending: false })
-    const existing = (existingRaw ?? []) as unknown as Array<{ id: string; version: number; itr_template_sections: CloneSectionSource[] }>
+    const existing = (existingRaw ?? [])
 
     let version = 1
     let kind: CloneKind = 'created'
@@ -765,7 +756,7 @@ async function cloneTemplateInternal(
       const rows = sec.itr_template_items.map(item => itemInsertRow(item, newSec.id, cloned.id))
       const { data: inserted, error: itemErr } = await ctx.supabase
         .from('itr_template_items')
-        .insert(rows as unknown as Database['public']['Tables']['itr_template_items']['Insert'][])
+        .insert(rows as Database['public']['Tables']['itr_template_items']['Insert'][])
         .select('id, order_index')
       if (itemErr || !inserted) return { error: t('itrTemplates.itemsCopyFailed', { section: sec.title, detail: itemErr?.message ?? t('itrTemplates.noRowsReturned') }) }
       const byOrder = [...inserted].sort((a, b) => a.order_index - b.order_index)

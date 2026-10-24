@@ -27,13 +27,11 @@ export default async function TestPacksPage({ params }: { params: Promise<{ id: 
       .limit(1000),
     supabase.from('register_types').select('is_active').eq('org_id', ctx.orgId).eq('kind', 'test_pack').maybeSingle(),
   ])
-
-  type TagJoin = { role: string; tag_id: string; tags: { tag_number: string; subsystems: { systems: { code: string } | null } | null } | null }
   type LinkJoin = { linked: { id: string; number: string; kind: RegisterKind; status: RegisterStatus } | null }
 
   const rows: PackRow[] = (packs ?? []).map(p => {
-    const tags = (p.register_item_tags as unknown as TagJoin[] | null) ?? []
-    const links = (p.register_item_links as unknown as LinkJoin[] | null) ?? []
+    const tags = (p.register_item_tags) ?? []
+    const links = (p.register_item_links) ?? []
     const data = (p.data ?? {}) as Record<string, unknown>
     return {
       id: p.id,

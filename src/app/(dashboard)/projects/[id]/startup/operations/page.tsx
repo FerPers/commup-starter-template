@@ -90,7 +90,7 @@ export default async function StartupOperationsPage({ params, searchParams }: {
       companies={(companies ?? []).map(c => c.name)}
       levels={levels}
       spares={(spares ?? []).map(s => ({ ...s, kind: s.kind as 'spare' | 'special_tool', status: s.status as SpareStatus, qty_required: Number(s.qty_required), qty_available: Number(s.qty_available) }))}
-      members={(members ?? []).map(m => ({ id: m.user_id, name: (m.profiles as unknown as { full_name: string | null } | null)?.full_name ?? '—' }))}
+      members={(members ?? []).map(m => ({ id: m.user_id, name: (m.profiles)?.full_name ?? '—' }))}
       canEdit={ctx.role !== 'client'}
       canAssess={ROLE_TIERS.editor.includes(ctx.role)}
       canRequest={ROLE_TIERS.editor.includes(ctx.role)}

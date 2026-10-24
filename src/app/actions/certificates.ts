@@ -6,9 +6,11 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { getTranslations } from 'next-intl/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '@/types/supabase.generated'
 import type { Eligibility } from '@/lib/certificates/eligibility'
 import { CERT_ROLE_CAPACITY, type CertSignRole } from '@/lib/constants/capacities'
 import { tierRoles } from '@/lib/constants/roles'
+import { fromJson } from '@/lib/supabase/casts'
 
 // S17 (A-05/D15, migración 20261112120000): toda escritura de certificados va por RPC SECURITY DEFINER
 // (issue/sign/unsign/revoke/reopen_certificate, add/remove_certificate_exception), que validan elegibilidad,
@@ -38,7 +40,7 @@ async function certificateSigners(orgId: string, projectId: string): Promise<str
 /** Texto opcional recortado: vacío → undefined (la RPC lo guarda como NULL). */
 const optText = (v?: string | null): string | undefined => (v?.trim() ? v.trim() : undefined)
 
-async function certInfo(supabase: SupabaseClient, certId: string) {
+async function certInfo(supabase: SupabaseClient<Database>, certId: string) {
   const { data } = await supabase.from('certificates')
     .select('id, project_id, certificate_number, title, issued_by').eq('id', certId).maybeSingle()
   return data as { id: string; project_id: string; certificate_number: string; title: string; issued_by: string | null } | null
@@ -67,7 +69,7 @@ export const checkSubsystemEligibility = withAuth(
     if (error || !data) {
       return { eligible: 'red', totalItrs: 0, approvedItrs: 0, openCatA: 0, openCatBPunches: [], catBLimit: null, catBOverLimit: false, error: error?.message ?? t('certificates.noData') }
     }
-    return { ...(data as unknown as Eligibility), previousBlocker: prev ?? null }
+    return { ...(fromJson<Eligibility>(data)), previousBlocker: prev ?? null }
   },
 )
 

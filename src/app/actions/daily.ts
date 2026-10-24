@@ -3,6 +3,7 @@
 import { getTranslations } from 'next-intl/server'
 import { revalidatePath } from 'next/cache'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '@/types/supabase.generated'
 import { withAuth } from '@/lib/auth/withAuth'
 import {
   ACTION_PRIORITIES,
@@ -25,6 +26,7 @@ import {
   type TqStatus,
   type VerificationMethod,
 } from '@/lib/daily/catalog'
+import { sqlArg } from '@/lib/supabase/casts'
 
 type T = Awaited<ReturnType<typeof getTranslations<'ActionErrors'>>>
 
@@ -36,7 +38,7 @@ const projectGuard = [{ resource: 'project' as const, field: 'projectId' }]
 const systemGuard = { resource: 'system' as const, field: 'systemId', scopeField: 'projectId', optional: true }
 
 // Los tipos generados no admiten null en parámetros de RPC sin DEFAULT, aunque SQL sí (null = quitar).
-const nullable = (v: string | null | undefined) => ((v ?? '') === '' ? null : v) as unknown as string
+const nullable = (v: string | null | undefined) => sqlArg<string>(((v ?? '') === '' ? null : v))
 /** '' / null → undefined (parámetro con DEFAULT en la RPC). */
 const opt = <T extends string>(v: T | null | undefined) => ((v ?? '') === '' ? undefined : (v as T))
 const text = (v: string | null | undefined, max: number) => (v ?? '').trim().slice(0, max)
@@ -53,7 +55,7 @@ function revalidate(projectId: string, kind?: MgmtKind, id?: string) {
 }
 
 /** El registro existe y es del proyecto indicado (RLS ya limita a la org del usuario). */
-async function belongs(db: SupabaseClient, kind: MgmtKind, id: string, projectId: string): Promise<boolean> {
+async function belongs(db: SupabaseClient<Database>, kind: MgmtKind, id: string, projectId: string): Promise<boolean> {
   const { data } = await db.from(TABLE[kind]).select('id').eq('id', id).eq('project_id', projectId).maybeSingle()
   return !!data
 }

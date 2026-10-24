@@ -7,7 +7,7 @@ type RateLimiter = { limit(options: { key: string }): Promise<{ success: boolean
 async function limiter(): Promise<RateLimiter | null> {
   try {
     const { getCloudflareContext } = await import('@opennextjs/cloudflare')
-    const env = getCloudflareContext().env as unknown as { API_RATE_LIMITER?: RateLimiter }
+    const env = getCloudflareContext().env as { API_RATE_LIMITER?: RateLimiter }
     return env.API_RATE_LIMITER ?? null
   } catch {
     return null

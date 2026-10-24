@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { ROLE_TIERS } from '@/lib/constants/roles'
+import type { Database } from '@/types/supabase.generated'
+import { tierRoles } from '@/lib/constants/roles'
 
 type PssrReviewMeta = {
   reviewId: string
@@ -9,7 +10,7 @@ type PssrReviewMeta = {
   systemName?: string | null
 }
 
-const ADMIN_ROLES = ROLE_TIERS.editor
+const ADMIN_ROLES = tierRoles('editor')
 
 function reviewLink(meta: PssrReviewMeta) {
   return `/projects/${meta.projectId}/pssr/${meta.reviewId}`
@@ -22,7 +23,7 @@ function systemTag(meta: PssrReviewMeta) {
   return null
 }
 
-async function approverUserIds(admin: SupabaseClient, orgId: string): Promise<string[]> {
+async function approverUserIds(admin: SupabaseClient<Database>, orgId: string): Promise<string[]> {
   const { data } = await admin
     .from('org_members')
     .select('user_id')
@@ -31,7 +32,7 @@ async function approverUserIds(admin: SupabaseClient, orgId: string): Promise<st
   return (data ?? []).map(m => m.user_id as string).filter(Boolean)
 }
 
-async function signerUserIds(admin: SupabaseClient, reviewId: string): Promise<string[]> {
+async function signerUserIds(admin: SupabaseClient<Database>, reviewId: string): Promise<string[]> {
   const { data } = await admin
     .from('pssr_signatures')
     .select('user_id')
@@ -44,7 +45,7 @@ async function signerUserIds(admin: SupabaseClient, reviewId: string): Promise<s
  * Excludes the submitter.
  */
 export async function notifyPssrSubmittedForApproval(
-  admin: SupabaseClient,
+  admin: SupabaseClient<Database>,
   params: { orgId: string; submitterUserId: string } & PssrReviewMeta,
 ): Promise<void> {
   const approvers = await approverUserIds(admin, params.orgId)
@@ -76,7 +77,7 @@ export async function notifyPssrSubmittedForApproval(
  * Excludes the approver.
  */
 export async function notifyPssrApproved(
-  admin: SupabaseClient,
+  admin: SupabaseClient<Database>,
   params: {
     orgId: string
     approverUserId: string
@@ -130,7 +131,7 @@ export async function notifyPssrApproved(
  * Excludes the rejector.
  */
 export async function notifyPssrRejected(
-  admin: SupabaseClient,
+  admin: SupabaseClient<Database>,
   params: {
     orgId: string
     rejecterUserId: string

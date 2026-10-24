@@ -19,12 +19,7 @@ import {
   SystemFileShell, SystemPlanTab, SystemStartupTab, SystemTransferTab, SystemVendorsTab,
   type SystemPerformance, type SystemVendor,
 } from './SystemFileTabs'
-
-// N2a (decisión de Luis 2026-10-21): ficha de sistema única. Junta la de Control Tower (gates, plan, hitos,
-// acciones) y la de Sistemas (atributos, límites de batería, dependencias) en pestañas por URL. El encabezado y
-// sus chips se cargan siempre; lo de cada pestaña, solo cuando se abre.
-
-type Ref = { id: string; code: string; name?: string }
+import { fromJson } from '@/lib/supabase/casts'
 
 export default async function SystemFilePage({ params, searchParams }: {
   params: Promise<{ id: string; systemId: string }>
@@ -75,7 +70,7 @@ export default async function SystemFilePage({ params, searchParams }: {
     supabase.rpc('compute_project_pid_coverage', { p_project_id: id }),
   ])
   if (gatesError) console.error('[SystemFile] gates rpc error:', gatesError)
-  const gates = (gatesRaw ?? []) as unknown as SystemGate[]
+  const gates = (gatesRaw ?? []) as SystemGate[]
 
   const performance = (perfTests ?? []).map(pt => {
     const runs = [...(pt.performance_runs ?? [])].sort((a, b) => b.attempt - a.attempt)
@@ -83,7 +78,7 @@ export default async function SystemFilePage({ params, searchParams }: {
     return { id: pt.id, number: pt.number, title: pt.title, lastRun: runs[0] ? { status: runs[0].status, result: runs[0].result } : null, certificate: cert }
   }) as SystemPerformance[]
   const vendors: SystemVendor[] = (vendorRows ?? []).map(r => {
-    const v = r.vendor_packages as unknown as { id: string; number: string; title: string; status: string; companies: { name: string; short_name: string | null } | null }
+    const v = r.vendor_packages
     return { id: v.id, number: v.number, title: v.title, status: v.status as PackageStatus, company: v.companies?.short_name?.trim() ? v.companies.short_name : v.companies?.name ?? '' }
   }).filter(v => v.status !== 'cancelled').sort((a, b) => a.number.localeCompare(b.number))
 
@@ -131,7 +126,7 @@ export default async function SystemFilePage({ params, searchParams }: {
     ])
     // S23 (D-25): dependencias en las que este sistema es proveedor (impacto de aprobar o revocar).
     const provides = depRows.filter(d => d.depends_on_system_id === systemId && d.dependent)
-      .map(d => ({ system_code: (d.dependent as unknown as Ref).code, required_gate_id: d.required_gate_id, blocked_gate_id: d.blocked_gate_id }))
+      .map(d => ({ system_code: (d.dependent).code, required_gate_id: d.required_gate_id, blocked_gate_id: d.blocked_gate_id }))
     content = (
       <SystemGatesView
         orgId={ctx.orgId} role={ctx.role} userId={ctx.userId} caps={caps} canEdit={canEdit}
@@ -164,11 +159,11 @@ export default async function SystemFilePage({ params, searchParams }: {
         planning={{
           progress: Object.fromEntries(progressRows.map(p => [p.gate_id, { weight: Number(p.weight), itr_total: p.itr_total, itr_approved: p.itr_approved, pct: Number(p.pct) }])),
           plans: planByGate,
-          events: (planEvents ?? []) as unknown as (GatePlanEvent & { gate_id: string })[],
+          events: (planEvents ?? []) as (GatePlanEvent & { gate_id: string })[],
           canCommit: canEdit,
         }}
         daily={{
-          constraints: (constraints ?? []).map(c => ({ ...c, gate: (c.readiness_gates as unknown as { code: string } | null)?.code ?? null })),
+          constraints: (constraints ?? []).map(c => ({ ...c, gate: (c.readiness_gates)?.code ?? null })),
           actions: actions ?? [],
         }}
       />
@@ -198,7 +193,7 @@ export default async function SystemFilePage({ params, searchParams }: {
     if (error) throw new Error(error.message)
     const redlineCounts = { open: 0, accepted: 0, rejected: 0, incorporated: 0 } as Record<string, number>
     for (const r of rls ?? []) redlineCounts[r.status] = (redlineCounts[r.status] ?? 0) + 1
-    content = <SystemDrawingsTab projectId={project.id} systemId={system.id} data={sheets as unknown as SystemPidSheets} losh={losh} canEdit={canEdit}
+    content = <SystemDrawingsTab projectId={project.id} systemId={system.id} data={fromJson<SystemPidSheets>(sheets)} losh={losh} canEdit={canEdit}
       redlines={{ total: (rls ?? []).length, open: redlineCounts.open, accepted: redlineCounts.accepted, incorporated: redlineCounts.incorporated }} />
   } else {
     // Datos del sistema y Dependencias: la ficha de Sistemas (fase 2), sin su encabezado.
@@ -242,11 +237,11 @@ export default async function SystemFilePage({ params, searchParams }: {
           subsystems: subs.count ?? 0,
           tags: tags.count ?? 0,
         }}
-        dependsOn={depRows.filter(d => d.system_id === systemId).map(d => toRow(d, d.provider as unknown as { id: string; code: string; name: string } | null))}
-        enables={depRows.filter(d => d.depends_on_system_id === systemId).map(d => toRow(d, d.dependent as unknown as { id: string; code: string; name: string } | null))}
+        dependsOn={depRows.filter(d => d.system_id === systemId).map(d => toRow(d, d.provider))}
+        enables={depRows.filter(d => d.depends_on_system_id === systemId).map(d => toRow(d, d.dependent))}
         otherSystems={(projectSystems ?? []).filter(s => s.id !== systemId)}
         gates={(orgGates ?? []).filter(g => g.is_active)}
-        events={(events ?? []) as unknown as BoundaryEvent[]}
+        events={(events ?? []) as BoundaryEvent[]}
         canEdit={canEdit}
       />
     )

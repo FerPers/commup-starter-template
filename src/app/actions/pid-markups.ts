@@ -42,7 +42,7 @@ async function pidRevisionDocument(supabase: SupabaseClient<Database>, revisionI
     .eq('id', revisionId)
     .eq('project_id', projectId)
     .maybeSingle()
-  const docType = (data?.documents as unknown as { doc_type: string } | null)?.doc_type
+  const docType = (data?.documents)?.doc_type
   return data && docType === 'pid' ? data.document_id : null
 }
 

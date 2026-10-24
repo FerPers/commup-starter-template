@@ -4,6 +4,7 @@ import { PRIVILEGED_ROLES } from '@/lib/auth/permissions'
 import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
 import { revalidatePath } from 'next/cache'
 import { getTranslations } from 'next-intl/server'
+import { sqlArg } from '@/lib/supabase/casts'
 
 export type CreateWebhookInput = {
   name: string
@@ -33,7 +34,7 @@ export const createWebhookSubscription = withAuth(
       p_org_id:       ctx.orgId,
       // La función PG acepta NULL (webhook org-level) pero el typegen no expresa
       // nullability de args. `undefined` se caería del JSON y rompería la llamada.
-      p_project_id:   (input.projectId ?? null) as unknown as string,
+      p_project_id:   sqlArg<string>((input.projectId ?? null)),
       p_name:         input.name.trim(),
       p_endpoint_url: input.endpointUrl.trim(),
       p_event_types:  input.eventTypes,

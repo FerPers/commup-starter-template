@@ -23,7 +23,7 @@ async function pidRevision(
     .eq('id', revisionId)
     .eq('project_id', projectId)
     .maybeSingle()
-  const docType = (data?.documents as unknown as { doc_type: string } | null)?.doc_type
+  const docType = (data?.documents)?.doc_type
   return data && docType === 'pid' ? { documentId: data.document_id } : null
 }
 

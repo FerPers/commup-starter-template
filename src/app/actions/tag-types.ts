@@ -15,6 +15,7 @@ import { defaultLineupFlags } from '@/lib/equipment-types'
 import { TYPE_CHANGE_REASON_MIN, needsReason, type TagTypePreview } from '@/lib/tags/type-change'
 import { cleanTypeCode, detectFree, learnedMap, signatureKey, type CatalogType, type LearnedPrefix, type TypeGroup } from '@/lib/tags/type-signature'
 import { GROUPS_PER_CALL, TYPE_RULES, TypeClassification, buildTypePrompt, reconcileTypeProposals, type ClassifyGroup } from '@/lib/tags/type-ai'
+import { fromJson, sqlArg } from '@/lib/supabase/casts'
 
 // R3 (plan referente; decisiones de Luis 2026-10-23): tipo de equipo editable y clasificación de los tags sin tipo.
 // Cambiar el tipo y aceptar o rechazar propuestas = Propietario, Administrador o Arquitecto (el guard de la BD lo
@@ -29,7 +30,7 @@ const ERRORS = ['reason_required', 'type_exists', 'invalid_type', 'no_tags', 'eq
 
 type Db = ActiveContext['supabase']
 // La RPC distingue «sin disciplina» / «quitar el tipo» con NULL explícito (sin DEFAULT en SQL).
-const NULL_ID = null as unknown as string
+const NULL_ID = sqlArg<string>(null)
 
 async function resolveTags(
   supabase: Db,
@@ -63,7 +64,7 @@ async function preview(
     p_project_id: projectId, p_tag_ids: ids, p_type_id: typeId ?? NULL_ID,
   })
   if (error) return { error: ERRORS.find(c => error.message.includes(c)) ?? error.message }
-  return { preview: data as unknown as TagTypePreview }
+  return { preview: fromJson<TagTypePreview>(data) }
 }
 
 /** «Gana X, quedan fuera Y» de poner `typeId` (null = quitar el tipo) a los tags o a la firma. */
@@ -199,7 +200,7 @@ export const classifyTagTypes = withAuth(
         .eq('project_id', input.projectId).in('status', ['proposed', 'rejected']).limit(5000),
     ])
     if (groupsRes.error) return { error: groupsRes.error.message }
-    const data = groupsRes.data as unknown as { groups: TypeGroup[]; learned: LearnedPrefix[] }
+    const data = fromJson<{ groups: TypeGroup[]; learned: LearnedPrefix[] }>(groupsRes.data)
     const cat = (catalog ?? []) as CatalogType[]
     const learned = learnedMap(data.learned)
     const codeOf = new Map(cat.map(ty => [ty.id, ty.code]))

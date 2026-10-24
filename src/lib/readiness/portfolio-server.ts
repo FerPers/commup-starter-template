@@ -9,6 +9,7 @@ import type { Database } from '@/types/supabase.generated'
 import type { MatrixGate } from './gates'
 import { isDone, nextGate, readinessSummary, rowState, type RowState } from './matrix'
 import { addDaysIso, todayIn } from '@/lib/time/zone'
+import { fromJson } from '@/lib/supabase/casts'
 
 export const ROW_STATES: RowState[] = ['regressed', 'blocked', 'signing', 'ready', 'done']
 
@@ -47,7 +48,7 @@ export async function loadPortfolioReadiness(supabase: SupabaseClient<Database>,
       supabase.rpc('compute_project_gates', { p_project_id: p.id }),
       supabase.rpc('compute_project_progress', { p_project_id: p.id }),
     ])
-    const rows = (gates.data ?? []).map(r => ({ system_id: r.system_id, gates: (r.gates ?? []) as unknown as MatrixGate[] }))
+    const rows = (gates.data ?? []).map(r => ({ system_id: r.system_id, gates: fromJson<MatrixGate[]>((r.gates ?? [])) }))
     const counts = Object.fromEntries(ROW_STATES.map(s => [s, 0])) as Record<RowState, number>
     const soonLimit = addDaysIso(todayIn(p.timezone), 7)
     let commitmentsSoon = 0

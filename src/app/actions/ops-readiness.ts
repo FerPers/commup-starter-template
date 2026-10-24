@@ -3,12 +3,14 @@
 import { getTranslations } from 'next-intl/server'
 import { revalidatePath } from 'next/cache'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '@/types/supabase.generated'
 import { withAuth } from '@/lib/auth/withAuth'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { generateHandoverPackage } from '@/lib/handover/generate'
 import { logActivity } from '@/lib/log-activity'
 import type { Json } from '@/types/supabase.generated'
 import { EVIDENCE_KINDS, OWNERSHIP_STAGES, SPARE_STATUSES, type EvidenceKind, type OwnershipStage, type SpareStatus } from '@/lib/startup/catalog'
+import { sqlArg } from '@/lib/supabase/casts'
 
 // Readiness de operaciones (fase 6 plan readiness, sesión 3): personal, competencias, repuestos y traspaso de
 // propiedad del sistema. Escritura por RPC SECURITY DEFINER (migración 20261018150000); aquí: guards,
@@ -25,7 +27,7 @@ function revalidate(projectId: string, transferId?: string) {
   revalidatePath('/projects/[id]', 'layout')
 }
 
-async function transferOf(db: SupabaseClient, id: string, projectId: string) {
+async function transferOf(db: SupabaseClient<Database>, id: string, projectId: string) {
   const { data } = await db.from('ownership_transfers').select('id, system_id, to_stage, is_reversal, status, handover_package_id')
     .eq('id', id).eq('project_id', projectId).maybeSingle()
   return data
@@ -41,7 +43,7 @@ export const upsertOpsPerson = withAuth(
     const t = await getTranslations('ActionErrors')
     if (!input.fullName?.trim()) return { error: t('opsReadiness.nameRequired') }
     const { data, error } = await ctx.supabase.rpc('upsert_ops_person', {
-      p_project_id: input.projectId, p_person_id: (opt(input.personId) ?? null) as unknown as string, p_full_name: input.fullName.trim().slice(0, 200),
+      p_project_id: input.projectId, p_person_id: sqlArg<string>((opt(input.personId) ?? null)), p_full_name: input.fullName.trim().slice(0, 200),
       p_company: opt(input.company?.trim()), p_position: opt(input.position?.trim()), p_shift: opt(input.shift?.trim()),
       p_user_id: opt(input.userId), p_active: input.active ?? true,
     })
@@ -111,7 +113,7 @@ export const upsertCriticalSpare = withAuth(
     if (!input.item?.trim()) return { error: t('opsReadiness.itemRequired') }
     if (!(input.qtyRequired >= 0) || !(input.qtyAvailable >= 0)) return { error: t('opsReadiness.quantitiesInvalid') }
     const { data, error } = await ctx.supabase.rpc('upsert_critical_spare', {
-      p_project_id: input.projectId, p_spare_id: (opt(input.spareId) ?? null) as unknown as string, p_system_id: input.systemId, p_item: input.item.trim().slice(0, 200),
+      p_project_id: input.projectId, p_spare_id: sqlArg<string>((opt(input.spareId) ?? null)), p_system_id: input.systemId, p_item: input.item.trim().slice(0, 200),
       p_kind: input.kind, p_part_number: opt(input.partNumber?.trim()), p_tag_id: opt(input.tagId), p_is_critical: input.isCritical,
       p_qty_required: input.qtyRequired, p_qty_available: input.qtyAvailable, p_status: input.status, p_eta: opt(input.eta),
       p_notes: opt(input.notes?.trim()),

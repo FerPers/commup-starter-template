@@ -9,6 +9,7 @@ import PartialNote from '@/components/ui/PartialNote'
 import { ROLE_TIERS } from '@/lib/constants/roles'
 import type { GateBlocker } from '@/lib/readiness/gates'
 import { blockerCount } from '@/lib/readiness/matrix'
+import { fromJson } from '@/lib/supabase/casts'
 
 // Look-ahead 90/30/7 (fase 5 plan readiness, sesión 2): gates por forecast y compromiso + acciones,
 // restricciones, TQ e ítems de work plan que vencen en la ventana, agrupados por sistema.
@@ -56,7 +57,7 @@ export default async function LookaheadPage({ params, searchParams }: {
     const n = blockerCount(b)
     return `${b.label ?? tg(`kind.${b.kind}`)}${n ? ` (${n})` : ''}`
   }
-  const systems = ((gatesRaw ?? []) as unknown as { system_id: string; system_code: string; system_name: string; gates: GateJson[] }[])
+  const systems = (gatesRaw ?? []).map(r => ({ system_id: r.system_id, system_code: r.system_code, system_name: r.system_name, gates: fromJson<GateJson[]>(r.gates) }))
   const planMap = new Map((plans ?? []).map(p => [`${p.system_id}:${p.gate_id}`, p]))
   const cells: GateCell[] = systems.flatMap(s => s.gates.map(g => {
     const plan = planMap.get(`${s.system_id}:${g.gate_id}`)
@@ -74,7 +75,7 @@ export default async function LookaheadPage({ params, searchParams }: {
     ...constraints.map(c => ({ kind: 'constraint' as const, id: c.id, ref: c.number, title: c.title, status: c.status, date: c.need_date, systemId: c.system_id, level: c.escalation_level })),
     ...tqs.map(q => ({ kind: 'tq' as const, id: q.id, ref: q.number, title: q.subject, status: q.status, date: q.required_by!, systemId: q.system_id })),
     ...planItems.map(w => {
-      const itr = w.itrs as unknown as { itr_number: string; subsystems: { system_id: string } | null } | null
+      const itr = w.itrs
       return { kind: 'work_plan' as const, id: w.id, ref: itr?.itr_number ?? 'WP', title: w.title ?? itr?.itr_number ?? '', status: w.status, date: w.planned_finish!, systemId: itr?.subsystems?.system_id ?? null }
     }),
   ]

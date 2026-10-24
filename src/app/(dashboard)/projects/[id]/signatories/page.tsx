@@ -27,7 +27,7 @@ export default async function SignatoriesPage({ params }: { params: Promise<{ id
   const companyById = new Map((companies ?? []).map(c => [c.id, c]))
 
   const memberOptions: MemberOption[] = (members ?? []).map(m => {
-    const p = m.profiles as unknown as { full_name: string | null } | null
+    const p = m.profiles
     const c = m.company_id ? companyById.get(m.company_id) ?? null : null
     return {
       userId: m.user_id, role: m.role, name: p?.full_name?.trim() ? p.full_name : m.user_id,

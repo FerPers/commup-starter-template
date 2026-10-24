@@ -11,8 +11,9 @@
  * the helpers so server actions get the same protection.
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '@/types/supabase.generated'
 
-type Db = SupabaseClient
+type Db = SupabaseClient<Database>
 
 export type AccessOk = { ok: true }
 /** V3: recurso que falló; las acciones lo traducen con `accessError` (`src/lib/i18n/action-errors.ts`), la API usa `error`. */

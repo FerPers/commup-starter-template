@@ -23,7 +23,7 @@ export async function GET(req: Request) {
 }
 
 function excelResponse(bytes: Uint8Array, filename: string): Response {
-  return new Response(bytes as unknown as BodyInit, {
+  return new Response(new Uint8Array(bytes), {
     status: 200,
     headers: {
       'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',

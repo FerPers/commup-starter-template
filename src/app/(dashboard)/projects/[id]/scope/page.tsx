@@ -45,7 +45,7 @@ export default async function ScopePage({ params }: { params: Promise<{ id: stri
     id: r.discipline_id, code: r.code, name: r.name, color: r.color, included: r.included, requirements: r.requirements, itrs: r.itrs,
   }))
   const history: ScopeEvent[] = (events ?? []).map(e => {
-    const d = e.disciplines as unknown as { code: string; name: string } | null
+    const d = e.disciplines
     return {
       id: e.id, action: e.action as ScopeEvent['action'], reason: e.reason, itrs: e.itrs_affected,
       discipline: d ? `${d.code} · ${d.name}` : '—', who: (e.user_id && nameOf.get(e.user_id)) ?? '', at: formatInZone(e.created_at, project.timezone, locale),

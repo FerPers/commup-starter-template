@@ -79,6 +79,27 @@ const eslintConfig = [
 		},
 	},
 	{
+		// G-18 también en lo que las reglas de pantalla (G-10/G-11) dejan fuera: PDF, Excel, landing e impresos.
+		files: [
+			"src/components/landing/**",
+			"src/lib/pdf/**",
+			"src/lib/excel/**",
+			"src/**/ReportPrint.tsx",
+			"src/**/BackupDocumentView.tsx",
+		],
+		ignores: ["src/**/*.test.{ts,tsx}"],
+		rules: {
+			"no-restricted-syntax": [
+				"error",
+				// G-18: tipos de la BD por el cliente tipado; Json → fromJson, NULL en argumentos SQL → sqlArg (@/lib/supabase/casts).
+				{
+					selector: "TSAsExpression[expression.type='TSAsExpression'][expression.typeAnnotation.type='TSUnknownKeyword']",
+					message: "Sin `as unknown as` (G-18): la fila se tipa con SupabaseClient<Database>; un jsonb con fromJson<T>(), un NULL de argumento SQL con sqlArg<T>(). Si de verdad no hay otra, eslint-disable con la razón.",
+				},
+			],
+		},
+	},
+	{
 		// G-11: piso de 12 px en todo lo que se ve en pantalla. El bloque G-10 de abajo repite estas
 		// reglas (en flat config la última configuración de una regla reemplaza a la anterior).
 		files: ["src/**/*.{ts,tsx}"],
@@ -94,6 +115,11 @@ const eslintConfig = [
 		rules: {
 			"no-restricted-syntax": [
 				"error",
+				// G-18: tipos de la BD por el cliente tipado; Json → fromJson, NULL en argumentos SQL → sqlArg (@/lib/supabase/casts).
+				{
+					selector: "TSAsExpression[expression.type='TSAsExpression'][expression.typeAnnotation.type='TSUnknownKeyword']",
+					message: "Sin `as unknown as` (G-18): la fila se tipa con SupabaseClient<Database>; un jsonb con fromJson<T>(), un NULL de argumento SQL con sqlArg<T>(). Si de verdad no hay otra, eslint-disable con la razón.",
+				},
 				// G-11: piso de 12 px para el texto en pantalla.
 				{
 					selector: "Property[key.name='fontSize'] > Literal[value<12], Property[key.name='fontSize'] > ConditionalExpression > Literal[value<12]",
@@ -131,6 +157,11 @@ const eslintConfig = [
 		rules: {
 			"no-restricted-syntax": [
 				"error",
+				// G-18: tipos de la BD por el cliente tipado; Json → fromJson, NULL en argumentos SQL → sqlArg (@/lib/supabase/casts).
+				{
+					selector: "TSAsExpression[expression.type='TSAsExpression'][expression.typeAnnotation.type='TSUnknownKeyword']",
+					message: "Sin `as unknown as` (G-18): la fila se tipa con SupabaseClient<Database>; un jsonb con fromJson<T>(), un NULL de argumento SQL con sqlArg<T>(). Si de verdad no hay otra, eslint-disable con la razón.",
+				},
 				// G-11: piso de 12 px para el texto en pantalla.
 				{
 					selector: "Property[key.name='fontSize'] > Literal[value<12], Property[key.name='fontSize'] > ConditionalExpression > Literal[value<12]",

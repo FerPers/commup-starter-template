@@ -3,6 +3,7 @@
 import { getTranslations } from 'next-intl/server'
 import { revalidatePath } from 'next/cache'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '@/types/supabase.generated'
 import { withAuth } from '@/lib/auth/withAuth'
 import type { Json } from '@/types/supabase.generated'
 import type { LineupRemote } from '@/lib/sync/startup-outbox-utils'
@@ -10,6 +11,7 @@ import {
   DEFAULT_HOLD_CAPACITY, HOLD_CAPACITIES, LINEUP_PURPOSES, PROCEDURE_KINDS, PROCEDURE_SECTIONS, VALVE_POSITIONS,
   type LineupPurpose, type ProcedureKind, type ProcedureSection, type StepDraft, type ValvePosition,
 } from '@/lib/startup/catalog'
+import { sqlArg } from '@/lib/supabase/casts'
 
 // Arranque (fase 6 plan readiness, sesión 1): procedimientos con hold points y line-ups. Toda escritura pasa
 // por RPC SECURITY DEFINER (migración 20261017210000), que aplica roles, orden de pasos, «otra persona» y
@@ -26,12 +28,12 @@ function revalidate(projectId: string, path?: string) {
   revalidatePath('/projects/[id]', 'layout')
 }
 
-async function owned(db: SupabaseClient, table: 'procedures' | 'procedure_revisions' | 'procedure_runs' | 'lineup_sheets' | 'lineup_items', id: string, projectId: string) {
+async function owned(db: SupabaseClient<Database>, table: 'procedures' | 'procedure_revisions' | 'procedure_runs' | 'lineup_sheets' | 'lineup_items', id: string, projectId: string) {
   const { data } = await db.from(table).select('id').eq('id', id).eq('project_id', projectId).maybeSingle()
   return !!data
 }
 
-const nullable = (v: string | null | undefined) => ((v ?? '') === '' ? null : v) as unknown as string
+const nullable = (v: string | null | undefined) => sqlArg<string>(((v ?? '') === '' ? null : v))
 
 /** Hora de captura offline (ISO) → parámetro p_captured_at; la RPC la acota a [límite lógico, now()]. */
 const capturedParam = (iso: string | undefined) => (iso && !Number.isNaN(Date.parse(iso)) ? iso : undefined)

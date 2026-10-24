@@ -9,6 +9,7 @@ import { accessError } from '@/lib/i18n/action-errors'
 import type { Enums } from '@/types/supabase.generated'
 import { isCriticality, type Criticality } from '@/lib/tags/criticality'
 import { TAG_MOVE_REASON_MIN, type TagMovePreview } from '@/lib/tags/move'
+import { fromJson } from '@/lib/supabase/casts'
 
 export interface TagUpdatePayload {
   description?: string
@@ -171,7 +172,7 @@ export const previewTagMove = withAuth(
   async (ctx, input: { projectId: string; tagId: string; subsystemId: string }): Promise<{ error?: string; preview?: TagMovePreview }> => {
     const { data, error } = await ctx.supabase.rpc('tag_subsystem_move_preview', { p_tag_id: input.tagId, p_subsystem_id: input.subsystemId })
     if (error) return { error: error.message }
-    return { preview: data as unknown as TagMovePreview }
+    return { preview: fromJson<TagMovePreview>(data) }
   },
 )
 
@@ -195,7 +196,7 @@ export const moveTagSubsystem = withAuth(
       p_tag_id: input.tagId, p_subsystem_id: input.subsystemId, p_reason: reason,
     })
     if (error) return { error: error.message }
-    const res = data as unknown as { itrs_moved: number; punches_moved: number }
+    const res = fromJson<{ itrs_moved: number; punches_moved: number }>(data)
     revalidatePath(`/projects/${input.projectId}/tags/${input.tagId}`)
     revalidatePath(`/projects/${input.projectId}/tags`)
     revalidatePath(`/projects/${input.projectId}/itrs`)

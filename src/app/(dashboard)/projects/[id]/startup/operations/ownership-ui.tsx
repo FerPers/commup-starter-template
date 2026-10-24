@@ -31,7 +31,7 @@ export function useCheckDetail() {
   return (it: CheckItem): string => {
     const d = it.detail ?? {}
     if (it.key.startsWith('staff_level_')) {
-      const s = d as unknown as Staff
+      const s = d as Staff
       if (!s.by_shift?.length) return t('ops.detail.noStaff')
       return s.by_shift.map(b => `${t('ops.shift')} ${b.shift}: ${b.count}/${s.required}`).join(' · ')
     }

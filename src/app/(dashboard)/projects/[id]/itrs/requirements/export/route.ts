@@ -3,6 +3,7 @@ import { getActiveMembership } from '@/lib/supabase/membership'
 import { REQ_STATES, parseReqParams } from '@/lib/itr/requirements'
 import { REQ_EXPORT_DETAIL_LIMIT, buildRequirementsWorkbook, type RequirementsExport } from '@/lib/excel/requirements'
 import { todayIn } from '@/lib/time/zone'
+import { fromJson } from '@/lib/supabase/casts'
 
 export const dynamic = 'force-dynamic'
 
@@ -33,7 +34,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     getTranslations('ItrRequirements'),
   ])
   if (res.error) return new Response(res.error.message, { status: 500 })
-  const data = res.data as unknown as RequirementsExport
+  const data = fromJson<RequirementsExport>(res.data)
   const today = todayIn(project.timezone)
   const nodeCode = node.data?.code ?? null
 

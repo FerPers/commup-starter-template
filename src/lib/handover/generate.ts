@@ -11,11 +11,11 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { getTranslations } from 'next-intl/server'
 import type { Database } from '@/types/supabase.generated'
-import type { Json } from '@/types/supabase.generated'
 import { buildHandoverBundle } from './bundle'
 import { loadSigningKey } from './sign'
 import type { HandoverPackageData } from './types'
 import { siteUrl } from '@/lib/site-url'
+import { fromJson } from '@/lib/supabase/casts'
 
 export type HandoverFormat = 'json' | 'pdf' | 'zip'
 
@@ -89,7 +89,7 @@ export async function generateHandoverPackage(
       p_system_ids: systemIds ?? undefined,
     })
     if (rpcErr) throw new Error(`RPC generate_handover_package failed: ${errMsg(rpcErr)}`)
-    const handoverData = payload as unknown as HandoverPackageData
+    const handoverData = fromJson<HandoverPackageData>(payload)
 
     const [t, { data: org }] = await Promise.all([
       getTranslations({ locale: lang, namespace: 'Startup' }),
@@ -133,7 +133,7 @@ export async function generateHandoverPackage(
         signature: bundle.signature,
         signature_alg: 'ed25519',
         key_id: signingKey.keyId,
-        manifest: bundle.manifest as unknown as Json,
+        manifest: bundle.manifest,
       })
       .eq('id', packageId)
     if (updErr) throw new Error(`Package update failed: ${errMsg(updErr)}`)

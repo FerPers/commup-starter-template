@@ -10,6 +10,7 @@ import {
   COMPANY_KINDS, DOC_TYPES, REFERENCE_KINDS, REVISION_STATUSES, REVALIDATION_MIN, VOID_REASON_MIN, documentPolicy, isDocumentPathFor, isHttpsUrl,
   type CompanyKind, type DocType, type DocumentPolicy, type ReferenceKind, type RevisionStatus,
 } from '@/lib/documents/catalog'
+import { sqlArg } from '@/lib/supabase/casts'
 
 // Empresas y registro maestro de documentos (fase 8 plan readiness, sesión 1; migración 20261021120000).
 // Toda escritura pasa por RPC SECURITY DEFINER, que aplica roles (empresas = owner/admin; documentos = líder+;
@@ -17,7 +18,7 @@ import {
 
 const projectGuard = [{ resource: 'project' as const, field: 'projectId' }]
 const txt = (v: string | null | undefined, max: number) => (v ?? '').trim().slice(0, max)
-const opt = (v: string | null | undefined) => ((v ?? '') === '' ? null : v) as unknown as string
+const opt = (v: string | null | undefined) => sqlArg<string>(((v ?? '') === '' ? null : v))
 
 function revalidateDocs(projectId: string, documentId?: string) {
   revalidatePath(`/projects/${projectId}/documents`)

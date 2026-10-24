@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { getTranslations } from 'next-intl/server'
 import { assignmentDbError } from '@/lib/i18n/action-errors'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '@/types/supabase.generated'
 import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { withAuth } from '@/lib/auth/withAuth'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -31,7 +32,7 @@ type GenerateResult = { created: number; errors: string[]; error?: string }
 
 const MAX_BATCH = 200
 
-async function prepare(ctx: { supabase: SupabaseClient; orgId: string }, input: GenerateInput, source: 'loop_signals' | 'ce_effects') {
+async function prepare(ctx: { supabase: SupabaseClient<Database>; orgId: string }, input: GenerateInput, source: 'loop_signals' | 'ce_effects') {
   const t = await getTranslations('ActionErrors')
   if (!input.ids.length) return { error: t('sourceItrs.nothing') }
   if (input.ids.length > MAX_BATCH) return { error: t('sourceItrs.maxBatch', { max: MAX_BATCH }) }
@@ -49,7 +50,7 @@ async function prepare(ctx: { supabase: SupabaseClient; orgId: string }, input: 
   if (input.clientId && !memberIds.has(input.clientId)) return { error: t('sourceItrs.notMember', { role: 'client' }) }
   // S04 (D4/D6): una persona distinta por cada firma que exige la plantilla (la BD congela el conjunto en el ITR).
   // ctx.supabase sin tipar: la relación a uno llega tipada como arreglo.
-  const phase = template.project_phases as unknown as { itr_client_signature: boolean } | null
+  const phase = template.project_phases
   const required = requiredForTemplate(template.required_signatures, phase?.itr_client_signature)
   const people: Record<SigningRole, string | null | undefined> = { executor: input.inspectorId, supervisor: input.supervisorId, client: input.clientId }
   const invalid = assignmentIssue(required, people)
@@ -58,7 +59,7 @@ async function prepare(ctx: { supabase: SupabaseClient; orgId: string }, input: 
 }
 
 async function insertItr(
-  ctx: { supabase: SupabaseClient },
+  ctx: { supabase: SupabaseClient<Database> },
   input: GenerateInput,
   template: { id: string; code: string; phase_id: string },
   row: { subsystem_id: string; tag_id: string; baseNumber: string; loop_id?: string; ce_cause_id?: string },

@@ -1,11 +1,12 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '@/types/supabase.generated'
 import { DEFAULT_TIMEZONE, todayIn } from './zone'
 
 /**
  * S10 (D-05/G-13): zona horaria de varios proyectos de una vez (crons y pantallas de varios proyectos).
  * `.in()` en lotes de 200 ids para no superar el largo de URL de PostgREST.
  */
-export async function loadProjectTimezones(db: SupabaseClient, projectIds: string[]): Promise<Map<string, string>> {
+export async function loadProjectTimezones(db: SupabaseClient<Database>, projectIds: string[]): Promise<Map<string, string>> {
   const out = new Map<string, string>()
   const ids = Array.from(new Set(projectIds))
   for (let i = 0; i < ids.length; i += 200) {
@@ -27,7 +28,7 @@ export function projectTodayFn(zones: Map<string, string>, now: Date = new Date(
 }
 
 /** «Hoy» de un proyecto (una lectura). */
-export async function getProjectToday(db: SupabaseClient, projectId: string): Promise<{ today: string; timezone: string }> {
+export async function getProjectToday(db: SupabaseClient<Database>, projectId: string): Promise<{ today: string; timezone: string }> {
   const { data } = await db.from('projects').select('timezone').eq('id', projectId).maybeSingle()
   const timezone = (data?.timezone as string | null) ?? DEFAULT_TIMEZONE
   return { today: todayIn(timezone), timezone }

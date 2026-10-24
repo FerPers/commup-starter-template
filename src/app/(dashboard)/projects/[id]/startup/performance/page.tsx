@@ -30,7 +30,7 @@ export default async function PerformancePage({ params }: { params: Promise<{ id
       tests={(tests ?? []).map(x => {
         const revs = (x.performance_test_revisions ?? []) as Rev[]
         const runs = ((x.performance_runs ?? []) as Run[]).sort((a, b) => b.attempt - a.attempt)
-        const sys = x.systems as unknown as { code: string; name: string } | null
+        const sys = x.systems
         return {
           id: x.id, number: x.number, title: x.title, system: sys ? `${sys.code} — ${sys.name}` : '—',
           currentRev: revs.find(r => r.id === x.current_revision_id)?.rev ?? null,

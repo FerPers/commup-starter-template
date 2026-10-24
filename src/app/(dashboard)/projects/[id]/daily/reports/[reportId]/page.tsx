@@ -4,6 +4,7 @@ import { isAiConfigured } from '@/lib/ai/claude'
 import type { ReportData } from '@/lib/daily/report'
 import ReportEditor from './ReportEditor'
 import { ROLE_TIERS } from '@/lib/constants/roles'
+import { fromJson } from '@/lib/supabase/casts'
 
 // Editor de un reporte diario (fase 5, sesión 3): 5 secciones editables a la izquierda, datos congelados
 // del día a la derecha; emitir lo congela con hash y el PDF se regenera desde estos datos.
@@ -23,7 +24,7 @@ export default async function DailyReportPage({ params }: { params: Promise<{ id
   ])
   const names: Record<string, string> = {}
   for (const m of members ?? []) {
-    const p = m.profiles as unknown as { full_name: string | null } | null
+    const p = m.profiles
     if (p?.full_name) names[m.user_id] = p.full_name
   }
 
@@ -32,7 +33,7 @@ export default async function DailyReportPage({ params }: { params: Promise<{ id
       project={project}
       report={{
         id: r.id, number: r.number, date: r.report_date, revision: r.revision, status: r.status as 'draft' | 'issued' | 'superseded',
-        data: r.data as unknown as ReportData, dataAt: r.data_at, revisionReason: r.revision_reason,
+        data: fromJson<ReportData>(r.data), dataAt: r.data_at, revisionReason: r.revision_reason,
         sections: { summary: r.summary ?? '', key_events: r.key_events ?? '', issues: r.issues ?? '', constraints: r.constraints_text ?? '', next_day_plan: r.next_day_plan ?? '' },
         aiGeneratedAt: r.ai_generated_at, aiModel: r.ai_model,
         issuedBy: r.issued_by ? names[r.issued_by] ?? null : null, issuedAt: r.issued_at, hash: r.content_hash,

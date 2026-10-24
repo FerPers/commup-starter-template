@@ -39,7 +39,7 @@ export default async function StartupEventsPage({ params, searchParams }: {
   const signals = signalsRes.rows
   const names: Record<string, string> = {}
   for (const m of members ?? []) {
-    const p = m.profiles as unknown as { full_name: string | null } | null
+    const p = m.profiles
     if (p?.full_name) names[m.user_id] = p.full_name
   }
 
@@ -64,7 +64,7 @@ export default async function StartupEventsPage({ params, searchParams }: {
       runs={runs ?? []}
       signals={signals.map(s => ({
         id: s.id, tag: s.signal_tag, type: s.signal_type, unit: s.eng_unit,
-        systemId: (s.tags as unknown as { subsystems: { system_id: string } | null } | null)?.subsystems?.system_id ?? null,
+        systemId: (s.tags)?.subsystems?.system_id ?? null,
       }))}
       names={names}
       canRecord={ctx.role !== 'client'}

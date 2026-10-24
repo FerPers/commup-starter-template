@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { getTranslations } from 'next-intl/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '@/types/supabase.generated'
 import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { withAuth } from '@/lib/auth/withAuth'
 import { logActivity } from '@/lib/log-activity'
@@ -48,7 +49,7 @@ function blank(s: string | null | undefined): string | undefined {
   return s?.trim().length ? s : undefined
 }
 
-async function orgGates(ctx: { supabase: SupabaseClient; orgId: string }) {
+async function orgGates(ctx: { supabase: SupabaseClient<Database>; orgId: string }) {
   const { data } = await ctx.supabase
     .from('readiness_gates')
     .select('id, code, order_index, is_active')

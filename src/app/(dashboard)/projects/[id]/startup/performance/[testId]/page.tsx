@@ -53,7 +53,7 @@ export default async function PerformanceTestPage({ params, searchParams }: {
 
   const names: Record<string, string> = {}
   for (const m of members ?? []) {
-    const p = m.profiles as unknown as { full_name: string | null } | null
+    const p = m.profiles
     if (p?.full_name) names[m.user_id] = p.full_name
   }
   const s = (v: number | null | undefined) => (v === null || v === undefined ? '' : String(v))
@@ -97,7 +97,7 @@ export default async function PerformanceTestPage({ params, searchParams }: {
       systems={systems ?? []}
       signals={signals.map(x => ({
         id: x.id, tag: x.signal_tag, unit: x.eng_unit,
-        systemId: (x.tags as unknown as { subsystems: { system_id: string } | null } | null)?.subsystems?.system_id ?? null,
+        systemId: (x.tags)?.subsystems?.system_id ?? null,
       }))}
       procedures={(procedures ?? []).map(p => ({ id: p.id, label: `${p.number} — ${p.title}` }))}
       names={names}

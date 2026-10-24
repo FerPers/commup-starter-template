@@ -43,7 +43,7 @@ export default async function ProcedurePage({ params, searchParams }: {
   const docRefs = await loadDocumentRefs(supabase, id, 'procedure_revision', selected.id)
   const names: Record<string, string> = {}
   for (const m of members ?? []) {
-    const p = m.profiles as unknown as { full_name: string | null } | null
+    const p = m.profiles
     if (p?.full_name) names[m.user_id] = p.full_name
   }
 
@@ -61,10 +61,10 @@ export default async function ProcedurePage({ params, searchParams }: {
       steps={(steps ?? []).map(s => ({
         action: s.action, responsible: s.responsible ?? '', expected_value: s.expected_value ?? '', tag_id: s.tag_id,
         expected_min: s.expected_min === null ? '' : String(s.expected_min), expected_max: s.expected_max === null ? '' : String(s.expected_max), expected_unit: s.expected_unit ?? '',
-        tag_number: (s.tags as unknown as { tag_number: string } | null)?.tag_number ?? null,
+        tag_number: (s.tags)?.tag_number ?? null,
         is_hold_point: s.is_hold_point, hold_capacity: (s.hold_capacity ?? 'operations') as HoldCapacity, stop_criteria: s.stop_criteria ?? '',
       }))}
-      runs={(runs ?? []).map(r => ({ id: r.id, number: r.number, status: r.status, startedAt: r.started_at, completedAt: r.completed_at, system: (r.systems as unknown as { code: string } | null)?.code ?? null }))}
+      runs={(runs ?? []).map(r => ({ id: r.id, number: r.number, status: r.status, startedAt: r.started_at, completedAt: r.completed_at, system: (r.systems)?.code ?? null }))}
       systems={systems ?? []}
       names={names}
       userId={ctx.userId}

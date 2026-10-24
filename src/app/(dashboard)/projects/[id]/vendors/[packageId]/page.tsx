@@ -27,7 +27,7 @@ export default async function VendorPackagePage({ params }: { params: Promise<{ 
     .eq('id', packageId).eq('project_id', id).maybeSingle()
   if (!pkg) notFound()
 
-  const systemIds = ((pkg.vendor_package_systems as unknown as { system_id: string }[] | null) ?? []).map(s => s.system_id)
+  const systemIds = ((pkg.vendor_package_systems) ?? []).map(s => s.system_id)
   const [
     { data: companies }, { data: systems }, { data: gates }, { data: interfaces }, { data: checklist },
     { data: mob }, { data: demob }, { data: activities }, { data: reports }, { data: recs }, { data: members },
@@ -61,7 +61,7 @@ export default async function VendorPackagePage({ params }: { params: Promise<{ 
     supabase.from('test_equipment').select('id, calibration_due').eq('org_id', ctx.orgId).eq('owner_company_id', pkg.company_id).eq('is_active', true).limit(1000),
   ])
   const today = todayIn(project.timezone)
-  const docStatus = (companyDocs ?? []).map(d => (d.current as unknown as { status: string } | null)?.status ?? null)
+  const docStatus = (companyDocs ?? []).map(d => (d.current)?.status ?? null)
   const hints: PackageData['hints'] = {
     docs: docStatus.length,
     docsCurrent: docStatus.filter(s => s === 'ifc' || s === 'as_built' || s === 'final').length,
@@ -78,7 +78,7 @@ export default async function VendorPackagePage({ params }: { params: Promise<{ 
 
   const names: Record<string, string> = {}
   for (const m of members ?? []) {
-    const p = m.profiles as unknown as { full_name: string | null } | null
+    const p = m.profiles
     if (p?.full_name) names[m.user_id] = p.full_name
   }
   const attachmentsBy: Record<string, Attachment[]> = {}
@@ -90,7 +90,7 @@ export default async function VendorPackagePage({ params }: { params: Promise<{ 
     plannedMobilization: pkg.planned_mobilization, mobilizedAt: pkg.mobilized_at, mobilizedBy: pkg.mobilized_by, mobilizationNote: pkg.mobilization_note,
     demobilizedAt: pkg.demobilized_at, demobilizedBy: pkg.demobilized_by, demobilizationNote: pkg.demobilization_note,
     cancelReason: pkg.cancel_reason, systemIds,
-    tagIds: ((pkg.vendor_package_tags as unknown as { tag_id: string }[] | null) ?? []).map(t => t.tag_id),
+    tagIds: ((pkg.vendor_package_tags) ?? []).map(t => t.tag_id),
     interfaces: (interfaces ?? []).map(i => ({ ...i, status: i.status as InterfaceStatus })),
     checklist: checklist ?? [],
     mobilization: (mob ?? null) as PackageData['mobilization'],
@@ -98,11 +98,7 @@ export default async function VendorPackagePage({ params }: { params: Promise<{ 
     activities: (activities ?? []).map(a => ({
       id: a.id, kind: a.kind as ActivityKind, title: a.title, planned_date: a.planned_date, performed_on: a.performed_on, location: a.location,
       result: a.result as ActivityResult, notes: a.notes, result_by: a.result_by, result_at: a.result_at, retest_of: a.retest_of,
-      findings: ((a.vendor_findings as unknown as {
-        id: string; description: string; tag_id: string | null; category: string | null; created_at: string
-        tags: { tag_number: string } | null; punches: { id: string; punch_number: string; status: string; tag_id: string | null } | null
-        actions: { id: string; number: string; status: string } | null
-      }[] | null) ?? []).sort((x, y) => x.created_at.localeCompare(y.created_at)),
+      findings: ((a.vendor_findings) ?? []).sort((x, y) => x.created_at.localeCompare(y.created_at)),
       attachments: attachmentsBy[a.id] ?? [],
     })),
     reports: (reports ?? []).map(r => ({ ...r, kind: r.kind as ReportKind, hours: r.hours === null ? null : Number(r.hours), attachments: attachmentsBy[r.id] ?? [] })),

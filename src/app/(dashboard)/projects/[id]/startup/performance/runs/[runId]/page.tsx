@@ -2,9 +2,11 @@ import { getActiveMembership } from '@/lib/supabase/membership'
 import { notFound, redirect } from 'next/navigation'
 import { loadMyCapacities } from '@/lib/capacities/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '@/types/supabase.generated'
 import type { DisturbanceKind, Evaluation, PerfResult, PerfRunStatus, VariableSource } from '@/lib/performance/catalog'
 import RunConsole from './RunConsole'
 import type { Certificate } from './CertificateCard'
+import { fromJson } from '@/lib/supabase/casts'
 
 // Consola de un intento de prueba de desempeño (fase 7, sesión 1): periodos, reloj, gráfico por variable
 // (en vivo con signal_series mientras corre; congelado desde performance_run_data al cerrar o evaluar),
@@ -32,7 +34,7 @@ export default async function PerformanceRunPage({ params }: { params: Promise<{
   const { id, runId } = await params
   const ctx = await getActiveMembership()
   if (!ctx) redirect('/login')
-  const supabase = ctx.supabase as SupabaseClient
+  const supabase = ctx.supabase as SupabaseClient<Database>
 
   const { data: project } = await ctx.supabase.from('projects').select('id, code, name').eq('id', id).eq('org_id', ctx.orgId).single()
   if (!project) notFound()
@@ -78,11 +80,11 @@ export default async function PerformanceRunPage({ params }: { params: Promise<{
   // B-26); congelada una vez registrado el resultado.
   let evaluation: Evaluation | null = null
   let evaluationError: string | null = null
-  if (run.status === 'evaluated') evaluation = run.evaluation as unknown as Evaluation
+  if (run.status === 'evaluated') evaluation = fromJson<Evaluation>(run.evaluation)
   else if (run.status === 'closed') {
     const { data, error } = await ctx.supabase.rpc('evaluate_performance_run', { p_run_id: runId })
     if (error) evaluationError = error.message
-    else evaluation = data as unknown as Evaluation
+    else evaluation = fromJson<Evaluation>(data)
   }
   const { data: certificate } = await ctx.supabase.from('performance_certificates')
     .select('id, number, status, content_hash, commissioning_signed_by, commissioning_signed_at, operations_signed_by, operations_signed_at, client_signed_by, client_signed_at, commissioning_company, operations_company, client_company, revoked_by, revoked_at, revoke_reason')
@@ -93,7 +95,7 @@ export default async function PerformanceRunPage({ params }: { params: Promise<{
 
   const names: Record<string, string> = {}
   for (const m of members ?? []) {
-    const p = m.profiles as unknown as { full_name: string | null } | null
+    const p = m.profiles
     if (p?.full_name) names[m.user_id] = p.full_name
   }
 

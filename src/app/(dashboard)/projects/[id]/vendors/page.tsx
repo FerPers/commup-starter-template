@@ -32,15 +32,15 @@ export default async function VendorsPage({ params }: { params: Promise<{ id: st
   const failedTests = count(activities, a => a.result === 'failed')
   const toDecide = count(recs, r => r.status === 'proposed')
   const openFindings = count(findings, f => {
-    const p = f.punches as unknown as { status: string } | null
-    const a = f.actions as unknown as { status: string } | null
+    const p = f.punches
+    const a = f.actions
     return p ? ['open', 'in_progress'].includes(p.status) : a ? ['open', 'in_progress', 'done'].includes(a.status) : false
   })
 
   const rows: PackageRow[] = (packages ?? []).map(p => ({
     id: p.id, number: p.number, title: p.title, status: p.status as PackageStatus,
     company: companyName.get(p.company_id) ?? '—', plannedMobilization: p.planned_mobilization,
-    systemIds: ((p.vendor_package_systems as unknown as { system_id: string }[] | null) ?? []).map(s => s.system_id),
+    systemIds: ((p.vendor_package_systems) ?? []).map(s => s.system_id),
     pendingTests: pendingTests[p.id] ?? 0, failedTests: failedTests[p.id] ?? 0, toDecide: toDecide[p.id] ?? 0, openFindings: openFindings[p.id] ?? 0,
   }))
 

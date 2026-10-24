@@ -35,7 +35,7 @@ export default async function SystemsPage({ params }: { params: Promise<{ id: st
 
   const list: SystemListItem[] = (systems ?? []).map(s => {
     const area = s.areas as { code: string; name: string } | null
-    const sub = s.subsystems as unknown as { count: number }[] | null
+    const sub = s.subsystems
     return {
       id: s.id,
       code: s.code,

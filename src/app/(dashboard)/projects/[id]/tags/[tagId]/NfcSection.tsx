@@ -129,7 +129,8 @@ function LinkNfcModal({
     setError(null)
     setScanning(true)
     try {
-      const Ctor = (window as unknown as { NDEFReader: new () => NDEFReaderLike }).NDEFReader
+      if (!('NDEFReader' in window)) { setScanning(false); return }
+      const Ctor = (window as { NDEFReader: new () => NDEFReaderLike }).NDEFReader
       const reader = new Ctor()
       await reader.scan()
       reader.addEventListener('reading', (event: NDEFReadingEvent) => {

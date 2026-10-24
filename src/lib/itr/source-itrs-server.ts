@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '@/types/supabase.generated'
 import type { GenerationMember, GenerationTemplate } from '@/components/itr/GenerateSourceItrsModal'
 import { requiredForTemplate } from '@/lib/itr/signatures'
 import { fetchAllRows } from '@/lib/list/fetch-all'
@@ -18,7 +19,7 @@ export type SourceItrInfo = {
   rows: Record<string, RowResult>
 }
 
-export async function loadGenerationTemplates(supabase: SupabaseClient, orgId: string, source: 'loop_signals' | 'ce_effects'): Promise<GenerationTemplate[]> {
+export async function loadGenerationTemplates(supabase: SupabaseClient<Database>, orgId: string, source: 'loop_signals' | 'ce_effects'): Promise<GenerationTemplate[]> {
   const { data } = await supabase
     .from('itr_template_items')
     .select('template_id, itr_templates!inner(id, code, title, version, is_active, org_id, required_signatures, project_phases(itr_client_signature))')
@@ -28,15 +29,15 @@ export async function loadGenerationTemplates(supabase: SupabaseClient, orgId: s
     .eq('itr_templates.is_active', true)
   const map = new Map<string, GenerationTemplate>()
   for (const row of data ?? []) {
-    const t = row.itr_templates as unknown as { id: string; code: string; title: string; version: number; required_signatures: string[]; project_phases: { itr_client_signature: boolean } | null }
+    const t = row.itr_templates
     map.set(t.id, { id: t.id, code: t.code, title: t.title, version: t.version, requiredSignatures: requiredForTemplate(t.required_signatures, t.project_phases?.itr_client_signature) })
   }
   return [...map.values()].sort((a, b) => a.code.localeCompare(b.code) || b.version - a.version)
 }
 
-export async function loadMembers(supabase: SupabaseClient, orgId: string): Promise<GenerationMember[]> {
+export async function loadMembers(supabase: SupabaseClient<Database>, orgId: string): Promise<GenerationMember[]> {
   const { data } = await supabase.from('org_members').select('user_id, role, profiles(full_name)').eq('org_id', orgId).order('role')
-  return (data ?? []).map(m => ({ user_id: m.user_id, role: String(m.role), name: (m.profiles as unknown as { full_name: string | null } | null)?.full_name ?? m.user_id }))
+  return (data ?? []).map(m => ({ user_id: m.user_id, role: String(m.role), name: (m.profiles)?.full_name ?? m.user_id }))
 }
 
 const IN_CHUNK = 200
@@ -48,7 +49,7 @@ async function inChunks<T>(ids: string[], load: (chunk: string[]) => Promise<T[]
 }
 
 /** ITR vigente (el más reciente) por lazo o por causa, con desactualización y resultados por fila. */
-export async function loadSourceItrs(supabase: SupabaseClient, kind: 'loop' | 'cause', ids: string[]): Promise<Record<string, SourceItrInfo>> {
+export async function loadSourceItrs(supabase: SupabaseClient<Database>, kind: 'loop' | 'cause', ids: string[]): Promise<Record<string, SourceItrInfo>> {
   if (!ids.length) return {}
   const column = kind === 'loop' ? 'loop_id' : 'ce_cause_id'
   // S09 (B-07): en lotes de 200 ids (largo de URL) y paginado (antes un .limit(5000) que PostgREST corta en 1000)

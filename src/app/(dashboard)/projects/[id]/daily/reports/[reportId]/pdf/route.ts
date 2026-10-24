@@ -2,6 +2,7 @@ import { getLocale } from 'next-intl/server'
 import { getActiveMembership } from '@/lib/supabase/membership'
 import { renderDailyReportPdf } from '@/lib/pdf/daily-report'
 import type { ReportData } from '@/lib/daily/report'
+import { fromJson } from '@/lib/supabase/casts'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,7 +31,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     revision: r.revision,
     revisionReason: r.revision_reason,
     status: r.status as 'draft' | 'issued' | 'superseded',
-    data: r.data as unknown as ReportData,
+    data: fromJson<ReportData>(r.data),
     dataAt: r.data_at,
     sections: { summary: r.summary, key_events: r.key_events, issues: r.issues, constraints: r.constraints_text, next_day_plan: r.next_day_plan },
     issuedBy: issuer?.full_name ?? null,

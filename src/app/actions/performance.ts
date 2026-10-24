@@ -3,11 +3,12 @@
 import { getTranslations } from 'next-intl/server'
 import { revalidatePath } from 'next/cache'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '@/types/supabase.generated'
 import { withAuth } from '@/lib/auth/withAuth'
-import type { Json } from '@/types/supabase.generated'
 import {
   DISTURBANCE_KINDS, PERF_RESULTS, checkContent, toPayload, type ContentDraft, type DisturbanceKind, type Evaluation, type PerfResult,
 } from '@/lib/performance/catalog'
+import { fromJson } from '@/lib/supabase/casts'
 
 // Prueba de desempeño (fase 7 plan readiness, sesión 1). Toda escritura pasa por RPC SECURITY DEFINER
 // (migración 20261019120000), que aplica roles, «otra persona» al aprobar, un intento vivo, ventanas de
@@ -23,7 +24,7 @@ function revalidate(projectId: string, path?: string) {
   if (path) revalidatePath(`${base(projectId)}/${path}`)
 }
 
-async function owned(db: SupabaseClient, table: Table, id: string, projectId: string) {
+async function owned(db: SupabaseClient<Database>, table: Table, id: string, projectId: string) {
   const { data } = await db.from(table).select('id').eq('id', id).eq('project_id', projectId).maybeSingle()
   return !!data
 }
@@ -68,7 +69,7 @@ export const savePerformanceRevision = withAuth(
     if (problem) return { error: problem }
     const { error } = await ctx.supabase.rpc('save_performance_revision', {
       p_revision_id: input.revisionId,
-      p_content: toPayload(input.content) as unknown as Json,
+      p_content: toPayload(input.content),
       p_change_reason: input.changeReason?.trim() ? input.changeReason.trim().slice(0, 2000) : undefined,
     })
     if (error) return { error: error.message }
@@ -293,7 +294,7 @@ export const evaluatePerformanceRun = withAuth(
     if (!(await owned(ctx.supabase, 'performance_runs', input.runId, input.projectId))) return { error: t('performance.runNotFound') }
     const { data, error } = await ctx.supabase.rpc('evaluate_performance_run', { p_run_id: input.runId })
     if (error) return { error: error.message }
-    return { data: data as unknown as Evaluation }
+    return { data: fromJson<Evaluation>(data) }
   },
 )
 
@@ -317,7 +318,7 @@ export const recordPerformanceResult = withAuth(
 )
 
 // ── Certificado PTC (sesión 2b) ───────────────────────────────────────────
-async function ownedCertificate(db: SupabaseClient, id: string, projectId: string) {
+async function ownedCertificate(db: SupabaseClient<Database>, id: string, projectId: string) {
   const { data } = await db.from('performance_certificates').select('id, run_id').eq('id', id).eq('project_id', projectId).maybeSingle()
   return data as { id: string; run_id: string } | null
 }

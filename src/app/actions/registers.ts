@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { getTranslations } from 'next-intl/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '@/types/supabase.generated'
 import { PRIVILEGED_ROLES } from '@/lib/auth/permissions'
 import { withAuth } from '@/lib/auth/withAuth'
 import type { Json } from '@/types/supabase.generated'
@@ -18,6 +19,7 @@ import {
 } from '@/lib/registers/catalog'
 import { isRegisterNumber, packKey } from '@/lib/registers/test-packs'
 import type { LineImportRow, PackImportRow } from '@/lib/registers/test-packs-import'
+import { sqlArg } from '@/lib/supabase/casts'
 
 // Registros controlados (fase 3 plan readiness). Toda escritura pasa por RPC SECURITY DEFINER
 // (migración 20261015200000), que aplica rol, ciclo de vida y «otra persona». Aquí: propiedad de
@@ -26,7 +28,7 @@ import type { LineImportRow, PackImportRow } from '@/lib/registers/test-packs-im
 const projectGuard = [{ resource: 'project' as const, field: 'projectId' }]
 
 // Los tipos generados no admiten null en parámetros de RPC sin DEFAULT, aunque SQL sí (null = quitar).
-const nullable = (v: string | null | undefined) => (v ?? null) as unknown as string
+const nullable = (v: string | null | undefined) => sqlArg<string>((v ?? null))
 
 type TagRef = { tag_id: string; role: 'subject' | 'line' | 'gauge' }
 
@@ -36,7 +38,7 @@ function revalidate(projectId: string, itemId?: string) {
   revalidatePath('/projects/[id]/readiness', 'page')
 }
 
-async function loadItem(db: SupabaseClient, projectId: string, itemId: string) {
+async function loadItem(db: SupabaseClient<Database>, projectId: string, itemId: string) {
   const { data } = await db
     .from('register_items')
     .select('id, kind, status, data')
@@ -216,7 +218,7 @@ export const importTestPacks = withAuth(
     ])
     type Existing = { id: string; number: string; title: string; description: string | null; status: RegisterStatus; data: Record<string, unknown>; system_id: string | null; register_item_tags: TagRef[] }
     const byKey = new Map<string, Existing>()
-    for (const p of (existing ?? []) as unknown as Existing[]) {
+    for (const p of (existing ?? []) as Existing[]) {
       byKey.set(packKey(p.number), p)
       const ref = typeof p.data?.pack_ref === 'string' ? packKey(p.data.pack_ref) : ''
       if (ref && !byKey.has(ref)) byKey.set(ref, p)

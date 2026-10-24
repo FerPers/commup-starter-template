@@ -36,7 +36,7 @@ export default function MicAppend({
   const [blocked, setBlocked] = useState(false)
 
   useEffect(() => {
-    const w = window as unknown as {
+    const w = window as {
       SpeechRecognition?: new () => WebSpeechRecognizer
       webkitSpeechRecognition?: new () => WebSpeechRecognizer
     }
@@ -47,7 +47,7 @@ export default function MicAppend({
   if (!supported || disabled) return null
 
   const start = () => {
-    const w = window as unknown as {
+    const w = window as {
       SpeechRecognition?: new () => WebSpeechRecognizer
       webkitSpeechRecognition?: new () => WebSpeechRecognizer
     }

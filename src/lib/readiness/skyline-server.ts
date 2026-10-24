@@ -8,6 +8,7 @@ import { getProjectToday } from '@/lib/time/project-zones'
 import { fetchAllRows } from '@/lib/list/fetch-all'
 import type { MatrixGate } from './gates'
 import { buildSkyline, defaultSkylineGate, type Skyline, type SkylineParams } from './skyline'
+import { fromJson } from '@/lib/supabase/casts'
 
 export type SkylineGate = { gateId: string; code: string; name: string; order: number }
 
@@ -31,7 +32,7 @@ export async function loadSkyline(supabase: SupabaseClient<Database>, projectId:
   ])
   if (error) console.error('[Skyline] gates rpc error:', error)
 
-  const rows = (gatesRaw ?? []).map(r => ({ ...r, gates: (r.gates ?? []) as unknown as MatrixGate[] }))
+  const rows = (gatesRaw ?? []).map(r => ({ ...r, gates: fromJson<MatrixGate[]>((r.gates ?? [])) }))
   const gates: SkylineGate[] = (rows[0]?.gates ?? []).map(g => ({ gateId: g.gate_id, code: g.code, name: g.name, order: g.order }))
     .sort((a, b) => a.order - b.order)
   const fallback = defaultSkylineGate(gates.map(g => ({

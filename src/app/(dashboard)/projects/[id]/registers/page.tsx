@@ -31,7 +31,7 @@ export default async function RegistersPage({ params }: { params: Promise<{ id: 
 
   const rows: RegisterRow[] = (items ?? []).map(r => {
     const sys = r.systems as { code: string; name: string } | null
-    const tags = (r.register_item_tags as unknown as { tags: { tag_number: string } | null }[] | null) ?? []
+    const tags = (r.register_item_tags) ?? []
     return {
       id: r.id,
       number: r.number,

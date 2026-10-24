@@ -76,6 +76,7 @@ export async function fetchTagPage(
     .order('id', { ascending: true })
     .range(from, to)
   if (error) throw new Error(error.message)
+  // eslint-disable-next-line no-restricted-syntax -- G-18: select armado en tiempo de ejecución (supabase-js no lo puede tipar)
   return { rows: (data ?? []) as unknown as TagListRow[], total: count ?? 0 }
 }
 

@@ -23,6 +23,7 @@ import type { Evaluation } from '@/lib/performance/catalog'
 import { PROCEDURE_SECTIONS, rangeLabel, type ProcedureSection } from '@/lib/startup/catalog'
 import { loadPdfBranding, type PdfBranding } from './branding'
 import { siteUrl } from '@/lib/site-url'
+import { fromJson } from '@/lib/supabase/casts'
 
 type Db = SupabaseClient<Database>
 /** Traductor del espacio `Startup` (next-intl). */
@@ -62,15 +63,14 @@ export async function loadProcedurePdf(
       .eq('project_id', projectId).eq('procedure_revision_id', rev.id),
     profileNames(db, [rev.created_by, rev.approved_by, rev.field_verified_by]),
   ])
-  type Rev = { rev: string } | null
   const documentRefs: DocRef[] = (refs ?? []).map(r => {
-    const d = r.documents as unknown as { number: string; title: string; current: Rev } | null
+    const d = r.documents
     return {
-      number: d?.number ?? '—', title: d?.title ?? '', used_rev: (r.used as unknown as Rev)?.rev ?? '—', current_rev: d?.current?.rev ?? null,
-      revalidated_from: (r.from as unknown as Rev)?.rev ?? null, revalidation_reason: r.revalidation_reason,
+      number: d?.number ?? '—', title: d?.title ?? '', used_rev: (r.used)?.rev ?? '—', current_rev: d?.current?.rev ?? null,
+      revalidated_from: (r.from)?.rev ?? null, revalidation_reason: r.revalidation_reason,
     }
   }).sort((a, b) => a.number.localeCompare(b.number))
-  const sys = proc.systems as unknown as { code: string; name: string } | null
+  const sys = proc.systems
 
   return {
     filename: `${project.code}-${proc.number}-R${rev.rev}.pdf`,
@@ -89,7 +89,7 @@ export async function loadProcedurePdf(
       sectionLabels: Object.fromEntries(PROCEDURE_SECTIONS.map(k => [k, t(`section.${k}`)])) as Record<ProcedureSection, string>,
       sections: (rev.sections ?? {}) as Record<string, string>,
       steps: (steps ?? []).map(s => ({
-        ord: s.ord, action: s.action, responsible: s.responsible, expected: s.expected_value, tag: (s.tags as unknown as { tag_number: string } | null)?.tag_number ?? null,
+        ord: s.ord, action: s.action, responsible: s.responsible, expected: s.expected_value, tag: (s.tags)?.tag_number ?? null,
         hold: s.is_hold_point, capacityLabel: s.hold_capacity ? t(`capacity.${s.hold_capacity}`) : null, stop: s.stop_criteria,
       })),
       author: name(rev.created_by),
@@ -119,11 +119,11 @@ export async function loadPerformancePdf(
   ])
   if (!project || !run || !['closed', 'evaluated'].includes(run.status)) return null
 
-  let evaluation = run.evaluation as unknown as Evaluation | null
+  let evaluation = fromJson<Evaluation | null>(run.evaluation)
   if (!evaluation) {
     const { data, error } = await db.rpc('evaluate_performance_run', { p_run_id: runId })
     if (error) return { error: error.message }
-    evaluation = data as unknown as Evaluation
+    evaluation = fromJson<Evaluation>(data)
   }
 
   const [{ data: test }, { data: rev }, { data: vars }, { data: rsys }, { data: dist }, { data: cert }, { data: action }] = await Promise.all([
@@ -150,8 +150,8 @@ export async function loadPerformancePdf(
   }
 
   const name = await profileNames(db, [rev.approved_by, run.result_by, cert?.commissioning_signed_by, cert?.operations_signed_by, cert?.client_signed_by, ...(dist ?? []).flatMap(d => [d.excluded_by, d.client_ack_by])])
-  const sys = test.systems as unknown as { code: string; name: string } | null
-  const proc = rev.procedures as unknown as { number: string; title: string } | null
+  const sys = test.systems
+  const proc = rev.procedures
 
   return {
     filename: `${project.code}-${run.number.replace('/', '-')}.pdf`,
@@ -172,11 +172,11 @@ export async function loadPerformancePdf(
       },
       sections: (rev.sections ?? {}) as Record<string, string>,
       primarySystem: sys ? `${sys.code} — ${sys.name}` : '—',
-      systems: (rsys ?? []).map(s => (s.systems as unknown as { code: string } | null)?.code).filter((c): c is string => !!c).sort(),
+      systems: (rsys ?? []).map(s => (s.systems)?.code).filter((c): c is string => !!c).sort(),
       procedure: proc ? `${proc.number} — ${proc.title}` : null,
       variables: (vars ?? []).map(v => ({
         key: v.key, label: v.label, source: v.source, unit: v.unit, every: v.source === 'manual' ? v.manual_every_min : null,
-        ref: v.source === 'signal' ? (v.signals as unknown as { signal_tag: string } | null)?.signal_tag ?? '' : v.source === 'derived' ? `${v.operand_a} ${v.op} ${v.operand_b}` : '',
+        ref: v.source === 'signal' ? (v.signals)?.signal_tag ?? '' : v.source === 'derived' ? `${v.operand_a} ${v.op} ${v.operand_b}` : '',
       })),
       evaluation,
       disturbances: (dist ?? []).map(d => ({
@@ -361,13 +361,12 @@ export async function loadItrPdf(db: Db, x: { projectId: string; itrId: string; 
       ? db.rpc('template_client_codes_for', { p_project_id: x.projectId }).eq('template_code', tplCode.toUpperCase()).maybeSingle()
       : Promise.resolve({ data: null }),
   ])
-  type Rev = { rev: string; status?: string } | null
   const documentRefs: ItrDocumentRef[] = (refs ?? []).map(r => {
-    const d = r.documents as unknown as { number: string; title: string; current: Rev } | null
-    const used = r.used as unknown as Rev
+    const d = r.documents
+    const used = r.used
     return {
       number: d?.number ?? '-', title: d?.title ?? '', used_rev: used?.rev ?? '-', used_status: used?.status ?? null,
-      current_rev: d?.current?.rev ?? null, revalidated_from: (r.from as unknown as Rev)?.rev ?? null, revalidation_reason: r.revalidation_reason,
+      current_rev: d?.current?.rev ?? null, revalidated_from: (r.from)?.rev ?? null, revalidation_reason: r.revalidation_reason,
     }
   }).sort((a, b) => a.number.localeCompare(b.number))
 
@@ -412,9 +411,9 @@ export async function loadRunPdf(db: Db, x: StartupCommon & { runId: string }): 
     run.started_by, run.completed_by, run.stopped_by, run.aborted_by,
     ...(steps ?? []).flatMap(s => [s.done_by, s.released_by]), ...(timeline ?? []).map(e => e.user_id),
   ])
-  const proc = run.procedures as unknown as { number: string; title: string }
-  const rev = run.procedure_revisions as unknown as { rev: number; sections: Record<string, string> | null; content_hash: string | null }
-  const sys = run.systems as unknown as { code: string; name: string } | null
+  const proc = run.procedures
+  const rev = run.procedure_revisions as { rev: number; sections: Record<string, string> | null; content_hash: string | null }
+  const sys = run.systems
   return {
     filename: `${project.code}-${run.number.replace(/[^a-zA-Z0-9-]/g, '_')}.pdf`,
     input: {
@@ -428,10 +427,7 @@ export async function loadRunPdf(db: Db, x: StartupCommon & { runId: string }): 
       stoppedBy: name(run.stopped_by), stoppedAt: run.stopped_at, stopReason: run.stop_reason,
       abortedBy: name(run.aborted_by), abortedAt: run.aborted_at, abortReason: run.abort_reason,
       steps: (steps ?? []).map(s => {
-        const st = s.procedure_steps as unknown as {
-          action: string; responsible: string | null; expected_value: string | null; expected_min: number | null; expected_max: number | null; expected_unit: string | null
-          is_hold_point: boolean; hold_capacity: string | null; stop_criteria: string | null; tags: { tag_number: string } | null
-        }
+        const st = s.procedure_steps
         return {
           ord: s.ord, action: st.action, tag: st.tags?.tag_number ?? null, responsible: st.responsible, expected: st.expected_value, stop: st.stop_criteria,
           range: rangeLabel(st.expected_min === null ? null : Number(st.expected_min), st.expected_max === null ? null : Number(st.expected_max), st.expected_unit) || null,
@@ -467,8 +463,8 @@ export async function loadLineupPdf(db: Db, x: StartupCommon & { sheetId: string
     sheet.status === 'verified' ? db.rpc('lineup_is_stale', { p_sheet_id: x.sheetId }) : Promise.resolve({ data: false }),
   ])
   const name = await profileNames(db, [sheet.issued_by, sheet.verified_by, ...(items ?? []).flatMap(i => [i.set_by, i.verified_by])])
-  const sys = sheet.systems as unknown as { code: string; name: string } | null
-  const proc = sheet.procedures as unknown as { number: string; title: string } | null
+  const sys = sheet.systems
+  const proc = sheet.procedures
   return {
     filename: `${project.code}-${sheet.number.replace(/[^a-zA-Z0-9-]/g, '_')}.pdf`,
     input: {
@@ -478,7 +474,7 @@ export async function loadLineupPdf(db: Db, x: StartupCommon & { sheetId: string
       issuedBy: name(sheet.issued_by), issuedAt: sheet.issued_at, verifiedBy: name(sheet.verified_by), verifiedAt: sheet.verified_at,
       hash: sheet.content_hash, stale: !!stale,
       items: (items ?? []).map(i => {
-        const tag = i.tags as unknown as { tag_number: string; description: string | null } | null
+        const tag = i.tags
         return {
           ord: i.ord, tag: tag?.tag_number ?? null, description: tag?.description ?? null, label: i.label ?? '',
           required: i.required_position, requiredNote: i.required_note, critical: i.is_critical, found: i.found_position, remarks: i.remarks,
@@ -501,8 +497,8 @@ export async function loadEventPdf(db: Db, x: StartupCommon & { eventId: string 
     db.from('startup_event_tags').select('tags(tag_number)').eq('event_id', x.eventId),
     profileNames(db, [ev.recorded_by, ev.witness_by, ev.voided_by]),
   ])
-  const sys = ev.systems as unknown as { code: string; name: string } | null
-  const run = ev.procedure_runs as unknown as { number: string } | null
+  const sys = ev.systems
+  const run = ev.procedure_runs
   return {
     filename: `${project.code}-${ev.number.replace(/[^a-zA-Z0-9-]/g, '_')}.pdf`,
     input: {
@@ -510,7 +506,7 @@ export async function loadEventPdf(db: Db, x: StartupCommon & { eventId: string 
       number: ev.number, kind: ev.kind as 'milestone' | 'free', milestone: ev.milestone, category: ev.category, status: ev.status,
       title: ev.title, description: ev.description, occurredAt: ev.occurred_at,
       system: sys ? `${sys.code} — ${sys.name}` : null, run: run?.number ?? null,
-      tags: (tags ?? []).map(r => (r.tags as unknown as { tag_number: string } | null)?.tag_number).filter((v): v is string => !!v).sort(),
+      tags: (tags ?? []).map(r => (r.tags)?.tag_number).filter((v): v is string => !!v).sort(),
       recordedBy: name(ev.recorded_by), recordedAt: ev.recorded_at,
       witnessCapacity: ev.witness_capacity, witnessBy: name(ev.witness_by), witnessAt: ev.witness_at,
       voidedBy: name(ev.voided_by), voidedAt: ev.voided_at, voidReason: ev.void_reason, backdateReason: ev.backdate_reason,

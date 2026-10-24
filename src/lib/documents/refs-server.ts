@@ -4,11 +4,6 @@ import type { DocumentOption, DocumentRef } from '@/components/documents/Documen
 import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
 import type { ReferenceKind } from './catalog'
 
-// Carga, para un ITR o una revisión de procedimiento, sus referencias a documentos (con revisión usada vs
-// vigente) y los documentos del proyecto que se pueden referenciar (fase 8, sesión 1).
-
-type Rev = { id: string; rev: string; status?: string } | null
-
 const DOC_SELECT = 'id, number, title, current_revision_id, current:document_revisions!documents_current_revision_fkey(id, rev, status)'
 const IN_CHUNK = 200
 
@@ -35,24 +30,24 @@ export async function loadDocumentRefs(
   }
   const refs: DocumentRef[] = (rows ?? []).map(r => {
     const d = byId.get(r.document_id)
-    const cur = (d?.current as unknown as Rev) ?? null
+    const cur = (d?.current) ?? null
     return {
       id: r.id,
       document_id: r.document_id,
       number: d?.number ?? '—',
       title: d?.title ?? '',
-      used_rev: (r.used as unknown as Rev)?.rev ?? '—',
-      used_status: (r.used as unknown as Rev)?.status ?? null,
+      used_rev: (r.used)?.rev ?? '—',
+      used_status: (r.used)?.status ?? null,
       current_rev: cur?.rev ?? null,
       outdated: !!d?.current_revision_id && d.current_revision_id !== r.revision_id,
       revalidated_at: r.revalidated_at,
-      revalidated_from_rev: (r.from as unknown as Rev)?.rev ?? null,
+      revalidated_from_rev: (r.from)?.rev ?? null,
       revalidation_reason: r.revalidation_reason,
     }
   }).sort((a, b) => a.number.localeCompare(b.number))
   const options: DocumentOption[] = docs.map(d => ({
-    id: d.id, number: d.number, title: d.title, current_rev: (d.current as unknown as Rev)?.rev ?? null,
-    current_status: (d.current as unknown as Rev)?.status ?? null,
+    id: d.id, number: d.number, title: d.title, current_rev: (d.current)?.rev ?? null,
+    current_status: (d.current)?.status ?? null,
   }))
   return { refs, options }
 }

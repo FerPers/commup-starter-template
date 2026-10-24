@@ -21,7 +21,7 @@ export default async function DailyReportsPage({ params }: { params: Promise<{ i
   ])
   const names: Record<string, string> = {}
   for (const m of members ?? []) {
-    const p = m.profiles as unknown as { full_name: string | null } | null
+    const p = m.profiles
     if (p?.full_name) names[m.user_id] = p.full_name
   }
 
@@ -31,7 +31,7 @@ export default async function DailyReportsPage({ params }: { params: Promise<{ i
       reports={(reports ?? []).map(r => ({
         id: r.id, number: r.number, date: r.report_date, revision: r.revision, status: r.status as 'draft' | 'issued' | 'superseded',
         issuedAt: r.issued_at, issuedBy: r.issued_by ? names[r.issued_by] ?? null : null, updatedAt: r.updated_at,
-        area: (r.areas as unknown as { code: string } | null)?.code ?? null, hasSummary: !!r.summary,
+        area: (r.areas)?.code ?? null, hasSummary: !!r.summary,
       }))}
       areas={areas ?? []}
       canCreate={ctx.role !== 'client'}

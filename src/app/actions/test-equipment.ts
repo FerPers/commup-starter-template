@@ -3,6 +3,7 @@
 import { getTranslations } from 'next-intl/server'
 import { revalidatePath } from 'next/cache'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '@/types/supabase.generated'
 import { ADMIN_ROLES, EDITOR_ROLES } from '@/lib/auth/permissions'
 import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
 import { TEST_EQUIPMENT_KINDS, type TestEquipmentKind } from '@/lib/test-equipment/calibration'
@@ -111,7 +112,7 @@ export const getTestEquipmentCertificateUrl = withAuthOnly(
 
 // ── Uso en el ITR ────────────────────────────────────────────────────────
 
-async function itrInProject(ctx: { supabase: SupabaseClient }, itrId: string, projectId: string) {
+async function itrInProject(ctx: { supabase: SupabaseClient<Database> }, itrId: string, projectId: string) {
   const { data } = await ctx.supabase.from('itrs').select('id, tag_id').eq('id', itrId).eq('project_id', projectId).maybeSingle()
   return data as { id: string; tag_id: string } | null
 }

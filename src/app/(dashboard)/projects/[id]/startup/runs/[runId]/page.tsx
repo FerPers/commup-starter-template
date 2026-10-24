@@ -28,16 +28,16 @@ export default async function RunPage({ params }: { params: Promise<{ id: string
   ])
   const names: Record<string, string> = {}
   for (const m of members ?? []) {
-    const p = m.profiles as unknown as { full_name: string | null } | null
+    const p = m.profiles
     if (p?.full_name) names[m.user_id] = p.full_name
   }
-  const proc = run.procedures as unknown as { id: string; number: string; title: string; current_revision_id: string | null }
+  const proc = run.procedures
   // S25b (E-32): ¿la revisión que se ejecuta fue reemplazada por otra aprobada?
   const { data: currentRev } = proc.current_revision_id && proc.current_revision_id !== run.revision_id
     ? await supabase.from('procedure_revisions').select('rev, status').eq('id', proc.current_revision_id).maybeSingle()
     : { data: null }
-  const rev = run.procedure_revisions as unknown as { rev: number; sections: Record<string, string> }
-  const sys = run.systems as unknown as { code: string; name: string } | null
+  const rev = run.procedure_revisions as { rev: number; sections: Record<string, string> }
+  const sys = run.systems
 
   return (
     <RunView
@@ -50,10 +50,7 @@ export default async function RunPage({ params }: { params: Promise<{ id: string
         supersededBy: currentRev?.status === 'approved' ? currentRev.rev : null,
       }}
       steps={(steps ?? []).map(s => {
-        const st = s.procedure_steps as unknown as {
-          action: string; responsible: string | null; expected_value: string | null; expected_min: number | null; expected_max: number | null; expected_unit: string | null
-          is_hold_point: boolean; hold_capacity: string | null; stop_criteria: string | null; tags: { tag_number: string } | null
-        }
+        const st = s.procedure_steps
         return {
           stepId: s.step_id, ord: s.ord, status: s.status as RunStepStatus, actual: s.actual_value, comment: s.comment,
           doneBy: s.done_by, doneAt: s.done_at, releasedBy: s.released_by, releasedAt: s.released_at, releaseComment: s.release_comment,

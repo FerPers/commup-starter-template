@@ -59,7 +59,7 @@ export async function loadPdfBranding(db: Db, projectId: string): Promise<PdfBra
   const { data } = await db.from('projects')
     .select('client, client_logo_url, organizations(name, logo_url)')
     .eq('id', projectId).maybeSingle()
-  const org = data?.organizations as unknown as { name: string; logo_url: string | null } | null
+  const org = data?.organizations
   const [orgLogo, clientLogo] = await Promise.all([fetchLogo(org?.logo_url), fetchLogo(data?.client_logo_url)])
   return { orgName: org?.name ?? '', orgLogo, clientName: data?.client ?? null, clientLogo }
 }

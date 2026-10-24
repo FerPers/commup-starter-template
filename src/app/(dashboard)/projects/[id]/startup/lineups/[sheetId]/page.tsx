@@ -36,15 +36,15 @@ export default async function LineupPage({ params }: { params: Promise<{ id: str
   type Reg = { id: string; number: string; kind: string; status: string; title: string }
   const regs = new Map<string, Reg>()
   for (const r of (bySystem ?? []) as Reg[]) regs.set(r.id, r)
-  for (const r of (byTag ?? []) as unknown as { register_items: Reg }[]) regs.set(r.register_items.id, r.register_items)
+  for (const r of (byTag ?? [])) regs.set(r.register_items.id, r.register_items)
 
   const names: Record<string, string> = {}
   for (const m of members ?? []) {
-    const p = m.profiles as unknown as { full_name: string | null } | null
+    const p = m.profiles
     if (p?.full_name) names[m.user_id] = p.full_name
   }
-  const sys = sheet.systems as unknown as { code: string; name: string } | null
-  const proc = sheet.procedures as unknown as { id: string; number: string; title: string } | null
+  const sys = sheet.systems
+  const proc = sheet.procedures
 
   return (
     <LineupView
@@ -55,7 +55,7 @@ export default async function LineupPage({ params }: { params: Promise<{ id: str
         issuedAt: sheet.issued_at, hash: sheet.content_hash, stale: !!stale, createdBy: sheet.created_by,
       }}
       items={(items ?? []).map(i => {
-        const tag = i.tags as unknown as { tag_number: string; description: string | null; pid_drawing: string | null } | null
+        const tag = i.tags
         return {
           id: i.id, ord: i.ord, tag_id: i.tag_id, tag_number: tag?.tag_number ?? null, description: tag?.description ?? null, label: i.label ?? '',
           required_position: i.required_position as ValvePosition | null, required_note: i.required_note ?? '', is_critical: i.is_critical,

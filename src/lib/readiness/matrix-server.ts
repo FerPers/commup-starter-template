@@ -9,6 +9,7 @@ import { fetchAllRows } from '@/lib/list/fetch-all'
 import { gatePolicy, type MatrixGate } from './gates'
 import { dependencyBlocks, type SystemType } from '@/lib/systems/dependencies'
 import type { MatrixRow } from './matrix'
+import { fromJson } from '@/lib/supabase/casts'
 
 export type MatrixData = {
   rows: MatrixRow[]
@@ -50,7 +51,7 @@ export async function loadMatrix(supabase: SupabaseClient<Database>, projectId: 
 
   const rows: MatrixRow[] = (gates.data ?? []).map(r => ({
     system_id: r.system_id, system_code: r.system_code, system_name: r.system_name, area_code: r.area_code, area_name: r.area_name,
-    gates: (r.gates ?? []) as unknown as MatrixGate[],
+    gates: fromJson<MatrixGate[]>((r.gates ?? [])),
   }))
   const gatesBySystem = new Map(rows.map(r => [r.system_id, r.gates]))
   const codes = new Map((systems.data ?? []).map(s => [s.id, s.code]))

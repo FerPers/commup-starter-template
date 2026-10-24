@@ -31,9 +31,7 @@ export default async function MatrixPage() {
       .order('order_index'),
     listMatrix(),
   ])
-
-  type RawTpl = { id: string; code: string; title: string; disciplines: { code: string } | null; project_phases: { code: string; order_index: number } | null }
-  const templateOptions = ((templates ?? []) as unknown as RawTpl[]).map(t => ({
+  const templateOptions = ((templates ?? [])).map(t => ({
     id: t.id,
     code: t.code,
     title: t.title,

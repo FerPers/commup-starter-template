@@ -10,7 +10,7 @@ import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { withAuth } from '@/lib/auth/withAuth'
 import { logActivity } from '@/lib/log-activity'
 import { SIGNAL_EDITABLE, type SignalEditable } from '@/lib/signals/editable'
-import type { TablesUpdate } from '@/types/supabase.generated'
+import type { Json, TablesUpdate } from '@/types/supabase.generated'
 
 export const updateSignalChain = withAuth(
   { role: EDITOR_ROLES, guards: [{ resource: 'project', field: 'projectId' }] },
@@ -47,7 +47,8 @@ export const updateSignalChain = withAuth(
     const { error } = await ctx.supabase.from('signals').update(patch as TablesUpdate<'signals'>).eq('id', input.signalId)
     if (error) return { error: error.message }
 
-    const prev = before as unknown as Record<string, unknown>
+    // eslint-disable-next-line no-restricted-syntax -- G-18: select armado con SIGNAL_EDITABLE (supabase-js no lo puede tipar)
+    const prev = before as unknown as Record<string, Json>
     const changed = Object.fromEntries(Object.entries(patch).filter(([k, v]) => (prev[k] ?? null) !== v).map(([k, v]) => [k, { from: prev[k] ?? null, to: v }]))
     if (Object.keys(changed).length) {
       await logActivity(ctx.supabase, {

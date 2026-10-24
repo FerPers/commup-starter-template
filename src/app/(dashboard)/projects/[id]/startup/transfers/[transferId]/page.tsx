@@ -27,10 +27,10 @@ export default async function OwnershipTransferPage({ params }: { params: Promis
   ])
   const names: Record<string, string> = {}
   for (const m of members ?? []) {
-    const p = m.profiles as unknown as { full_name: string | null } | null
+    const p = m.profiles
     if (p?.full_name) names[m.user_id] = p.full_name
   }
-  const sys = tr.systems as unknown as { code: string; name: string } | null
+  const sys = tr.systems
 
   return (
     <TransferView

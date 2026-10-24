@@ -76,7 +76,7 @@ export const bulkDeletePunches = withAuthOnly(
     if (!found || found.length === 0) return { deleted: 0 }
 
     // C-27 (S08): solo los que son errores de carga (abiertos, sin evidencia ni vínculos); el resto se cancela.
-    const blocked = found.filter(r => punchDeleteBlocker({ ...r, attachments: (r.punch_attachments as unknown as { count: number }[])[0]?.count ?? 0 }))
+    const blocked = found.filter(r => punchDeleteBlocker({ ...r, attachments: (r.punch_attachments)[0]?.count ?? 0 }))
     if (blocked.length) {
       return { deleted: 0, error: t('bulk.deleteBlocked', { count: blocked.length, list: `${blocked.slice(0, 5).map(r => r.punch_number).join(', ')}${blocked.length > 5 ? '…' : ''}` }) }
     }

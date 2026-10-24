@@ -12,6 +12,7 @@ import {
   notifyPssrApproved,
   notifyPssrRejected,
 } from '@/lib/notifications/pssr'
+import { sqlArg } from '@/lib/supabase/casts'
 
 // Q4 2026-06-11: convertido del contrato throw (shim requireCtx) al contrato
 // { error } estándar del wrapper withAuth. Los callers (PssrReviewForm,
@@ -247,7 +248,7 @@ export const updatePssrReviewNotes = withAuth(
   { guards: [{ resource: 'project', field: 'projectId' }] },
   async (ctx, input: { reviewId: string; projectId: string; notes: string }): Promise<{ error?: string }> => {
     const { error } = await ctx.supabase.rpc('update_pssr_meta', {
-      p_review_id: input.reviewId, p_set_notes: true, p_notes: input.notes, p_set_due: false, p_due: null as unknown as string,
+      p_review_id: input.reviewId, p_set_notes: true, p_notes: input.notes, p_set_due: false, p_due: sqlArg<string>(null),
     })
     if (error) return { error: error.message }
     revalidatePath(`/projects/${input.projectId}/pssr/${input.reviewId}`)
@@ -260,7 +261,7 @@ export const updatePssrReviewDueDate = withAuth(
   { role: EDITOR_ROLES, guards: [{ resource: 'project', field: 'projectId' }] },
   async (ctx, input: { reviewId: string; projectId: string; dueDate: string | null }): Promise<{ error?: string }> => {
     const { error } = await ctx.supabase.rpc('update_pssr_meta', {
-      p_review_id: input.reviewId, p_set_notes: false, p_notes: null as unknown as string, p_set_due: true, p_due: input.dueDate as string,
+      p_review_id: input.reviewId, p_set_notes: false, p_notes: sqlArg<string>(null), p_set_due: true, p_due: input.dueDate as string,
     })
     if (error) return { error: error.message }
     revalidatePath(`/projects/${input.projectId}/pssr/${input.reviewId}`)
@@ -286,7 +287,7 @@ export const submitPssrForApproval = withAuth(
       .eq('id', input.reviewId)
       .single()
     if (review) {
-      const sys = (review.systems as unknown) as { code: string | null; name: string | null } | null
+      const sys = review.systems
       await notifyPssrSubmittedForApproval(createAdminClient(), {
         orgId: review.org_id,
         submitterUserId: ctx.userId,
@@ -342,7 +343,7 @@ export const approvePssrAndIssueRfsu = withAuth(
       ctx.supabase.from('pssr_reviews').select('review_number, created_by, systems(code, name)').eq('id', input.reviewId).single(),
     ])
     if (cert && review) {
-      const system = review.systems as unknown as { code: string | null; name: string | null } | null
+      const system = review.systems
       await notifyPssrApproved(createAdminClient(), {
         orgId: ctx.orgId,
         approverUserId: ctx.userId,
@@ -378,7 +379,7 @@ export const rejectPssrReview = withAuth(
       .eq('id', input.reviewId)
       .single()
     if (review) {
-      const sys = (review.systems as unknown) as { code: string | null; name: string | null } | null
+      const sys = review.systems
       await notifyPssrRejected(createAdminClient(), {
         orgId: review.org_id,
         rejecterUserId: ctx.userId,

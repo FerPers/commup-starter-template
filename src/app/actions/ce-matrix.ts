@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { getTranslations } from 'next-intl/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '@/types/supabase.generated'
 import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { withAuth } from '@/lib/auth/withAuth'
 import { CE_ACTIONS, CE_VOTINGS, normalizeCeCode, parseDelay, type CeAction, type CeVoting } from '@/lib/ce/matrix'
@@ -19,7 +20,7 @@ function revalidate(projectId: string, matrixId?: string) {
   if (matrixId) revalidatePath(`/projects/${projectId}/ce-matrices/${matrixId}`)
 }
 
-async function matrixInProject(supabase: SupabaseClient, projectId: string, matrixId: string) {
+async function matrixInProject(supabase: SupabaseClient<Database>, projectId: string, matrixId: string) {
   const { data } = await supabase.from('ce_matrices').select('id').eq('id', matrixId).eq('project_id', projectId).maybeSingle()
   return !!data
 }
@@ -28,7 +29,7 @@ async function matrixInProject(supabase: SupabaseClient, projectId: string, matr
 const ilikeLiteral = (v: string) => v.replace(/[\\%_]/g, c => `\\${c}`)
 
 /** Tag por número dentro del proyecto (vacío = sin tag). S13 (F-15/F-33): por la clave normalizada `tag_key`. */
-async function resolveTag(supabase: SupabaseClient, projectId: string, tagNumber: string | null | undefined): Promise<{ id: string | null } | { error: string }> {
+async function resolveTag(supabase: SupabaseClient<Database>, projectId: string, tagNumber: string | null | undefined): Promise<{ id: string | null } | { error: string }> {
   const t = await getTranslations('ActionErrors')
   const number = txt(tagNumber, 100)
   if (!number) return { id: null }
@@ -41,7 +42,7 @@ async function resolveTag(supabase: SupabaseClient, projectId: string, tagNumber
 }
 
 /** Señal por tag de señal; si hay tag, dentro de ese instrumento. */
-async function resolveSignal(supabase: SupabaseClient, projectId: string, tagId: string | null, signalTag: string | null | undefined): Promise<{ id: string | null } | { error: string }> {
+async function resolveSignal(supabase: SupabaseClient<Database>, projectId: string, tagId: string | null, signalTag: string | null | undefined): Promise<{ id: string | null } | { error: string }> {
   const t = await getTranslations('ActionErrors')
   const name = txt(signalTag, 100)
   if (!name) return { id: null }

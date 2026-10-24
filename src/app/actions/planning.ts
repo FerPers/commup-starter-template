@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { getTranslations } from 'next-intl/server'
 import { ADMIN_ROLES } from '@/lib/auth/permissions'
 import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
+import { sqlArg } from '@/lib/supabase/casts'
 
 // Planificación por readiness (fase 5 plan readiness, sesión 2). Escritura por RPC SECURITY DEFINER
 // (migración 20261017150000): forecast (cualquier no-client), compromiso (líderes+, motivo al cambiar)
@@ -28,7 +29,7 @@ function badDate(t: Awaited<ReturnType<typeof getTranslations>>, date: string | 
 }
 
 // Los tipos generados no admiten null en p_date, aunque SQL sí (null = quitar la fecha).
-const nullableDate = (v: string | null) => v as unknown as string
+const nullableDate = (v: string | null) => sqlArg<string>(v)
 
 export const setGateForecast = withAuth(
   { guards: systemGuards },

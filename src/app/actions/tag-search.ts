@@ -30,7 +30,7 @@ export const searchProjectTags = withAuth(
     if (search) query = query.or(`tag_number.ilike.%${search}%,description.ilike.%${search}%`)
     const { data, error } = await query
     if (error) return { error: error.message }
-    return { tags: (data ?? []) as unknown as TagSearchHit[] }
+    return { tags: (data ?? []) }
   },
 )
 
@@ -41,12 +41,6 @@ export type PidTagHit = {
 }
 
 const PID_TAG_PAGE = 30
-
-type PidTagRow = {
-  id: string; tag_number: string; description: string | null; status: string
-  disciplines: { id: string; code: string; name: string; color: string } | null
-  subsystems: { systems: { id: string; code: string; name: string; color: string } | null } | null
-}
 
 /**
  * P1: selector de tags del editor de pines del P&ID. Antes la página cargaba todos los tags del proyecto (hasta
@@ -70,7 +64,7 @@ export const searchPidTags = withAuth(
     if (search) query = query.or(`tag_number.ilike.%${search}%,description.ilike.%${search}%`)
     const { data, error } = await query
     if (error) return { error: error.message }
-    const rows = (data ?? []) as unknown as PidTagRow[]
+    const rows = (data ?? [])
     return {
       hasMore: rows.length > PID_TAG_PAGE,
       tags: rows.slice(0, PID_TAG_PAGE).map(t => ({

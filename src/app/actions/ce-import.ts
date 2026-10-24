@@ -4,6 +4,7 @@ import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod'
 import { revalidatePath } from 'next/cache'
 import { getTranslations } from 'next-intl/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '@/types/supabase.generated'
 import { aiNotConfigured, isAiConfigured, type createClaudeClient } from '@/lib/ai/claude'
 import { runAi } from '@/lib/ai/run'
 import { checkProjectAccess } from '@/lib/auth/access'
@@ -45,7 +46,7 @@ export type ExtractResult = {
  * (S13, F-15: se busca por la columna generada `tags.tag_key`, no por variantes del texto). Una clave que
  * corresponde a más de un tag queda sin emparejar (ámbar) en lugar de elegir uno al azar.
  */
-async function matchingTags(supabase: SupabaseClient, projectId: string, candidates: string[]): Promise<Map<string, string>> {
+async function matchingTags(supabase: SupabaseClient<Database>, projectId: string, candidates: string[]): Promise<Map<string, string>> {
   const keys = [...new Set(candidates.map(normalizeTag).filter(Boolean))]
   const out = new Map<string, string>()
   const ambiguous = new Set<string>()

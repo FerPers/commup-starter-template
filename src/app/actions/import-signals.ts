@@ -214,7 +214,7 @@ export const importSignals = withAuthOnly(
             .in('signal_tag', chunk.map(c => c.signalTag))
         : { data: [], error: null }
       if (exSigErr) return { error: exSigErr.message }
-      const existingByKey = new Map(((existingSigs ?? []) as unknown as Array<Record<string, unknown> & { tag_id: string; signal_tag: string }>)
+      const existingByKey = new Map(((existingSigs ?? []) as Array<Record<string, unknown> & { tag_id: string; signal_tag: string }>)
         .map(s => [`${s.tag_id}|${s.signal_tag}`, s]))
 
       type SigPending = { payload: TablesInsert<'signals'>; index: number; tag: string; isNew: boolean }
@@ -231,6 +231,7 @@ export const importSignals = withAuthOnly(
         }
         const existing = existingByKey.get(`${tagId}|${c.signalTag}`) ?? null
         const loopId = loopIdMap.get(normalizeCode(c.row.loop_number ?? '', '')) ?? null
+        // eslint-disable-next-line no-restricted-syntax -- G-18: planSignal recorre la fila por nombre de columna (SignalRow no tiene firma de índice)
         const plan = planSignal(c.row as unknown as Record<string, unknown> & { signal_tag: string }, present, existing, { tagId, signalType: c.signalType, loopId })
         sigs.push({ index: c.index, tag: c.signalTag, payload: plan.payload as TablesInsert<'signals'>, isNew: !existing })
       }

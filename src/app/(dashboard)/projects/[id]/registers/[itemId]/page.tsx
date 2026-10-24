@@ -48,7 +48,7 @@ export default async function RegisterDetailPage({ params }: { params: Promise<{
     const p = m.profiles as { full_name: string | null } | null
     if (p?.full_name) names[m.user_id] = p.full_name
   }
-  const type = item.register_types as unknown as { blocks_gate_id: string | null; readiness_gates: { code: string; name: string } | null } | null
+  const type = item.register_types
 
   const detail: RegisterDetail = {
     id: item.id,

@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '@/types/supabase.generated'
 
 export type ItrAssignmentChange = {
   itrId: string
@@ -17,7 +18,7 @@ const ROLE_LABEL_ES: Record<string, string> = {
 }
 
 export async function notifyItrAssignmentChanged(
-  admin: SupabaseClient,
+  admin: SupabaseClient<Database>,
   orgId: string,
   actorUserId: string,
   changes: ItrAssignmentChange[],

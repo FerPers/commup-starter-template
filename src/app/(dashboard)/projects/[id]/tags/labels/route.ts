@@ -39,7 +39,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 
   const t = await getTranslations('Tags')
   const labels: RegisterLabel[] = (tags ?? []).map(tag => {
-    const ss = tag.subsystems as unknown as { code: string; systems: { code: string } | null } | null
+    const ss = tag.subsystems
     return {
       number: tag.tag_number,
       kindLabel: t('labels.kind'),
