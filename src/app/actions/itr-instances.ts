@@ -5,7 +5,7 @@ import { evaluateTable, parseSourceRows } from '@/lib/itr/table'
 import { evaluateSelectionOutcome } from '@/lib/itr/selection-outcome'
 import { EDITOR_ROLES, PRIVILEGED_ROLES } from '@/lib/auth/permissions'
 import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
-import { checkProjectAccess } from '@/lib/auth/access'
+import { checkProjectAccess, notFound } from '@/lib/auth/access'
 import { accessError, assignmentDbError } from '@/lib/i18n/action-errors'
 import { getTranslations } from 'next-intl/server'
 import { assignmentIssue, requiredForTemplate, type SigningRole } from '@/lib/itr/signatures'
@@ -185,20 +185,38 @@ export const upsertResponse = withAuth(
        */
       expectedRespondedAt?: string | null
     },
-  ): Promise<{ error?: string; conflict?: ResponseConflict; respondedAt?: string }> => {
+  ): Promise<{
+    error?: string
+    conflict?: ResponseConflict
+    respondedAt?: string
+    /** C-19: lo que la BD dejó tras guardar, para que la pantalla no recargue la página entera. */
+    isPassed?: boolean | null
+    status?: string
+    progressPct?: number
+  }> => {
     const t = await getTranslations('ActionErrors')
     const { itrId, itemId } = input
 
+    // B-15: todas las lecturas en un solo viaje (antes eran seis secuenciales); nada se escribe hasta validar.
+    const responseCols = 'id, value_option, value_text, value_numeric, value_bool, remarks, is_passed, responded_at, responded_by'
+    const [itrRes, signaturesRes, itemRes, existingRes, assignmentRes] = await Promise.all([
+      ctx.supabase.from('itrs').select('status, template_id, project_id, source_rows, projects!inner(org_id)').eq('id', itrId).single(),
+      ctx.supabase.from('itr_signatures').select('id').eq('itr_id', itrId).limit(1),
+      ctx.supabase.from('itr_template_items')
+        .select('template_id, item_type, acceptance_min, acceptance_max, options, option_outcomes')
+        .eq('id', itemId).single(),
+      ctx.supabase.from('itr_responses').select(responseCols).eq('itr_id', itrId).eq('item_id', itemId).maybeSingle(),
+      EDITOR_ROLES.includes(ctx.role)
+        ? Promise.resolve({ data: { id: 'editor' } })
+        : ctx.supabase.from('itr_assignments').select('id').eq('itr_id', itrId).eq('role', 'executor').eq('user_id', ctx.userId).maybeSingle(),
+    ])
+
     // Guard: ITR aprobado es inmutable. Sin este chequeo, upsertResponse recalcula
     // status al final y pisaría 'approved' con 'in_progress'/'completed' (bug ses15).
-    const { data: itrRow, error: itrReadError } = await ctx.supabase
-      .from('itrs')
-      .select('status, template_id, project_id, source_rows')
-      .eq('id', itrId)
-      .single()
-    if (itrReadError || !itrRow) return { error: t('itrInstances.itrNotAccessible') }
-    const access = await checkProjectAccess(ctx.supabase, ctx.orgId, itrRow.project_id)
-    if (!access.ok) return { error: await accessError(access) }
+    const itrRow = itrRes.data
+    if (itrRes.error || !itrRow) return { error: t('itrInstances.itrNotAccessible') }
+    // Mismo guard que checkProjectAccess, embebido en la lectura del ITR.
+    if (itrRow.projects?.org_id !== ctx.orgId) return { error: await accessError(notFound('project')) }
     const templateId = itrRow.template_id
     const sourceRows = parseSourceRows(itrRow.source_rows)
     if (input.templateId !== templateId) {
@@ -207,21 +225,15 @@ export const upsertResponse = withAuth(
     if (itrRow.status === 'approved') {
       return { error: t('itrInstances.itrApproved') }
     }
-    const captureError = await captureBlocker(ctx, itrId)
-    if (captureError) return { error: captureError }
+    if (!assignmentRes.data) return { error: t('itrInstances.captureNotAssigned') }
 
-    const { data: signedRows, error: signatureReadError } = await ctx.supabase
-      .from('itr_signatures').select('id').eq('itr_id', itrId).limit(1)
-    if (signatureReadError || !signedRows) return { error: t('itrInstances.signatureCheckFailed') }
+    const signedRows = signaturesRes.data
+    if (signaturesRes.error || !signedRows) return { error: t('itrInstances.signatureCheckFailed') }
     if (signedRows.length > 0) return { error: t('itrInstances.itrSigned') }
 
     // Resolve the item independently of the supplied template reference.
-    const { data: item, error: itemReadError } = await ctx.supabase
-      .from('itr_template_items')
-      .select('template_id, item_type, acceptance_min, acceptance_max, options, option_outcomes')
-      .eq('id', itemId)
-      .single()
-    if (itemReadError || !item || item.template_id !== templateId) {
+    const item = itemRes.data
+    if (itemRes.error || !item || item.template_id !== templateId) {
       return { error: t('itrInstances.itemNotInRevision') }
     }
 
@@ -251,14 +263,8 @@ export const upsertResponse = withAuth(
 
     // UPDATE if response exists, INSERT otherwise. We don't use upsert because
     // upsert with partial fields would null-out the missing columns.
-    const { data: existing, error: existingReadError } = await ctx.supabase
-      .from('itr_responses')
-      .select('id, value_option, value_text, value_numeric, value_bool, remarks, is_passed, responded_at, responded_by')
-      .eq('itr_id', itrId)
-      .eq('item_id', itemId)
-      .maybeSingle()
-
-    if (existingReadError) return { error: t('itrInstances.responseCheckFailed') }
+    const existing = existingRes.data
+    if (existingRes.error) return { error: t('itrInstances.responseCheckFailed') }
     if (item.item_type === 'continuity') {
       const result = evaluateContinuity('valueText' in input ? input.valueText : existing?.value_text)
       if (!result.data) return { error: t('itrInstances.continuityInvalid') }
@@ -285,27 +291,28 @@ export const upsertResponse = withAuth(
       remarks: row.remarks, isPassed: row.is_passed,
     } })
     const reread = async () => (await ctx.supabase.from('itr_responses')
-      .select('id, value_option, value_text, value_numeric, value_bool, remarks, is_passed, responded_at, responded_by')
-      .eq('itr_id', itrId).eq('item_id', itemId).maybeSingle()).data
+      .select(responseCols).eq('itr_id', itrId).eq('item_id', itemId).maybeSingle()).data
 
     let respondedAt: string | null = null
+    let isPassed: boolean | null = null
     if (existing) {
       if (checkVersion && input.expectedRespondedAt === null) return conflictFrom(existing) // alguien la creó después
       let q = ctx.supabase.from('itr_responses').update(patch).eq('id', existing.id)
       // Compare-and-set en el mismo UPDATE: si otra escritura cambió la fila, no toca nada.
       if (checkVersion) q = q.eq('responded_at', input.expectedRespondedAt as string)
-      const { data: written, error } = await q.select('responded_at')
+      const { data: written, error } = await q.select('responded_at, is_passed')
       if (error) return { error: error.message }
       if (checkVersion && !written?.length) {
         const now = await reread()
         return now ? conflictFrom(now) : { error: t('itrInstances.responseGone') }
       }
       respondedAt = written?.[0]?.responded_at ?? null
+      isPassed = written?.[0]?.is_passed ?? null
     } else {
       const { data: written, error } = await ctx.supabase
         .from('itr_responses')
         .insert({ itr_id: itrId, item_id: itemId, ...patch })
-        .select('responded_at')
+        .select('responded_at, is_passed')
         .single()
       if (error) {
         // Otra escritura creó la fila entre la lectura y el insert (UNIQUE itr_id, item_id).
@@ -316,14 +323,21 @@ export const upsertResponse = withAuth(
         return { error: error.message }
       }
       respondedAt = written?.responded_at ?? null
+      isPassed = written?.is_passed ?? null
     }
 
     // S05 (C-34, D7): el estado y el avance los recalcula la BD desde el contenido (evaluate_itr_capture);
     // la RLS y guard_itr_derived ya no dejan escribirlos desde aquí.
-    const { error: progressError } = await ctx.supabase.rpc('refresh_itr_status', { p_itr_id: itrId })
+    const { data: refreshed, error: progressError } = await ctx.supabase.rpc('refresh_itr_status', { p_itr_id: itrId })
     if (progressError) return { error: t('itrInstances.progressFailed') }
+    const state = (refreshed ?? {}) as { status?: string; progress_pct?: number | string }
 
-    return respondedAt ? { respondedAt } : {}
+    return {
+      ...(respondedAt ? { respondedAt } : {}),
+      isPassed,
+      ...(state.status ? { status: state.status } : {}),
+      ...(state.progress_pct != null ? { progressPct: Number(state.progress_pct) } : {}),
+    }
   },
 )
 

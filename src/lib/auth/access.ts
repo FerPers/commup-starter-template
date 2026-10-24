@@ -27,7 +27,7 @@ const LABEL: Record<AccessResource, string> = {
   equipment_type: 'Equipment type', tag: 'Tag', template: 'ITR template', phase: 'Phase',
 }
 
-function notFound(resource: AccessResource): AccessFail {
+export function notFound(resource: AccessResource): AccessFail {
   return {
     ok: false,
     error: `${LABEL[resource]} not found or not accessible`,

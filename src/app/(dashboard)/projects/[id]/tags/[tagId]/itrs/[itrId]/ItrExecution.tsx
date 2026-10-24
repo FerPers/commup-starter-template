@@ -103,7 +103,7 @@ export default function ItrExecution({
   const [punchItrItemId, setPunchItrItemId] = useState<string | null>(null)
 
   // ── Autosave + responses optimistas + offline ───────────────────────
-  const { responses, saveResponse, lastSaved, saveError, isPending, isOffline, pendingCount, syncing } =
+  const { responses, saveResponse, lastSaved, saveError, isPending, isOffline, pendingCount, syncing, itrStatus } =
     useItrAutosave(itr)
 
   // Attachments state — keyed by itemId or 'general'. Estado optimista de los
@@ -211,7 +211,7 @@ export default function ItrExecution({
   const template = itr.itr_templates
   const tag = itr.tags
   const phase = itr.project_phases
-  const st = ITR_STATUS_COLORS[itr.status] ?? ITR_STATUS_COLORS.not_started
+  const st = ITR_STATUS_COLORS[itrStatus] ?? ITR_STATUS_COLORS.not_started
 
   // Status + role labels (i18n)
   const STATUS_LABELS: Record<string, string> = {
@@ -398,7 +398,7 @@ export default function ItrExecution({
               ))}
             </div>
             <span style={{ padding: '4px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, background: st.bg, color: ink(st.color), whiteSpace: 'nowrap' }}>
-              {STATUS_LABELS[itr.status] ?? itr.status}
+              {STATUS_LABELS[itrStatus] ?? itrStatus}
             </span>
           </div>
         </div>

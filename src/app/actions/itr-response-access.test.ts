@@ -19,8 +19,11 @@ let items: Result, responses: Result, attachments: Result, signatures: Result, a
 let writes: Array<{ table: string; value: unknown }>
 let rpcs: Array<{ name: string; args: unknown }>
 let rpcError: { message: string } | null
+const refreshed = { status: 'in_progress', progress_pct: 50 }
+// C-19: la acción devuelve lo que dejó la BD (estado, avance, is_passed) para no recargar la página.
+const SAVED = { isPassed: null, status: 'in_progress', progressPct: 50 }
 function database() {
-  return { rpc: async (name: string, args: unknown) => { rpcs.push({ name, args }); return { error: rpcError } }, from(table: string) {
+  return { rpc: async (name: string, args: unknown) => { rpcs.push({ name, args }); return { data: rpcError ? null : refreshed, error: rpcError } }, from(table: string) {
     let mutation = false
     const query = {
       select: () => query, eq: () => query, limit: () => query,
@@ -46,7 +49,7 @@ function database() {
 }
 const input = { itrId: 'itr', itemId: 'item', templateId: 'revision-1', valueText: 'Evidence' }
 beforeEach(() => {
-  itr = { data: { status: 'in_progress', template_id: 'revision-1', project_id: 'project' } }
+  itr = { data: { status: 'in_progress', template_id: 'revision-1', project_id: 'project', projects: { org_id: 'org' } } }
   item = { data: { template_id: 'revision-1', item_type: 'text', acceptance_min: null, acceptance_max: null }, count: 1 }
   project = { data: { id: 'project' } }
   existing = { data: null, count: 0 }
@@ -71,8 +74,8 @@ describe('upsertResponse resolves the authoritative ITR and item before writes',
     expect((await upsertResponse({ ...input, templateId: 'revision-2' })).error).toBeTruthy()
     expect(writes).toEqual([])
   })
-  it('rejects an inaccessible project', async () => {
-    project = { data: null }
+  it('rejects a project of another organization', async () => {
+    itr = { data: { status: 'in_progress', template_id: 'revision-1', project_id: 'project', projects: { org_id: 'other-org' } } }
     expect((await upsertResponse(input)).error).toBeTruthy()
     expect(writes).toEqual([])
   })
@@ -88,12 +91,12 @@ describe('upsertResponse resolves the authoritative ITR and item before writes',
     expect(writes).toEqual([])
   })
   it('preserves the approved ITR guard', async () => {
-    itr = { data: { status: 'approved', template_id: 'revision-1', project_id: 'project' } }
+    itr = { data: { status: 'approved', template_id: 'revision-1', project_id: 'project', projects: { org_id: 'org' } } }
     expect((await upsertResponse(input)).error).toBeTruthy()
     expect(writes).toEqual([])
   })
   it('accepts the assigned historical revision and preserves partial patches', async () => {
-    expect(await upsertResponse({ ...input, valueText: undefined, remarks: 'Review' })).toEqual({})
+    expect(await upsertResponse({ ...input, valueText: undefined, remarks: 'Review' })).toEqual(SAVED)
     expect(writes[0].table).toBe('itr_responses')
     expect(writes[0].value).toMatchObject({ itr_id: 'itr', item_id: 'item', remarks: 'Review' })
     expect(writes[0].value).not.toHaveProperty('value_numeric')
@@ -110,9 +113,13 @@ function answer(id: string, text: string | null, extra = {}) {
 // evaluación del contenido se prueba en src/lib/itr/completion.test.ts y en la BD (tests/db).
 describe('upsertResponse delega el estado en la BD', () => {
   it('no escribe itrs: llama refresh_itr_status después de guardar la respuesta', async () => {
-    expect(await upsertResponse(input)).toEqual({})
+    expect(await upsertResponse(input)).toEqual(SAVED)
     expect(writes.find(w => w.table === 'itrs')).toBeUndefined()
     expect(rpcs).toEqual([{ name: 'refresh_itr_status', args: { p_itr_id: 'itr' } }])
+  })
+  it('B-15: la pertenencia del proyecto viaja embebida en la lectura del ITR (sin consulta aparte)', async () => {
+    project = { data: null }
+    expect(await upsertResponse(input)).toEqual(SAVED)
   })
   it('informa si no se pudo recalcular el avance', async () => {
     rpcError = { message: 'boom' }
@@ -141,7 +148,7 @@ describe('signed content lock and controlled reopening', () => {
 describe('selection outcome authority', () => {
   it('does not trust submitted acceptance for a rejecting option', async () => {
     item = { data: { template_id: 'revision-1', item_type: 'select', options: ['X'], option_outcomes: { X: 'fail' } } }
-    expect(await upsertResponse({ ...input, valueOption: 'X', isPassed: true })).toEqual({})
+    expect(await upsertResponse({ ...input, valueOption: 'X', isPassed: true })).toEqual(SAVED)
     expect(writes[0].value).toMatchObject({ is_passed: false })
   })
   it('rejects a selection not present in the template', async () => {

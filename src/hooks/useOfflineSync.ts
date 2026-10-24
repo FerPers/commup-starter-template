@@ -76,7 +76,7 @@ export function useOfflineSync(itrId = '', templateId = '') {
     itemId: string,
     data: ResponseData,
     expectedRespondedAt: string | null = null,
-  ): Promise<{ error?: string; queued?: boolean; respondedAt?: string }> => {
+  ): Promise<{ error?: string; queued?: boolean; respondedAt?: string; isPassed?: boolean | null; status?: string }> => {
     const now = new Date().toISOString()
     // If already known offline, queue immediately
     if (!navigator.onLine) {

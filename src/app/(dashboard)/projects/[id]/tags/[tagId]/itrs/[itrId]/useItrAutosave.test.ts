@@ -23,7 +23,8 @@ it('persists the next field while a previous request is pending', async () => {
   release({ queued: false })
   await Promise.all(harness.transitions)
   expect(harness.save.mock.calls).toEqual([['text', { valueText: 'test' }, null], ['date', { valueText: '2026-09-09' }, null]])
-  expect(harness.refresh).toHaveBeenCalledTimes(1)
+  // C-19: guardar ya no recarga la página entera.
+  expect(harness.refresh).not.toHaveBeenCalled()
 })
 it('continues saving later fields after a request throws', async () => {
   harness.save.mockRejectedValueOnce(new Error('Network failure')).mockResolvedValue({ queued: false })
@@ -32,4 +33,15 @@ it('continues saving later fields after a request throws', async () => {
   hook.saveResponse('second', { valueText: 'b' })
   await Promise.allSettled(harness.transitions)
   expect(harness.save).toHaveBeenCalledTimes(2)
+})
+it('C-19: no vuelve a guardar lo que ya tiene la casilla', async () => {
+  harness.save.mockResolvedValue({ queued: false })
+  const hook = useItrAutosave({ id: 'itr', template_id: 'template', status: 'in_progress', itr_responses: [
+    { id: 'r', item_id: 'yes', value_text: null, value_numeric: null, value_bool: true, value_option: null, remarks: null, is_passed: null, responded_at: 'v1' },
+  ] } as unknown as ItrData)
+  hook.saveResponse('yes', { valueBool: true, isPassed: null })
+  hook.saveResponse('text', { valueText: 'a' })
+  hook.saveResponse('text', { valueText: 'a' })
+  await Promise.all(harness.transitions)
+  expect(harness.save.mock.calls).toEqual([['text', { valueText: 'a' }, null]])
 })

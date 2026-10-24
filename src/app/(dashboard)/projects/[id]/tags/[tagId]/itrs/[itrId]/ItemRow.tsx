@@ -1,13 +1,12 @@
 'use client'
 
 import { evaluateSelectionOutcome } from '@/lib/itr/selection-outcome'
-import { useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import ContinuityCapture from './ContinuityCapture'
 import TableCapture from './TableCapture'
 import { evaluateTable, type SourceRow } from '@/lib/itr/table'
 import { evaluateContinuity } from '@/lib/itr/continuity'
-import MicAppend from './MicAppend'
+import { DraftInput, DraftTextarea } from './DraftFields'
 import PhotoUpload from './PhotoUpload'
 import { itemDescription } from '@/lib/itr/item-text'
 import { computeIsPassed, type Attachment, type Item, type Response, type SaveData } from './types'
@@ -47,8 +46,6 @@ export default function ItemRow({
 }) {
   const t = useTranslations('ItrExecution')
   const isPassed = response?.is_passed
-  const textRef = useRef<HTMLTextAreaElement | null>(null)
-  const remarksRef = useRef<HTMLTextAreaElement | null>(null)
   // S05 (C-20): un «No» cuenta como respondido solo con observación (evaluate_itr_capture / completion.ts).
   const answeredNo = item.item_type === 'yes_no' && response?.value_bool === false
 
@@ -127,35 +124,27 @@ export default function ItemRow({
       {/* Text input */}
       {item.item_type === 'text' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <textarea
-            ref={textRef}
+          <DraftTextarea
             aria-label={visibleDesc}
             rows={2}
-            defaultValue={response?.value_text ?? ''}
+            saved={response?.value_text ?? ''}
             disabled={!canEdit}
             placeholder={t('item.observationsPlaceholder')}
-            onBlur={e => onSave(item.id, { valueText: e.target.value || null })}
+            onCommit={value => onSave(item.id, { valueText: value || null })}
             style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '7px', fontSize: '16px', fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box' }}
           />
-          <div style={{ alignSelf: 'flex-end' }}>
-            <MicAppend
-              targetRef={textRef}
-              disabled={!canEdit}
-              onCommit={(value) => onSave(item.id, { valueText: value || null })}
-            />
-          </div>
         </div>
       )}
 
       {/* Number input */}
       {item.item_type === 'number' && (
-        <input
+        <DraftInput
           type="number"
           inputMode="decimal"
           aria-label={visibleDesc}
-          defaultValue={response?.value_numeric ?? ''}
+          saved={numberText(response?.value_numeric)}
           disabled={!canEdit}
-          onBlur={e => onSave(item.id, { valueNumeric: e.target.value !== '' ? Number(e.target.value) : null })}
+          onCommit={value => onSave(item.id, { valueNumeric: value !== '' ? Number(value) : null })}
           style={{ minHeight: '44px', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '7px', fontSize: '16px', width: '160px', maxWidth: '100%', boxSizing: 'border-box' }}
         />
       )}
@@ -164,15 +153,15 @@ export default function ItemRow({
       {item.item_type === 'measurement' && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <input
+            <DraftInput
               type="number"
               inputMode="decimal"
               step="any"
               aria-label={visibleDesc}
-              defaultValue={response?.value_numeric ?? ''}
+              saved={numberText(response?.value_numeric)}
               disabled={!canEdit}
-              onBlur={e => {
-                const val = e.target.value !== '' ? Number(e.target.value) : null
+              onCommit={value => {
+                const val = value !== '' ? Number(value) : null
                 const passed = val !== null ? computeIsPassed(val, item.acceptance_min, item.acceptance_max) : null
                 onSave(item.id, { valueNumeric: val, isPassed: passed })
               }}
@@ -212,12 +201,12 @@ export default function ItemRow({
 
       {/* Date */}
       {item.item_type === 'date' && (
-        <input
+        <DraftInput
           type="date"
           aria-label={visibleDesc}
-          defaultValue={response?.value_text ?? ''}
+          saved={response?.value_text ?? ''}
           disabled={!canEdit}
-          onBlur={e => onSave(item.id, { valueText: e.target.value || null })}
+          onCommit={value => onSave(item.id, { valueText: value || null })}
           style={{ minHeight: '44px', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '7px', fontSize: '16px' }}
         />
       )}
@@ -269,25 +258,22 @@ export default function ItemRow({
               {t('item.noNeedsRemarks')}{canPunch ? ` ${t('item.noSuggestPunch')}` : ''}
             </span>
           )}
-          <textarea
-            ref={remarksRef}
+          <DraftTextarea
             aria-label={item.item_type === 'select' ? 'Justificación de no aplica' : undefined}
             rows={1}
-            defaultValue={response?.remarks ?? ''}
+            saved={response?.remarks ?? ''}
             disabled={!canEdit}
             placeholder={t('item.remarksPlaceholder')}
-            onBlur={e => onSave(item.id, { remarks: e.target.value || null })}
+            onCommit={value => onSave(item.id, { remarks: value || null })}
             style={{ width: '100%', padding: '6px 10px', border: `1px solid ${answeredNo && !response?.remarks?.trim() ? 'var(--warning-300)' : 'var(--gray-100)'}`, borderRadius: '6px', fontSize: '12px', fontFamily: 'inherit', resize: 'none', boxSizing: 'border-box', color: 'var(--text-muted)' }}
           />
-          <div style={{ alignSelf: 'flex-end' }}>
-            <MicAppend
-              targetRef={remarksRef}
-              disabled={!canEdit}
-              onCommit={value => onSave(item.id, { remarks: value || null })}
-            />
-          </div>
         </div>
       )}
     </div>
   )
+}
+
+/** Número guardado → texto del campo (null = vacío). */
+function numberText(value: number | null | undefined): string {
+  return value === null || value === undefined ? '' : String(value)
 }

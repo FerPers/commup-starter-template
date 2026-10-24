@@ -2,10 +2,11 @@
 
 // Hook de autosave de la ejecución de ITR (Q2, extraído de ItrExecution.tsx):
 // estado optimista de responses (snake_case, espejo de la fila en DB) + cola
-// offline + re-sync con props tras router.refresh().
+// offline + re-sync con props cuando otra acción recarga la página.
+// C-19: guardar ya no recarga la página entera; la acción devuelve lo que dejó la BD (versión, is_passed,
+// estado y avance) y solo eso se aplica en local.
 
 import { useState, useEffect, useCallback, useRef, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
 import { useOfflineSync } from '@/hooks/useOfflineSync'
 import { getAllQueued, OUTBOX_CHANGED_EVENT } from '@/lib/offline-queue'
 import { currentUserId } from '@/lib/sync/owner'
@@ -13,8 +14,13 @@ import { sendableBy } from '@/lib/sync/ownership'
 import { overlayQueued } from '@/lib/sync/response-utils'
 import type { ItrData, Response, SaveData } from './types'
 
+// Campos de un patch y su columna (camelCase de la acción → snake_case de la fila).
+const PATCH_FIELDS = [
+  ['valueText', 'value_text'], ['valueNumeric', 'value_numeric'], ['valueBool', 'value_bool'],
+  ['valueOption', 'value_option'], ['remarks', 'remarks'], ['isPassed', 'is_passed'],
+] as const
+
 export function useItrAutosave(itr: ItrData) {
-  const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
@@ -37,17 +43,27 @@ export function useItrAutosave(itr: ItrData) {
   // Build response lookup by item_id. Re-sync when server data changes after
   // router.refresh() so server-side computed fields (e.g. defensive is_passed)
   // become visible without a hard reload.
-  const [responses, setResponses] = useState<Record<string, Response>>(() => {
+  const [responses, setResponsesState] = useState<Record<string, Response>>(() => {
     const map: Record<string, Response> = {}
     for (const r of itr.itr_responses) map[r.item_id] = r
     return map
   })
+  // Espejo síncrono para decidir en saveResponse si algo cambió (el estado de React llega en el próximo render).
+  const responsesRef = useRef(responses)
+  const setResponses = useCallback((update: (prev: Record<string, Response>) => Record<string, Response>) => {
+    responsesRef.current = update(responsesRef.current)
+    setResponsesState(responsesRef.current)
+  }, [])
   useEffect(() => {
     if (pendingSavesRef.current > 0) return
     const map: Record<string, Response> = {}
     for (const r of itr.itr_responses) map[r.item_id] = r
-    setResponses(map)
-  }, [itr.itr_responses])
+    setResponses(() => map)
+  }, [itr.itr_responses, setResponses])
+
+  // Estado del ITR que devolvió la BD tras el último guardado; vale mientras la página no traiga otro.
+  const [saved, setSaved] = useState<{ base: string; status: string } | null>(null)
+  const itrStatus = saved && saved.base === itr.status ? saved.status : itr.status
 
   // S18 (C-09): al recargar (o al cambiar la bandeja) se superponen las respuestas propias aún encoladas de este
   // ITR, para que quien trabaja sin red vea lo que ya capturó.
@@ -70,19 +86,22 @@ export function useItrAutosave(itr: ItrData) {
     onChange()
     window.addEventListener(OUTBOX_CHANGED_EVENT, onChange)
     return () => { alive = false; window.removeEventListener(OUTBOX_CHANGED_EVENT, onChange) }
-  }, [itr.id, itr.itr_responses])
+  }, [itr.id, itr.itr_responses, setResponses])
+
+  // Guardados en vuelo por casilla: el eco del servidor solo se aplica cuando no queda otro detrás.
+  const pendingByItemRef = useRef<Record<string, number>>({})
 
   const saveResponse = useCallback((itemId: string, data: SaveData) => {
     setSaveError(null)
     // Map camelCase patch → snake_case so state matches DB shape and reads
     // via response?.value_numeric / is_passed work consistently.
     const patch: Partial<Response> = {}
-    if ('valueText'    in data) patch.value_text    = data.valueText ?? null
-    if ('valueNumeric' in data) patch.value_numeric = data.valueNumeric ?? null
-    if ('valueBool'    in data) patch.value_bool    = data.valueBool ?? null
-    if ('valueOption'  in data) patch.value_option  = data.valueOption ?? null
-    if ('remarks'      in data) patch.remarks       = data.remarks ?? null
-    if ('isPassed'     in data) patch.is_passed     = data.isPassed ?? null
+    for (const [key, column] of PATCH_FIELDS) {
+      if (key in data) (patch as Record<string, unknown>)[column] = data[key] ?? null
+    }
+    // C-19: lo que ya está en la casilla no se vuelve a guardar (salir del campo, tocar el mismo «Sí»).
+    const current = responsesRef.current[itemId]
+    if (Object.entries(patch).every(([column, value]) => (current?.[column as keyof Response] ?? null) === value)) return
     setResponses(prev => ({
       ...prev,
       [itemId]: { ...(prev[itemId] ?? { id: '', item_id: itemId, responded_at: null }), ...patch },
@@ -91,23 +110,37 @@ export function useItrAutosave(itr: ItrData) {
     // Refresh only after the queue drains, so earlier server snapshots do not erase
     // optimistic edits that have not reached the server yet.
     pendingSavesRef.current += 1
+    pendingByItemRef.current[itemId] = (pendingByItemRef.current[itemId] ?? 0) + 1
     const task = saveQueueRef.current.then(async () => {
-      let savedOnline = false
       try {
         const res = await saveWithQueue(itemId, data, versionsRef.current[itemId] ?? null)
         if (res.error) { setSaveError(res.error); return }
         if (res.respondedAt) versionsRef.current[itemId] = res.respondedAt
-        if (!res.queued) { savedOnline = true; setLastSaved(new Date()) }
+        if (res.queued) return
+        setLastSaved(new Date())
+        if (res.status) setSaved({ base: itr.status, status: res.status })
+        // Lo que decidió la BD (versión; is_passed de medición, selección, tabla o continuidad), salvo que haya
+        // otro guardado de la misma casilla detrás: ese trae su propio eco.
+        if (pendingByItemRef.current[itemId] === 1) {
+          setResponses(prev => ({
+            ...prev,
+            [itemId]: {
+              ...(prev[itemId] ?? { id: '', item_id: itemId, responded_at: null }),
+              ...(res.respondedAt ? { responded_at: res.respondedAt } : {}),
+              ...(res.isPassed !== undefined ? { is_passed: res.isPassed } : {}),
+            } as Response,
+          }))
+        }
       } catch (error) {
         setSaveError(error instanceof Error ? error.message : 'No se pudo guardar la respuesta')
       } finally {
         pendingSavesRef.current -= 1
-        if (pendingSavesRef.current === 0 && savedOnline) router.refresh()
+        pendingByItemRef.current[itemId] -= 1
       }
     })
     saveQueueRef.current = task
     startTransition(async () => { await task })
-  }, [saveWithQueue, router])
+  }, [saveWithQueue, setResponses, itr.status])
 
-  return { responses, saveResponse, lastSaved, saveError, isPending, isOffline, pendingCount, syncing }
+  return { responses, saveResponse, lastSaved, saveError, isPending, isOffline, pendingCount, syncing, itrStatus }
 }
