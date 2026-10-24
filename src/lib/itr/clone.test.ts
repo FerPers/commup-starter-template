@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { conditionRemaps, itemInsertRow, localState, templateContentHash, type CloneSectionSource } from './clone'
+import { localState, templateContentHash, type CloneSectionSource } from './clone'
 
 const item = (id: string, order: number, extra: Partial<CloneSectionSource['itr_template_items'][number]> = {}) => ({
   id, item_number: `${order + 1}.0`, description: `Item ${id}`, description_es: null, item_type: 'select', is_required: true,
@@ -39,18 +39,16 @@ describe('templateContentHash', () => {
   })
 })
 
-describe('itemInsertRow / conditionRemaps', () => {
-  it('copies every v2 field and leaves the condition for the second pass', () => {
-    const row = itemInsertRow(item('a', 0, { requires_document: true, description_es_source: 'ai', condition_item_id: 'z', condition_value: 'x' }), 'sec', 'tpl')
-    expect(row).toMatchObject({ section_id: 'sec', template_id: 'tpl', requires_document: true, description_es_source: 'ai', option_outcomes: { Conforme: 'pass', 'No conforme': 'fail' }, condition_item_id: null, condition_value: null })
-    expect(itemInsertRow(item('a', 0, { requires_document: undefined, option_outcomes: undefined }), 's', 't')).toMatchObject({ requires_document: false, option_outcomes: {} })
+describe('templateContentHash: cabecera (A40)', () => {
+  it('cambia si cambian las firmas requeridas o el equipo de prueba', () => {
+    const base = templateContentHash(template(), { required_signatures: ['executor', 'supervisor'], requires_test_equipment: false })
+    expect(templateContentHash(template(), { required_signatures: ['executor', 'supervisor', 'client'], requires_test_equipment: false })).not.toBe(base)
+    expect(templateContentHash(template(), { required_signatures: ['executor', 'supervisor'], requires_test_equipment: true })).not.toBe(base)
   })
-  it('remaps conditions with the id map and drops the ones pointing outside', () => {
-    const sections = template()
-    const map = new Map([['a', 'A'], ['b', 'B'], ['r', 'R']])
-    expect(conditionRemaps(sections, map)).toEqual([{ id: 'B', condition_item_id: 'A', condition_value: 'Conforme' }])
-    sections[0].itr_template_items[1].condition_item_id = 'ghost'
-    expect(conditionRemaps(sections, map)).toEqual([])
+  it('normaliza las firmas: orden y ejecutor implícito no cambian la huella', () => {
+    const a = templateContentHash(template(), { required_signatures: ['supervisor', 'executor'] })
+    expect(templateContentHash(template(), { required_signatures: ['executor', 'supervisor'] })).toBe(a)
+    expect(templateContentHash(template(), { required_signatures: ['supervisor'] })).toBe(a)
   })
 })
 

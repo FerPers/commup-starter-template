@@ -8544,6 +8544,7 @@
       "missingDiscipline": "Discipline «{code}» is missing in the active organization: create it before importing",
       "missingPhase": "Phase «{code}» is missing in the active organization: create it before importing",
       "codeExists": "A template with code «{code}» already exists in this organization. Use «Update» to bring the catalog content as a new revision",
+      "changedWhileImporting": "Template {code} changed while importing: try again.",
       "createFailed": "Could not create the template",
       "sectionCopyFailed": "Could not copy section «{section}»: {detail}",
       "itemsCopyFailed": "Could not copy the items of «{section}»: {detail}",

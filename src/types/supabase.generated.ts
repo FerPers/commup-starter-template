@@ -13492,8 +13492,12 @@ export type Database = {
       clone_itr_template_from_catalog: {
         Args: {
           p_code_suffix?: string
+          p_content_hash?: string
+          p_description?: string
+          p_expected_latest_version?: number
           p_source_template_id: string
           p_target_org_id: string
+          p_update_existing?: boolean
         }
         Returns: Json
       }

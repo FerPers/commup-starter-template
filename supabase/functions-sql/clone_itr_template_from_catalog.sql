@@ -1,6 +1,6 @@
--- fn: public.clone_itr_template_from_catalog(uuid, uuid, text)
+-- fn: public.clone_itr_template_from_catalog(uuid, uuid, text, boolean, integer, text, text)
 -- Canónico (S03). Volcado de prod con scripts/sql/canonical-functions.mjs; no editar sin migración.
-CREATE OR REPLACE FUNCTION public.clone_itr_template_from_catalog(p_source_template_id uuid, p_target_org_id uuid, p_code_suffix text DEFAULT NULL::text)
+CREATE OR REPLACE FUNCTION public.clone_itr_template_from_catalog(p_source_template_id uuid, p_target_org_id uuid, p_code_suffix text DEFAULT NULL::text, p_update_existing boolean DEFAULT false, p_expected_latest_version integer DEFAULT NULL::integer, p_description text DEFAULT NULL::text, p_content_hash text DEFAULT NULL::text)
  RETURNS jsonb
  LANGUAGE plpgsql
  SECURITY DEFINER
@@ -16,29 +16,26 @@ DECLARE
   tgt_phase uuid;
   tgt_eq uuid;
   new_code text;
+  latest integer;
   next_version integer;
-  already public.itr_templates;
-  mode text;
+  kind text;
   new_id uuid;
   sec record;
   new_sec_id uuid;
   it record;
   new_item_id uuid;
   id_map jsonb := '{}'::jsonb;
+  matrix_rows integer := 0;
 BEGIN
-  IF uid IS NULL OR NOT EXISTS (
-    SELECT 1 FROM public.org_members m
-    WHERE m.org_id = p_target_org_id AND m.user_id = uid
-      AND m.role::text IN ('owner','admin','architect','leader')
-  ) THEN RAISE EXCEPTION 'Template editor membership required'; END IF;
+  -- A40: una sola transacción. Plantilla, secciones, ítems, condiciones, filas de la matriz y auditoría quedan
+  -- juntas o no queda nada; un código nuevo se activa al final, con sus ítems ya copiados.
+  IF uid IS NULL OR NOT public.is_org_editor(p_target_org_id) THEN RAISE EXCEPTION 'Template editor membership required' USING ERRCODE = '42501'; END IF;
 
   SELECT * INTO src FROM public.itr_templates WHERE id = p_source_template_id;
   IF NOT FOUND THEN RAISE EXCEPTION 'Source template not found'; END IF;
   IF src.org_id = p_target_org_id THEN RAISE EXCEPTION 'Source template already belongs to the target organization'; END IF;
   -- Visibility mirrors RLS: catalog orgs are public, other orgs require membership.
-  IF NOT public.is_catalog_org(src.org_id) AND NOT EXISTS (
-    SELECT 1 FROM public.org_members m WHERE m.org_id = src.org_id AND m.user_id = uid
-  ) THEN RAISE EXCEPTION 'Source template not found'; END IF;
+  IF NOT public.is_catalog_org(src.org_id) AND NOT src.org_id IN (SELECT public.get_my_org_ids()) THEN RAISE EXCEPTION 'Source template not found'; END IF;
   IF NOT src.is_active THEN RAISE EXCEPTION 'Only the active revision can be imported'; END IF;
 
   SELECT code INTO src_disc_code FROM public.disciplines WHERE id = src.discipline_id;
@@ -57,29 +54,27 @@ BEGIN
 
   new_code := src.code || COALESCE(p_code_suffix, '');
 
-  -- Serialise concurrent imports of the same code into the target.
-  PERFORM 1 FROM public.itr_templates WHERE org_id = p_target_org_id AND code = new_code FOR UPDATE;
+  -- Serialise concurrent imports of the same code into the target (also when the code does not exist yet).
+  PERFORM pg_advisory_xact_lock(hashtextextended(p_target_org_id::text || ':itr_template:' || new_code, 0));
 
-  SELECT * INTO already FROM public.itr_templates
-  WHERE org_id = p_target_org_id AND code = new_code AND source_template_id = src.id
-  ORDER BY is_active DESC, version DESC LIMIT 1;
-  IF FOUND THEN
-    RETURN jsonb_build_object('mode', 'skipped', 'id', already.id, 'code', new_code,
-      'version', already.version, 'is_active', already.is_active,
-      'equipment_type_mapped', src.equipment_type_id IS NULL OR already.equipment_type_id IS NOT NULL);
+  SELECT max(version) INTO latest FROM public.itr_templates WHERE org_id = p_target_org_id AND code = new_code;
+  IF latest IS NOT NULL AND NOT p_update_existing THEN
+    RAISE EXCEPTION 'Template code % already exists in the target organization', new_code USING ERRCODE = 'P0001';
   END IF;
-
-  SELECT COALESCE(max(version), 0) + 1 INTO next_version
-  FROM public.itr_templates WHERE org_id = p_target_org_id AND code = new_code;
-  mode := CASE WHEN next_version = 1 THEN 'created' ELSE 'revision' END;
+  -- Quien llama comparó el contenido con la última revisión que vio; si cambió entretanto, que vuelva a mirar.
+  IF p_expected_latest_version IS DISTINCT FROM latest AND (p_expected_latest_version IS NOT NULL OR latest IS NOT NULL) AND p_update_existing THEN
+    RAISE EXCEPTION 'Template % changed while importing (latest revision %); retry', new_code, COALESCE(latest, 0) USING ERRCODE = 'CU409';
+  END IF;
+  next_version := COALESCE(latest, 0) + 1;
+  kind := CASE WHEN latest IS NULL THEN 'created' ELSE 'revision' END;
 
   INSERT INTO public.itr_templates (
     org_id, discipline_id, equipment_type_id, phase_id, code, title, title_es, description,
     version, is_active, is_global, source_template_id, source_org_id, source_version, imported_at,
-    requires_test_equipment, required_signatures -- S04: la revisión conserva equipos de prueba y firmas
+    requires_test_equipment, required_signatures
   ) VALUES (
-    p_target_org_id, tgt_disc, tgt_eq, tgt_phase, new_code, src.title, src.title_es, src.description,
-    next_version, next_version = 1, false, src.id, src.org_id, src.version, now(),
+    p_target_org_id, tgt_disc, tgt_eq, tgt_phase, new_code, src.title, src.title_es, COALESCE(p_description, src.description),
+    next_version, false, false, src.id, src.org_id, src.version, now(),
     src.requires_test_equipment, src.required_signatures
   ) RETURNING id INTO new_id;
 
@@ -116,13 +111,28 @@ BEGIN
   WHERE o.template_id = src.id AND o.condition_item_id IS NOT NULL
     AND n.id = (id_map ->> o.id::text)::uuid;
 
+  -- A40: un código nuevo trae su matriz equipo × ITR (tipos que existen por código en la org destino);
+  -- una revisión la hereda al activarse.
+  IF kind = 'created' THEN
+    INSERT INTO public.equipment_type_templates (org_id, equipment_type_id, itr_template_id, status, source, confidence, reason, model)
+    SELECT p_target_org_id, te.id, new_id, m.status, m.source, m.confidence, m.reason, m.model
+    FROM public.equipment_type_templates m
+    JOIN public.equipment_types se ON se.id = m.equipment_type_id
+    JOIN public.equipment_types te ON te.org_id = p_target_org_id AND te.code = se.code
+    WHERE m.itr_template_id = src.id
+    ON CONFLICT (org_id, equipment_type_id, itr_template_id) DO NOTHING;
+    GET DIAGNOSTICS matrix_rows = ROW_COUNT;
+    UPDATE public.itr_templates SET is_active = true WHERE id = new_id;
+  END IF;
+
   INSERT INTO public.activity_log (org_id, user_id, entity_type, entity_id, action, payload)
-  VALUES (p_target_org_id, uid, 'itr_template', new_id, 'imported_from_catalog',
-    jsonb_build_object('code', new_code, 'version', next_version, 'mode', mode,
+  VALUES (p_target_org_id, uid, 'itr_template', new_id, 'template_imported',
+    jsonb_build_object('code', new_code, 'version', next_version, 'kind', kind,
       'source_template_id', src.id, 'source_org_id', src.org_id, 'source_version', src.version,
+      'content_hash', p_content_hash, 'matrix_rows', matrix_rows,
       'equipment_type_mapped', src.equipment_type_id IS NULL OR tgt_eq IS NOT NULL));
 
-  RETURN jsonb_build_object('mode', mode, 'id', new_id, 'code', new_code,
-    'version', next_version, 'is_active', next_version = 1,
+  RETURN jsonb_build_object('kind', kind, 'id', new_id, 'code', new_code,
+    'version', next_version, 'is_active', kind = 'created', 'matrix_rows', matrix_rows,
     'equipment_type_mapped', src.equipment_type_id IS NULL OR tgt_eq IS NOT NULL);
 END $function$;

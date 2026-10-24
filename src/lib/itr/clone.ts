@@ -1,7 +1,9 @@
 // Clonación de plantillas ITR entre organizaciones (catálogo → org cliente,
 // DEMO → catálogo). Lógica pura: huella del contenido para saber si una
-// plantilla cambió, filas de inserción sin ids de origen y re-mapeo de
-// condiciones a los ítems copiados. Sin acceso a la base.
+// plantilla cambió. La copia la hace la RPC clone_itr_template_from_catalog
+// (A40, una transacción). Sin acceso a la base.
+
+import { normalizeRequired } from './signatures'
 
 export type CloneItemSource = {
   id: string
@@ -24,6 +26,12 @@ export type CloneItemSource = {
   order_index: number
   condition_item_id?: string | null
   condition_value?: string | null
+}
+
+/** A40: cabecera que también cuenta como contenido (lo que el ITR congela al crearse). */
+export type CloneHeaderSource = {
+  required_signatures?: ReadonlyArray<string> | null
+  requires_test_equipment?: boolean | null
 }
 
 export type CloneSectionSource = {
@@ -58,8 +66,10 @@ function canonical(value: unknown): unknown {
  * Huella del contenido de una plantilla (estructura, textos, tipos, opciones,
  * resultados, unidades, criterios y condiciones), independiente de los ids y
  * de la organización. Dos plantillas con la misma huella son intercambiables.
+ * A40: incluye las firmas requeridas y si exige equipo de prueba; antes una plantilla
+ * que solo cambiaba eso se veía «al día».
  */
-export function templateContentHash(sections: CloneSectionSource[]): string {
+export function templateContentHash(sections: CloneSectionSource[], header: CloneHeaderSource = {}): string {
   const ordered = orderedSections(sections)
   const position = new Map<string, string>()
   ordered.forEach((s, si) => s.itr_template_items.forEach((it, ii) => position.set(it.id, `${si}.${ii}`)))
@@ -72,7 +82,11 @@ export function templateContentHash(sections: CloneSectionSource[]): string {
         : null,
     })),
   }))
-  const text = JSON.stringify(payload)
+  const text = JSON.stringify({
+    signatures: normalizeRequired(header.required_signatures),
+    test_equipment: !!header.requires_test_equipment,
+    sections: payload,
+  })
   // Dos hashes de 32 bits independientes (FNV-1a y djb2) → 16 hex.
   let fnv = 0x811c9dc5, djb = 5381
   for (let i = 0; i < text.length; i++) {
@@ -81,51 +95,6 @@ export function templateContentHash(sections: CloneSectionSource[]): string {
     djb = (Math.imul(djb, 33) + c) >>> 0
   }
   return fnv.toString(16).padStart(8, '0') + djb.toString(16).padStart(8, '0')
-}
-
-/** Fila de inserción de un ítem copiado (sin condición: se re-mapea después). */
-export function itemInsertRow(item: CloneItemSource, sectionId: string, templateId: string) {
-  return {
-    section_id: sectionId,
-    template_id: templateId,
-    item_number: item.item_number,
-    description: item.description,
-    description_es: item.description_es,
-    description_es_source: item.description_es_source ?? null,
-    item_type: item.item_type,
-    is_required: item.is_required,
-    is_critical: item.is_critical,
-    requires_photo: item.requires_photo,
-    requires_document: item.requires_document ?? false,
-    requires_measurement: item.requires_measurement,
-    options: item.options ?? null,
-    option_outcomes: item.option_outcomes ?? {},
-    unit: item.unit,
-    acceptance_min: item.acceptance_min,
-    acceptance_max: item.acceptance_max,
-    acceptance_text: item.acceptance_text,
-    order_index: item.order_index,
-    condition_item_id: null as string | null,
-    condition_value: null as string | null,
-  }
-}
-
-/**
- * Condiciones a escribir sobre los ítems copiados. `idMap` traduce id de origen →
- * id copiado. Una condición que apunte fuera de la plantilla se descarta con su valor.
- */
-export function conditionRemaps(
-  sections: CloneSectionSource[],
-  idMap: Map<string, string>,
-): Array<{ id: string; condition_item_id: string; condition_value: string | null }> {
-  const out: Array<{ id: string; condition_item_id: string; condition_value: string | null }> = []
-  for (const s of sections) for (const it of s.itr_template_items) {
-    if (!it.condition_item_id) continue
-    const target = idMap.get(it.condition_item_id), self = idMap.get(it.id)
-    if (!target || !self) continue
-    out.push({ id: self, condition_item_id: target, condition_value: it.condition_value ?? null })
-  }
-  return out
 }
 
 export type LocalState = 'new' | 'same' | 'outdated'

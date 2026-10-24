@@ -8544,6 +8544,7 @@
       "missingDiscipline": "Falta la disciplina «{code}» en la organización activa: créala antes de importar",
       "missingPhase": "Falta la fase «{code}» en la organización activa: créala antes de importar",
       "codeExists": "Ya existe una plantilla con código «{code}» en esta organización. Usa «Actualizar» para traer el contenido del catálogo como revisión nueva",
+      "changedWhileImporting": "La plantilla {code} cambió mientras se importaba: vuelve a intentarlo.",
       "createFailed": "No se pudo crear la plantilla",
       "sectionCopyFailed": "No se pudo copiar la sección «{section}»: {detail}",
       "itemsCopyFailed": "No se pudieron copiar los ítems de «{section}»: {detail}",
