@@ -46,6 +46,14 @@ export type TableColumn = {
   auto_from?: string | null
   /** v2 · reference: dato de la foto que se muestra (ver SOURCE_REFS). */
   ref?: string
+  /**
+   * A36 · select: qué significa cada opción para la aceptación, igual que `option_outcomes` en los ítems
+   * (`fail` rechaza la fila; `not_applicable` exige justificación en una columna de texto). Opción sin entrada =
+   * descriptiva. El texto de la opción nunca decide por sí solo.
+   */
+  outcomes?: Record<string, TableResultValue> | null
+  /** A36 · result: es LA decisión de aceptación de la fila (siempre obligatoria; una por tabla). */
+  decides?: boolean
 }
 
 export type TableRowsSpec =
@@ -104,6 +112,7 @@ export type TableRow = { id: string; label: string; cells: Record<string, TableC
 export type TableCapture = { version: 1; count: number; rows: TableRow[] }
 
 export const TABLE_RESULT_VALUES = ['pass', 'fail', 'not_applicable'] as const
+export type TableResultValue = typeof TABLE_RESULT_VALUES[number]
 const COLUMN_TYPES: readonly TableColumnType[] = ['text', 'number', 'select', 'result', 'computed', 'datetime', 'reference']
 const V2_TYPES: readonly TableColumnType[] = ['computed', 'datetime', 'reference']
 const MODES: readonly DeviationMode[] = ['abs', 'pct_span', 'pct_reading']
@@ -146,6 +155,18 @@ export function checkTableConfig(options: unknown): Checked {
       if (new Set(raw.options).size !== raw.options.length) return bad(`Opciones repetidas en «${raw.label}»`)
       selectOptions = raw.options as string[]
     }
+    let outcomes: Record<string, TableResultValue> | null = null
+    if ('outcomes' in raw && raw.outcomes !== null && raw.outcomes !== undefined) {
+      if (type !== 'select' || !object(raw.outcomes)) return bad(`«${raw.label}»: solo una selección puede asignar resultados a sus opciones`)
+      for (const [option, outcome] of Object.entries(raw.outcomes)) {
+        if (!selectOptions!.includes(option)) return bad(`«${raw.label}»: «${option}» no es una de sus opciones`)
+        if (!(TABLE_RESULT_VALUES as readonly unknown[]).includes(outcome)) return bad(`«${raw.label}»: resultado inválido para «${option}»`)
+      }
+      outcomes = Object.keys(raw.outcomes).length ? raw.outcomes as Record<string, TableResultValue> : null
+    }
+    if ('decides' in raw && raw.decides !== undefined && raw.decides !== null && raw.decides !== false) {
+      if (raw.decides !== true || type !== 'result') return bad(`«${raw.label}»: solo una columna de resultado decide la aceptación`)
+    }
     let min: number | null = null
     let max: number | null = null
     if (type === 'number') {
@@ -160,8 +181,10 @@ export function checkTableConfig(options: unknown): Checked {
       key: raw.key, label: raw.label.trim(), type,
       unit: typeof raw.unit === 'string' && raw.unit.trim() ? raw.unit.trim() : null,
       options: selectOptions, min, max,
-      required: type === 'computed' || type === 'reference' ? false : typeof raw.required === 'boolean' ? raw.required : true,
+      required: type === 'computed' || type === 'reference' ? false : raw.decides === true ? true : typeof raw.required === 'boolean' ? raw.required : true,
     }
+    if (outcomes) column.outcomes = outcomes
+    if (raw.decides === true) column.decides = true
     if (type === 'reference') {
       if (typeof raw.ref !== 'string') return bad(`«${raw.label}»: indica qué dato de la foto muestra`)
       column.ref = raw.ref
@@ -185,6 +208,7 @@ export function checkTableConfig(options: unknown): Checked {
     }
     columns.push(column)
   }
+  if (columns.filter(c => c.decides).length > 1) return bad('Solo una columna puede decidir la aceptación')
   // Referencias entre columnas (después de conocerlas todas).
   const byKey = new Map(columns.map(c => [c.key, c]))
   for (const c of columns) {
@@ -290,6 +314,8 @@ export type TableIssue =
   | { code: TableRecordIssue }
   | { code: 'missing'; row: string; column: string }
   | { code: 'na_reason'; row: string }
+  /** A36: un resultado automático sin datos para calcular su desviación. */
+  | { code: 'auto_result'; row: string; column: string }
   | { code: 'stability'; n: number }
 
 export function evaluateTable(options: unknown, value: string | null | undefined, sourceRows?: SourceRow[] | null): {
@@ -328,9 +354,9 @@ export function evaluateTable(options: unknown, value: string | null | undefined
   let asFoundOut = 0
   const series: Array<number | null> = []
   for (let i = 0; i < expected.length; i++) {
-    const raw = d.rows[i]
+    const raw: unknown = d.rows[i]
     if (!object(raw) || raw.id !== expected[i].id || !object(raw.cells)) return invalid()
-    const cells = raw.cells
+    const cells: Record<string, unknown> = raw.cells
     for (const key of Object.keys(cells)) if (!config.columns.some(column => column.key === key)) return invalid()
     const label = expected[i].label
     const out: Record<string, TableCellValue> = {}
@@ -339,7 +365,7 @@ export function evaluateTable(options: unknown, value: string | null | undefined
     let notApplicable = false
     // 1) Columnas capturadas por el inspector.
     for (const column of config.columns) {
-      const cell = cells[column.key]
+      const cell: unknown = cells[column.key]
       if (column.type === 'reference') {
         // Dato de la foto: lo enviado no cuenta; se muestra el de itrs.source_rows.
         if (cell !== undefined && cell !== null && typeof cell !== 'string') return invalid()
@@ -375,6 +401,8 @@ export function evaluateTable(options: unknown, value: string | null | undefined
         const v = typeof cell === 'string' ? cell : ''
         if (v === '') { if (column.required) errors.push({ code: 'missing', row: label, column: column.label }) }
         else if (!column.options?.includes(v)) return invalid()
+        else if (column.outcomes?.[v] === 'fail') { hasFail = true; flags.fail = true }
+        else if (column.outcomes?.[v] === 'not_applicable') notApplicable = true
         out[column.key] = v
       } else {
         if (cell !== undefined && cell !== null && typeof cell !== 'string') return invalid()
@@ -404,6 +432,8 @@ export function evaluateTable(options: unknown, value: string | null | undefined
       const src = config.columns.find(c => c.key === column.auto_from)!
       const v = exact[src.key] ?? null
       out[column.key] = v === null ? '' : outOfTolerance(v, src.tolerance) ? 'fail' : 'pass'
+      // A36: sin desviación calculable no hay resultado; antes quedaba vacío y la tabla pasaba como completa.
+      if (v === null) errors.push({ code: 'auto_result', row: label, column: column.label })
     }
     if (config.stability) {
       const key = config.stability.column
@@ -550,10 +580,11 @@ export const TABLE_PRESETS: ReadonlyArray<{ id: string; label: string; config: T
       col({ key: 'description', label: 'Descripción', type: 'reference', required: false, ref: 'effect_description' }),
       col({ key: 'action', label: 'Acción esperada', type: 'reference', required: false, ref: 'action' }),
       col({ key: 'link', label: 'Cruce', type: 'reference', required: false, ref: 'link' }),
-      col({ key: 'executed', label: 'Ejecutó la acción', type: 'select', options: ['Sí', 'No'] }),
+      // A36: ejecutar la acción decide (No = rechazo; N/A = acción inhibida o no aplicable, con justificación).
+      col({ key: 'executed', label: 'Ejecutó la acción', type: 'select', options: ['Sí', 'No', 'N/A'], outcomes: { 'Sí': 'pass', No: 'fail', 'N/A': 'not_applicable' } }),
       col({ key: 'response_s', label: 'Tiempo de respuesta', type: 'number', unit: 's', required: false }),
       col({ key: 'feedback', label: 'Confirmación (feedback) en DCS', type: 'result' }),
-      col({ key: 'result', label: 'Resultado', type: 'result' }),
+      col({ key: 'result', label: 'Resultado', type: 'result', decides: true }),
       col({ key: 'remarks', label: 'Observación', type: 'text', required: false }),
     ] },
   },

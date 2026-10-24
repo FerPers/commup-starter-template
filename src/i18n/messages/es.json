@@ -1359,6 +1359,12 @@
       "passLeft": "As left (acepta/rechaza)",
       "result": "Resultado",
       "resultManual": "Manual (lo marca el inspector)",
+      "outcomes": "Qué decide cada opción",
+      "outcomeNone": "Descriptiva",
+      "outcomePass": "Conforme",
+      "outcomeFail": "Rechazo",
+      "outcomeNa": "No aplica (justificar)",
+      "decides": "Decide la aceptación de la fila (obligatoria)",
       "resultAuto": "Automático según «{col}»",
       "addColumn": "+ Columna",
       "stability": "Criterio de estabilidad (serie de lecturas): las últimas N lecturas dentro de los límites",
@@ -8466,6 +8472,7 @@
       "rows_mismatch": "Faltan o sobran filas",
       "missing": "{row}: falta {column}",
       "na_reason": "{row}: justifica el No aplica",
+      "auto_result": "{row}: no se puede calcular «{column}» (faltan las lecturas para la desviación)",
       "stability": "Se requieren al menos {n} lecturas para el criterio de estabilidad"
     },
     "itrInstances": {

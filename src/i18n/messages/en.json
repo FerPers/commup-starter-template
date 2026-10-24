@@ -1359,6 +1359,12 @@
       "passLeft": "As left (accept/reject)",
       "result": "Result",
       "resultManual": "Manual (the inspector marks it)",
+      "outcomes": "What each option decides",
+      "outcomeNone": "Descriptive",
+      "outcomePass": "Pass",
+      "outcomeFail": "Fail",
+      "outcomeNa": "N/A (justify)",
+      "decides": "Decides the row acceptance (mandatory)",
       "resultAuto": "Automatic from “{col}”",
       "addColumn": "+ Column",
       "stability": "Stability criterion (series of readings): the last N readings within limits",
@@ -8466,6 +8472,7 @@
       "rows_mismatch": "Rows are missing or extra",
       "missing": "{row}: {column} missing",
       "na_reason": "{row}: justify the N/A",
+      "auto_result": "{row}: «{column}» cannot be calculated (the readings for the deviation are missing)",
       "stability": "At least {n} readings are required for the stability criterion"
     },
     "itrInstances": {

@@ -13,6 +13,9 @@ import probes from './diagnostico-sondas.fixture.json'
 const rejects = (r: { isComplete: boolean; hasFail: boolean }) => r.hasFail || !r.isComplete
 
 describe('sondas del diagnóstico ITR (A45)', () => {
+  // A36 (ola 1): el motor ya puede rechazarlo (`outcomes` en la selección, preset ce_test; casos en
+  // table-acceptance.test.ts). Sigue `.fails` porque la fixture es la I30C v3 real, que aún no lo adopta: se quita
+  // cuando la plantilla homologada (A41) reemplace esta configuración.
   it.fails('H1 · I30C v3 E.1: «Ejecutó la acción = No» con resultado conforme no se acepta', () => {
     const p = probes.inconsistentEffect
     const r = evaluateTable(p.options, JSON.stringify(p.input), p.sourceRows)
@@ -26,7 +29,8 @@ describe('sondas del diagnóstico ITR (A45)', () => {
   })
 
   // La corrección puede ser del motor o de la plantilla homologada (resultado obligatorio, A41/A42): si es de la
-  // plantilla, esta fixture se cambia por la revisión nueva y la prueba se queda como regresión.
+  // plantilla, esta fixture se cambia por la revisión nueva y la prueba se queda como regresión. A36: el motor ya
+  // tiene `decides` (resultado siempre obligatorio); falta que E10B lo adopte.
   it.fails('H3 · E10B v2 M.1: una tabla con el resultado vacío no queda completa', () => {
     const p = probes.optionalResult
     const r = evaluateTable(p.options, JSON.stringify(p.input))

@@ -49,6 +49,8 @@ describe('sondas del diagnóstico ITR en SQL (A45)', () => {
     }
   })
 
+  // A36: el motor ya lo rechaza si la plantilla usa `outcomes` (paridad en itr-table-acceptance.test.ts); la fixture
+  // es la I30C v3 real, que aún no lo adopta (A41).
   it.fails('H1 · I30C v3 E.1: «Ejecutó la acción = No» con resultado conforme no se acepta', () => {
     expect(rejects(sql.get('inconsistentEffect')!)).toBe(true)
   })

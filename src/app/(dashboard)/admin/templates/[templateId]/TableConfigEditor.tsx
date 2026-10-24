@@ -7,8 +7,10 @@
 // as found / as left, fecha y hora, y criterio de estabilidad para series.
 // Fase 4-D: filas desde el lazo (una por señal) o desde la matriz C&E (una por efecto) y
 // columnas de referencia que muestran datos de esa foto.
+// A36: una selección puede asignar conforme / rechazo / N/A a sus opciones, y una columna de resultado
+// «decide la aceptación» de la fila (obligatoria, una por tabla).
 
-import { SOURCE_REFS, TABLE_MAX_COLUMNS, TABLE_MAX_ROWS, TABLE_PRESETS, checkTableConfig, type TableColumn, type TableConfig, type TableSource } from '@/lib/itr/table'
+import { SOURCE_REFS, TABLE_MAX_COLUMNS, TABLE_MAX_ROWS, TABLE_PRESETS, checkTableConfig, type TableColumn, type TableConfig, type TableResultValue, type TableSource } from '@/lib/itr/table'
 import { useId } from 'react'
 import { useTranslations } from 'next-intl'
 import { fieldInput, fieldLabel } from './template-builder-shared'
@@ -54,7 +56,7 @@ export default function TableConfigEditor({ value, onChange }: { value: TableCon
 
   function changeType(index: number, type: TableColumn['type']) {
     const column = config.columns[index]
-    const patch: Partial<TableColumn> = { type, options: type === 'select' ? (column.options ?? [t('defaultOption')]) : null, min: null, max: null, auto_from: undefined, formula: undefined, tolerance: undefined, pass: undefined }
+    const patch: Partial<TableColumn> = { type, options: type === 'select' ? (column.options ?? [t('defaultOption')]) : null, min: null, max: null, auto_from: undefined, formula: undefined, tolerance: undefined, pass: undefined, outcomes: undefined, decides: undefined }
     if (type === 'reference' && config.rows.mode === 'source') {
       patch.ref = Object.keys(SOURCE_REFS[config.rows.source])[0]
       patch.required = false
@@ -130,12 +132,17 @@ export default function TableConfigEditor({ value, onChange }: { value: TableCon
                       {Object.entries(SOURCE_REFS[source]).map(([key, label]) => <option key={key} value={key}>{label}</option>)}
                     </select>
                   : column.type === 'select'
-                  ? <input id={`${uid}-${column.key}-criterion`} style={small} value={(column.options ?? []).join(', ')} onChange={e => setColumn(index, { options: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })} />
+                  ? <input id={`${uid}-${column.key}-criterion`} style={small} value={(column.options ?? []).join(', ')} onChange={e => {
+                      const options = e.target.value.split(',').map(s => s.trim()).filter(Boolean)
+                      // Un resultado asignado a una opción que ya no existe se descarta.
+                      const outcomes = Object.fromEntries(Object.entries(column.outcomes ?? {}).filter(([option]) => options.includes(option)))
+                      setColumn(index, { options, outcomes: Object.keys(outcomes).length ? outcomes : undefined })
+                    }} />
                   : <input id={`${uid}-${column.key}-criterion`} style={{ ...small, color: 'var(--text-muted)' }} disabled value={numeric ? t('hintNumber') : column.type === 'result' ? (column.auto_from ? t('hintAuto') : t('hintResult')) : column.type === 'computed' ? t('hintComputed') : column.type === 'datetime' ? t('hintDatetime') : t('hintText')} />}
               </label>
               <label style={fieldLabel}>{t('min')}<input style={small} type="number" step="any" disabled={!numeric} value={column.min ?? ''} onChange={e => setColumn(index, { min: num(e.target.value) })} /></label>
               <label style={fieldLabel}>{t('max')}<input style={small} type="number" step="any" disabled={!numeric} value={column.max ?? ''} onChange={e => setColumn(index, { max: num(e.target.value) })} /></label>
-              <label style={{ ...fieldLabel, whiteSpace: 'nowrap' }}>{t('required')}<br /><input type="checkbox" checked={column.required} disabled={column.type === 'computed' || column.type === 'reference' || !!column.auto_from} onChange={e => setColumn(index, { required: e.target.checked })} /></label>
+              <label style={{ ...fieldLabel, whiteSpace: 'nowrap' }}>{t('required')}<br /><input type="checkbox" checked={column.required} disabled={column.type === 'computed' || column.type === 'reference' || !!column.auto_from || !!column.decides} onChange={e => setColumn(index, { required: e.target.checked })} /></label>
               <button type="button" onClick={() => set({ columns: config.columns.filter((_, i) => i !== index) })} title={t('removeColumn')} style={{ padding: '6px 8px', border: '1px solid var(--border)', borderRadius: '6px', background: 'var(--card-bg)', cursor: 'pointer' }}>×</button>
             </div>
 
@@ -170,13 +177,46 @@ export default function TableConfigEditor({ value, onChange }: { value: TableCon
               </div>
             )}
 
+            {column.type === 'select' && (column.options ?? []).length > 0 && (
+              <fieldset style={{ border: 'none', padding: 0, margin: '6px 0 0' }}>
+                <legend style={{ ...fieldLabel, marginBottom: '4px' }}>{t('outcomes')}</legend>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                  {(column.options ?? []).map(option => (
+                    <label key={option} style={{ ...fieldLabel, display: 'flex', alignItems: 'center', gap: '4px', margin: 0 }}>
+                      <span style={{ whiteSpace: 'nowrap' }}>{option}</span>
+                      <select style={{ ...small, width: 'auto' }} value={column.outcomes?.[option] ?? ''} onChange={e => {
+                        const outcomes: Record<string, TableResultValue> = { ...(column.outcomes ?? {}) }
+                        if (e.target.value) outcomes[option] = e.target.value as TableResultValue
+                        else delete outcomes[option]
+                        setColumn(index, { outcomes: Object.keys(outcomes).length ? outcomes : undefined })
+                      }}>
+                        <option value="">{t('outcomeNone')}</option>
+                        <option value="pass">{t('outcomePass')}</option>
+                        <option value="fail">{t('outcomeFail')}</option>
+                        <option value="not_applicable">{t('outcomeNa')}</option>
+                      </select>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+            )}
+
             {column.type === 'result' && (
-              <label style={{ ...fieldLabel, marginTop: '6px', maxWidth: '360px' }}>{t('result')}
-                <select style={small} value={column.auto_from ?? ''} onChange={e => setColumn(index, { auto_from: e.target.value || null, required: e.target.value ? false : true })}>
-                  <option value="">{t('resultManual')}</option>
-                  {computedCols.filter(c => c.pass !== 'as_found').map(c => <option key={c.key} value={c.key}>{t('resultAuto', { col: c.label || c.key })}</option>)}
-                </select>
-              </label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'end', marginTop: '6px' }}>
+                <label style={{ ...fieldLabel, maxWidth: '360px', flex: '1 1 240px' }}>{t('result')}
+                  <select style={small} value={column.auto_from ?? ''} onChange={e => setColumn(index, { auto_from: e.target.value || null, required: e.target.value ? false : true })}>
+                    <option value="">{t('resultManual')}</option>
+                    {computedCols.filter(c => c.pass !== 'as_found').map(c => <option key={c.key} value={c.key}>{t('resultAuto', { col: c.label || c.key })}</option>)}
+                  </select>
+                </label>
+                <label style={{ ...fieldLabel, display: 'flex', alignItems: 'center', gap: '6px', margin: 0 }}>
+                  {/* Una sola columna decide: marcar esta desmarca las demás. */}
+                  <input type="checkbox" checked={!!column.decides} onChange={e => set({ columns: config.columns.map((c, i) =>
+                    i === index ? { ...c, decides: e.target.checked || undefined, required: e.target.checked && !c.auto_from ? true : c.required }
+                      : e.target.checked && c.decides ? { ...c, decides: undefined } : c) })} />
+                  {t('decides')}
+                </label>
+              </div>
             )}
           </div>
         )
