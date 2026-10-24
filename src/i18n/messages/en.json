@@ -1681,7 +1681,11 @@
       "datasheet": "Datasheet",
       "pid": "P&ID",
       "junctionBox": "Junction box",
-      "hint": "Engineering data of the tag, read-only. If it does not match the installed equipment, record it in remarks or raise a punch."
+      "hint": "Engineering data of the tag, read-only. If it does not match the installed equipment, record it in remarks or raise a punch.",
+      "frozen": "as they were when signed ({date})",
+      "changedBadge": "{n, plural, =1 {1 changed afterwards} other {# changed afterwards}}",
+      "changedNow": "Now in the tag: {value}",
+      "frozenHint": "Tag data this ITR was signed with. If the tag changed afterwards, the current value is shown; what was signed does not change."
     },
     "assign": {
       "title": "Signing assignments",

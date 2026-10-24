@@ -21,6 +21,8 @@ IF NOT trusted AND (OLD.status='approved' OR EXISTS(SELECT 1 FROM public.itr_sig
 IF TG_OP='UPDATE' AND NOT trusted AND NEW.required_signatures IS DISTINCT FROM OLD.required_signatures THEN RAISE EXCEPTION 'Required signatures are fixed when the ITR is created'; END IF;
 -- A39: también el requisito de equipo de prueba (cambiar la plantilla después no cambia un ITR ya creado).
 IF TG_OP='UPDATE' AND NOT trusted AND NEW.requires_test_equipment IS DISTINCT FROM OLD.requires_test_equipment THEN RAISE EXCEPTION 'Test equipment requirement is fixed when the ITR is created'; END IF;
+-- A44: la foto de los datos del tag la escribe solo la firma (sign_itr_atomic).
+IF TG_OP='UPDATE' AND NOT trusted AND (NEW.tag_snapshot,NEW.tag_snapshot_at) IS DISTINCT FROM (OLD.tag_snapshot,OLD.tag_snapshot_at) THEN RAISE EXCEPTION 'Tag snapshot is written only by signing'; END IF;
 IF TG_OP='DELETE' THEN IF OLD.status='approved' OR EXISTS(SELECT 1 FROM public.itr_signatures WHERE itr_id=OLD.id) THEN RAISE EXCEPTION 'Cannot delete signed ITR'; END IF; RETURN OLD; END IF;
 ELSE
 SELECT org_id INTO tpl_org FROM public.itr_templates WHERE id=NEW.template_id FOR KEY SHARE;
@@ -34,6 +36,8 @@ NEW.required_signatures:=public.itr_signing_roles((SELECT t.required_signatures 
   FROM public.itr_templates t LEFT JOIN public.project_phases ph ON ph.id=NEW.phase_id WHERE t.id=NEW.template_id));
 -- A39: el equipo de prueba se congela igual que las firmas.
 NEW.requires_test_equipment:=COALESCE((SELECT t.requires_test_equipment FROM public.itr_templates t WHERE t.id=NEW.template_id),false);
+-- A44: un ITR nace sin foto del tag (la toma la primera firma).
+NEW.tag_snapshot:=NULL; NEW.tag_snapshot_at:=NULL;
 END IF;
 IF NOT trusted AND NEW.status='approved' THEN RAISE EXCEPTION 'Approval requires atomic signing'; END IF;
 RETURN NEW;

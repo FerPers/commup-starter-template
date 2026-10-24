@@ -37,6 +37,7 @@ import { applyTheme, currentTheme, THEME_EVENT } from '@/lib/theme/client'
 import type { Theme } from '@/types/theme'
 import { ink, alpha } from '@/lib/theme'
 import { formatInZone } from '@/lib/time/zone'
+import { resolveTagData, type TagDataField } from '@/lib/itr/tag-snapshot'
 
 export default function ItrExecution({
   itr,
@@ -214,7 +215,9 @@ export default function ItrExecution({
   const [generalUploadError, setGeneralUploadError] = useState<string | null>(null)
 
   const template = itr.itr_templates
-  const tag = itr.tags
+  // A44: firmado = los datos del tag con los que se firmó (y lo que cambió después); sin firmar = en vivo.
+  const tagView = resolveTagData(itr.tags, itr.tag_snapshot, itr.itr_signatures.length > 0)
+  const tag = tagView.data
   const phase = itr.project_phases
   const st = ITR_STATUS_COLORS[itrStatus] ?? ITR_STATUS_COLORS.not_started
 
@@ -431,29 +434,44 @@ export default function ItrExecution({
           const range = tag.range_min !== null && tag.range_min !== undefined && tag.range_max !== null && tag.range_max !== undefined
             ? `${tag.range_min} – ${tag.range_max}${tag.eng_unit ? ` ${tag.eng_unit}` : ''}`
             : tag.eng_unit ?? null
-          const rows: Array<[string, string | null | undefined]> = [
-            [t('tagData.manufacturer'), tag.manufacturer],
-            [t('tagData.model'), tag.model],
-            [t('tagData.serial'), tag.serial_number],
-            [t('tagData.range'), range],
-            [t('tagData.datasheet'), tag.datasheet_number ? `${tag.datasheet_number}${tag.revision ? ` rev. ${tag.revision}` : ''}` : null],
-            [t('tagData.pid'), tag.pid_drawing],
-            [t('tagData.junctionBox'), tag.junction_box],
+          // A44: [etiqueta, valor, campos que lo componen] — un campo cambiado después de firmar se marca.
+          const rows: Array<[string, string | null | undefined, TagDataField[]]> = [
+            [t('tagData.manufacturer'), tag.manufacturer, ['manufacturer']],
+            [t('tagData.model'), tag.model, ['model']],
+            [t('tagData.serial'), tag.serial_number, ['serial_number']],
+            [t('tagData.range'), range, ['range_min', 'range_max', 'eng_unit']],
+            [t('tagData.datasheet'), tag.datasheet_number ? `${tag.datasheet_number}${tag.revision ? ` rev. ${tag.revision}` : ''}` : null, ['datasheet_number', 'revision']],
+            [t('tagData.pid'), tag.pid_drawing, ['pid_drawing']],
+            [t('tagData.junctionBox'), tag.junction_box, ['junction_box']],
           ]
-          const present = rows.filter(([, value]) => typeof value === 'string' && value.trim().length > 0) as Array<[string, string]>
+          // Un campo vacío al firmar y lleno después también se ve (como «—» con el valor de hoy).
+          const present = rows
+            .filter(([, value, fields]) => (typeof value === 'string' && value.trim().length > 0) || fields.some(f => f in tagView.changed))
+            .map(([label, value, fields]) => [label, typeof value === 'string' && value.trim() ? value : '—', fields]) as Array<[string, string, TagDataField[]]>
           if (present.length === 0) return null
+          const changedCount = Object.keys(tagView.changed).length
           return (
             <details style={{ marginTop: '10px', fontSize: '12px' }}>
-              <summary style={{ cursor: 'pointer', color: 'var(--text-body)', fontWeight: 600 }}>{t('tagData.title', { count: present.length })}</summary>
+              <summary style={{ cursor: 'pointer', color: 'var(--text-body)', fontWeight: 600 }}>
+                {t('tagData.title', { count: present.length })}
+                {tagView.frozen && itr.tag_snapshot_at && <span style={{ fontWeight: 400, color: 'var(--text-muted)' }}> · {t('tagData.frozen', { date: formatInZone(itr.tag_snapshot_at, timezone, locale) })}</span>}
+                {changedCount > 0 && <span style={{ marginLeft: '6px', padding: '1px 6px', borderRadius: '999px', background: 'var(--warning-50)', color: 'var(--warning-700)', border: '1px solid var(--warning-200)', fontWeight: 600 }}>{t('tagData.changedBadge', { n: changedCount })}</span>}
+              </summary>
               <dl style={{ display: 'grid', gridTemplateColumns: 'max-content 1fr', columnGap: '12px', rowGap: '4px', margin: '8px 0 0', padding: '10px 12px', background: 'var(--gray-50)', border: '1px solid var(--border)', borderRadius: '8px' }}>
-                {present.map(([label, value]) => (
-                  <Fragment key={label}>
-                    <dt style={{ color: 'var(--text-muted)' }}>{label}</dt>
-                    <dd style={{ margin: 0, color: 'var(--text-strong)', fontFamily: 'ui-monospace, monospace', wordBreak: 'break-word' }}>{value}</dd>
-                  </Fragment>
-                ))}
+                {present.map(([label, value, fields]) => {
+                  const changed = fields.filter(f => f in tagView.changed)
+                  return (
+                    <Fragment key={label}>
+                      <dt style={{ color: 'var(--text-muted)' }}>{label}</dt>
+                      <dd style={{ margin: 0, color: 'var(--text-strong)', fontFamily: 'ui-monospace, monospace', wordBreak: 'break-word' }}>
+                        {value}
+                        {changed.length > 0 && <span style={{ display: 'block', fontFamily: 'inherit', color: 'var(--warning-700)' }}>{t('tagData.changedNow', { value: changed.map(f => tagView.changed[f] ?? '—').join(' / ') })}</span>}
+                      </dd>
+                    </Fragment>
+                  )
+                })}
               </dl>
-              <p style={{ margin: '6px 0 0', color: 'var(--text-muted)', fontSize: '12px' }}>{t('tagData.hint')}</p>
+              <p style={{ margin: '6px 0 0', color: 'var(--text-muted)', fontSize: '12px' }}>{tagView.frozen ? t('tagData.frozenHint') : t('tagData.hint')}</p>
             </details>
           )
         })()}

@@ -5,6 +5,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { resolveTagData } from '@/lib/itr/tag-snapshot'
 import type { Database } from '@/types/supabase.generated'
 import type { ProcedurePdfInput } from './procedure'
 import type { PerformancePdfInput } from './performance-report'
@@ -289,6 +290,7 @@ export async function loadItrPdf(db: Db, x: { projectId: string; itrId: string; 
       tag_id,
       source_rows,
       required_signatures,
+      tag_snapshot,
       loops ( loop_number ),
       ce_causes ( code, description, ce_matrices ( code ) ),
       itr_templates (
@@ -374,6 +376,8 @@ export async function loadItrPdf(db: Db, x: { projectId: string; itrId: string; 
     filename: `ITR-${itr.itr_number.replace(/[^a-zA-Z0-9-]/g, '_')}.pdf`,
     input: {
       ...itr,
+      // A44: un ITR firmado se imprime con los datos del tag con los que se firmó, no con los de hoy.
+      tags: resolveTagData(itr.tags, itr.tag_snapshot, (itr.itr_signatures ?? []).length > 0).data,
       document_refs: documentRefs,
       client_code: clientCode?.client_code ?? null,
       // snapshot es jsonb: la foto de calibración que copió el trigger al registrar el equipo.

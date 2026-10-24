@@ -3099,6 +3099,8 @@ export type Database = {
           status: Database["public"]["Enums"]["itr_status"]
           subsystem_id: string
           tag_id: string | null
+          tag_snapshot: Json | null
+          tag_snapshot_at: string | null
           template_id: string
         }
         Insert: {
@@ -3118,6 +3120,8 @@ export type Database = {
           status?: Database["public"]["Enums"]["itr_status"]
           subsystem_id: string
           tag_id?: string | null
+          tag_snapshot?: Json | null
+          tag_snapshot_at?: string | null
           template_id: string
         }
         Update: {
@@ -3137,6 +3141,8 @@ export type Database = {
           status?: Database["public"]["Enums"]["itr_status"]
           subsystem_id?: string
           tag_id?: string | null
+          tag_snapshot?: Json | null
+          tag_snapshot_at?: string | null
           template_id?: string
         }
         Relationships: [
@@ -14161,6 +14167,7 @@ export type Database = {
         Args: { p_formula: Json; p_observed: number; p_reference: number }
         Returns: number
       }
+      itr_tag_snapshot: { Args: { p_tag_id: string }; Returns: Json }
       itr_test_equipment_blocker: {
         Args: { p_itr_id: string }
         Returns: string

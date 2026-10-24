@@ -96,6 +96,9 @@ export type ItrData = {
     disciplines: { code: string; name: string; color: string }
   } | null
   project_phases: { code: string; name: string; color: string } | null
+  /** A44: datos del tag congelados en la primera firma (null = sin firmar o firmado antes de A44). */
+  tag_snapshot?: unknown
+  tag_snapshot_at?: string | null
   itr_assignments: Array<{ id: string; user_id: string; role: string; profiles: { full_name: string } | null }>
   itr_responses: Response[]
   itr_signatures: Signature[]
