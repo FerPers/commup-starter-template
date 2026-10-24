@@ -104,6 +104,12 @@ En términos concretos, salir significa cuatro cosas:
 
 **Salida:** primer lote homologado y activo; restauración probada; recorrido completo con datos reales aceptado por Luis.
 
+**Avance:**
+- **Ficha A37/A38/A39 (24-oct):** `docs/FICHA-A37-A38-A39-2026-10-24.md`, en espera de las decisiones de Luis. Hallazgos principales:
+  - Los 27 cambios de A39 no fueron decisiones: el relleno de la marca buscó un texto que las v2 ya no tenían.
+  - I10A no exige equipo de prueba en ninguna versión.
+  - Del primer lote, solo I10A, I01A e I30C dependen de esta ficha.
+
 ### Ola 3 — Orientación y lectura (en paralelo, no bloquea la salida)
 
 | Acción | Brecha concreta |
