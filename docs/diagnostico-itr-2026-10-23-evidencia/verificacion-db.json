@@ -1,0 +1,146 @@
+{
+  "readOnly": true,
+  "evaluators": [
+    {
+      "probe": "calibrationManual",
+      "result": {
+        "has_fail": false,
+        "is_complete": true,
+        "as_found_out": 0
+      },
+      "error": null
+    },
+    {
+      "probe": "optionalResult",
+      "result": {
+        "has_fail": false,
+        "is_complete": true,
+        "as_found_out": 0
+      },
+      "error": null
+    },
+    {
+      "probe": "inconsistentEffect",
+      "result": {
+        "has_fail": false,
+        "is_complete": true,
+        "as_found_out": 0
+      },
+      "error": null
+    }
+  ],
+  "usage": [
+    {
+      "code": "I10A",
+      "version": 2,
+      "active": true,
+      "instances": 0,
+      "error": null
+    },
+    {
+      "code": "I01A",
+      "version": 2,
+      "active": true,
+      "instances": 0,
+      "error": null
+    },
+    {
+      "code": "I29C",
+      "version": 1,
+      "active": false,
+      "instances": 0,
+      "error": null
+    },
+    {
+      "code": "I29C",
+      "version": 2,
+      "active": false,
+      "instances": 0,
+      "error": null
+    },
+    {
+      "code": "I10A",
+      "version": 3,
+      "active": false,
+      "instances": 0,
+      "error": null
+    },
+    {
+      "code": "I29C",
+      "version": 3,
+      "active": true,
+      "instances": 1,
+      "error": null
+    },
+    {
+      "code": "I04A",
+      "version": 1,
+      "active": false,
+      "instances": 0,
+      "error": null
+    },
+    {
+      "code": "I30C",
+      "version": 2,
+      "active": false,
+      "instances": 0,
+      "error": null
+    },
+    {
+      "code": "I30C",
+      "version": 3,
+      "active": true,
+      "instances": 1,
+      "error": null
+    },
+    {
+      "code": "I01A",
+      "version": 3,
+      "active": false,
+      "instances": 0,
+      "error": null
+    },
+    {
+      "code": "I30C",
+      "version": 1,
+      "active": false,
+      "instances": 0,
+      "error": null
+    },
+    {
+      "code": "I10A",
+      "version": 1,
+      "active": false,
+      "instances": 0,
+      "error": null
+    },
+    {
+      "code": "I04A",
+      "version": 2,
+      "active": true,
+      "instances": 0,
+      "error": null
+    },
+    {
+      "code": "I01A",
+      "version": 1,
+      "active": false,
+      "instances": 0,
+      "error": null
+    },
+    {
+      "code": "I06A",
+      "version": 2,
+      "active": true,
+      "instances": 0,
+      "error": null
+    },
+    {
+      "code": "I06A",
+      "version": 1,
+      "active": false,
+      "instances": 0,
+      "error": null
+    }
+  ]
+}

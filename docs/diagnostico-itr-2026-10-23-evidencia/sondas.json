@@ -1,0 +1,129 @@
+{
+  "inconsistentEffect": {
+    "template": "I30C v3",
+    "item": "E.1",
+    "input": {
+      "version": 1,
+      "count": 1,
+      "rows": [
+        {
+          "id": "R1",
+          "label": "Efecto de prueba",
+          "cells": {
+            "description": null,
+            "action": null,
+            "link": null,
+            "executed": "No",
+            "response_s": null,
+            "feedback": "pass",
+            "result": "pass",
+            "remarks": ""
+          }
+        }
+      ]
+    },
+    "sourceRows": [
+      {
+        "key": "synthetic-effect",
+        "label": "Efecto de prueba",
+        "refs": {
+          "effect_description": "Dato sintético",
+          "action": "trip",
+          "link": "X"
+        }
+      }
+    ],
+    "isComplete": true,
+    "hasFail": false,
+    "note": "Ejecutó la acción=No, feedback=pass, resultado=pass: el select de tabla no tiene significado de rechazo."
+  },
+  "calibrationManual": {
+    "template": "I10A v3",
+    "item": "4.01",
+    "input": {
+      "version": 1,
+      "count": 3,
+      "rows": [
+        {
+          "id": "R1",
+          "label": "Punto 1",
+          "cells": {
+            "direction": "Ascendente",
+            "input": 50,
+            "pct_range": 50,
+            "expected": 12,
+            "observed": 99,
+            "error": 0,
+            "result": "pass",
+            "remarks": ""
+          }
+        },
+        {
+          "id": "R2",
+          "label": "Punto 2",
+          "cells": {
+            "direction": "Ascendente",
+            "input": 50,
+            "pct_range": 50,
+            "expected": 12,
+            "observed": 99,
+            "error": 0,
+            "result": "pass",
+            "remarks": ""
+          }
+        },
+        {
+          "id": "R3",
+          "label": "Punto 3",
+          "cells": {
+            "direction": "Ascendente",
+            "input": 50,
+            "pct_range": 50,
+            "expected": 12,
+            "observed": 99,
+            "error": 0,
+            "result": "pass",
+            "remarks": ""
+          }
+        }
+      ]
+    },
+    "isComplete": true,
+    "hasFail": false,
+    "note": "Salida esperada 12, observada 99, error manual 0 y pass: no existe fórmula que detecte la inconsistencia."
+  },
+  "optionalResult": {
+    "template": "E10B v2",
+    "item": "M.1",
+    "input": {
+      "version": 1,
+      "count": 1,
+      "rows": [
+        {
+          "id": "R1",
+          "label": "Registro 1",
+          "cells": {
+            "receptacle": "dato",
+            "verify_tag_number_label_is_c": "dato",
+            "insulation_resistance_to_ear": 1,
+            "polarity": "dato",
+            "verify_voltage_level_v": 1,
+            "verify_fuse_mcb_according_to": "dato",
+            "visual_inspection_for_extern": "dato",
+            "verify_correspondence_betwee": "dato",
+            "result": "",
+            "remarks": ""
+          }
+        }
+      ]
+    },
+    "isComplete": true,
+    "hasFail": false,
+    "note": "Tabla completa con resultado vacío; no prueba aprobación de un ITR completo."
+  },
+  "continuitySelfDeclared": {
+    "isComplete": true,
+    "hasFail": false,
+    "note": "Un conductor sin lectura es válido según la configuración declarada por la captura; no contrasta número contra D.4 o ingeniería."
+  }
+}
