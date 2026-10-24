@@ -8,6 +8,8 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { authenticateApiKey, apiHeaders, parsePagination, apiDbError } from '@/lib/api/auth'
+import { readJson, readQuery } from '@/lib/api/validate'
+import { HANDOVER_FORMATS, HandoverExport, ProjectQuery } from '@/lib/api/schemas'
 import { requireProjectAccess, requireSystemsAccess } from '@/lib/api/access'
 import { generateHandoverPackage, siteUrl, type HandoverFormat } from '@/lib/handover/generate'
 
@@ -19,11 +21,10 @@ export async function GET(req: NextRequest) {
   const auth = await authenticateApiKey(req, ['handover:read'])
   if (!auth.ok) return auth.response
 
-  const { searchParams } = new URL(req.url)
-  const projectId = searchParams.get('project_id')
-  if (!projectId) {
-    return NextResponse.json({ error: 'project_id is required' }, { status: 400, headers: apiHeaders() })
-  }
+  // A05: ids de la consulta validados (400) antes de tocar la BD.
+  const q = readQuery(req, ProjectQuery)
+  if (!q.ok) return q.response
+  const projectId = q.data.project_id
 
   const { limit, offset } = parsePagination(req)
   const admin = createAdminClient()
@@ -50,24 +51,12 @@ export async function POST(req: NextRequest) {
   const auth = await authenticateApiKey(req, ['handover:write'])
   if (!auth.ok) return auth.response
 
-  let body: { project_id?: string; system_ids?: string[]; format?: string[] }
-  try { body = await req.json() } catch {
-    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400, headers: apiHeaders() })
-  }
-
-  const projectId = body.project_id
-  const systemIds = Array.isArray(body.system_ids) && body.system_ids.length > 0 ? body.system_ids : null
-  const rawFormats = Array.isArray(body.format) && body.format.length > 0 ? body.format : ['json', 'pdf', 'zip']
-  const formats = rawFormats
-    .map(f => f.toLowerCase())
-    .filter((f): f is HandoverFormat => f === 'json' || f === 'pdf' || f === 'zip')
-
-  if (!projectId) {
-    return NextResponse.json({ error: 'project_id is required' }, { status: 400, headers: apiHeaders() })
-  }
-  if (formats.length === 0) {
-    return NextResponse.json({ error: 'format must include at least one of: json, pdf, zip' }, { status: 422, headers: apiHeaders() })
-  }
+  // A05: cuerpo validado (antes `format: [1]` llegaba a toLowerCase() y era un 500).
+  const parsed = await readJson(req, HandoverExport)
+  if (!parsed.ok) return parsed.response
+  const projectId = parsed.data.project_id
+  const systemIds = parsed.data.system_ids?.length ? parsed.data.system_ids : null
+  const formats: HandoverFormat[] = [...new Set(parsed.data.format ?? HANDOVER_FORMATS)]
 
   const admin = createAdminClient()
 

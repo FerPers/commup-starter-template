@@ -7,6 +7,8 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { authenticateApiKey, apiHeaders, parsePagination, apiDbError } from '@/lib/api/auth'
+import { readQuery } from '@/lib/api/validate'
+import { ProjectQuery } from '@/lib/api/schemas'
 
 export function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: apiHeaders() })
@@ -16,12 +18,12 @@ export async function GET(req: NextRequest) {
   const auth = await authenticateApiKey(req, ['punches:read'])
   if (!auth.ok) return auth.response
 
+  // A05: ids de la consulta validados (400) antes de tocar la BD.
+  const query = readQuery(req, ProjectQuery)
+  if (!query.ok) return query.response
   const { searchParams } = new URL(req.url)
-  const projectId = searchParams.get('project_id')
+  const projectId = query.data.project_id
   const status    = searchParams.get('status')
-  if (!projectId) {
-    return NextResponse.json({ error: 'project_id is required' }, { status: 400, headers: apiHeaders() })
-  }
 
   const { limit, offset } = parsePagination(req)
   const admin = createAdminClient()

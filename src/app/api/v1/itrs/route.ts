@@ -15,6 +15,8 @@ import {
   requirePhaseAccess,
 } from '@/lib/api/access'
 import type { Enums } from '@/types/supabase.generated'
+import { readJson, readQuery } from '@/lib/api/validate'
+import { ItrCreate, ItrsQuery } from '@/lib/api/schemas'
 
 const ITR_STATUSES: Enums<'itr_status'>[] = ['not_started', 'in_progress', 'completed', 'rejected', 'approved']
 
@@ -26,15 +28,14 @@ export async function GET(req: NextRequest) {
   const auth = await authenticateApiKey(req, ['itrs:read'])
   if (!auth.ok) return auth.response
 
+  // A05: ids de la consulta validados (400) antes de tocar la BD.
+  const q = readQuery(req, ItrsQuery)
+  if (!q.ok) return q.response
   const { searchParams } = new URL(req.url)
-  const projectId = searchParams.get('project_id')
-  const tagId     = searchParams.get('tag_id')
+  const projectId = q.data.project_id
+  const tagId     = q.data.tag_id
   const status    = searchParams.get('status')
   const { limit, offset } = parsePagination(req)
-
-  if (!projectId) {
-    return NextResponse.json({ error: 'project_id is required' }, { status: 400, headers: apiHeaders() })
-  }
 
   const admin = createAdminClient()
 
@@ -82,42 +83,33 @@ export async function POST(req: NextRequest) {
   const auth = await authenticateApiKey(req, ['itrs:write'])
   if (!auth.ok) return auth.response
 
-  let body: Record<string, unknown>
-  try { body = await req.json() } catch {
-    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400, headers: apiHeaders() })
-  }
-
-  const { project_id, tag_id, template_id, itr_number, scheduled_date, phase_id } = body
-
-  if (!project_id || !tag_id || !template_id) {
-    return NextResponse.json(
-      { error: 'Required fields: project_id, tag_id, template_id' },
-      { status: 422, headers: apiHeaders() },
-    )
-  }
+  // A05: cuerpo validado en tiempo de ejecución (400 JSON ilegible · 413 demasiado grande · 422 forma equivocada).
+  const body = await readJson(req, ItrCreate)
+  if (!body.ok) return body.response
+  const { project_id, tag_id, template_id, itr_number, scheduled_date, phase_id } = body.data
 
   const admin = createAdminClient({ apiKeyId: auth.keyId })
 
   // Cross-tenant FK guards: project (org), tag (project), template (org+is_global), phase (org).
-  const projectCheck = await requireProjectAccess(admin, auth.orgId, project_id as string)
+  const projectCheck = await requireProjectAccess(admin, auth.orgId, project_id)
   if (!projectCheck.ok) return projectCheck.response
 
-  const tagCheck = await requireTagAccess(admin, project_id as string, tag_id as string)
+  const tagCheck = await requireTagAccess(admin, project_id, tag_id)
   if (!tagCheck.ok) return tagCheck.response
 
-  const templateCheck = await requireTemplateAccess(admin, auth.orgId, template_id as string)
+  const templateCheck = await requireTemplateAccess(admin, auth.orgId, template_id)
   if (!templateCheck.ok) return templateCheck.response
 
   if (phase_id) {
-    const phaseCheck = await requirePhaseAccess(admin, auth.orgId, phase_id as string)
+    const phaseCheck = await requirePhaseAccess(admin, auth.orgId, phase_id)
     if (!phaseCheck.ok) return phaseCheck.response
   }
 
   // subsystem_id y phase_id son NOT NULL — se resuelven del tag y el template,
   // y el itr_number sigue el formato CODE/TAG de createItrInstance (itr-instances.ts)
   const [{ data: tag }, { data: template }] = await Promise.all([
-    admin.from('tags').select('tag_number, subsystem_id').eq('id', tag_id as string).single(),
-    admin.from('itr_templates').select('code, phase_id').eq('id', template_id as string).single(),
+    admin.from('tags').select('tag_number, subsystem_id').eq('id', tag_id).single(),
+    admin.from('itr_templates').select('code, phase_id').eq('id', template_id).single(),
   ])
   if (!tag?.subsystem_id) {
     return NextResponse.json(
@@ -125,7 +117,7 @@ export async function POST(req: NextRequest) {
       { status: 422, headers: apiHeaders() },
     )
   }
-  const resolvedPhaseId = (phase_id as string | undefined) ?? template?.phase_id
+  const resolvedPhaseId = phase_id ?? template?.phase_id
   if (!resolvedPhaseId) {
     return NextResponse.json(
       { error: 'phase_id is required (template has no default phase)' },
@@ -136,12 +128,12 @@ export async function POST(req: NextRequest) {
   const { data, error } = await admin
     .from('itrs')
     .insert({
-      project_id:      project_id as string,
-      tag_id:          tag_id as string,
-      template_id:     template_id as string,
+      project_id,
+      tag_id,
+      template_id,
       subsystem_id:    tag.subsystem_id,
-      itr_number:      (itr_number as string | undefined) ?? `${template?.code ?? 'ITR'}/${tag.tag_number}`,
-      scheduled_date:  (scheduled_date as string | undefined) ?? null,
+      itr_number:      itr_number ?? `${template?.code ?? 'ITR'}/${tag.tag_number}`,
+      scheduled_date:  scheduled_date ?? null,
       phase_id:        resolvedPhaseId,
       status:          'not_started',
       progress_pct:    0,

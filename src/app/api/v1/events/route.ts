@@ -17,6 +17,8 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { authenticateApiKey, apiHeaders, apiDbError } from '@/lib/api/auth'
+import { readQuery } from '@/lib/api/validate'
+import { EventsQuery } from '@/lib/api/schemas'
 
 export function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: apiHeaders() })
@@ -26,18 +28,17 @@ export async function GET(req: NextRequest) {
   const auth = await authenticateApiKey(req, ['events:read'])
   if (!auth.ok) return auth.response
 
+  // A05: ids de la consulta validados (400) antes de tocar la BD.
+  const q = readQuery(req, EventsQuery)
+  if (!q.ok) return q.response
   const { searchParams } = new URL(req.url)
-  const projectId     = searchParams.get('project_id')
-  const since         = searchParams.get('since') ?? new Date(Date.now() - 86_400_000).toISOString()
+  const projectId     = q.data.project_id
+  const since         = q.data.since ?? new Date(Date.now() - 86_400_000).toISOString()
   const aggregateType = searchParams.get('aggregate_type')
   const eventType     = searchParams.get('event_type')
   // S15 (A-25): NaN o negativo → valores válidos.
   const rawLimit      = parseInt(searchParams.get('limit') ?? '200', 10)
   const limit         = Number.isNaN(rawLimit) ? 200 : Math.min(Math.max(rawLimit, 1), 200)
-
-  if (!projectId) {
-    return NextResponse.json({ error: 'project_id is required' }, { status: 400, headers: apiHeaders() })
-  }
 
   const admin = createAdminClient()
 

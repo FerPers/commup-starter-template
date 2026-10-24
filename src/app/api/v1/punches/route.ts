@@ -14,9 +14,10 @@ import {
   requireSubsystemAccess,
 } from '@/lib/api/access'
 import type { Enums } from '@/types/supabase.generated'
+import { readJson, readQuery } from '@/lib/api/validate'
+import { PunchCreate, PunchesQuery } from '@/lib/api/schemas'
 
 const PUNCH_STATUSES: Enums<'punch_status'>[] = ['open', 'in_progress', 'closed', 'cancelled']
-const PUNCH_PRIORITIES: Enums<'punch_priority'>[] = ['critical', 'major', 'minor']
 
 export function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: apiHeaders() })
@@ -26,16 +27,15 @@ export async function GET(req: NextRequest) {
   const auth = await authenticateApiKey(req, ['punches:read'])
   if (!auth.ok) return auth.response
 
+  // A05: ids de la consulta validados (400) antes de tocar la BD.
+  const q = readQuery(req, PunchesQuery)
+  if (!q.ok) return q.response
   const { searchParams } = new URL(req.url)
-  const projectId  = searchParams.get('project_id')
-  const tagId      = searchParams.get('tag_id')
+  const projectId  = q.data.project_id
+  const tagId      = q.data.tag_id
   const category   = searchParams.get('category')   // A | B | C
   const status     = searchParams.get('status')      // open | in_progress | closed
   const { limit, offset } = parsePagination(req)
-
-  if (!projectId) {
-    return NextResponse.json({ error: 'project_id is required' }, { status: 400, headers: apiHeaders() })
-  }
 
   const admin = createAdminClient()
 
@@ -88,53 +88,33 @@ export async function POST(req: NextRequest) {
   const auth = await authenticateApiKey(req, ['punches:write'])
   if (!auth.ok) return auth.response
 
-  let body: Record<string, unknown>
-  try { body = await req.json() } catch {
-    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400, headers: apiHeaders() })
-  }
-
-  const { project_id, tag_id, subsystem_id, category, description, priority } = body
-
-  if (!project_id || !tag_id || !category || !description) {
-    return NextResponse.json(
-      { error: 'Required fields: project_id, tag_id, category (A|B|C), description' },
-      { status: 422, headers: apiHeaders() },
-    )
-  }
-
-  const cat = (category as string).toUpperCase()
-  if (!['A', 'B', 'C'].includes(cat)) {
-    return NextResponse.json({ error: 'category must be A, B, or C' }, { status: 422, headers: apiHeaders() })
-  }
+  // A05: cuerpo validado en tiempo de ejecución (400 JSON ilegible · 413 demasiado grande · 422 forma equivocada).
+  const body = await readJson(req, PunchCreate)
+  if (!body.ok) return body.response
+  const { project_id, tag_id, subsystem_id, category: cat, description, priority } = body.data
 
   const admin = createAdminClient({ apiKeyId: auth.keyId })
 
   // Cross-tenant FK guards: project (org), tag (project), subsystem (project, optional).
-  const projectCheck = await requireProjectAccess(admin, auth.orgId, project_id as string)
+  const projectCheck = await requireProjectAccess(admin, auth.orgId, project_id)
   if (!projectCheck.ok) return projectCheck.response
 
-  const tagCheck = await requireTagAccess(admin, project_id as string, tag_id as string)
+  const tagCheck = await requireTagAccess(admin, project_id, tag_id)
   if (!tagCheck.ok) return tagCheck.response
 
   if (subsystem_id) {
-    const subsystemCheck = await requireSubsystemAccess(admin, project_id as string, subsystem_id as string)
+    const subsystemCheck = await requireSubsystemAccess(admin, project_id, subsystem_id)
     if (!subsystemCheck.ok) return subsystemCheck.response
   }
 
-  const prio = (priority as string | undefined) ?? 'minor'
-  if (!PUNCH_PRIORITIES.includes(prio as Enums<'punch_priority'>)) {
-    return NextResponse.json(
-      { error: `priority must be one of: ${PUNCH_PRIORITIES.join(', ')}` },
-      { status: 422, headers: apiHeaders() },
-    )
-  }
+  const prio = priority ?? 'minor'
 
   // subsystem_id y discipline_id son NOT NULL — se resuelven desde el tag,
   // igual que createPunch en src/app/actions/punches.ts
   const { data: tag } = await admin
     .from('tags')
     .select('subsystem_id, discipline_id')
-    .eq('id', tag_id as string)
+    .eq('id', tag_id)
     .single()
   if (!tag?.subsystem_id || !tag.discipline_id) {
     return NextResponse.json(
@@ -164,15 +144,15 @@ export async function POST(req: NextRequest) {
   const { data, error } = await admin
     .from('punches')
     .insert({
-      project_id:   project_id as string,
-      tag_id:       tag_id as string,
-      subsystem_id: (subsystem_id as string | undefined) ?? tag.subsystem_id,
+      project_id,
+      tag_id,
+      subsystem_id: subsystem_id ?? tag.subsystem_id,
       discipline_id: tag.discipline_id,
       raised_by:    raisedBy,
       punch_number: '', // trigger punch_number_before_insert genera el correlativo
-      category:     cat as Enums<'punch_category'>,
-      description:  description as string,
-      priority:     prio as Enums<'punch_priority'>,
+      category:     cat,
+      description,
+      priority:     prio,
       status:       'open',
       created_via:  'api_v1',
     })

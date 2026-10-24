@@ -8,6 +8,8 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { authenticateApiKey, apiHeaders, apiDbError } from '@/lib/api/auth'
+import { readId, readJson } from '@/lib/api/validate'
+import { PunchTransferToOps } from '@/lib/api/schemas'
 
 export function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: apiHeaders() })
@@ -17,16 +19,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const auth = await authenticateApiKey(req, ['punches:write'])
   if (!auth.ok) return auth.response
 
-  const { id: punchId } = await params
-
-  let body: { transferred_to?: string; ops_target_date?: string; notes?: string }
-  try { body = await req.json() } catch {
-    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400, headers: apiHeaders() })
-  }
-
-  if (!body.transferred_to) {
-    return NextResponse.json({ error: 'transferred_to is required' }, { status: 422, headers: apiHeaders() })
-  }
+  // A05: id de la ruta y cuerpo validados (400 · 413 · 422) antes de tocar la BD.
+  const idCheck = readId((await params).id)
+  if (!idCheck.ok) return idCheck.response
+  const punchId = idCheck.data
+  const parsed = await readJson(req, PunchTransferToOps)
+  if (!parsed.ok) return parsed.response
+  const body = parsed.data
 
   const admin = createAdminClient({ apiKeyId: auth.keyId })
 

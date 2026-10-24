@@ -9,9 +9,8 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { authenticateApiKey, parsePagination, apiHeaders, apiDbError } from '@/lib/api/auth'
-import type { Enums } from '@/types/supabase.generated'
-
-const TAG_STATUSES: Enums<'tag_status'>[] = ['not_started', 'in_progress', 'completed', 'on_hold']
+import { readJson, readQuery } from '@/lib/api/validate'
+import { TagCreate, TagsQuery } from '@/lib/api/schemas'
 import {
   requireProjectAccess,
   requireSubsystemAccess,
@@ -28,16 +27,15 @@ export async function GET(req: NextRequest) {
   const auth = await authenticateApiKey(req, ['tags:read'])
   if (!auth.ok) return auth.response
 
+  // A05: ids de la consulta validados (400) antes de tocar la BD.
+  const q = readQuery(req, TagsQuery)
+  if (!q.ok) return q.response
   const { searchParams } = new URL(req.url)
-  const projectId    = searchParams.get('project_id')
-  const subsystemId  = searchParams.get('subsystem_id')
+  const projectId    = q.data.project_id
+  const subsystemId  = q.data.subsystem_id
   const discCode     = searchParams.get('discipline_code')
-  const status       = searchParams.get('status')
+  const status       = q.data.status
   const { limit, offset } = parsePagination(req)
-
-  if (!projectId) {
-    return NextResponse.json({ error: 'project_id is required' }, { status: 400, headers: apiHeaders() })
-  }
 
   const admin = createAdminClient()
 
@@ -100,49 +98,34 @@ export async function POST(req: NextRequest) {
   const auth = await authenticateApiKey(req, ['tags:write'])
   if (!auth.ok) return auth.response
 
-  let body: Record<string, unknown>
-  try { body = await req.json() } catch {
-    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400, headers: apiHeaders() })
-  }
-
-  const { project_id, tag_number, subsystem_id, discipline_id, description, status } = body
-
-  if (!project_id || !tag_number || !subsystem_id || !discipline_id) {
-    return NextResponse.json(
-      { error: 'Required fields: project_id, tag_number, subsystem_id, discipline_id' },
-      { status: 422, headers: apiHeaders() },
-    )
-  }
+  // A05: cuerpo validado en tiempo de ejecución (400 JSON ilegible · 413 demasiado grande · 422 forma equivocada).
+  const body = await readJson(req, TagCreate)
+  if (!body.ok) return body.response
+  const { project_id, tag_number, subsystem_id, discipline_id, description, status } = body.data
 
   const admin = createAdminClient({ apiKeyId: auth.keyId })
 
   // Verify project, subsystem and discipline all belong to this org/project.
   // Prevents cross-tenant inserts where an OrgA key references OrgB sub-resources.
-  const projectCheck = await requireProjectAccess(admin, auth.orgId, project_id as string)
+  const projectCheck = await requireProjectAccess(admin, auth.orgId, project_id)
   if (!projectCheck.ok) return projectCheck.response
 
-  const subsystemCheck = await requireSubsystemAccess(admin, project_id as string, subsystem_id as string)
+  const subsystemCheck = await requireSubsystemAccess(admin, project_id, subsystem_id)
   if (!subsystemCheck.ok) return subsystemCheck.response
 
-  const disciplineCheck = await requireDisciplineAccess(admin, auth.orgId, discipline_id as string)
+  const disciplineCheck = await requireDisciplineAccess(admin, auth.orgId, discipline_id)
   if (!disciplineCheck.ok) return disciplineCheck.response
 
-  const tagStatus = ((status as string | undefined) ?? 'not_started') as Enums<'tag_status'>
-  if (!TAG_STATUSES.includes(tagStatus)) {
-    return NextResponse.json(
-      { error: `status must be one of: ${TAG_STATUSES.join(', ')}` },
-      { status: 422, headers: apiHeaders() },
-    )
-  }
+  const tagStatus = status ?? 'not_started'
 
   const { data, error } = await admin
     .from('tags')
     .insert({
-      project_id: project_id as string,
-      tag_number:    tag_number    as string,
-      subsystem_id:  subsystem_id  as string,
-      discipline_id: discipline_id as string,
-      description:   (description as string | undefined) ?? '', // NOT NULL en DB
+      project_id,
+      tag_number,
+      subsystem_id,
+      discipline_id,
+      description:   description ?? '', // NOT NULL en DB
       status:        tagStatus,
     })
     .select('id, tag_number, description, status, subsystem_id, discipline_id')

@@ -48,6 +48,11 @@ const SPEC = {
       'In addition to polling, CommUp can push domain events to an HTTPS endpoint. Each delivery is signed',
       'with HMAC-SHA256 in the `X-CommUp-Signature` header. Retries use exponential backoff (0s, 60s, 5m, 30m, 2h)',
       'and are abandoned after 5 failed attempts. Configure subscriptions under **Admin → Webhooks**.',
+      '',
+      '**Input errors** — bodies, query parameters and path ids are validated before anything is written: ',
+      '`400` unreadable JSON or an invalid query/path parameter (ids are UUIDs), `413` body over 256 KB (2 MB for ',
+      'signal samples) or a collection over its limit, `422` readable JSON with the wrong shape. Shape and ',
+      'query-parameter errors carry `issues: [{ path, message }]` naming each failing field.',
     ].join('\n'),
     contact: { name: 'CommUp Support', url: 'https://commup.app' },
   },
@@ -83,6 +88,11 @@ const SPEC = {
         properties: {
           error: { type: 'string' },
           docs:  { type: 'string', format: 'uri' },
+          issues: {
+            type: 'array',
+            description: 'Present on 400/413/422 input errors: each failing field and why.',
+            items: { type: 'object', properties: { path: { type: 'string' }, message: { type: 'string' } } },
+          },
         },
       },
       Tag: {

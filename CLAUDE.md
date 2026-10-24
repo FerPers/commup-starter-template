@@ -217,6 +217,7 @@ Rules for every new page/query/action:
 ## Miembros y acceso (S15)
 
 - `org_members` **no se escribe por REST**: solo RPC `add_org_member` / `set_member_role` / `remove_org_member` / `set_member_access` / `respond_org_invitation`. Estados `invited` · `active` · `suspended` + `access_expires_at`; todos los helpers de RLS exigen membresía activa y no vencida (`isActiveMembership` en `src/lib/members/catalog.ts`). Invitado o suspendido sin otra org activa → `/access`.
+- **API v1, entrada (A05):** toda ruta valida antes de tocar la BD con `readJson(req, Esquema)` / `readQuery` / `readId` (`src/lib/api/validate.ts`) y esquemas Zod en `src/lib/api/schemas.ts` (enums desde `Constants` de los tipos generados): 400 JSON ilegible o parámetro inválido, 413 cuerpo > 256 KB o colección sobre su tope, 422 forma equivocada con `issues`. Una ruta nueva entra en la prueba de fuzz `src/app/api/v1/input-validation.test.ts`.
 - `activity_log` solo a nombre propio; `notifications` solo service role/DEFINER y `link_url` relativo. API v1 limitada por el binding `API_RATE_LIMITER` (wrangler.jsonc) y errores de BD con `apiDbError`.
 
 ## PSSR (S16)

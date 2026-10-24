@@ -7,6 +7,8 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { authenticateApiKey, parsePagination, apiHeaders, apiDbError } from '@/lib/api/auth'
+import { readQuery } from '@/lib/api/validate'
+import { CertificatesQuery } from '@/lib/api/schemas'
 import type { Enums } from '@/types/supabase.generated'
 
 const CERT_STATUSES: Enums<'certificate_status'>[] = ['pending', 'in_review', 'issued', 'rejected']
@@ -19,15 +21,14 @@ export async function GET(req: NextRequest) {
   const auth = await authenticateApiKey(req, ['certificates:read'])
   if (!auth.ok) return auth.response
 
+  // A05: ids de la consulta validados (400) antes de tocar la BD.
+  const q = readQuery(req, CertificatesQuery)
+  if (!q.ok) return q.response
   const { searchParams } = new URL(req.url)
-  const projectId   = searchParams.get('project_id')
-  const subsystemId = searchParams.get('subsystem_id')
+  const projectId   = q.data.project_id
+  const subsystemId = q.data.subsystem_id
   const status      = searchParams.get('status')  // pending|in_review|issued|rejected
   const { limit, offset } = parsePagination(req)
-
-  if (!projectId) {
-    return NextResponse.json({ error: 'project_id is required' }, { status: 400, headers: apiHeaders() })
-  }
 
   const admin = createAdminClient()
 

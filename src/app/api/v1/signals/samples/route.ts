@@ -30,16 +30,8 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { authenticateApiKey, apiHeaders } from '@/lib/api/auth'
 import { sqlArg } from '@/lib/supabase/casts'
-
-const MAX_SAMPLES_PER_BATCH = 5000
-
-type Sample = {
-  signal_name?: string
-  signal_id?:   string
-  sampled_at:  string
-  value:       number | null
-  quality?:    number
-}
+import { readJson } from '@/lib/api/validate'
+import { MAX_SAMPLES_BYTES, SignalSamples } from '@/lib/api/schemas'
 
 export function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: apiHeaders() })
@@ -49,35 +41,15 @@ export async function POST(req: NextRequest) {
   const auth = await authenticateApiKey(req, ['signals:write'])
   if (!auth.ok) return auth.response
 
-  let body: { source?: string; source_system?: string; batch_id?: string; project_code?: string; upsert?: boolean; samples?: Sample[] }
-  try { body = await req.json() } catch {
-    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400, headers: apiHeaders() })
-  }
-
+  // A05: forma validada en tiempo de ejecución (400 JSON ilegible · 413 más de MAX_SAMPLES_PER_BATCH o 2 MB ·
+  // 422 una muestra que no es un objeto legible). La validez de cada muestra la sigue decidiendo la RPC (207).
+  const parsed = await readJson(req, SignalSamples, MAX_SAMPLES_BYTES)
+  if (!parsed.ok) return parsed.response
+  const body = parsed.data
   const source       = body.source ?? 'MANUAL'
   const sourceSystem = body.source_system ?? null
   const batchKey     = body.batch_id ?? null
-  const samples      = Array.isArray(body.samples) ? body.samples : []
-
-  if (samples.length === 0) {
-    return NextResponse.json({ error: 'samples[] must not be empty' }, { status: 422, headers: apiHeaders() })
-  }
-  if (samples.length > MAX_SAMPLES_PER_BATCH) {
-    return NextResponse.json(
-      { error: `Too many samples in one batch (max ${MAX_SAMPLES_PER_BATCH})` },
-      { status: 413, headers: apiHeaders() },
-    )
-  }
-
-  // Basic shape validation — keep cheap, let the SQL do the heavy lifting
-  for (const s of samples) {
-    if (!s || (!s.signal_name && !s.signal_id) || !s.sampled_at) {
-      return NextResponse.json(
-        { error: 'Each sample requires signal_name (or signal_id) and sampled_at' },
-        { status: 422, headers: apiHeaders() },
-      )
-    }
-  }
+  const samples      = body.samples
 
   const admin = createAdminClient()
 
@@ -85,7 +57,7 @@ export async function POST(req: NextRequest) {
   let projectId: string | null = null
   if (body.project_code) {
     const { data: project } = await admin.from('projects').select('id')
-      .eq('org_id', auth.orgId).eq('code', String(body.project_code)).maybeSingle()
+      .eq('org_id', auth.orgId).eq('code', body.project_code).maybeSingle()
     if (!project) return NextResponse.json({ error: 'Unknown project_code' }, { status: 422, headers: apiHeaders() })
     projectId = project.id
   }
