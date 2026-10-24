@@ -6,15 +6,16 @@ import { evaluateSelectionOutcome } from '@/lib/itr/selection-outcome'
 import { EDITOR_ROLES, PRIVILEGED_ROLES } from '@/lib/auth/permissions'
 import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
 import { checkProjectAccess, notFound } from '@/lib/auth/access'
-import { accessError, assignmentDbError } from '@/lib/i18n/action-errors'
+import { accessError } from '@/lib/i18n/action-errors'
 import { getTranslations } from 'next-intl/server'
 import { assignmentIssue, requiredForTemplate, type SigningRole } from '@/lib/itr/signatures'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { notifyItrAssignmentChanged, type ItrAssignmentChange } from '@/lib/notifications/itr-assignment'
-import type { TablesInsert, TablesUpdate } from '@/types/supabase.generated'
+import type { TablesUpdate } from '@/types/supabase.generated'
 import type { ResponseConflict } from '@/lib/sync/response-utils'
 import type { ActiveContext } from '@/lib/supabase/membership'
+import { createItrRecord, isRequestId } from '@/lib/itr/create'
 
 // NOTA sobre roles: las funciones de EJECUCIÓN de campo (upsertResponse,
 // saveItrAttachment, deleteItrAttachment, signItr) son auth-only a propósito —
@@ -57,10 +58,14 @@ export const createItrAssignment = withAuth(
       inspectorId: string
       supervisorId?: string
       clientId?: string
+      /** A03: UUID que genera el formulario al abrirse; es el id del ITR (reintentar no duplica). */
+      requestId?: string
     },
   ): Promise<{ itrId?: string; itrNumber?: string; error?: string }> => {
     const t = await getTranslations('ActionErrors')
     const { projectId, tagId, templateId, subsystemId, scheduledDate, inspectorId, supervisorId, clientId } = input
+    if (input.requestId !== undefined && !isRequestId(input.requestId)) return { error: t('itrInstances.invalidRequest') }
+    const requestId = input.requestId ?? crypto.randomUUID()
 
     const [{ data: tag }, { data: template }] = await Promise.all([
       ctx.supabase.from('tags').select('tag_number, subsystem_id').eq('id', tagId).single(),
@@ -82,44 +87,24 @@ export const createItrAssignment = withAuth(
     const invalid = assignmentIssue(required, people)
     if (invalid) return { error: t(`itrAssign.${invalid.code}`, invalid) }
 
-    const baseNumber = `${template.code}/${tag.tag_number}`
-
     // S05 (C-15): se manda la base; si ya existe, la BD agrega « Rn» de forma atómica (assign_itr_number).
+    // A03: ITR y firmantes en una transacción; `requestId` = id del ITR, repetir la solicitud devuelve el mismo.
+    const signers = Object.fromEntries(required.map(role => [role, people[role]!]))
+    const res = await createItrRecord(ctx.supabase, {
+      id: requestId, projectId, tagId, subsystemId, templateId, baseNumber: `${template.code}/${tag.tag_number}`,
+      signers, scheduledDate: scheduledDate ?? null,
+    })
+    if ('error' in res) return { error: res.error }
+    const itrNumber = res.itr_number
+    if (!res.created) return { itrId: res.id, itrNumber }
 
-    const { data: itr, error: itrErr } = await ctx.supabase
-      .from('itrs')
-      .insert({
-        template_id: templateId,
-        tag_id: tagId,
-        subsystem_id: subsystemId,
-        project_id: projectId,
-        phase_id: template.phase_id,
-        itr_number: baseNumber,
-        status: 'not_started',
-        scheduled_date: scheduledDate ?? null,
-        progress_pct: 0,
-      })
-      .select('id, itr_number')
-      .single()
-
-    if (itrErr) return { error: itrErr.message }
-    const itrNumber = itr.itr_number
-
-    const assignments: TablesInsert<'itr_assignments'>[] = required.map(role => ({ itr_id: itr.id, user_id: people[role]!, role }))
-
-    const { error: assignErr } = await ctx.supabase
-      .from('itr_assignments')
-      .insert(assignments)
-
-    if (assignErr) return { error: await assignmentDbError(assignErr.message) }
-
-    const changes: ItrAssignmentChange[] = assignments.map(a => ({
-      itrId: itr.id,
+    const changes: ItrAssignmentChange[] = required.map(role => ({
+      itrId: res.id,
       itrNumber,
       projectId,
       tagId,
-      role: a.role as 'executor' | 'supervisor' | 'client',
-      recipientUserId: a.user_id,
+      role,
+      recipientUserId: people[role]!,
       changeType: 'added',
     }))
     const admin = createAdminClient()
@@ -127,7 +112,7 @@ export const createItrAssignment = withAuth(
 
     revalidatePath(`/projects/${projectId}/tags/${tagId}`)
     revalidatePath(`/projects/${projectId}/itrs`)
-    return { itrId: itr.id, itrNumber }
+    return { itrId: res.id, itrNumber }
   },
 )
 

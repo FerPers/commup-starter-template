@@ -73,6 +73,8 @@ export default function TagItrTab({
   const [selectedSupervisor, setSelectedSupervisor] = useState('')
   const [selectedClient, setSelectedClient] = useState('')
   const [scheduledDate, setScheduledDate] = useState('')
+  // A03: id del ITR que se va a crear; un doble clic o un reintento tras perder la respuesta devuelve el mismo.
+  const [requestId, setRequestId] = useState(() => crypto.randomUUID())
 
   // Add to plan modal state
   const [planModalItr, setPlanModalItr] = useState<ModalItr | null>(null)
@@ -115,8 +117,10 @@ export default function TagItrTab({
         supervisorId: (needsSupervisor && selectedSupervisor) || undefined,
         clientId: (needsClient && selectedClient) || undefined,
         scheduledDate: scheduledDate || undefined,
+        requestId,
       })
       if (res.error) { setAssignError(res.error); return }
+      setRequestId(crypto.randomUUID())
       setShowAssign(false)
       setSelectedTemplate('')
       setSelectedInspector('')

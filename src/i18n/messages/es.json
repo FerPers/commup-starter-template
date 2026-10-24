@@ -8430,6 +8430,8 @@
       "role_not_required": "Este ITR no exige ese rol de firma",
       "role_signed": "Ese rol ya firmó: para cambiarlo hay que reabrir el ITR",
       "not_member": "La persona no es miembro de la organización",
+      "missing_role_db": "Falta asignar una firma que exige el ITR: no se creó",
+      "client_executor_db": "El cliente no puede ser el ejecutor del ITR",
       "bulkNotRequired": "Estos ITR no exigen ese rol de firma: {list}"
     },
     "workflows": {
@@ -8453,6 +8455,7 @@
       "stability": "Se requieren al menos {n} lecturas para el criterio de estabilidad"
     },
     "itrInstances": {
+      "invalidRequest": "Solicitud no válida: vuelve a abrir el formulario",
       "tagNotFound": "Tag no encontrado",
       "templateNotFound": "Plantilla no encontrada",
       "templateDraft": "La plantilla es un borrador: actívala antes de asignar ITR",
@@ -8490,6 +8493,7 @@
       "rejectReasonMin10": "Explica qué hay que corregir (mínimo 10 caracteres)"
     },
     "sourceItrs": {
+      "invalidRequest": "Solicitud no válida: vuelve a abrir el formulario",
       "nothing": "Nada que generar",
       "maxBatch": "Máximo {max} por vez",
       "templateNotFound": "Plantilla no encontrada",

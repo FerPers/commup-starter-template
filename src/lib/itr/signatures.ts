@@ -94,8 +94,11 @@ export function itrSignErrorKey(message: string): 'alreadySigned' | 'previous' |
 }
 
 /** Errores de asignación de la BD → clave de `ActionErrors.itrAssign` (null = mostrar el mensaje de la BD). */
-export function assignmentDbErrorKey(message: string): 'same_person_db' | 'role_not_required' | 'role_signed' | 'not_member' | null {
+export function assignmentDbErrorKey(message: string): 'same_person_db' | 'role_not_required' | 'role_signed' | 'not_member' | 'missing_role_db' | 'client_executor_db' | null {
   if (/two signing roles/i.test(message)) return 'same_person_db'
+  // A03: validaciones de create_itr (todo o nada).
+  if (/Missing signer for required role/i.test(message)) return 'missing_role_db'
+  if (/client cannot be the ITR executor/i.test(message)) return 'client_executor_db'
   if (/not required for this ITR/i.test(message)) return 'role_not_required'
   if (/audited reopening/i.test(message)) return 'role_signed'
   if (/not a project organization member/i.test(message)) return 'not_member'

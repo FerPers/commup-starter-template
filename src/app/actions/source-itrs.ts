@@ -2,14 +2,13 @@
 
 import { revalidatePath } from 'next/cache'
 import { getTranslations } from 'next-intl/server'
-import { assignmentDbError } from '@/lib/i18n/action-errors'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/supabase.generated'
 import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { withAuth } from '@/lib/auth/withAuth'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { notifyItrAssignmentChanged, type ItrAssignmentChange } from '@/lib/notifications/itr-assignment'
-import type { TablesInsert } from '@/types/supabase.generated'
+import { batchItrId, createItrRecord, isRequestId, type CreatedItr } from '@/lib/itr/create'
 import { assignmentIssue, requiredForTemplate, type SigningRole } from '@/lib/itr/signatures'
 
 // ITR generados desde un lazo (loop check) o desde una causa C&E (prueba por causa) — fase 4 · bloque D,
@@ -24,6 +23,8 @@ type GenerateInput = {
   inspectorId: string
   supervisorId?: string | null
   clientId?: string | null
+  /** A03: UUID que genera el modal al abrirse; reintentar el mismo lote no duplica. */
+  requestId?: string
 }
 
 type Signer = { role: SigningRole; userId: string }
@@ -35,6 +36,7 @@ const MAX_BATCH = 200
 async function prepare(ctx: { supabase: SupabaseClient<Database>; orgId: string }, input: GenerateInput, source: 'loop_signals' | 'ce_effects') {
   const t = await getTranslations('ActionErrors')
   if (!input.ids.length) return { error: t('sourceItrs.nothing') }
+  if (input.requestId !== undefined && !isRequestId(input.requestId)) return { error: t('sourceItrs.invalidRequest') }
   if (input.ids.length > MAX_BATCH) return { error: t('sourceItrs.maxBatch', { max: MAX_BATCH }) }
   const [{ data: template }, { data: sourceItem }, { data: members }] = await Promise.all([
     ctx.supabase.from('itr_templates').select('id, code, phase_id, is_active, required_signatures, project_phases(itr_client_signature)').eq('id', input.templateId).eq('org_id', ctx.orgId).maybeSingle(),
@@ -61,23 +63,19 @@ async function prepare(ctx: { supabase: SupabaseClient<Database>; orgId: string 
 async function insertItr(
   ctx: { supabase: SupabaseClient<Database> },
   input: GenerateInput,
-  template: { id: string; code: string; phase_id: string },
+  template: { id: string },
   row: { subsystem_id: string; tag_id: string; baseNumber: string; loop_id?: string; ce_cause_id?: string },
   signers: Signer[],
-): Promise<{ id: string; itr_number: string } | { error: string }> {
-  const t = await getTranslations('ActionErrors')
+): Promise<CreatedItr | { error: string }> {
   // S05 (C-15): la BD agrega « Rn» de forma atómica si la base ya existe (assign_itr_number).
-  const payload: TablesInsert<'itrs'> = {
-    template_id: template.id, tag_id: row.tag_id, subsystem_id: row.subsystem_id, project_id: input.projectId,
-    phase_id: template.phase_id, itr_number: row.baseNumber, status: 'not_started', progress_pct: 0,
-    loop_id: row.loop_id ?? null, ce_cause_id: row.ce_cause_id ?? null,
-  }
-  const { data: itr, error } = await ctx.supabase.from('itrs').insert(payload).select('id, itr_number').single()
-  if (error || !itr) return { error: error?.message ?? t('sourceItrs.createFailed') }
-  const assignments: TablesInsert<'itr_assignments'>[] = signers.map(s => ({ itr_id: itr.id, user_id: s.userId, role: s.role }))
-  const { error: assignErr } = await ctx.supabase.from('itr_assignments').insert(assignments)
-  if (assignErr) return { error: await assignmentDbError(assignErr.message) }
-  return { id: itr.id, itr_number: itr.itr_number }
+  // A03: ITR y firmantes en una transacción; con `requestId` el id sale de la solicitud y la fuente (reintentar el
+  // lote devuelve los mismos ITR en vez de crear revisiones).
+  const sourceKey = `${template.id}:${row.loop_id ? `loop:${row.loop_id}` : `cause:${row.ce_cause_id}`}`
+  return createItrRecord(ctx.supabase, {
+    id: input.requestId ? batchItrId(input.requestId, sourceKey) : crypto.randomUUID(),
+    projectId: input.projectId, tagId: row.tag_id, subsystemId: row.subsystem_id, templateId: template.id, baseNumber: row.baseNumber,
+    signers: Object.fromEntries(signers.map(s => [s.role, s.userId])), loopId: row.loop_id ?? null, ceCauseId: row.ce_cause_id ?? null,
+  })
 }
 
 async function notify(ctx: { orgId: string; userId: string }, input: GenerateInput, made: Array<{ id: string; itr_number: string; tag_id: string }>, signers: Signer[]) {
@@ -111,7 +109,7 @@ export const generateLoopItrs = withAuth(
       if (!tagId) { errors.push(t('sourceItrs.loopNoInstrument', { code: loop.loop_number })); continue }
       const res = await insertItr(ctx, input, prep.template, { subsystem_id: loop.subsystem_id, tag_id: tagId, baseNumber: `${prep.template.code}/${loop.loop_number}`, loop_id: loop.id }, prep.signers)
       if ('error' in res) errors.push(`${loop.loop_number}: ${res.error}`)
-      else made.push({ ...res, tag_id: tagId })
+      else if (res.created) made.push({ id: res.id, itr_number: res.itr_number, tag_id: tagId })
     }
     await notify(ctx, input, made, prep.signers)
     revalidatePath(`/projects/${input.projectId}/loops`)
@@ -144,7 +142,7 @@ export const generateCauseItrs = withAuth(
       if (!tagId || !subsystemId) { errors.push(t('sourceItrs.causeNoTag', { code: cause.code })); continue }
       const res = await insertItr(ctx, input, prep.template, { subsystem_id: subsystemId, tag_id: tagId, baseNumber: `${prep.template.code}/${cause.ce_matrices?.code ?? 'C&E'}/${cause.code}`, ce_cause_id: cause.id }, prep.signers)
       if ('error' in res) errors.push(`${cause.code}: ${res.error}`)
-      else made.push({ ...res, tag_id: tagId })
+      else if (res.created) made.push({ id: res.id, itr_number: res.itr_number, tag_id: tagId })
     }
     await notify(ctx, input, made, prep.signers)
     const matrixIds = [...new Set((causes ?? []).map(c => c.matrix_id))]

@@ -13710,6 +13710,21 @@ export type Database = {
         Args: { p_area_id?: string; p_date?: string; p_project_id: string }
         Returns: string
       }
+      create_itr: {
+        Args: {
+          p_assignments: Json
+          p_ce_cause_id?: string
+          p_id: string
+          p_itr_number: string
+          p_loop_id?: string
+          p_project_id: string
+          p_scheduled_date?: string
+          p_subsystem_id: string
+          p_tag_id: string
+          p_template_id: string
+        }
+        Returns: Json
+      }
       create_itr_template_revision: {
         Args: { p_template_id: string }
         Returns: string

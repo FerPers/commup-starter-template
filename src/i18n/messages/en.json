@@ -8430,6 +8430,8 @@
       "role_not_required": "This ITR does not require that signing role",
       "role_signed": "That role already signed: reopen the ITR to change it",
       "not_member": "The person is not a member of the organization",
+      "missing_role_db": "A signature required by the ITR is not assigned: nothing was created",
+      "client_executor_db": "The client cannot be the ITR executor",
       "bulkNotRequired": "These ITRs do not require that signing role: {list}"
     },
     "workflows": {
@@ -8453,6 +8455,7 @@
       "stability": "At least {n} readings are required for the stability criterion"
     },
     "itrInstances": {
+      "invalidRequest": "Invalid request: reopen the form",
       "tagNotFound": "Tag not found",
       "templateNotFound": "Template not found",
       "templateDraft": "The template is a draft: activate it before assigning ITRs",
@@ -8490,6 +8493,7 @@
       "rejectReasonMin10": "Explain what must be corrected (at least 10 characters)"
     },
     "sourceItrs": {
+      "invalidRequest": "Invalid request: reopen the form",
       "nothing": "Nothing to generate",
       "maxBatch": "At most {max} at a time",
       "templateNotFound": "Template not found",

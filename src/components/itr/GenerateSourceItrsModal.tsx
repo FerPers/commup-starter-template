@@ -37,6 +37,8 @@ export default function GenerateSourceItrsModal({ projectId, kind, items, templa
   const [error, setError] = useState('')
   const [report, setReport] = useState<{ created: number; errors: string[] } | null>(null)
   const [pending, start] = useTransition()
+  // A03: una solicitud por apertura del modal; reenviar el mismo lote devuelve los ITR ya creados.
+  const [requestId] = useState(() => crypto.randomUUID())
   const revisions = items.filter(i => i.revision).length
 
   function submit(e: React.FormEvent) {
@@ -45,7 +47,7 @@ export default function GenerateSourceItrsModal({ projectId, kind, items, templa
     const invalid = assignmentIssue(required, { executor: inspectorId, supervisor: needs('supervisor') ? supervisorId : null, client: needs('client') ? clientId : null })
     if (invalid) { setError(te(`itrAssign.${invalid.code}`, invalid)); return }
     start(async () => {
-      const input = { projectId, templateId, ids: items.map(i => i.id), inspectorId, supervisorId: needs('supervisor') ? supervisorId : null, clientId: needs('client') ? clientId : null }
+      const input = { projectId, templateId, ids: items.map(i => i.id), inspectorId, supervisorId: needs('supervisor') ? supervisorId : null, clientId: needs('client') ? clientId : null, requestId }
       const res = kind === 'loop' ? await generateLoopItrs(input) : await generateCauseItrs(input)
       if (res.error) { setError(res.error); return }
       setReport({ created: res.created ?? 0, errors: res.errors ?? [] })
