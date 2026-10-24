@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { TABLE_PRESETS, reshapeTable, type SourceRow } from '../itr/table'
-import { isNetworkFailure, localAttachmentId, localItrStatus, outboxPolicy, signatureWaits, parseLocalAttachmentId, punchPhotoPath, storagePathFor } from './outbox-utils'
+import { isNetworkFailure, localAttachmentId, localItrStatus, outboxPolicy, signatureWaits, parseLocalAttachmentId, punchPhotoPath, itrEvidencePath, isAlreadyStored } from './outbox-utils'
 
 describe('local attachment ids', () => {
   it('round-trips an outbox id', () => {
@@ -29,14 +29,20 @@ describe('isNetworkFailure', () => {
   })
 })
 
-describe('storagePathFor', () => {
-  it('scopes by itr and item, keeps the extension', () => {
-    const p = storagePathFor('itr1', 'item9', 'IMG_0001.HEIC', 1000)
-    expect(p.startsWith('itr1/item9/1000-')).toBe(true)
-    expect(p.endsWith('.HEIC')).toBe(true)
+describe('itrEvidencePath (A02)', () => {
+  it('es la misma ruta en cada reenvío de la captura', () => {
+    const paths = Array.from({ length: 10 }, () => itrEvidencePath('itr1', 'item9', 'cap-1', 'IMG_0001.HEIC'))
+    expect(new Set(paths)).toEqual(new Set(['itr1/item9/cap-1.heic']))
   })
-  it('uses the general folder without item', () => {
-    expect(storagePathFor('itr1', null, 'a.jpg', 1)).toMatch(/^itr1\/general\/1-[a-z0-9]+\.jpg$/)
+  it('usa la carpeta general sin ítem y sanea la extensión', () => {
+    expect(itrEvidencePath('itr1', null, 'cap-2', 'foto')).toBe('itr1/general/cap-2.jpg')
+    expect(itrEvidencePath('itr1', null, 'cap-3', 'a.p?df')).toBe('itr1/general/cap-3.pdf')
+  })
+  it('reconoce un objeto ya subido como éxito', () => {
+    expect(isAlreadyStored({ message: 'The resource already exists', statusCode: '409' })).toBe(true)
+    expect(isAlreadyStored({ message: 'Duplicate' })).toBe(true)
+    expect(isAlreadyStored({ message: 'new row violates row-level security policy', statusCode: '403' })).toBe(false)
+    expect(isAlreadyStored(null)).toBe(false)
   })
 })
 

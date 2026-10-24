@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import { deleteItrAttachment } from '@/app/actions/itr-instances'
-import { uploadOrQueuePhoto, uploadPhoto, discardPendingPhoto } from '@/lib/sync/outbox'
+import { uploadOrQueuePhoto, uploadPhoto, discardPendingPhoto, newCapture } from '@/lib/sync/outbox'
 import type { Attachment } from './types'
 import { DialogSurface } from '@/components/ui'
 
@@ -54,7 +54,7 @@ export default function PhotoUpload({
       if (file.type !== 'application/pdf' || file.size > MAX_DOCUMENT_BYTES) { setUploading(false); setUploadError(t('upload.documentOnlyPdf')); return }
       if (typeof navigator !== 'undefined' && !navigator.onLine) { setUploading(false); setUploadError(t('upload.documentNeedsNetwork')); return }
       try {
-        const res = await uploadPhoto({ itrId, itemId, projectId, tagId, fileName: file.name, fileType: file.type, blob: file })
+        const res = await uploadPhoto(newCapture({ itrId, itemId, projectId, tagId, fileName: file.name, fileType: file.type, blob: file }))
         setUploading(false)
         if ('error' in res) { setUploadError(res.error); return }
         onAdded(res.attachment)

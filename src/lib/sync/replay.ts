@@ -23,7 +23,7 @@
  */
 
 import {
-  getAllQueued, removeFromQueue, markResponseAttempt, patchResponseEntry, getOutbox, removeFromOutbox, markOutboxAttempt,
+  getAllQueued, removeFromQueue, markResponseAttempt, patchResponseEntry, getOutbox, removeFromOutbox, markOutboxAttempt, patchOutboxEntry,
   notifyOutboxChanged, SYNC_DONE_EVENT, SYNC_DROPPED_EVENT, type OutboxEntry, type SyncDroppedDetail,
 } from '@/lib/offline-queue'
 import { uploadPhoto, isNetworkFailure, sendPunch } from '@/lib/sync/outbox'
@@ -233,9 +233,16 @@ export async function discardOutboxEntry(entry: OutboxEntry): Promise<{ ok: true
 
 async function sendOutboxEntry(entry: OutboxEntry): Promise<{ ok: true } | { error: string }> {
   if (entry.kind === 'photo') {
+    // A02: una foto encolada antes de A02 recibe su identidad una vez y queda guardada para los reintentos.
+    let captureId = entry.captureId
+    if (!captureId) {
+      captureId = crypto.randomUUID()
+      if (entry.id !== undefined) await patchOutboxEntry(entry.id, { captureId })
+    }
     const res = await uploadPhoto({
       itrId: entry.itrId, itemId: entry.itemId, projectId: entry.projectId, tagId: entry.tagId,
       fileName: entry.fileName, fileType: entry.fileType, blob: entry.blob,
+      captureId, capturedAt: entry.capturedAt ?? entry.queuedAt,
     })
     return 'error' in res ? { error: res.error } : { ok: true }
   }
@@ -262,7 +269,7 @@ async function sendOutboxEntry(entry: OutboxEntry): Promise<{ ok: true } | { err
 
 function outboxPayload(entry: OutboxEntry): Json {
   if (entry.kind === 'photo') {
-    return { kind: 'photo', itrId: entry.itrId, itemId: entry.itemId, fileName: entry.fileName, fileType: entry.fileType, bytes: entry.blob.size }
+    return { kind: 'photo', itrId: entry.itrId, itemId: entry.itemId, captureId: entry.captureId ?? null, capturedAt: entry.capturedAt ?? entry.queuedAt, fileName: entry.fileName, fileType: entry.fileType, bytes: entry.blob.size }
   }
   if (entry.kind === 'signature') {
     return { kind: 'signature', itrId: entry.itrId, role: entry.role, hasImage: Boolean(entry.signatureImage) }

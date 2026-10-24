@@ -35,9 +35,19 @@ export function punchPhotoPath(punchId: string, index: number, fileName: string)
   return `${punchId}/campo-${index + 1}.${ext}`
 }
 
-export function storagePathFor(itrId: string, itemId: string | null, fileName: string, now: number = Date.now()): string {
-  const ext = fileName.split('.').pop() ?? 'jpg'
-  return `${itrId}/${itemId ?? 'general'}/${now}-${Math.random().toString(36).slice(2)}.${ext}`
+/**
+ * A02: ruta fija por captura de evidencia del ITR (`<itrId>/<item|general>/<captureId>.<ext>`): reenviar la misma
+ * foto no crea otro objeto. `captureId` = UUID que el dispositivo genera al tomarla (va también en el adjunto).
+ */
+export function itrEvidencePath(itrId: string, itemId: string | null, captureId: string, fileName: string): string {
+  const ext = (fileName.includes('.') ? fileName.split('.').pop()! : 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg'
+  return `${itrId}/${itemId ?? 'general'}/${captureId}.${ext}`
+}
+
+/** A02: el objeto ya estaba en storage (un intento anterior lo subió y se perdió la respuesta). */
+export function isAlreadyStored(err: { message?: string; statusCode?: string | number } | null | undefined): boolean {
+  if (!err) return false
+  return String(err.statusCode ?? '') === '409' || /already exists|duplicate/i.test(err.message ?? '')
 }
 
 // ── Política de reintentos de la bandeja ──────────────────────────────

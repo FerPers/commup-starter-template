@@ -21,6 +21,8 @@ import type { ActiveContext } from '@/lib/supabase/membership'
 // los inspectores ('inspector') ejecutan ITRs y NO están en EDITOR_ROLES.
 // RLS (is_project_member) gobierna el acceso a itr_responses/attachments/signatures.
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 /**
  * C-26 (S05): captura el ejecutor asignado o un supervisor (leader+); antes cualquier inspector o líder del
  * proyecto llenaba cualquier ITR y solo la firma exigía la asignación.
@@ -356,10 +358,14 @@ export const saveItrAttachment = withAuth(
       longitude?: number | null
       projectId: string
       tagId: string
+      /** A02: UUID de la captura (dispositivo); reenviarla devuelve el mismo adjunto. */
+      captureId?: string
+      /** A02: hora del dispositivo al tomarla; la BD la acota (trigger itr_attachment_times). */
+      capturedAt?: string
     },
-  ): Promise<{ id?: string; error?: string }> => {
+  ): Promise<{ id?: string; capturedAt?: string; progressStale?: boolean; error?: string }> => {
     const t = await getTranslations('ActionErrors')
-    const { itrId, itemId, storagePath, fileType, latitude, longitude, projectId, tagId } = input
+    const { itrId, itemId, storagePath, fileType, latitude, longitude, projectId, tagId, captureId, capturedAt } = input
 
     const { data: itr, error: itrError } = await ctx.supabase.from('itrs')
       .select('template_id, project_id, tag_id, status, source_rows').eq('id', itrId).single()
@@ -367,6 +373,18 @@ export const saveItrAttachment = withAuth(
     const access = await checkProjectAccess(ctx.supabase, ctx.orgId, itr.project_id)
     if (!access.ok) return { error: await accessError(access) }
     if (itr.project_id !== projectId || itr.tag_id !== tagId) return { error: t('itrInstances.itrMismatch') }
+    if (captureId !== undefined && !UUID_RE.test(captureId)) return { error: t('itrInstances.evidenceMissing') }
+
+    // A02: si un intento anterior ya la guardó (y se perdió la respuesta), devolver ese adjunto aunque el ITR
+    // haya avanzado después (firmado, aprobado): la evidencia ya está, reintentar no debe fallar ni duplicar.
+    const findCapture = async () => captureId
+      ? (await ctx.supabase.from('itr_attachments').select('id, itr_id, captured_at').eq('capture_id', captureId).maybeSingle()).data
+      : null
+    const saved = await findCapture()
+    if (saved) {
+      if (saved.itr_id !== itrId) return { error: t('itrInstances.itrMismatch') }
+      return { id: saved.id, capturedAt: saved.captured_at }
+    }
     if (itr.status === 'approved') return { error: t('itrInstances.itrApproved') }
     const captureError = await captureBlocker(ctx, itrId)
     if (captureError) return { error: captureError }
@@ -392,20 +410,26 @@ export const saveItrAttachment = withAuth(
         file_type: fileType,
         latitude: latitude ?? null,
         longitude: longitude ?? null,
-        captured_at: new Date().toISOString(),
+        capture_id: captureId ?? null,
+        captured_at: capturedAt ?? new Date().toISOString(),
         uploaded_by: ctx.userId,
       })
-      .select('id')
+      .select('id, captured_at')
       .single()
 
-    if (error) return { error: error.message }
+    if (error) {
+      // A02: dos envíos simultáneos de la misma captura: gana uno y el otro devuelve ese adjunto.
+      const raced = error.code === '23505' ? await findCapture() : null
+      if (raced && raced.itr_id === itrId) return { id: raced.id, capturedAt: raced.captured_at }
+      return { error: error.message }
+    }
 
-    // S05 (C-34): la BD recalcula estado y avance desde el contenido.
+    // S05 (C-34): la BD recalcula estado y avance desde el contenido. A02: si el recálculo falla, la evidencia
+    // ya quedó guardada: se informa como avance desactualizado, no como error (un reintento la duplicaría).
     const { error: progressError } = await ctx.supabase.rpc('refresh_itr_status', { p_itr_id: itrId })
-    if (progressError) return { error: t('itrInstances.evidenceProgressFailed') }
 
     revalidatePath(`/projects/${projectId}/tags/${tagId}/itrs/${itrId}`)
-    return { id: data.id }
+    return progressError ? { id: data.id, capturedAt: data.captured_at, progressStale: true } : { id: data.id, capturedAt: data.captured_at }
   },
 )
 

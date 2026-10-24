@@ -70,6 +70,10 @@ En términos concretos, salir significa cuatro cosas:
 | A29 | Paridad TS = SQL para lo que falta: `completion.ts` contra `evaluate_itr_capture` y `eligibility.ts` contra `certificate_eligibility`. |
 | A30 | Retirar o aislar el código analítico sin consumidores (`src/analytics/*`, `getProjectForecast`, la vista con eventos `itrs.*` viejos). |
 
+**Avance (24-oct):**
+
+- **A02:** hecho (migración `20261217120000`). Cada foto o PDF del ITR lleva un `capture_id` que genera el dispositivo al tomarla, con una ruta fija (`itrEvidencePath`) y un índice único: diez reenvíos dan un objeto y un adjunto (`tests/db/itr-evidence-identity.test.ts`). `captured_at` es la hora del dispositivo, acotada como en las respuestas (`capture_clamped`), y `uploaded_at` es la hora de recepción. `saveItrAttachment` devuelve el adjunto ya guardado aunque el ITR se haya firmado después. Si falla `refresh_itr_status`, informa `progressStale` en vez de error. Las fotos encoladas antes de A02 reciben su id al primer reenvío y lo guardan. Revisión de prod en solo lectura (`scripts/db/itr-evidence-audit.sql`): 0 adjuntos y 1 objeto huérfano, que no se tocó.
+
 **Salida:** cada defecto tiene una prueba que falla con el código anterior; diez reenvíos de una foto dan un adjunto; un fallo en cualquier asignación deja cero ITR; una importación interrumpida no deja plantillas activas a medias; las sondas del ITR pasan.
 
 ### Ola 2 — Catálogo, datos y operación para Geopark (bloquea la salida)

@@ -2415,6 +2415,8 @@ export type Database = {
       }
       itr_attachments: {
         Row: {
+          capture_clamped: boolean
+          capture_id: string | null
           captured_at: string
           file_type: string
           file_url: string
@@ -2424,9 +2426,12 @@ export type Database = {
           latitude: number | null
           longitude: number | null
           response_id: string | null
+          uploaded_at: string
           uploaded_by: string
         }
         Insert: {
+          capture_clamped?: boolean
+          capture_id?: string | null
           captured_at?: string
           file_type: string
           file_url: string
@@ -2436,9 +2441,12 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           response_id?: string | null
+          uploaded_at?: string
           uploaded_by: string
         }
         Update: {
+          capture_clamped?: boolean
+          capture_id?: string | null
           captured_at?: string
           file_type?: string
           file_url?: string
@@ -2448,6 +2456,7 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           response_id?: string | null
+          uploaded_at?: string
           uploaded_by?: string
         }
         Relationships: [

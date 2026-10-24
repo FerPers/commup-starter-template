@@ -42,6 +42,10 @@ export type OutboxPhoto = {
   fileName: string
   fileType: string
   blob: Blob
+  /** A02: UUID de la captura (ruta fija + adjunto único). Ausente en fotos encoladas antes de A02: se fija al reenviar. */
+  captureId?: string
+  /** A02: hora del dispositivo al tomarla. Ausente antes de A02 → `queuedAt`. */
+  capturedAt?: string
 }
 
 export type OutboxPunch = {
@@ -237,6 +241,22 @@ export async function removeFromOutbox(id: number): Promise<void> {
 }
 
 /** Anota un intento fallido (error lógico del servidor, no de red). */
+/** A02: completa una entrada de la bandeja (p. ej. el `captureId` de una foto vieja) antes de reenviarla. */
+export async function patchOutboxEntry(id: number, patch: Partial<OutboxPhoto>): Promise<void> {
+  const db = await openDB()
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(OUTBOX_STORE, 'readwrite')
+    const store = tx.objectStore(OUTBOX_STORE)
+    const req = store.get(id)
+    req.onsuccess = () => {
+      const row = req.result as OutboxEntry | undefined
+      if (row) store.put({ ...row, ...patch, id })
+    }
+    tx.oncomplete = () => { db.close(); resolve() }
+    tx.onerror = () => { db.close(); reject(tx.error) }
+  })
+}
+
 export async function markOutboxAttempt(id: number, lastError: string): Promise<void> {
   const db = await openDB()
   return new Promise((resolve, reject) => {

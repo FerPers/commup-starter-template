@@ -15,8 +15,8 @@ import { addPunchAttachment, createPunch } from '@/app/actions/punches'
 import { enqueueOutbox, removeFromOutbox, type OutboxEntry, type OutboxPhoto, type OutboxSignature } from '@/lib/offline-queue'
 import { currentUserId } from './owner'
 
-export { LOCAL_ATTACHMENT_PREFIX, localAttachmentId, parseLocalAttachmentId, isNetworkFailure, storagePathFor } from './outbox-utils'
-import { localAttachmentId, parseLocalAttachmentId, isNetworkFailure, punchPhotoPath, storagePathFor } from './outbox-utils'
+export { LOCAL_ATTACHMENT_PREFIX, localAttachmentId, parseLocalAttachmentId, isNetworkFailure, itrEvidencePath } from './outbox-utils'
+import { localAttachmentId, parseLocalAttachmentId, isNetworkFailure, isAlreadyStored, punchPhotoPath, itrEvidencePath } from './outbox-utils'
 
 export type PhotoAttachmentResult = {
   id: string
@@ -28,23 +28,32 @@ export type PhotoAttachmentResult = {
   pending?: boolean
 }
 
+/** A02: captura con identidad fija; reenviarla da el mismo objeto y el mismo adjunto. */
+export type PhotoCapture = Omit<OutboxPhoto, 'kind' | 'captureId' | 'capturedAt'> & { captureId: string; capturedAt: string }
+
+/** A02: la identidad y la hora de una captura se fijan al tomarla, una sola vez. */
+export function newCapture<T extends Omit<OutboxPhoto, 'kind'>>(photo: T): T & { captureId: string; capturedAt: string } {
+  return { ...photo, captureId: photo.captureId ?? crypto.randomUUID(), capturedAt: photo.capturedAt ?? new Date().toISOString() }
+}
+
 /**
- * Sube una foto al bucket y registra el adjunto; sin red la encola.
- * Lanza solo si el servidor rechaza (error lógico); los fallos de red se encolan.
+ * Sube una foto al bucket y registra el adjunto. Idempotente (A02): ruta fija por `captureId`, un objeto que ya
+ * estaba cuenta como subido y el servidor devuelve el adjunto existente de esa captura.
+ * Lanza solo ante un fallo de red (para encolar); un rechazo del servidor devuelve `error`.
  */
 export async function uploadPhoto(
-  photo: Omit<OutboxPhoto, 'kind'>,
+  photo: PhotoCapture,
 ): Promise<{ attachment: PhotoAttachmentResult; queued: false } | { error: string }> {
   const supabase = createClient()
-  const path = storagePathFor(photo.itrId, photo.itemId, photo.fileName)
-  const { error: upErr } = await supabase.storage.from('itr-attachments').upload(path, photo.blob, { contentType: photo.fileType })
-  if (upErr) {
+  const path = itrEvidencePath(photo.itrId, photo.itemId, photo.captureId, photo.fileName)
+  const { error: upErr } = await supabase.storage.from('itr-attachments').upload(path, photo.blob, { contentType: photo.fileType, upsert: false })
+  if (upErr && !isAlreadyStored(upErr)) {
     if (isNetworkFailure(upErr)) throw upErr
     return { error: upErr.message }
   }
   const res = await saveItrAttachment({
     itrId: photo.itrId, itemId: photo.itemId, storagePath: path, fileType: photo.fileType,
-    projectId: photo.projectId, tagId: photo.tagId,
+    projectId: photo.projectId, tagId: photo.tagId, captureId: photo.captureId, capturedAt: photo.capturedAt,
   })
   if (res.error) return { error: res.error }
   const { data: signed } = await supabase.storage.from('itr-attachments').createSignedUrl(path, 3600)
@@ -52,14 +61,16 @@ export async function uploadPhoto(
     queued: false,
     attachment: {
       id: res.id!, item_id: photo.itemId, file_url: path, file_type: photo.fileType,
-      captured_at: new Date().toISOString(), signed_url: signed?.signedUrl ?? null,
+      captured_at: res.capturedAt ?? photo.capturedAt, signed_url: signed?.signedUrl ?? null,
     },
   }
 }
 
 export async function uploadOrQueuePhoto(
-  photo: Omit<OutboxPhoto, 'kind'>,
+  input: Omit<OutboxPhoto, 'kind'>,
 ): Promise<{ attachment: PhotoAttachmentResult; queued: boolean } | { error: string }> {
+  // A02: si el envío en línea se corta a medias, la bandeja reintenta con la misma identidad.
+  const photo = newCapture(input)
   if (typeof navigator !== 'undefined' && navigator.onLine) {
     try {
       return await uploadPhoto(photo)
@@ -79,7 +90,7 @@ export function pendingAttachment(entry: OutboxEntry & OutboxPhoto, withPreview 
     item_id: entry.itemId,
     file_url: '',
     file_type: entry.fileType,
-    captured_at: entry.queuedAt,
+    captured_at: entry.capturedAt ?? entry.queuedAt,
     signed_url: withPreview && typeof URL !== 'undefined' ? URL.createObjectURL(entry.blob) : null,
     pending: true,
   }
