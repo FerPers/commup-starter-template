@@ -24,7 +24,7 @@ const btn: React.CSSProperties = {
   fontSize: 13, cursor: 'pointer',
 }
 const primaryBtn: React.CSSProperties = { ...btn, border: 0, background: 'var(--primary-600)', color: '#fff', fontWeight: 600 }
-const fieldLabel: React.CSSProperties = { fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }
+const fieldLabel: React.CSSProperties = { fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }
 const selectStyle: React.CSSProperties = {
   width: '100%', minHeight: 36, padding: '0 8px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--card-bg)', color: 'var(--text-strong)', fontSize: 13,
 }

@@ -50,13 +50,13 @@ export default function ToolRail({
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d={icon} />
             </svg>
-            <span style={{ fontSize: 10, lineHeight: 1.1, textAlign: 'center' }}>{t(`markups.tool_${id}`)}</span>
+            <span style={{ fontSize: 12, lineHeight: 1.1, textAlign: 'center' }}>{t(`markups.tool_${id}`)}</span>
           </button>
         )
       })}
       {/* F-21a: red-line (nube, trazo, texto) en rojo, separado de las marcas de límites */}
       <span aria-hidden="true" style={{ width: 48, height: 1, background: 'var(--border)', margin: '6px 0 2px' }} />
-      <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.05em', color: 'var(--danger-700)' }}>{t('redline.group')}</span>
+      <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.05em', color: 'var(--danger-700)' }}>{t('redline.group')}</span>
       {RL_TOOLS.map(({ tool: id, icon }) => {
         const on = id === tool
         return (
@@ -70,13 +70,13 @@ export default function ToolRail({
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d={icon} />
             </svg>
-            <span style={{ fontSize: 10, lineHeight: 1.1, textAlign: 'center' }}>{t(`redline.tool_${id}`)}</span>
+            <span style={{ fontSize: 12, lineHeight: 1.1, textAlign: 'center' }}>{t(`redline.tool_${id}`)}</span>
           </button>
         )
       })}
       <span style={{ flex: 1 }} />
       <button type="button" onClick={onUndo} disabled={!canUndo || busy}
-        style={{ width: 60, minHeight: 44, border: '1px solid var(--border)', borderRadius: 8, background: 'var(--card-bg)', cursor: canUndo ? 'pointer' : 'default', fontSize: 11, color: 'var(--text-strong)', opacity: canUndo ? 1 : 0.45 }}>
+        style={{ width: 60, minHeight: 44, border: '1px solid var(--border)', borderRadius: 8, background: 'var(--card-bg)', cursor: canUndo ? 'pointer' : 'default', fontSize: 12, color: 'var(--text-strong)', opacity: canUndo ? 1 : 0.45 }}>
         {t('markups.undo')}
       </button>
     </div>

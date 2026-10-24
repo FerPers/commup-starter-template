@@ -10,12 +10,12 @@ const SIGNAL_TYPES = ['AI', 'AO', 'DI', 'DO', 'PI', 'PO'] as const
 type SignalType = typeof SIGNAL_TYPES[number]
 
 const TYPE_COLORS: Record<SignalType, string> = {
-  AI: '#3b82f6',
-  AO: '#f59e0b',
-  DI: '#10b981',
-  DO: '#ef4444',
-  PI: '#8b5cf6',
-  PO: '#06b6d4',
+  AI: 'var(--primary-500)',
+  AO: 'var(--warning-500)',
+  DI: 'var(--success-500)',
+  DO: 'var(--danger-500)',
+  PI: 'var(--violet-500)',
+  PO: 'var(--cyan-500)',
 }
 
 const TYPE_LABELS: Record<SignalType, string> = {
@@ -121,7 +121,7 @@ export default function SignalsView({
   }, [signals])
 
   function typeColor(type: string) {
-    return TYPE_COLORS[type as SignalType] ?? '#94a3b8'
+    return TYPE_COLORS[type as SignalType] ?? 'var(--gray-400)'
   }
 
   return (
@@ -239,7 +239,7 @@ export default function SignalsView({
                   {[t('col.signalTag'), t('col.type'), t('col.instrument'), t('col.subsystem'), t('col.range'), t('col.service'), t('col.pid'), ''].map(h => (
                     <th key={h} style={{
                       padding: '10px 12px', textAlign: 'left',
-                      fontWeight: 600, color: 'var(--text-muted)', fontSize: '11px',
+                      fontWeight: 600, color: 'var(--text-muted)', fontSize: '12px',
                       textTransform: 'uppercase', letterSpacing: '0.04em', whiteSpace: 'nowrap',
                     }}>{h}</th>
                   ))}
@@ -273,7 +273,7 @@ export default function SignalsView({
                       {/* Type badge */}
                       <td style={{ padding: '10px 12px' }}>
                         <span style={{
-                          padding: '2px 8px', borderRadius: '999px', fontSize: '11px', fontWeight: 700,
+                          padding: '2px 8px', borderRadius: '999px', fontSize: '12px', fontWeight: 700,
                           background: alpha(color, 9), color,
                           border: `1px solid ${alpha(color, 19)}`,
                         }}>
@@ -289,7 +289,7 @@ export default function SignalsView({
                       {/* Subsystem */}
                       <td style={{ padding: '10px 12px' }}>
                         <div style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-strong)' }}>{sub.code}</div>
-                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{sub.systems.areas.code} › {sub.systems.code}</div>
+                        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{sub.systems.areas.code} › {sub.systems.code}</div>
                       </td>
 
                       {/* Range */}
@@ -356,7 +356,7 @@ export default function SignalsView({
                   { label: t('detail.notes'),       value: selected.notes ?? '—' },
                 ].map(item => (
                   <div key={item.label} style={{ background: 'var(--card-bg)', borderRadius: '8px', padding: '10px 12px', border: '1px solid var(--border)' }}>
-                    <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '3px' }}>{item.label}</div>
+                    <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '3px' }}>{item.label}</div>
                     <div style={{ fontSize: '13px', color: 'var(--text-strong)', wordBreak: 'break-word' }}>{item.value}</div>
                   </div>
                 ))}

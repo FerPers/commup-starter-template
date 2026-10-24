@@ -32,7 +32,7 @@ const sel: React.CSSProperties = {
   padding: '6px 8px', border: '1px solid var(--border)', borderRadius: '7px', fontSize: '12px',
   background: 'var(--card-bg)', color: 'var(--text-strong)', fontFamily: 'inherit',
 }
-const small: React.CSSProperties = { fontSize: '11px', color: 'var(--text-muted)' }
+const small: React.CSSProperties = { fontSize: '12px', color: 'var(--text-muted)' }
 const btn = (primary: boolean, disabled = false): React.CSSProperties => ({
   padding: '6px 12px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.5 : 1,
   border: primary ? 'none' : '1px solid var(--border)', background: primary ? 'var(--primary-600)' : 'var(--card-bg)', color: primary ? '#fff' : 'var(--text-strong)',

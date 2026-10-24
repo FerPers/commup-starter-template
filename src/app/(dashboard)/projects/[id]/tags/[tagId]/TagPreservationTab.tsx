@@ -187,13 +187,13 @@ export default function TagPreservationTab({ tagId, projectId, plans, procedures
                       <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-strong)' }}>
                         {proc?.code} — {proc?.title}
                       </span>
-                      <span style={{ padding: '2px 8px', borderRadius: '10px', fontSize: '11px', fontWeight: 600, background: st.bg, color: ink(st.color) }}>
+                      <span style={{ padding: '2px 8px', borderRadius: '10px', fontSize: '12px', fontWeight: 600, background: st.bg, color: ink(st.color) }}>
                         {tp(`planStatus.${statusKey}`)}
                       </span>
                     </div>
                     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                       {proc?.disciplines && (
-                        <span style={{ padding: '2px 8px', borderRadius: '10px', fontSize: '11px', fontWeight: 600, background: alpha(proc.disciplines.color, 13), color: ink(proc.disciplines.color) }}>
+                        <span style={{ padding: '2px 8px', borderRadius: '10px', fontSize: '12px', fontWeight: 600, background: alpha(proc.disciplines.color, 13), color: ink(proc.disciplines.color) }}>
                           {proc.disciplines.code}
                         </span>
                       )}
@@ -211,11 +211,11 @@ export default function TagPreservationTab({ tagId, projectId, plans, procedures
                     <div style={{ padding: '4px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, background: due.bg, color: ink(due.color), marginBottom: '4px' }}>
                       {due.label}
                     </div>
-                    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                    <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                       {tx('start', { date: plan.start_date })}
                     </div>
                     {plan.last_performed_date && (
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                      <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                         {tx('last', { date: plan.last_performed_date })}
                       </div>
                     )}
@@ -307,7 +307,7 @@ export default function TagPreservationTab({ tagId, projectId, plans, procedures
                   onChange={e => setForm(f => ({ ...f, startDate: e.target.value }))}
                   style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--gray-300)', borderRadius: '8px', fontSize: '13px', boxSizing: 'border-box' }}
                 />
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>
                   {tx('startDateHint')}
                 </div>
               </div>

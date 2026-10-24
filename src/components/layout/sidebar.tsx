@@ -293,7 +293,7 @@ function FoldButton({ open, onClick, label, count, header }: { open: boolean; on
       style={{
         width: '100%', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit',
         padding: header ? '8px 20px 4px' : '7px 20px', display: 'flex', alignItems: 'center', gap: 6,
-        fontSize: header ? 10 : 'var(--text-sm)', fontWeight: header ? 700 : 600, letterSpacing: header ? '0.08em' : 0,
+        fontSize: header ? 12 : 'var(--text-sm)', fontWeight: header ? 700 : 600, letterSpacing: header ? '0.06em' : 0,
         textTransform: header ? 'uppercase' : 'none', color: open ? 'var(--sidebar-text-strong)' : 'var(--sidebar-text-dim)',
       }}>
       {open ? <ChevronDown size={12} aria-hidden="true" /> : <ChevronRight size={12} aria-hidden="true" />}
@@ -378,7 +378,7 @@ function GroupHeader({ children }: { children: React.ReactNode }) {
   return (
     <div style={{
       padding: '8px 20px 4px', display: 'flex', alignItems: 'baseline', minWidth: 0,
-      fontSize: 10, fontWeight: 700, letterSpacing: '0.08em',
+      fontSize: 12, fontWeight: 700, letterSpacing: '0.08em',
       color: 'var(--sidebar-text-dim)', textTransform: 'uppercase',
     }}>
       {children}
@@ -390,7 +390,7 @@ function SubHeader({ children }: { children: React.ReactNode }) {
   return (
     <div style={{
       padding: '8px 20px 2px 28px',
-      fontSize: 10, fontWeight: 600, letterSpacing: '0.06em',
+      fontSize: 12, fontWeight: 600, letterSpacing: '0.06em',
       color: 'var(--sidebar-text-faint)', textTransform: 'uppercase',
     }}>
       {children}

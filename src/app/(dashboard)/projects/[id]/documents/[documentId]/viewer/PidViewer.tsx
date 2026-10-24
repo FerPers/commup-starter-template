@@ -89,7 +89,7 @@ type UndoOp =
   | { type: 'updated'; before: MarkupView }
 
 const sectionLabel: React.CSSProperties = {
-  fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px',
+  fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px',
 }
 const floatBtn: React.CSSProperties = {
   minWidth: 40, height: 40, padding: '0 10px', border: '1px solid var(--border)', borderRadius: 8, background: 'var(--card-bg)',
@@ -1032,7 +1032,7 @@ export default function PidViewer({
                   }}
                 >
                   <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: pinColor(h), flexShrink: 0, display: 'inline-block' }} />
-                  <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '11px', fontWeight: 600, color: 'var(--text-strong)' }}>{h.tag.tag_number}</span>
+                  <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)' }}>{h.tag.tag_number}</span>
                 </button>
               ))}
             </div>

@@ -29,7 +29,7 @@ function TypeBadge({ type }: { type: string }) {
   const color = def?.color ?? 'var(--text-muted)'
   return (
     <span style={{
-      padding: '2px 8px', borderRadius: '999px', fontSize: '10px', fontWeight: 600,
+      padding: '2px 8px', borderRadius: '999px', fontSize: '12px', fontWeight: 600,
       background: alpha(color, 9), color, border: `1px solid ${alpha(color, 19)}`,
       whiteSpace: 'nowrap',
     }}>
@@ -152,7 +152,7 @@ export default function TemplateSectionCard({
             <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-strong)', flex: 1 }}>
               {section.title}
             </span>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginRight: '8px' }}>
+            <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginRight: '8px' }}>
               {t('sectionItemCount', { count: section.items.length, plural: section.items.length !== 1 ? 's' : '' })}
             </span>
             {canEdit && (
@@ -217,18 +217,18 @@ export default function TemplateSectionCard({
                 alignItems: 'center', fontSize: '12px',
               }}
             >
-              <span style={{ color: 'var(--text-muted)', fontFamily: 'monospace', fontWeight: 600, fontSize: '11px' }}>
+              <span style={{ color: 'var(--text-muted)', fontFamily: 'monospace', fontWeight: 600, fontSize: '12px' }}>
                 {item.item_number ?? '—'}
               </span>
               <div>
                 <div style={{ color: 'var(--text-strong)', fontWeight: 500 }}>{item.description}</div>
                 {item.description_es && (
-                  <div style={{ color: 'var(--text-muted)', fontSize: '11px', marginTop: '1px' }}>{item.description_es}</div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: '12px', marginTop: '1px' }}>{item.description_es}</div>
                 )}
                 {item.condition_item_id && (() => {
                   const condItem = allItems.find(it => it.id === item.condition_item_id)
                   return condItem ? (
-                    <div style={{ fontSize: '10px', color: 'var(--warning-800)', marginTop: '3px', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                    <div style={{ fontSize: '12px', color: 'var(--warning-800)', marginTop: '3px', display: 'flex', alignItems: 'center', gap: '3px' }}>
                       <span style={{ background: 'var(--warning-100)', border: '1px solid var(--warning-200)', borderRadius: '3px', padding: '0 4px' }}>
                         {t('conditionBadgePrefix')} &ldquo;{condItem.item_number ?? condItem.description.slice(0, 25)}&rdquo; = {item.condition_value}
                       </span>

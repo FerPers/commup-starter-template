@@ -82,14 +82,14 @@ export default function PidLegend({
 
       {colorBy === 'status' && (
         <div style={{ padding: '10px 16px', display: 'flex', flexDirection: 'column', gap: 5, borderBottom: '1px solid var(--border)' }}>
-          <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t('markups.markupStatus')}</span>
+          <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t('markups.markupStatus')}</span>
           {ROW_STATE_ORDER.map(s => (
             <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
               <span style={{ width: 14, height: 6, borderRadius: 3, background: ROW_STATE_COLORS[s], flexShrink: 0, display: 'inline-block' }} />
-              <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{tr(`rowState.${s}`)}</span>
+              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{tr(`rowState.${s}`)}</span>
             </div>
           ))}
-          <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t('markups.pinStatus')}</span>
+          <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t('markups.pinStatus')}</span>
           {([
             [PIN_STATUS_COLORS.punchA, t('viewer.legendPunchA')],
             [PIN_STATUS_COLORS.complete, t('viewer.legendComplete')],
@@ -98,7 +98,7 @@ export default function PidLegend({
           ] as const).map(([color, label]) => (
             <div key={color} style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
               <span style={{ width: 10, height: 10, borderRadius: '50%', background: color, flexShrink: 0, display: 'inline-block' }} />
-              <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{label}</span>
+              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{label}</span>
             </div>
           ))}
         </div>

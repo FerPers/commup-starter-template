@@ -133,7 +133,8 @@
   --role-client-border: rgba(100, 116, 139, 0.30);
 
   /* ---------- Tipografía ---------- */
-  --text-xs:   11px;
+  /* G-11: piso de 12 px para todo texto en pantalla (xs = sm). */
+  --text-xs:   12px;
   --text-sm:   12px;
   --text-base: 14px;
   --text-md:   16px;
@@ -418,7 +419,7 @@
   --ink-l-max: 0.44;
 
   /* Texto un punto más grande: con guantes y reflejo, 14 px no alcanza. */
-  --text-xs:   12px;
+  --text-xs:   13px;
   --text-sm:   13px;
   --text-base: 16px;
   --text-md:   17px;
@@ -699,7 +700,7 @@ body.drawer-locked { overflow: hidden; }
     border-top: 2px solid transparent;
     color: var(--text-muted);
     font: inherit;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 500;
     line-height: 1;
     text-decoration: none;
@@ -734,7 +735,7 @@ body.drawer-locked { overflow: hidden; }
     border-radius: var(--radius-pill);
     background: var(--danger-500);
     color: #fff;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 700;
     line-height: 18px;
     text-align: center;

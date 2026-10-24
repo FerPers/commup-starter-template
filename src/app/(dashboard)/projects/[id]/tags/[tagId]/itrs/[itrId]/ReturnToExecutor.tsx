@@ -30,7 +30,7 @@ export default function ReturnToExecutor({ itrId, projectId, tagId }: { itrId: s
       <label htmlFor={`${uid}-reason`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--warning-800)', display: 'block', marginBottom: '6px' }}>{t('reasonLabel')}</label>
       <textarea id={`${uid}-reason`} rows={2} value={reason} onChange={e => setReason(e.target.value)} placeholder={t('reasonPlaceholder')}
         style={{ width: '100%', boxSizing: 'border-box', padding: '8px 10px', border: '1px solid var(--warning-200)', borderRadius: '6px', fontSize: '13px', fontFamily: 'inherit', resize: 'vertical' }} />
-      <p style={{ fontSize: '11px', color: 'var(--warning-800)', margin: '4px 0 8px' }}>{t('hint')}</p>
+      <p style={{ fontSize: '12px', color: 'var(--warning-800)', margin: '4px 0 8px' }}>{t('hint')}</p>
       {error && <p role="alert" style={{ fontSize: '12px', color: 'var(--danger-700)', margin: '0 0 8px' }}>{error}</p>}
       <div style={{ display: 'flex', gap: '8px' }}>
         <button disabled={!ok || isPending} onClick={() => startTransition(async () => {

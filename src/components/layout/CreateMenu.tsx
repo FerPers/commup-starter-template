@@ -64,7 +64,7 @@ function CreateOptions({ kinds, projects, snap, onChoose, onPick }: {
       <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 6 }}>
         {inProject ? (
           <>
-            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.04em', color: 'var(--text-muted)' }}>{t('preloaded')}</span>
+            <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: '.04em', color: 'var(--text-muted)' }}>{t('preloaded')}</span>
             <span style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               <span style={chip}>{projectName}</span>
               {objectLabel && <span style={{ ...chip, fontFamily: 'ui-monospace, monospace' }}>{snap.objectRef ?? objectLabel}</span>}
@@ -79,7 +79,7 @@ function CreateOptions({ kinds, projects, snap, onChoose, onPick }: {
             </select>
           </label>
         )}
-        {!objectLabel && <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{t('tagHint')}</span>}
+        {!objectLabel && <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('tagHint')}</span>}
       </div>
       <ul style={{ listStyle: 'none', margin: 0, padding: 6 }}>
         {kinds.map(k => (

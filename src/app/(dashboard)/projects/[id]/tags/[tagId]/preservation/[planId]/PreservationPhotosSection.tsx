@@ -121,7 +121,7 @@ export default function PreservationPhotosSection({
             {t(required ? 'labelRequired' : 'labelOptional', { count: attachments.length })}
           </span>
           {!recordId && (
-            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
               {t('hintStartRecord')}
             </div>
           )}
@@ -192,7 +192,7 @@ export default function PreservationPhotosSection({
                     style={{
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       width: '100%', height: '100%',
-                      fontSize: 11, color: 'var(--text-muted)', textDecoration: 'none',
+                      fontSize: 12, color: 'var(--text-muted)', textDecoration: 'none',
                       padding: 4, textAlign: 'center',
                     }}
                   >

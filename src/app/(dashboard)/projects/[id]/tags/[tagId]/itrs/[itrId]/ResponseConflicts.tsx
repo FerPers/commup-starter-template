@@ -89,11 +89,11 @@ export default function ResponseConflicts({ itrId, userId, labels, names, timezo
           </div>
           <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
             <button type="button" disabled={busy !== null} onClick={() => { void applyMine(r) }}
-              style={{ padding: '3px 8px', fontSize: '11px', borderRadius: '6px', border: '1px solid var(--warning-500)', background: 'var(--warning-100)', color: 'var(--warning-800)', fontWeight: 600, cursor: 'pointer' }}>
+              style={{ padding: '3px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--warning-500)', background: 'var(--warning-100)', color: 'var(--warning-800)', fontWeight: 600, cursor: 'pointer' }}>
               {t('applyMine')}
             </button>
             <button type="button" disabled={busy !== null} onClick={() => { void discard(r) }}
-              style={{ padding: '3px 8px', fontSize: '11px', borderRadius: '6px', border: '1px solid var(--danger-200)', background: 'var(--card-bg)', color: 'var(--danger-700)', cursor: 'pointer' }}>
+              style={{ padding: '3px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--danger-200)', background: 'var(--card-bg)', color: 'var(--danger-700)', cursor: 'pointer' }}>
               {t('keepTheirs')}
             </button>
           </div>

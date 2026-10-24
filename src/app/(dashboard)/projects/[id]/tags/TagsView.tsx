@@ -304,11 +304,11 @@ export default function TagsView({
                       />
                     </td>
                     <td style={tdStyle}>
-                      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{(page - 1) * pageSize + i + 1}</span>
+                      <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{(page - 1) * pageSize + i + 1}</span>
                     </td>
                     <td style={tdStyle}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '10px', fontWeight: 700, background: alpha(d.color, 9), color: ink(d.color), flexShrink: 0 }}>
+                        <span style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '12px', fontWeight: 700, background: alpha(d.color, 9), color: ink(d.color), flexShrink: 0 }}>
                           {d.code}
                         </span>
                         <span style={{ fontWeight: 600, fontSize: '13px', color: 'var(--text-strong)', fontFamily: 'ui-monospace, monospace' }}>
@@ -319,7 +319,7 @@ export default function TagsView({
                     <td style={tdStyle}>
                       <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{tag.description || '—'}</span>
                       {tag.equipment_types && (
-                        <span title={tag.equipment_types.name} style={{ marginLeft: '6px', padding: '1px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 600, background: 'var(--gray-100)', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                        <span title={tag.equipment_types.name} style={{ marginLeft: '6px', padding: '1px 6px', borderRadius: '4px', fontSize: '12px', fontWeight: 600, background: 'var(--gray-100)', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                           {tag.equipment_types.name}
                         </span>
                       )}
@@ -339,13 +339,13 @@ export default function TagsView({
                               rel="noopener noreferrer"
                               title={t('list.openPid')}
                               onClick={e => e.stopPropagation()}
-                              style={{ fontSize: '11px', color: 'var(--primary-700)', fontFamily: 'ui-monospace, monospace', background: 'var(--primary-50)', padding: '2px 8px', borderRadius: '5px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                              style={{ fontSize: '12px', color: 'var(--primary-700)', fontFamily: 'ui-monospace, monospace', background: 'var(--primary-50)', padding: '2px 8px', borderRadius: '5px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                             >
                               {tag.pid_drawing}
-                              <span style={{ opacity: 0.6, fontSize: '10px' }}>↗</span>
+                              <span style={{ opacity: 0.6, fontSize: '12px' }}>↗</span>
                             </a>
                           ) : (
-                            <span style={{ fontSize: '11px', color: 'var(--primary-700)', fontFamily: 'ui-monospace, monospace', background: 'var(--primary-50)', padding: '2px 8px', borderRadius: '5px' }}>
+                            <span style={{ fontSize: '12px', color: 'var(--primary-700)', fontFamily: 'ui-monospace, monospace', background: 'var(--primary-50)', padding: '2px 8px', borderRadius: '5px' }}>
                               {tag.pid_drawing}
                             </span>
                           )
@@ -358,7 +358,7 @@ export default function TagsView({
                       <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{maker || '—'}</span>
                     </td>
                     <td style={tdStyle}>
-                      <span style={{ padding: '3px 9px', borderRadius: '999px', fontSize: '11px', fontWeight: 500, background: statusStyle.bg, color: ink(statusStyle.color) }}>
+                      <span style={{ padding: '3px 9px', borderRadius: '999px', fontSize: '12px', fontWeight: 500, background: statusStyle.bg, color: ink(statusStyle.color) }}>
                         {statusLabel}
                       </span>
                     </td>
@@ -389,7 +389,7 @@ function FilterTab({ label, count, active, color, onClick }: {
       transition: 'all 0.15s',
     }}>
       {label}
-      <span style={{ padding: '1px 7px', borderRadius: '999px', fontSize: '11px', fontWeight: 700, background: active ? color : 'var(--gray-100)', color: active ? 'var(--on-ink)' : 'var(--text-muted)' }}>
+      <span style={{ padding: '1px 7px', borderRadius: '999px', fontSize: '12px', fontWeight: 700, background: active ? color : 'var(--gray-100)', color: active ? 'var(--on-ink)' : 'var(--text-muted)' }}>
         {count}
       </span>
     </button>
@@ -398,7 +398,7 @@ function FilterTab({ label, count, active, color, onClick }: {
 
 function Th({ children }: { children: React.ReactNode }) {
   return (
-    <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>
+    <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>
       {children}
     </th>
   )

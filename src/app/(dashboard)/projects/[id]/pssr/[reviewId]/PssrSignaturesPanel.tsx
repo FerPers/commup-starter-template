@@ -86,9 +86,9 @@ export default function PssrSignaturesPanel({
                   {sig.profiles?.full_name ?? t('review.signUserFallback')}
                 </div>
                 {(sig.capacity ?? sig.discipline) && (
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{sig.capacity ? t(`capacity.${sig.capacity}`) : sig.discipline}</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{sig.capacity ? t(`capacity.${sig.capacity}`) : sig.discipline}</div>
                 )}
-                <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
                   {new Date(sig.signed_at).toLocaleString(undefined, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                 </div>
               </div>
@@ -96,7 +96,7 @@ export default function PssrSignaturesPanel({
                 <button
                   onClick={() => onRemoveSig(sig.id)}
                   style={{
-                    marginTop: '6px', padding: '3px 8px', borderRadius: '5px', fontSize: '10px',
+                    marginTop: '6px', padding: '3px 8px', borderRadius: '5px', fontSize: '12px',
                     background: 'var(--danger-50)', border: '1px solid var(--danger-200)', color: 'var(--danger-700)', cursor: 'pointer',
                   }}
                 >

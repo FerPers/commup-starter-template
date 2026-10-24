@@ -131,7 +131,7 @@ export default function PreservationGlobal({
             {plan.tags
               ? <Link href={`/projects/${plan.project_id}/tags/${plan.tags.id}?tab=preservation`} style={{ fontFamily: 'ui-monospace, monospace', fontWeight: 700, fontSize: 15, color: 'var(--text-strong)', textDecoration: 'none' }}>{plan.tags.tag_number}</Link>
               : <span style={{ color: 'var(--text-muted)' }}>—</span>}
-            {!projectScope && plan.projects && <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--primary-700)' }}>{plan.projects.code}</span>}
+            {!projectScope && plan.projects && <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--primary-700)' }}>{plan.projects.code}</span>}
           </span>
           {proc && <span style={{ fontSize: 13, color: 'var(--text-body)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{proc.code} · {proc.title}</span>}
           <span style={{ fontSize: 12, fontWeight: plan.status === 'active' && due.bg !== 'transparent' ? 600 : 400, color: plan.status === 'active' ? ink(due.color) : 'var(--text-muted)' }}>
@@ -222,10 +222,10 @@ export default function PreservationGlobal({
           type="button"
           aria-pressed={filterDue === 'overdue'}
           onClick={() => setFilterDue(filterDue === 'overdue' ? '' : 'overdue')}
-          style={{ display: 'block', width: '100%', textAlign: 'left', font: 'inherit', padding: '14px 16px', borderRadius: '10px', cursor: 'pointer', transition: 'all 0.15s', background: filterDue === 'overdue' ? 'var(--danger-100)' : 'var(--card-bg)', border: `1px solid ${filterDue === 'overdue' ? '#fca5a540' : 'var(--border)'}` }}
+          style={{ display: 'block', width: '100%', textAlign: 'left', font: 'inherit', padding: '14px 16px', borderRadius: '10px', cursor: 'pointer', transition: 'all 0.15s', background: filterDue === 'overdue' ? 'var(--danger-100)' : 'var(--card-bg)', border: `1px solid ${filterDue === 'overdue' ? 'var(--danger-200)' : 'var(--border)'}` }}
         >
           <span style={{ display: 'block', fontSize: '22px', fontWeight: 700, color: 'var(--danger-700)' }}>{overdueCnt}</span>
-          <span style={{ display: 'block', fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>{t('summary.overdue')}</span>
+          <span style={{ display: 'block', fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>{t('summary.overdue')}</span>
         </button>
         <button
           type="button"
@@ -234,11 +234,11 @@ export default function PreservationGlobal({
           style={{ display: 'block', width: '100%', textAlign: 'left', font: 'inherit', padding: '14px 16px', borderRadius: '10px', cursor: 'pointer', transition: 'all 0.15s', background: filterDue === 'soon' ? 'var(--warning-50)' : 'var(--card-bg)', border: `1px solid ${filterDue === 'soon' ? 'var(--warning-200)' : 'var(--border)'}` }}
         >
           <span style={{ display: 'block', fontSize: '22px', fontWeight: 700, color: 'var(--warning-700)' }}>{soonCnt}</span>
-          <span style={{ display: 'block', fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>{t('summary.dueSoon')}</span>
+          <span style={{ display: 'block', fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>{t('summary.dueSoon')}</span>
         </button>
         <div style={{ padding: '14px 16px', borderRadius: '10px', background: 'var(--card-bg)', border: '1px solid var(--border)' }}>
           <div style={{ fontSize: '22px', fontWeight: 700, color: 'var(--success-700)' }}>{activeCnt}</div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>{t('summary.active')}</div>
+          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>{t('summary.active')}</div>
         </div>
       </div>
 
@@ -281,7 +281,7 @@ export default function PreservationGlobal({
         </div>
       ) : (
         <div className="desk-only" style={{ background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)', overflow: 'hidden' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr 1fr 90px 110px 110px 90px', gap: '12px', padding: '10px 16px', background: 'var(--gray-50)', borderBottom: '1px solid var(--border)', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr 1fr 90px 110px 110px 90px', gap: '12px', padding: '10px 16px', background: 'var(--gray-50)', borderBottom: '1px solid var(--border)', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             <span>{t('table.colProject')}</span>
             <span>{t('table.colTag')}</span>
             <span>{t('table.colProcedure')}</span>
@@ -308,7 +308,7 @@ export default function PreservationGlobal({
                     <Link
                       href={`/projects/${proj.id}`}
                       title={proj.name}
-                      style={{ fontSize: '10px', fontWeight: 700, color: 'var(--primary-700)', background: 'var(--primary-50)', padding: '2px 7px', borderRadius: '4px', textDecoration: 'none', display: 'inline-block', maxWidth: '94px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                      style={{ fontSize: '12px', fontWeight: 700, color: 'var(--primary-700)', background: 'var(--primary-50)', padding: '2px 7px', borderRadius: '4px', textDecoration: 'none', display: 'inline-block', maxWidth: '94px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                     >
                       {proj.code}
                     </Link>
@@ -324,11 +324,11 @@ export default function PreservationGlobal({
                     </Link>
                   ) : <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>—</div>}
                   {plan.tags && plan.status === 'active' && (
-                    <Link href={`/projects/${plan.project_id}/tags/${plan.tags.id}/preservation/${plan.id}`} style={{ marginLeft: '8px', fontSize: '11px', fontWeight: 600, color: 'var(--primary-700)', textDecoration: 'none' }}>
+                    <Link href={`/projects/${plan.project_id}/tags/${plan.tags.id}/preservation/${plan.id}`} style={{ marginLeft: '8px', fontSize: '12px', fontWeight: 600, color: 'var(--primary-700)', textDecoration: 'none' }}>
                       {t('table.execute')} →
                     </Link>
                   )}
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '1px' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '1px' }}>
                     {plan.tags?.description ?? ''}
                   </div>
                 </div>
@@ -337,29 +337,29 @@ export default function PreservationGlobal({
                 <div>
                   {proc && (
                     <>
-                      <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', fontFamily: 'ui-monospace, monospace' }}>{proc.code}</div>
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{proc.title}</div>
+                      <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', fontFamily: 'ui-monospace, monospace' }}>{proc.code}</div>
+                      <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{proc.title}</div>
                     </>
                   )}
                 </div>
 
                 {/* Frequency */}
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                   {proc ? (freqLabels[proc.frequency] ?? proc.frequency) : '—'}
                 </div>
 
                 {/* Next due */}
-                <div style={{ fontSize: '11px', fontWeight: 500, color: ink(plan.status === 'active' ? due.color : 'var(--text-muted)'), background: plan.status === 'active' ? due.bg : 'transparent', padding: due.bg !== 'transparent' ? '2px 6px' : '0', borderRadius: '4px', display: 'inline-block' }}>
+                <div style={{ fontSize: '12px', fontWeight: 500, color: ink(plan.status === 'active' ? due.color : 'var(--text-muted)'), background: plan.status === 'active' ? due.bg : 'transparent', padding: due.bg !== 'transparent' ? '2px 6px' : '0', borderRadius: '4px', display: 'inline-block' }}>
                   {plan.status === 'active' ? due.label : plan.next_due_date}
                 </div>
 
                 {/* Last record */}
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                   {plan.last_performed_date ?? '—'}
                 </div>
 
                 {/* Status */}
-                <span style={{ padding: '3px 8px', borderRadius: '5px', fontSize: '10px', fontWeight: 600, background: pStyle.bg, color: ink(pStyle.color), whiteSpace: 'nowrap' }}>
+                <span style={{ padding: '3px 8px', borderRadius: '5px', fontSize: '12px', fontWeight: 600, background: pStyle.bg, color: ink(pStyle.color), whiteSpace: 'nowrap' }}>
                   {planStatusLabels[plan.status] ?? plan.status}
                 </span>
               </div>

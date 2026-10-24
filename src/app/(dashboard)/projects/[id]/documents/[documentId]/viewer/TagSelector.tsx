@@ -11,7 +11,7 @@ import { ink } from '@/lib/theme'
 function DisciplineChip({ discipline }: { discipline: TagItem['discipline'] }) {
   return (
     <span style={{
-      padding: '1px 5px', borderRadius: '4px', fontSize: '10px', fontWeight: 700,
+      padding: '1px 5px', borderRadius: '4px', fontSize: '12px', fontWeight: 700,
       background: `color-mix(in srgb, ${discipline.color} 10%, transparent)`, color: ink(discipline.color), flexShrink: 0,
     }}>
       {discipline.code}

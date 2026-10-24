@@ -174,7 +174,7 @@ export default function GenerateItrsView({ projectId, projectName, phases, syste
                   <div key={key} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10, padding: '8px 0', borderTop: '1px solid var(--gray-100)' }}>
                     <div style={{ minWidth: 180, fontSize: 13 }}>
                       <strong>{d.code ?? t('noDiscipline')}</strong> {d.name ?? ''}
-                      <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{t('itrCount', { n: d.create })}</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('itrCount', { n: d.create })}</div>
                     </div>
                     {roles.map(role => (
                       <select key={role} value={assign[key]?.[role] ?? ''} onChange={e => setPerson(key, role, e.target.value)} style={sel} aria-label={t(`role.${role}`)}>
@@ -212,7 +212,7 @@ function Stat({ n, label, tone }: { n: number; label: string; tone?: string }) {
   return (
     <div style={{ border: '1px solid var(--border)', borderRadius: 10, padding: '10px 12px' }}>
       <div style={{ fontSize: 22, fontWeight: 700, color: tone ?? 'var(--text-strong)' }}>{n}</div>
-      <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{label}</div>
+      <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{label}</div>
     </div>
   )
 }

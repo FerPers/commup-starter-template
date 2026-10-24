@@ -152,7 +152,7 @@ export default function TagEditForm({ tag, projectId, onCancel, canDelete }: {
             <select style={inputStyle} value={form.criticality} onChange={e => set('criticality', e.target.value)}>
               {CRITICALITY_LEVELS.map(c => <option key={c} value={c}>{t(`criticality.${c}`)}</option>)}
             </select>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{t('edit.criticalityHint')}</span>
+            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{t('edit.criticalityHint')}</span>
           </FormField>
 
           <FormField label={t('edit.fieldPreservation')}>
@@ -207,10 +207,10 @@ export default function TagEditForm({ tag, projectId, onCancel, canDelete }: {
         {isInst && (
           <>
             <div style={{ margin: '20px 0 14px', paddingTop: '16px', borderTop: '1px solid var(--gray-100)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                 {t('edit.sectionInstrumentation')}
               </span>
-              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{t('edit.instrSubtitle')}</span>
+              <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{t('edit.instrSubtitle')}</span>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px' }}>
 
@@ -351,7 +351,7 @@ function FormField({ label, children, style }: { label: string; children: React.
   const fieldAt = items.findIndex(c => isValidElement(c) && typeof c.type === 'string' && FIELD_TAGS.has(c.type))
   const linked = fieldAt >= 0
   const content = items.map((c, i) => (i === fieldAt && isValidElement<{ id?: string }>(c) ? cloneElement(c, { id }) : c))
-  const labelStyle: React.CSSProperties = { display: 'block', fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '5px' }
+  const labelStyle: React.CSSProperties = { display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '5px' }
   return (
     <div style={style}>
       {linked

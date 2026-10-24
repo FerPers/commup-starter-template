@@ -266,7 +266,7 @@ function InboxRow({
                 borderRadius: 6,
                 background: 'var(--card-bg)',
                 color: 'var(--text-muted)',
-                fontSize: 11,
+                fontSize: 12,
                 fontWeight: 600,
                 cursor: isPending ? 'wait' : 'pointer',
                 display: 'inline-flex',
@@ -278,7 +278,7 @@ function InboxRow({
             </button>
           )}
           <span style={{
-            fontSize: 11, fontWeight: 600,
+            fontSize: 12, fontWeight: 600,
             padding: '2px 8px',
             borderRadius: 999,
             background: 'var(--gray-100)',
@@ -295,7 +295,7 @@ function InboxRow({
           {n.body}
         </p>
       )}
-      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+      <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
         {when(n.created_at)}
       </span>
     </div>

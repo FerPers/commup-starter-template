@@ -8,9 +8,9 @@ import { alpha, ink } from '@/lib/theme'
 
 const STATUS_COLORS: Record<string, string> = {
   not_started: 'var(--gray-400)',
-  in_progress:  '#3b82f6',
-  completed:    '#10b981',
-  approved:     '#7c3aed',
+  in_progress:  'var(--primary-500)',
+  completed:    'var(--success-500)',
+  approved:     'var(--violet-600)',
 }
 
 type LoopTag = {
@@ -159,7 +159,7 @@ export default function LoopsView({
                   {[t('loops.col.loopNumber'), t('loops.col.description'), t('loops.col.subsystem'), t('loops.col.discipline'), t('loops.col.tags'), 'Señales', 'Loop check', t('col.status'), ''].map(h => (
                     <th key={h} style={{
                       padding: '10px 12px', textAlign: 'left',
-                      fontWeight: 600, color: 'var(--text-muted)', fontSize: '11px',
+                      fontWeight: 600, color: 'var(--text-muted)', fontSize: '12px',
                       textTransform: 'uppercase', letterSpacing: '0.04em', whiteSpace: 'nowrap',
                     }}>{h}</th>
                   ))}
@@ -196,14 +196,14 @@ export default function LoopsView({
                         {sub ? (
                           <div>
                             <div style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-strong)' }}>{sub.code}</div>
-                            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{sub.systems.areas.code} › {sub.systems.code}</div>
+                            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{sub.systems.areas.code} › {sub.systems.code}</div>
                           </div>
                         ) : '—'}
                       </td>
                       <td style={{ padding: '10px 12px' }}>
                         {disc ? (
                           <span style={{
-                            padding: '2px 8px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
+                            padding: '2px 8px', borderRadius: '999px', fontSize: '12px', fontWeight: 600,
                             background: alpha(disc.color, 9), color: ink(disc.color),
                           }}>
                             {disc.code}
@@ -222,7 +222,7 @@ export default function LoopsView({
                       </td>
                       <td style={{ padding: '10px 12px' }}>
                         <span style={{
-                          padding: '2px 8px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
+                          padding: '2px 8px', borderRadius: '999px', fontSize: '12px', fontWeight: 600,
                           background: alpha(statusColor, 9), color: ink(statusColor),
                         }}>
                           {t(`status.${loop.status}` as Parameters<typeof t>[0])}
@@ -277,7 +277,7 @@ export default function LoopsView({
                   <table style={{ borderCollapse: 'collapse', fontSize: '12px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', minWidth: '100%' }}>
                     <thead><tr>
                       {[t('loops.col.signal'), t('loops.col.type'), t('loops.col.instrument'), ...CHAIN.map(c => t(`loopsChain.${c.key}`))].map(h => (
-                        <th key={h} style={{ padding: '7px 10px', textAlign: 'left', color: 'var(--text-muted)', fontSize: '11px', whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>{h}</th>
+                        <th key={h} style={{ padding: '7px 10px', textAlign: 'left', color: 'var(--text-muted)', fontSize: '12px', whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>{h}</th>
                       ))}
                     </tr></thead>
                     <tbody>{[...selected.signals].sort((a, b) => a.signal_tag.localeCompare(b.signal_tag)).map(sig => (

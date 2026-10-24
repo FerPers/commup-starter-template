@@ -154,7 +154,7 @@ export default function ImportMatrixModal({ onClose }: { onClose: () => void }) 
                     ))}
                   </tbody>
                 </table>
-                {rows.length > 40 && <div style={{ padding: '6px 10px', fontSize: 11, color: 'var(--text-muted)' }}>{t('showing', { n: 40, total: rows.length })}</div>}
+                {rows.length > 40 && <div style={{ padding: '6px 10px', fontSize: 12, color: 'var(--text-muted)' }}>{t('showing', { n: 40, total: rows.length })}</div>}
               </div>
               <button onClick={handleImport} disabled={loading} style={{ alignSelf: 'flex-end', padding: '9px 18px', background: 'var(--success-500)', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: loading ? 'wait' : 'pointer' }}>
                 {loading ? t('importing') : t('import', { n: rows.length })}

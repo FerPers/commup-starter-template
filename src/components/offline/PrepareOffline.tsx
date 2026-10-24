@@ -79,7 +79,7 @@ export function OfflineReadyChip({ url }: { url: string }) {
   }, [url])
   if (!ready) return null
   return (
-    <span title={t('readyTitle')} style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 'var(--radius-sm)', background: 'var(--success-50)', color: 'var(--success-700)' }}>
+    <span title={t('readyTitle')} style={{ fontSize: 12, fontWeight: 600, padding: '1px 6px', borderRadius: 'var(--radius-sm)', background: 'var(--success-50)', color: 'var(--success-700)' }}>
       {t('ready')}
     </span>
   )

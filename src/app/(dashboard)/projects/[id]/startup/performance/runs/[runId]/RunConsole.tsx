@@ -206,15 +206,15 @@ export default function RunConsole({ project, test, run, rev, variables, points,
                   <ResponsiveContainer width="100%" height={190}>
                     <LineChart data={data} margin={{ top: 6, right: 12, bottom: 0, left: -10 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                      <XAxis dataKey="t" type="number" domain={[chartFrom, chartTo]} tick={{ fontSize: 10 }}
+                      <XAxis dataKey="t" type="number" domain={[chartFrom, chartTo]} tick={{ fontSize: 12 }}
                         tickFormatter={x => new Date(Number(x)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} />
-                      <YAxis tick={{ fontSize: 10 }} domain={['auto', 'auto']} />
+                      <YAxis tick={{ fontSize: 12 }} domain={['auto', 'auto']} />
                       <Tooltip labelFormatter={x => new Date(Number(x)).toLocaleString()} formatter={x => [String(x), v.key]} />
                       {disturbances.map(d => (
                         <ReferenceArea key={d.id} x1={Date.parse(d.started_at)} x2={d.ended_at ? Date.parse(d.ended_at) : chartTo}
                           fill={d.excluded ? 'var(--gray-400)' : 'var(--warning-500)'} fillOpacity={0.18} ifOverflow="hidden" />
                       ))}
-                      {run.formal_started_at && <ReferenceLine x={Date.parse(run.formal_started_at)} stroke="var(--primary-500)" strokeDasharray="4 2" label={{ value: t('perf.phase.formal'), fontSize: 10, position: 'top' }} />}
+                      {run.formal_started_at && <ReferenceLine x={Date.parse(run.formal_started_at)} stroke="var(--primary-500)" strokeDasharray="4 2" label={{ value: t('perf.phase.formal'), fontSize: 12, position: 'top' }} />}
                       <Line type="monotone" dataKey="v" stroke="var(--primary-500)" strokeWidth={2} dot={v.source === 'manual'} isAnimationActive={false} connectNulls={false} />
                     </LineChart>
                   </ResponsiveContainer>

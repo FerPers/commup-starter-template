@@ -104,8 +104,8 @@ export default function ReadinessKpis({ projectId, livePct, liveGates, snapshots
           <ResponsiveContainer width="100%" height={240}>
             <LineChart data={data} margin={{ top: 5, right: 24, bottom: 5, left: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-              <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-              <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} unit="%" />
+              <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+              <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} unit="%" />
               <Tooltip formatter={(v, name) => [`${String(v)} %`, name === 'plan' ? t('plan') : t('weighted')]} />
               <Line type="monotone" dataKey="pct" stroke="var(--primary-500)" strokeWidth={2} dot={false} connectNulls />
               {hasPlan && <Line type="stepAfter" dataKey="plan" stroke="var(--text-muted, var(--gray-500))" strokeDasharray="5 4" strokeWidth={1.5} dot={false} connectNulls />}

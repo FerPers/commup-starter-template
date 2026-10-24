@@ -129,10 +129,10 @@ export default function CeMatrixEditor({ projectId, projectName, matrix, causes,
               <thead>
                 <tr>
                   <th style={{ position: 'sticky', top: 0, left: 0, zIndex: 3, background: 'var(--gray-50)', padding: '8px 10px', textAlign: 'left', borderBottom: '1px solid var(--border)', minWidth: '280px' }}>{tc('corner')}</th>
-                  <th style={{ position: 'sticky', top: 0, zIndex: 2, background: 'var(--gray-50)', padding: '8px 10px', textAlign: 'left', borderBottom: '1px solid var(--border)', fontSize: '11px', color: 'var(--text-muted)', minWidth: '150px' }}>{tc('testCol')}</th>
+                  <th style={{ position: 'sticky', top: 0, zIndex: 2, background: 'var(--gray-50)', padding: '8px 10px', textAlign: 'left', borderBottom: '1px solid var(--border)', fontSize: '12px', color: 'var(--text-muted)', minWidth: '150px' }}>{tc('testCol')}</th>
                   {effects.map(e => (
                     <th key={e.id} scope="col" title={`${e.code} — ${e.description}${e.tag_number ? ` (${e.tag_number})` : ''}`} style={{ position: 'sticky', top: 0, zIndex: 2, background: loneEffects.has(e.id) ? 'var(--warning-50)' : 'var(--gray-50)', borderBottom: '1px solid var(--border)', padding: '6px 4px', verticalAlign: 'bottom' }}>
-                      <button type="button" disabled={!canEdit} onClick={() => { setError(''); setPanel({ kind: 'effect', row: e }) }} style={{ border: 0, background: 'transparent', cursor: canEdit ? 'pointer' : 'default', writingMode: 'vertical-rl', transform: 'rotate(180deg)', fontSize: '11px', fontWeight: 600, color: 'var(--text-strong)', maxHeight: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', padding: 0 }}>
+                      <button type="button" disabled={!canEdit} onClick={() => { setError(''); setPanel({ kind: 'effect', row: e }) }} style={{ border: 0, background: 'transparent', cursor: canEdit ? 'pointer' : 'default', writingMode: 'vertical-rl', transform: 'rotate(180deg)', fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)', maxHeight: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', padding: 0 }}>
                         {e.code}{e.tag_number ? ` · ${e.tag_number}` : ''} · {tc(`action.${e.action}`)}
                       </button>
                     </th>
@@ -144,12 +144,12 @@ export default function CeMatrixEditor({ projectId, projectName, matrix, causes,
                   <th scope="row" style={{ position: 'sticky', left: 0, zIndex: 1, background: loneCauses.has(c.id) ? 'var(--warning-50)' : 'var(--card-bg)', borderBottom: '1px solid var(--border)', padding: '6px 10px', textAlign: 'left', fontWeight: 400 }}>
                     <button type="button" disabled={!canEdit} onClick={() => { setError(''); setPanel({ kind: 'cause', row: c }) }} style={{ border: 0, background: 'transparent', padding: 0, cursor: canEdit ? 'pointer' : 'default', textAlign: 'left', color: 'var(--text-strong)', fontSize: '12px' }}>
                       <strong style={{ fontFamily: 'monospace' }}>{c.code}</strong> {c.description}
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                      <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                         {[c.signal_tag ?? c.tag_number, [c.condition, c.setpoint].filter(Boolean).join(' '), c.voting && tc(`votingOpt.${c.voting}`)].filter(Boolean).join(' · ') || '—'}
                       </div>
                     </button>
                   </th>
-                  <td style={{ padding: '6px 10px', borderBottom: '1px solid var(--border)', fontSize: '11px', whiteSpace: 'nowrap' }}>
+                  <td style={{ padding: '6px 10px', borderBottom: '1px solid var(--border)', fontSize: '12px', whiteSpace: 'nowrap' }}>
                     <CauseItrCell info={causeItrs[c.id]} projectId={projectId} />
                   </td>
                   {effects.map(e => {

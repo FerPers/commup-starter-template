@@ -90,7 +90,7 @@ function TypeBadge({ type }: { type: string }) {
   const cfg = found ? { label: t(`type.${found.value}`), color: found.color } : { label: type, color: 'var(--text-muted)' }
   return (
     <span style={{
-      padding: '2px 8px', borderRadius: '20px', fontSize: '11px', fontWeight: 600,
+      padding: '2px 8px', borderRadius: '20px', fontSize: '12px', fontWeight: 600,
       background: alpha(cfg.color, 13), color: ink(cfg.color),
     }}>
       {cfg.label}
@@ -259,7 +259,7 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
         {!editHeader ? (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px' }}>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '4px' }}>
+              <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '4px' }}>
                 {procedure.code}
               </div>
               <h1 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 8px' }}>
@@ -443,33 +443,33 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
               {canEdit && (
                 <div style={{ color: 'var(--text-muted)', fontSize: '16px', cursor: 'grab', flexShrink: 0 }}>⠿</div>
               )}
-              <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'var(--gray-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', flexShrink: 0 }}>
+              <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'var(--gray-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', flexShrink: 0 }}>
                 {idx + 1}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
                   <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-strong)' }}>{item.label}</span>
                   {item.is_critical && (
-                    <span style={{ padding: '1px 7px', borderRadius: '10px', fontSize: '10px', fontWeight: 700, background: 'var(--danger-50)', color: 'var(--danger-700)' }}>{t('critical')}</span>
+                    <span style={{ padding: '1px 7px', borderRadius: '10px', fontSize: '12px', fontWeight: 700, background: 'var(--danger-50)', color: 'var(--danger-700)' }}>{t('critical')}</span>
                   )}
                   {!item.is_required && (
-                    <span style={{ padding: '1px 7px', borderRadius: '10px', fontSize: '10px', fontWeight: 600, background: 'var(--gray-100)', color: 'var(--text-muted)' }}>{t('optional')}</span>
+                    <span style={{ padding: '1px 7px', borderRadius: '10px', fontSize: '12px', fontWeight: 600, background: 'var(--gray-100)', color: 'var(--text-muted)' }}>{t('optional')}</span>
                   )}
                 </div>
                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                   <TypeBadge type={item.item_type} />
                   {item.unit && (
-                    <span style={{ fontSize: '11px', color: 'var(--text-muted)', background: 'var(--gray-50)', padding: '2px 7px', borderRadius: '10px' }}>
+                    <span style={{ fontSize: '12px', color: 'var(--text-muted)', background: 'var(--gray-50)', padding: '2px 7px', borderRadius: '10px' }}>
                       Unidad: {item.unit}
                     </span>
                   )}
                   {item.min_value != null && (
-                    <span style={{ fontSize: '11px', color: 'var(--text-muted)', background: 'var(--gray-50)', padding: '2px 7px', borderRadius: '10px' }}>
+                    <span style={{ fontSize: '12px', color: 'var(--text-muted)', background: 'var(--gray-50)', padding: '2px 7px', borderRadius: '10px' }}>
                       Min: {item.min_value}
                     </span>
                   )}
                   {item.max_value != null && (
-                    <span style={{ fontSize: '11px', color: 'var(--text-muted)', background: 'var(--gray-50)', padding: '2px 7px', borderRadius: '10px' }}>
+                    <span style={{ fontSize: '12px', color: 'var(--text-muted)', background: 'var(--gray-50)', padding: '2px 7px', borderRadius: '10px' }}>
                       Max: {item.max_value}
                     </span>
                   )}
@@ -566,7 +566,7 @@ export default function ProcedureItemEditor({ procedure, disciplines, canEdit }:
               <div style={{ display: 'flex', gap: '20px', paddingTop: '4px' }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', color: 'var(--text-body)' }}>
                   <input type="checkbox" checked={itemForm.isCritical} onChange={e => setItemForm(f => ({ ...f, isCritical: e.target.checked }))} />
-                  <span>{t('criticalLabel')} <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{t('criticalHelp')}</span></span>
+                  <span>{t('criticalLabel')} <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{t('criticalHelp')}</span></span>
                 </label>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', color: 'var(--text-body)' }}>
                   <input type="checkbox" checked={itemForm.isRequired} onChange={e => setItemForm(f => ({ ...f, isRequired: e.target.checked }))} />

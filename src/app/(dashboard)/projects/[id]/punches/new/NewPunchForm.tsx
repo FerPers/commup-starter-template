@@ -94,7 +94,7 @@ export default function NewPunchForm({ project, initialTag, assignees, back }: P
               <span style={{ fontSize: 13, fontFamily: 'ui-monospace, monospace', fontWeight: 700, color: ink(tag.disciplines?.color ?? 'var(--text-strong)') }}>{tag.tag_number}</span>
               <span style={{ fontSize: 12, color: 'var(--text-muted)', flex: 1, minWidth: 120 }}>{tag.description}</span>
               {(tag.disciplines?.code ?? tag.where) && (
-                <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{[tag.disciplines?.code, tag.where].filter(Boolean).join(' · ')}</span>
+                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{[tag.disciplines?.code, tag.where].filter(Boolean).join(' · ')}</span>
               )}
               <button type="button" onClick={() => { setTag(null); setTagSearch('') }} style={linkBtn}>{t('create.changeTag')}</button>
             </div>

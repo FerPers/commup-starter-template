@@ -85,4 +85,4 @@ export default async function HelpPage({ searchParams }: { searchParams: Promise
   )
 }
 
-const sideLabel: React.CSSProperties = { fontSize: 11, fontWeight: 700, letterSpacing: '.05em', color: 'var(--text-muted)', margin: '14px 10px 6px', textTransform: 'uppercase' }
+const sideLabel: React.CSSProperties = { fontSize: 12, fontWeight: 700, letterSpacing: '.05em', color: 'var(--text-muted)', margin: '14px 10px 6px', textTransform: 'uppercase' }

@@ -39,7 +39,7 @@ export default function SignalChainEditor({ projectId, signalId, chain, canEdit 
   }
 
   const cell: React.CSSProperties = { background: 'var(--card-bg)', borderRadius: '8px', padding: '10px 12px', border: '1px solid var(--border)' }
-  const label: React.CSSProperties = { fontSize: '10px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '3px' }
+  const label: React.CSSProperties = { fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '3px' }
 
   return (
     <div style={{ marginTop: '14px' }}>
@@ -67,7 +67,7 @@ export default function SignalChainEditor({ projectId, signalId, chain, canEdit 
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '10px', flexWrap: 'wrap' }}>
           <button onClick={save} disabled={isPending} style={{ padding: '7px 14px', fontSize: '12px', fontWeight: 600, borderRadius: '6px', border: 'none', background: 'var(--primary-600)', color: '#fff', cursor: isPending ? 'wait' : 'pointer' }}>{isPending ? t('saving') : t('save')}</button>
           <button onClick={() => setEditing(false)} style={{ padding: '7px 14px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--card-bg)', color: 'var(--text-muted)', cursor: 'pointer' }}>{t('cancel')}</button>
-          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{t('hint')}</span>
+          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{t('hint')}</span>
         </div>
       )}
       {error && <p role="alert" style={{ fontSize: '12px', color: 'var(--danger-700)', margin: '8px 0 0' }}>{error}</p>}

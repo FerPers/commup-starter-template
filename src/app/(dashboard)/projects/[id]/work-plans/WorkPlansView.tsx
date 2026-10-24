@@ -288,7 +288,7 @@ export default function WorkPlansView({
             }}
           >
             <span style={{ display: 'block', fontSize: '22px', fontWeight: 700, color: ink(style.color) }}>{counts[key] ?? 0}</span>
-            <span style={{ display: 'block', fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>{planStatusLabels[key]}</span>
+            <span style={{ display: 'block', fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>{planStatusLabels[key]}</span>
           </button>
         ))}
       </div>
@@ -346,7 +346,7 @@ export default function WorkPlansView({
         <div style={{ background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)', overflow: 'hidden' }}>
 
           {/* Header */}
-          <div style={{ display: 'grid', gridTemplateColumns: gridCols, gap: '10px', padding: '10px 16px', background: 'var(--gray-50)', borderBottom: '1px solid var(--border)', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: gridCols, gap: '10px', padding: '10px 16px', background: 'var(--gray-50)', borderBottom: '1px solid var(--border)', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             {allScope && <span>{t('table.colProject')}</span>}
             <span>{t('table.colDate')}</span>
             <span>{t('table.colDiscipline')}</span>
@@ -387,7 +387,7 @@ export default function WorkPlansView({
                       {plan.projects && (
                         <Link
                           href={`/projects/${plan.projects.id}/work-plans`}
-                          style={{ fontSize: '10px', fontWeight: 700, color: 'var(--primary-700)', background: 'var(--primary-50)', padding: '2px 7px', borderRadius: '4px', textDecoration: 'none', display: 'inline-block', maxWidth: '94px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                          style={{ fontSize: '12px', fontWeight: 700, color: 'var(--primary-700)', background: 'var(--primary-50)', padding: '2px 7px', borderRadius: '4px', textDecoration: 'none', display: 'inline-block', maxWidth: '94px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                           title={plan.projects.name}
                         >
                           {plan.projects.code}
@@ -404,7 +404,7 @@ export default function WorkPlansView({
                   {/* Disciplina */}
                   <div>
                     {disc && (
-                      <span style={{ fontSize: '11px', fontWeight: 600, color: ink(disc.color), background: alpha(disc.color, 8), padding: '2px 8px', borderRadius: '4px' }}>
+                      <span style={{ fontSize: '12px', fontWeight: 600, color: ink(disc.color), background: alpha(disc.color, 8), padding: '2px 8px', borderRadius: '4px' }}>
                         {disc.code} — {disc.name}
                       </span>
                     )}
@@ -434,14 +434,14 @@ export default function WorkPlansView({
                         aria-label={t('table.colStatus')}
                         value={plan.status}
                         onChange={e => handleStatusChange(plan.id, e.target.value as WorkPlan['status'])}
-                        style={{ padding: '3px 8px', borderRadius: '5px', fontSize: '10px', fontWeight: 600, background: st.bg, color: ink(st.color), border: `1px solid ${alpha(st.color, 19)}`, fontFamily: 'inherit', cursor: 'pointer' }}
+                        style={{ padding: '3px 8px', borderRadius: '5px', fontSize: '12px', fontWeight: 600, background: st.bg, color: ink(st.color), border: `1px solid ${alpha(st.color, 19)}`, fontFamily: 'inherit', cursor: 'pointer' }}
                       >
                         {Object.entries(PLAN_STATUS_STYLE).map(([k]) => (
                           <option key={k} value={k}>{planStatusLabels[k]}</option>
                         ))}
                       </select>
                     ) : (
-                      <span style={{ padding: '3px 8px', borderRadius: '5px', fontSize: '10px', fontWeight: 600, background: st.bg, color: ink(st.color) }}>
+                      <span style={{ padding: '3px 8px', borderRadius: '5px', fontSize: '12px', fontWeight: 600, background: st.bg, color: ink(st.color) }}>
                         {planStatusLabels[plan.status]}
                       </span>
                     )}
@@ -453,7 +453,7 @@ export default function WorkPlansView({
                       <button
                         onClick={() => openAddItem(plan)}
                         aria-label={t('addItemModal.title')}
-                        style={{ padding: '4px 8px', background: 'var(--success-50)', border: '1px solid var(--success-200)', borderRadius: '5px', fontSize: '11px', color: 'var(--success-700)', cursor: 'pointer' }}
+                        style={{ padding: '4px 8px', background: 'var(--success-50)', border: '1px solid var(--success-200)', borderRadius: '5px', fontSize: '12px', color: 'var(--success-700)', cursor: 'pointer' }}
                       >
                         +
                       </button>
@@ -463,7 +463,7 @@ export default function WorkPlansView({
                         onClick={() => handleDeletePlan(plan.id)}
                         disabled={isPending}
                         aria-label={tA('delete')}
-                        style={{ padding: '4px 8px', background: 'var(--card-bg)', border: '1px solid var(--danger-200)', borderRadius: '5px', fontSize: '11px', color: 'var(--danger-700)', cursor: 'pointer' }}
+                        style={{ padding: '4px 8px', background: 'var(--card-bg)', border: '1px solid var(--danger-200)', borderRadius: '5px', fontSize: '12px', color: 'var(--danger-700)', cursor: 'pointer' }}
                       >
                         ✕
                       </button>
@@ -476,7 +476,7 @@ export default function WorkPlansView({
                     onClick={() => toggleExpand(plan.id)}
                     aria-expanded={isExp}
                     aria-label={`${t('table.colItems')} · ${plan.plan_date}`}
-                    style={{ width: '100%', background: 'none', border: 'none', padding: 0, font: 'inherit', cursor: 'pointer', fontSize: '10px', color: 'var(--text-muted)', textAlign: 'center' }}
+                    style={{ width: '100%', background: 'none', border: 'none', padding: 0, font: 'inherit', cursor: 'pointer', fontSize: '12px', color: 'var(--text-muted)', textAlign: 'center' }}
                   >
                     {isExp ? '▲' : '▼'}
                   </button>
@@ -497,7 +497,7 @@ export default function WorkPlansView({
                       </p>
                     ) : (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px' }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 120px 90px 28px', gap: '10px', padding: '4px 10px', fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 120px 90px 28px', gap: '10px', padding: '4px 10px', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
                           <span>{t('items.colItr')}</span>
                           <span>{t('items.colTag')}</span>
                           <span>{t('items.colAssigned')}</span>
@@ -524,14 +524,14 @@ export default function WorkPlansView({
                               </div>
                               <div>
                                 {itr?.tags && (
-                                  <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-strong)' }}>{itr.tags.tag_number}</div>
+                                  <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)' }}>{itr.tags.tag_number}</div>
                                 )}
-                                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{itr?.itr_templates?.title ?? '—'}</div>
+                                <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{itr?.itr_templates?.title ?? '—'}</div>
                               </div>
-                              <div style={{ fontSize: '11px', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              <div style={{ fontSize: '12px', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                 {item.assigned?.full_name ?? '—'}
                               </div>
-                              <span style={{ padding: '2px 7px', borderRadius: '4px', fontSize: '10px', fontWeight: 600, background: ist.bg, color: ink(ist.color), whiteSpace: 'nowrap' }}>
+                              <span style={{ padding: '2px 7px', borderRadius: '4px', fontSize: '12px', fontWeight: 600, background: ist.bg, color: ink(ist.color), whiteSpace: 'nowrap' }}>
                                 {itemStatusLabels[item.status]}
                               </span>
                               {canEdit && (
@@ -539,7 +539,7 @@ export default function WorkPlansView({
                                   onClick={() => handleRemoveItem(item.id)}
                                   disabled={isPending}
                                   aria-label={tA('remove')}
-                                  style={{ width: '22px', height: '22px', background: 'var(--card-bg)', border: '1px solid var(--danger-200)', borderRadius: '4px', color: 'var(--danger-700)', cursor: 'pointer', fontSize: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+                                  style={{ width: '22px', height: '22px', background: 'var(--card-bg)', border: '1px solid var(--danger-200)', borderRadius: '4px', color: 'var(--danger-700)', cursor: 'pointer', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
                                 >
                                   ✕
                                 </button>
@@ -663,7 +663,7 @@ export default function WorkPlansView({
                   ))}
                 </select>
                 {availableItrs.length === 0 && (
-                  <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>{t('addItemModal.itrLoading')}</p>
+                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>{t('addItemModal.itrLoading')}</p>
                 )}
               </div>
 

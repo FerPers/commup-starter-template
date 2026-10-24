@@ -73,6 +73,7 @@ export default function PinLayer({
               transition: 'box-shadow 0.15s',
             }}
           >
+            {/* eslint-disable-next-line no-restricted-syntax -- G-11: inicial de la disciplina dentro del pin (marca gráfica a la medida del pin; el tag sale en el título y el panel) */}
             <span style={{ fontSize: isTouch ? '11px' : '8px', color: '#fff', fontWeight: 700, lineHeight: 1 }}>
               {h.discipline.code.substring(0, 1)}
             </span>

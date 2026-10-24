@@ -128,21 +128,21 @@ export default function TagPunchTab({
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: '11px', fontFamily: 'ui-monospace, monospace', color: 'var(--text-muted)', fontWeight: 600 }}>{punch.punch_number}</span>
-                    <span style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '11px', fontWeight: 700, background: catCfg.bg, color: ink(catCfg.color), border: `1px solid ${catCfg.border}` }}>{catCfg.label}</span>
-                    <span style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '11px', fontWeight: 600, background: stColors.bg, color: ink(stColors.color) }}>{stLabel}</span>
+                    <span style={{ fontSize: '12px', fontFamily: 'ui-monospace, monospace', color: 'var(--text-muted)', fontWeight: 600 }}>{punch.punch_number}</span>
+                    <span style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '12px', fontWeight: 700, background: catCfg.bg, color: ink(catCfg.color), border: `1px solid ${catCfg.border}` }}>{catCfg.label}</span>
+                    <span style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '12px', fontWeight: 600, background: stColors.bg, color: ink(stColors.color) }}>{stLabel}</span>
                     {!punch.category_reviewed_at && punch.status !== 'closed' && punch.status !== 'cancelled' && (
-                      <span style={{ fontSize: '10px', color: 'var(--warning-700)' }}>{tGuide('unreviewedShort')}</span>
+                      <span style={{ fontSize: '12px', color: 'var(--warning-700)' }}>{tGuide('unreviewedShort')}</span>
                     )}
                   </div>
                   <p style={{ fontSize: '13px', color: 'var(--text-strong)', margin: '0 0 4px', lineHeight: '1.4' }}>{punch.description}</p>
-                  <div style={{ display: 'flex', gap: '12px', fontSize: '11px', color: 'var(--text-muted)', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', gap: '12px', fontSize: '12px', color: 'var(--text-muted)', flexWrap: 'wrap' }}>
                     {punch.assigned_to_profile && <span>👤 {punch.assigned_to_profile.full_name}</span>}
                     {punch.target_date && <span>📅 {punch.target_date}</span>}
                     {punch.itr_id && <span>↗ ITR</span>}
                   </div>
                 </div>
-                <span aria-hidden style={{ fontSize: '11px', color: 'var(--text-muted)' }}>›</span>
+                <span aria-hidden style={{ fontSize: '12px', color: 'var(--text-muted)' }}>›</span>
               </div>
             </Link>
           )

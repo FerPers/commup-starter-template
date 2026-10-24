@@ -245,7 +245,7 @@ export default function TemplateItemForm({
           padding: '12px 14px', background: 'var(--warning-50)', border: '1px solid var(--warning-100)',
           borderRadius: '8px', marginBottom: '12px',
         }}>
-          <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--warning-800)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '8px' }}>
+          <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--warning-800)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '8px' }}>
             {t('conditionSectionLabel')}
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 160px', gap: '8px' }}>

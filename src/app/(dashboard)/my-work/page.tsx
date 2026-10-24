@@ -365,7 +365,7 @@ export default async function MyWorkPage({ searchParams }: { searchParams: Promi
 
   const catTag = (c: PunchRow['category']) => {
     const cat = CATEGORY_CFG[c]
-    return <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 'var(--radius-sm)', background: cat.bg, color: ink(cat.color), border: `1px solid ${cat.border}` }}>{cat.label}</span>
+    return <span style={{ fontSize: 12, fontWeight: 700, padding: '1px 6px', borderRadius: 'var(--radius-sm)', background: cat.bg, color: ink(cat.color), border: `1px solid ${cat.border}` }}>{cat.label}</span>
   }
   const itrHref = (itr: NonNullable<AssignmentRow['itrs']>) => `/projects/${itr.project_id}/tags/${itr.tags?.id}/itrs/${itr.id}`
   const verifyPill = <Pill tone="info" style={{ background: 'var(--violet-50)', color: 'var(--violet-700)' }}>{t('due.verify')}</Pill>
@@ -474,7 +474,7 @@ export default async function MyWorkPage({ searchParams }: { searchParams: Promi
     constraints_mine: { more: dailyHref(constraintRows[0]?.project_id, 'constraints'), rows: constraintRows.map(c => (
       <Row key={c.id} href={`/projects/${c.project_id}/daily/constraint/${c.id}`} stripe={c.escalation_level >= 4 ? 'var(--danger-500)' : c.escalation_level >= 3 ? 'var(--warning-600)' : 'var(--primary-500)'}
         code={c.number}
-        tag={<span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 'var(--radius-sm)', background: 'var(--gray-100)', color: 'var(--text-strong)' }}>{t('constraintLevel', { n: c.escalation_level })}</span>}
+        tag={<span style={{ fontSize: 12, fontWeight: 700, padding: '1px 6px', borderRadius: 'var(--radius-sm)', background: 'var(--gray-100)', color: 'var(--text-strong)' }}>{t('constraintLevel', { n: c.escalation_level })}</span>}
         what={`${c.title}${c.systems?.code ? ` · ${c.systems.code}` : ''}`} project={c.projects?.code}
         right={dueState(c.need_date, todayOf(c.project_id)) === 'overdue'
           ? <Pill tone="danger">{t('due.escalate', { days: daysOverdue(c.need_date, todayOf(c.project_id)) })}</Pill>
@@ -566,10 +566,10 @@ function Row({ href, stripe, code, phase, tag, what, project, right }: {
       <div style={{ padding: '10px 14px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderLeft: `3px solid ${stripe}`, borderRadius: 'var(--radius-md)', display: 'flex', flexWrap: 'wrap', gap: '6px 12px', alignItems: 'center' }}>
         <div style={{ minWidth: 0, flex: '1 1 160px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2, flexWrap: 'wrap' }}>
-            {phase && <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 'var(--radius-sm)', background: alpha(phase.color, 9), color: ink(phase.color) }}>{phase.code}</span>}
+            {phase && <span style={{ fontSize: 12, fontWeight: 700, padding: '1px 6px', borderRadius: 'var(--radius-sm)', background: alpha(phase.color, 9), color: ink(phase.color) }}>{phase.code}</span>}
             {tag}
             <span style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--text-strong)', fontFamily: 'ui-monospace, monospace' }}>{code}</span>
-            {project && <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--accent-700)', background: 'var(--accent-50)', padding: '1px 6px', borderRadius: 'var(--radius-sm)', fontFamily: 'ui-monospace, monospace' }}>{project}</span>}
+            {project && <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--accent-700)', background: 'var(--accent-50)', padding: '1px 6px', borderRadius: 'var(--radius-sm)', fontFamily: 'ui-monospace, monospace' }}>{project}</span>}
           </div>
           <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-body)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{what}</div>
         </div>

@@ -108,7 +108,7 @@ export default function TestEquipmentSection({ itrId, projectId, requires, used,
                 )}
                 {editable && (
                   <button type="button" disabled={isPending} onClick={() => run(() => removeItrTestEquipment({ projectId, itrId, equipmentId: u.equipment_id }))}
-                    style={{ background: 'none', border: '1px solid var(--border)', borderRadius: '6px', padding: '2px 8px', fontSize: '11px', cursor: 'pointer', color: 'var(--text-muted)' }}>{t('remove')}</button>
+                    style={{ background: 'none', border: '1px solid var(--border)', borderRadius: '6px', padding: '2px 8px', fontSize: '12px', cursor: 'pointer', color: 'var(--text-muted)' }}>{t('remove')}</button>
                 )}
               </li>
             )

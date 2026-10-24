@@ -51,14 +51,14 @@ export function PunchImpactAndGuide({ impact, onImpact, category, onCategory, di
             )
           })}
         </div>
-        {impact && <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>{IMPACT_HELP[impact][lang]} {t('suggests', { cat: SUGGESTED_CATEGORY[impact] })}</div>}
+        {impact && <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>{IMPACT_HELP[impact][lang]} {t('suggests', { cat: SUGGESTED_CATEGORY[impact] })}</div>}
       </div>
 
       {suggested && (
         <div role="status" style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', padding: '8px 10px', borderRadius: '8px', background: 'var(--warning-50)', border: '1px solid var(--warning-200)', fontSize: '12px', color: 'var(--warning-800)' }}>
           <span>{t('mismatch', { chosen: category, suggested, impact: t(`impact.${impact!}`) })}</span>
           <button type="button" onClick={() => onCategory(suggested)}
-            style={{ padding: '3px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 600, border: '1px solid var(--warning-300)', background: 'var(--card-bg)', color: 'var(--warning-800)', cursor: 'pointer' }}>
+            style={{ padding: '3px 8px', borderRadius: '6px', fontSize: '12px', fontWeight: 600, border: '1px solid var(--warning-300)', background: 'var(--card-bg)', color: 'var(--warning-800)', cursor: 'pointer' }}>
             {t('useSuggested', { cat: suggested })}
           </button>
         </div>
@@ -74,13 +74,13 @@ export function PunchImpactAndGuide({ impact, onImpact, category, onCategory, di
             {(['A', 'B', 'C'] as const).map(c => (
               <div key={c}>
                 <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-strong)' }}>{CATEGORY_CRITERIA[c].title[lang]}</div>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)', lineHeight: 1.45 }}>{CATEGORY_CRITERIA[c].rule[lang]} {CATEGORY_CRITERIA[c].blocks[lang]}</div>
-                <ul style={{ margin: '3px 0 0', paddingLeft: '16px', fontSize: '11px', color: 'var(--text-strong)' }}>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.45 }}>{CATEGORY_CRITERIA[c].rule[lang]} {CATEGORY_CRITERIA[c].blocks[lang]}</div>
+                <ul style={{ margin: '3px 0 0', paddingLeft: '16px', fontSize: '12px', color: 'var(--text-strong)' }}>
                   {examples[c].map((e, i) => <li key={i}>{e[lang]}</li>)}
                 </ul>
               </div>
             ))}
-            <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
+            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
               {disciplineCode ? t('examplesFor', { disc: disciplineCode }) : t('examplesGeneric')} {t('functionNotSize')}
             </div>
           </div>

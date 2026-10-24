@@ -79,11 +79,11 @@ export default function ProjectSwitcher({ currentId, projectNames }: { currentId
           <div style={{ maxHeight: 320, overflowY: 'auto' }}>
             {!needle && recent.length > 0 && (
               <>
-                <div style={{ padding: '8px 12px 2px', fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t('recent')}</div>
+                <div style={{ padding: '8px 12px 2px', fontSize: 12, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t('recent')}</div>
                 {recent.slice(0, MAX_RECENT).map(id => item(id, projectNames[id]))}
               </>
             )}
-            <div style={{ padding: '8px 12px 2px', fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t('allProjects')} ({matches.length})</div>
+            <div style={{ padding: '8px 12px 2px', fontSize: 12, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t('allProjects')} ({matches.length})</div>
             {matches.slice(0, MAX_LISTED).map(([id, name]) => item(id, name))}
           </div>
           <Link href="/projects" onClick={() => setOpen(false)} style={{ display: 'block', padding: '10px 12px', borderTop: '1px solid var(--border)', fontSize: 13, fontWeight: 600, color: 'var(--primary-700)', textDecoration: 'none' }}>

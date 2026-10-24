@@ -354,7 +354,7 @@ export default function BackupRestoreView({ orgName, orgSlug }: Props) {
                   color: 'var(--sidebar-text-strong)',
                   padding: '16px',
                   borderRadius: '8px',
-                  fontSize: '11px',
+                  fontSize: '12px',
                   fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
                   overflow: 'auto',
                   maxHeight: '400px',
@@ -458,7 +458,7 @@ function TaxonomyPreflight({
   const tb = useTranslations('TemplatesBackup')
   if (isChecking && !preview) {
     return (
-      <div style={preflightCard('#f3f4f6', '#d1d5db')}>
+      <div style={preflightCard('var(--gray-100)', 'var(--gray-300)')}>
         <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
           {tb('checking')}
         </span>
@@ -474,7 +474,7 @@ function TaxonomyPreflight({
 
   if (total === 0) {
     return (
-      <div style={preflightCard('#ecfdf5', '#a7f3d0')}>
+      <div style={preflightCard('var(--success-50)', 'var(--success-200)')}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <span style={{ fontSize: '16px' }}>✓</span>
           <div>
@@ -492,7 +492,7 @@ function TaxonomyPreflight({
   }
 
   return (
-    <div style={preflightCard('#fef3c7', '#fde68a')}>
+    <div style={preflightCard('var(--warning-100)', 'var(--warning-200)')}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--warning-800)', marginBottom: '6px' }}>
@@ -509,7 +509,7 @@ function TaxonomyPreflight({
               <div><strong>{tb('types')}</strong> {preview.missingEquipmentTypes.join(', ')}</div>
             )}
           </div>
-          <div style={{ fontSize: '11px', color: 'var(--warning-700)', marginTop: '8px' }}>
+          <div style={{ fontSize: '12px', color: 'var(--warning-700)', marginTop: '8px' }}>
             {tb('missingHelp')}
           </div>
         </div>
@@ -558,7 +558,7 @@ function SummaryCell({ label, value, mono }: { label: string; value: string; mon
       borderRadius: '10px',
       padding: '12px 14px',
     }}>
-      <div style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', fontWeight: 600 }}>
+      <div style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', fontWeight: 600 }}>
         {label}
       </div>
       <div style={{
@@ -609,7 +609,7 @@ function ModuleSummary({
             onClick={() => setExpanded(s => !s)}
             style={{
               padding: '4px 10px', background: 'transparent', border: '1px solid var(--border)',
-              borderRadius: '6px', fontSize: '11px', color: 'var(--text-muted)', cursor: 'pointer',
+              borderRadius: '6px', fontSize: '12px', color: 'var(--text-muted)', cursor: 'pointer',
             }}
           >
             {expanded ? tb('hide') : tb('showList')}
@@ -728,7 +728,7 @@ const codeStyle: React.CSSProperties = {
   background: 'var(--gray-50)',
   padding: '2px 6px',
   borderRadius: '4px',
-  fontSize: '11px',
+  fontSize: '12px',
   fontFamily: 'ui-monospace, monospace',
   color: 'var(--text-strong)',
 }

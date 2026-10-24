@@ -108,17 +108,17 @@ export default function TemplateHeaderCard({
                 </span>
               )}
               <span style={{
-                padding: '3px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: 700,
+                padding: '3px 10px', borderRadius: '999px', fontSize: '12px', fontWeight: 700,
                 background: 'var(--primary-50)', color: 'var(--primary-700)',
                 border: '1px solid var(--primary-200)',
               }}>
                 v{template.version}
               </span>
               <span style={{
-                padding: '3px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
-                background: template.is_active ? '#10b98115' : '#94a3b815',
+                padding: '3px 10px', borderRadius: '999px', fontSize: '12px', fontWeight: 600,
+                background: template.is_active ? 'var(--success-50)' : 'var(--gray-100)',
                 color: template.is_active ? 'var(--success-700)' : 'var(--text-muted)',
-                border: `1px solid ${template.is_active ? '#10b98130' : 'var(--border)'}`,
+                border: `1px solid ${template.is_active ? 'var(--success-200)' : 'var(--border)'}`,
               }}>
                 {template.is_active ? t('statusActive') : t('statusInactive')}
               </span>
@@ -280,7 +280,7 @@ export default function TemplateHeaderCard({
                 </label>
               ))}
             </div>
-            <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '6px 0 0' }}>{t('signaturesHint')}</p>
+            <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '6px 0 0' }}>{t('signaturesHint')}</p>
           </fieldset>
           {error && (
             <p style={{ fontSize: '12px', color: 'var(--danger-700)', margin: '0 0 12px', padding: '8px 12px', background: 'var(--danger-100)', borderRadius: '6px' }}>

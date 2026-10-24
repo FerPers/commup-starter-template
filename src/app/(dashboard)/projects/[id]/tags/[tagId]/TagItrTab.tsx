@@ -177,7 +177,7 @@ export default function TagItrTab({
               >
                 {/* Phase badge */}
                 {phase && (
-                  <span style={{ padding: '3px 9px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, background: alpha(phase.color, 9), color: ink(phase.color), whiteSpace: 'nowrap' }}>
+                  <span style={{ padding: '3px 9px', borderRadius: '6px', fontSize: '12px', fontWeight: 700, background: alpha(phase.color, 9), color: ink(phase.color), whiteSpace: 'nowrap' }}>
                     {phase.code}
                   </span>
                 )}
@@ -196,14 +196,14 @@ export default function TagItrTab({
 
                 {/* Progress bar */}
                 <div style={{ width: '80px' }}>
-                  <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginBottom: '3px', textAlign: 'right' }}>{itr.progress_pct}%</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '3px', textAlign: 'right' }}>{itr.progress_pct}%</div>
                   <div style={{ height: '5px', background: 'var(--gray-100)', borderRadius: '3px', overflow: 'hidden' }}>
                     <div style={{ height: '100%', width: `${itr.progress_pct}%`, background: itr.progress_pct >= 100 ? 'var(--success-500)' : 'var(--primary-500)', borderRadius: '3px', transition: 'width 0.3s' }} />
                   </div>
                 </div>
 
                 {/* Status pill */}
-                <span style={{ padding: '3px 9px', borderRadius: '6px', fontSize: '11px', fontWeight: 600, background: st.bg, color: ink(st.color), whiteSpace: 'nowrap' }}>
+                <span style={{ padding: '3px 9px', borderRadius: '6px', fontSize: '12px', fontWeight: 600, background: st.bg, color: ink(st.color), whiteSpace: 'nowrap' }}>
                   {stLabel}
                 </span>
 
@@ -212,7 +212,7 @@ export default function TagItrTab({
                   {normalizeRequired(itr.required_signatures).map(role => {
                     const signed = itr.itr_signatures.some(s => s.role === role)
                     return (
-                      <span key={role} style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', background: signed ? 'var(--success-50)' : 'var(--gray-50)', color: signed ? 'var(--success-700)' : 'var(--text-muted)', border: `1px solid ${signed ? 'var(--success-200)' : 'var(--border)'}`, fontWeight: 600 }}>
+                      <span key={role} style={{ fontSize: '12px', padding: '2px 6px', borderRadius: '4px', background: signed ? 'var(--success-50)' : 'var(--gray-50)', color: signed ? 'var(--success-700)' : 'var(--text-muted)', border: `1px solid ${signed ? 'var(--success-200)' : 'var(--border)'}`, fontWeight: 600 }}>
                         {(SIGN_ROLES as readonly string[]).includes(role) ? t(`sign.${role as SignRoleKey}`) : role}
                       </span>
                     )
@@ -221,7 +221,7 @@ export default function TagItrTab({
 
                 {/* Inspector */}
                 {executor?.profiles?.full_name && (
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', whiteSpace: 'nowrap', maxWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', whiteSpace: 'nowrap', maxWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {executor.profiles.full_name}
                   </div>
                 )}
@@ -242,7 +242,7 @@ export default function TagItrTab({
                         tagNumber: tagNumber,
                         defaultAssignedTo: executor?.user_id,
                       })}
-                      style={{ padding: '6px 10px', background: 'var(--success-50)', border: '1px solid var(--success-200)', borderRadius: '6px', fontSize: '11px', color: 'var(--success-700)', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                      style={{ padding: '6px 10px', background: 'var(--success-50)', border: '1px solid var(--success-200)', borderRadius: '6px', fontSize: '12px', color: 'var(--success-700)', cursor: 'pointer', whiteSpace: 'nowrap' }}
                       title={t('addToPlan')}
                     >
                       + {t('plan')}
@@ -301,7 +301,7 @@ export default function TagItrTab({
                   <label htmlFor={`${assignTitleId}-template`} style={labelStyle}>
                     {t('template')} *
                     {tagType && (
-                      <span style={{ marginLeft: '8px', fontSize: '11px', fontWeight: 400, color: 'var(--success-700)', background: 'var(--success-50)', border: '1px solid var(--success-200)', borderRadius: '4px', padding: '1px 6px' }}>
+                      <span style={{ marginLeft: '8px', fontSize: '12px', fontWeight: 400, color: 'var(--success-700)', background: 'var(--success-50)', border: '1px solid var(--success-200)', borderRadius: '4px', padding: '1px 6px' }}>
                         {tagType.typeName}
                       </span>
                     )}
@@ -331,7 +331,7 @@ export default function TagItrTab({
                     </optgroup>
                   </select>
                   {templateObj?.project_phases && (
-                    <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '4px 0 0' }}>
+                    <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0' }}>
                       {t.rich('phaseName', { name: templateObj.project_phases.name, strong: chunks => <strong>{chunks}</strong> })}
                     </p>
                   )}

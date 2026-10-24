@@ -107,7 +107,7 @@ export default function PhotoUpload({
                 : <div style={{ width: '100%', height: '100%', background: 'var(--gray-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>📷</div>
               }
               {att.pending && (
-                <span title={t('upload.queuedHint')} style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: '2px 0', background: 'rgba(245,158,11,0.9)', color: '#fff', fontSize: '9px', fontWeight: 700, textAlign: 'center', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                <span title={t('upload.queuedHint')} style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: '2px 0', background: 'rgba(245,158,11,0.9)', color: '#fff', fontSize: '12px', fontWeight: 700, textAlign: 'center', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
                   ⏳ {t('upload.pending')}
                 </span>
               )}
@@ -115,7 +115,7 @@ export default function PhotoUpload({
                 <button
                   onClick={() => handleDelete(att)}
                   aria-label={tA('remove')}
-                  style={{ position: 'absolute', top: '2px', right: '2px', width: '18px', height: '18px', borderRadius: '50%', background: 'rgba(0,0,0,0.55)', border: 'none', color: '#fff', fontSize: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}
+                  style={{ position: 'absolute', top: '2px', right: '2px', width: '18px', height: '18px', borderRadius: '50%', background: 'rgba(0,0,0,0.55)', border: 'none', color: '#fff', fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}
                 >
                   ×
                 </button>
@@ -137,11 +137,11 @@ export default function PhotoUpload({
       )}
 
       {uploadError && (
-        <p style={{ fontSize: '11px', color: 'var(--danger-700)', margin: '4px 0 0' }}>{uploadError}</p>
+        <p style={{ fontSize: '12px', color: 'var(--danger-700)', margin: '4px 0 0' }}>{uploadError}</p>
       )}
       {/* G-17: el aviso dura mientras alguna foto del ítem siga en la bandeja (antes quedaba tras subirla). */}
       {queuedHint && shown.some(att => att.pending) && (
-        <p style={{ fontSize: '11px', color: 'var(--warning-700)', margin: '4px 0 0' }}>{t('upload.queuedHint')}</p>
+        <p style={{ fontSize: '12px', color: 'var(--warning-700)', margin: '4px 0 0' }}>{t('upload.queuedHint')}</p>
       )}
 
       {/* Lightbox */}

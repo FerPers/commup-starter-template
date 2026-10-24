@@ -181,7 +181,7 @@ export default function NotificationsBell({
             background: 'var(--danger-600)',
             color: '#fff',
             borderRadius: 999,
-            fontSize: 11,
+            fontSize: 12,
             fontWeight: 700,
             display: 'flex',
             alignItems: 'center',
@@ -283,7 +283,7 @@ export default function NotificationsBell({
                       {n.body}
                     </span>
                   )}
-                  <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
                     {formatRelative(n.created_at, tx, locale)}
                   </span>
                 </button>

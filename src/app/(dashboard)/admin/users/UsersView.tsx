@@ -63,7 +63,7 @@ function Avatar({ name, url }: { name: string; url: string | null }) {
   return (
     <div style={{
       width: 36, height: 36, borderRadius: '50%',
-      background: '#3b82f620', border: '1px solid #3b82f630',
+      background: 'var(--primary-100)', border: '1px solid var(--primary-200)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       fontSize: '13px', fontWeight: 700, color: 'var(--primary-700)', flexShrink: 0,
     }}>
@@ -229,7 +229,7 @@ export default function UsersView({
     })
   }
 
-  const labelStyle = { fontSize: '11px', fontWeight: 500, color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }
+  const labelStyle = { fontSize: '12px', fontWeight: 500, color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }
   const selectStyle = {
     padding: '7px 10px', border: '1px solid var(--border)',
     borderRadius: '8px', fontSize: '13px', color: 'var(--text-strong)',
@@ -445,7 +445,7 @@ export default function UsersView({
                   ].map((h, i) => (
                     <th key={i} style={{
                       padding: '12px 20px', textAlign: 'left',
-                      fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)',
+                      fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)',
                       textTransform: 'uppercase', letterSpacing: '0.06em',
                     }}>
                       {h}
@@ -470,7 +470,7 @@ export default function UsersView({
                             <div style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-strong)' }}>
                               {m.fullName}
                               {isSelf && (
-                                <span style={{ marginLeft: '8px', fontSize: '11px', color: 'var(--text-muted)', fontWeight: 400 }}>
+                                <span style={{ marginLeft: '8px', fontSize: '12px', color: 'var(--text-muted)', fontWeight: 400 }}>
                                   {t('table.self')}
                                 </span>
                               )}
@@ -483,7 +483,7 @@ export default function UsersView({
                                     : m.accessExpiresAt ? t('access.until', { date: m.accessExpiresAt.slice(0, 10) }) : null
                               if (!label) return null
                               const bad = m.status === 'suspended' || expired
-                              return <div suppressHydrationWarning style={{ fontSize: '11px', marginTop: 2, color: bad ? 'var(--danger-700)' : m.status === 'invited' ? 'var(--primary-700)' : 'var(--text-muted)' }}>{label}</div>
+                              return <div suppressHydrationWarning style={{ fontSize: '12px', marginTop: 2, color: bad ? 'var(--danger-700)' : m.status === 'invited' ? 'var(--primary-700)' : 'var(--text-muted)' }}>{label}</div>
                             })()}
                           </div>
                         </div>
@@ -667,7 +667,7 @@ export default function UsersView({
 
       {/* Role legend */}
       <div style={{ marginTop: '20px', padding: '16px 20px', background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)' }}>
-        <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 10px' }}>
+        <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 10px' }}>
           {t('legend')}
         </p>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>

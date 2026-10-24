@@ -22,9 +22,9 @@ type Props = {
 
 const SEVERITY_ORDER: DQSeverity[] = ['critical', 'error', 'warning']
 const SEVERITY_COLORS: Record<DQSeverity, string> = {
-  critical: '#dc2626',
-  error: '#ea580c',
-  warning: '#d97706',
+  critical: 'var(--danger-600)',
+  error: 'var(--orange-600)',
+  warning: 'var(--warning-600)',
 }
 
 const CATEGORIES = [
@@ -165,7 +165,7 @@ export default function DataQualityView({
                     </td>
                     <td style={{ ...tdStyle, fontWeight: 500 }}>
                       {b.subsystem_code}
-                      <div style={{ color: 'var(--text-muted)', fontSize: '11px' }}>{b.subsystem_name}</div>
+                      <div style={{ color: 'var(--text-muted)', fontSize: '12px' }}>{b.subsystem_name}</div>
                     </td>
                     <td style={tdStyle}>{b.system_name}</td>
                     <td style={tdStyle}>
@@ -178,13 +178,13 @@ export default function DataQualityView({
                     </td>
                     <td style={tdStyle}>
                       {b.punch_a_open > 0 && (
-                        <span style={pillStyle('#dc2626')}>A: {b.punch_a_open}</span>
+                        <span style={pillStyle('var(--danger-600)')}>A: {b.punch_a_open}</span>
                       )}
                       {b.punch_b_open > 0 && (
-                        <span style={pillStyle('#ea580c')}>B: {b.punch_b_open}</span>
+                        <span style={pillStyle('var(--orange-600)')}>B: {b.punch_b_open}</span>
                       )}
                       {b.punch_c_open > 0 && (
-                        <span style={pillStyle('var(--text-muted)')}>C: {b.punch_c_open}</span>
+                        <span style={pillStyle('var(--gray-600)')}>C: {b.punch_c_open}</span>
                       )}
                     </td>
                     <td style={tdStyle}>
@@ -315,7 +315,7 @@ export default function DataQualityView({
                       style={{
                         ...pillStyle(SEVERITY_COLORS[iss.severity]),
                         textTransform: 'uppercase',
-                        fontSize: '10px',
+                        fontSize: '12px',
                       }}
                     >
                       {t(`severity.${iss.severity}`)}
@@ -324,7 +324,7 @@ export default function DataQualityView({
                   <td style={tdStyle}>{t(`category.${iss.category}`)}</td>
                   <td style={tdStyle}>
                     <div style={{ fontWeight: 500 }}>{iss.entity_label}</div>
-                    <div style={{ color: 'var(--text-muted)', fontSize: '11px' }}>{iss.entity_type}</div>
+                    <div style={{ color: 'var(--text-muted)', fontSize: '12px' }}>{iss.entity_type}</div>
                   </td>
                   <td style={{ ...tdStyle, color: 'var(--text-muted)' }}>{iss.description}</td>
                   <td style={{ ...tdStyle, color: 'var(--text-muted)', fontSize: '12px' }}>{iss.suggested_fix}</td>
@@ -435,7 +435,7 @@ const pillStyle = (color: string): React.CSSProperties => ({
   background: color,
   color: '#fff',
   borderRadius: '4px',
-  fontSize: '11px',
+  fontSize: '12px',
   fontWeight: 600,
   marginRight: '4px',
 })
@@ -447,7 +447,7 @@ const reasonStyle: React.CSSProperties = {
   color: 'var(--text-muted)',
   border: '1px solid var(--border)',
   borderRadius: '4px',
-  fontSize: '11px',
+  fontSize: '12px',
   marginRight: '4px',
   marginBottom: '2px',
 }

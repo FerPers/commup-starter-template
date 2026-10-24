@@ -131,7 +131,7 @@ export function dateStamp() {
 
 export const fieldLabel: React.CSSProperties = {
   display: 'flex', flexDirection: 'column', gap: '5px',
-  fontSize: '11px', fontWeight: 600, color: 'var(--text-body)', textTransform: 'uppercase', letterSpacing: '0.04em',
+  fontSize: '12px', fontWeight: 600, color: 'var(--text-body)', textTransform: 'uppercase', letterSpacing: '0.04em',
 }
 
 export const fieldInput: React.CSSProperties = {
@@ -151,7 +151,7 @@ export function iconBtn(color: string): React.CSSProperties {
 export const miniBtn: React.CSSProperties = {
   width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center',
   borderRadius: '4px', border: 'none', background: 'transparent', color: 'var(--text-muted)',
-  cursor: 'pointer', fontSize: '10px', padding: 0,
+  cursor: 'pointer', fontSize: '12px', padding: 0,
 }
 
 export function normalizeItemType(form: ItemFormValues, itemType: ItrItemType): ItemFormValues {

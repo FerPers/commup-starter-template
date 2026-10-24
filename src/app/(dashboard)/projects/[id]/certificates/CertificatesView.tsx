@@ -245,7 +245,7 @@ export default function CertificatesView({
                 {[t('view.colSubsystem'), t('view.colSystem'), t('view.colItrs'), t('view.colCatA'), t('view.colCatB'), t('view.colStatus'), t('view.colCert'), ''].map((h, i) => (
                   <th key={i} style={{
                     padding: '11px 16px', textAlign: 'left',
-                    fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)',
+                    fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)',
                     textTransform: 'uppercase', letterSpacing: '0.06em',
                     whiteSpace: 'nowrap',
                   }}>
@@ -313,7 +313,7 @@ export default function CertificatesView({
                     </td>
                     <td style={{ padding: '12px 16px' }}>
                       <span style={{
-                        padding: '3px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
+                        padding: '3px 10px', borderRadius: '999px', fontSize: '12px', fontWeight: 600,
                         background: semColors.bg, color: ink(semColors.color), border: `1px solid ${semColors.border}`,
                         whiteSpace: 'nowrap',
                       }}>
@@ -328,18 +328,18 @@ export default function CertificatesView({
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '2px' }}>
                             <span style={{
-                              padding: '1px 7px', borderRadius: '999px', fontSize: '10px', fontWeight: 600,
+                              padding: '1px 7px', borderRadius: '999px', fontSize: '12px', fontWeight: 600,
                               background: certColors.bg, color: ink(certColors.color),
                             }}>
                               {certLabel}
                             </span>
                             {pd.certificate.status === 'issued' && pd.certificate.is_blocked && (
-                              <span style={{ padding: '1px 7px', borderRadius: '999px', fontSize: '10px', fontWeight: 600, background: 'var(--danger-100)', color: 'var(--danger-700)' }}>
+                              <span style={{ padding: '1px 7px', borderRadius: '999px', fontSize: '12px', fontWeight: 600, background: 'var(--danger-100)', color: 'var(--danger-700)' }}>
                                 {t('blocked')}
                               </span>
                             )}
                             {pd.certificate.issued_date && (
-                              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                              <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                                 {new Date(pd.certificate.issued_date).toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' })}
                               </span>
                             )}
@@ -444,17 +444,17 @@ export default function CertificatesView({
                 display: 'flex', gap: '24px',
               }}>
                 <div>
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('view.modal.itrsApproved')}</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('view.modal.itrsApproved')}</div>
                   <div style={{ fontSize: '18px', fontWeight: 700, color: 'var(--success-700)', marginTop: '2px' }}>
                     {issueModal.phaseEl.approvedItrs} / {issueModal.phaseEl.totalItrs}
                   </div>
                 </div>
                 <div>
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('view.modal.catAPunches')}</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('view.modal.catAPunches')}</div>
                   <div style={{ fontSize: '18px', fontWeight: 700, color: 'var(--success-700)', marginTop: '2px' }}>0</div>
                 </div>
                 <div>
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('view.modal.catBPunches')}</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('view.modal.catBPunches')}</div>
                   <div style={{ fontSize: '18px', fontWeight: 700, color: issueModal.phaseEl.openCatBPunches.length > 0 ? 'var(--warning-700)' : 'var(--success-700)', marginTop: '2px' }}>
                     {issueModal.phaseEl.openCatBPunches.length}
                   </div>
@@ -475,7 +475,7 @@ export default function CertificatesView({
                     }}>
                       <div style={{ display: 'flex', gap: '8px', alignItems: 'baseline', marginBottom: '8px' }}>
                         <span style={{
-                          fontSize: '11px', fontWeight: 700, color: 'var(--warning-700)',
+                          fontSize: '12px', fontWeight: 700, color: 'var(--warning-700)',
                           background: 'var(--warning-100)', padding: '2px 7px', borderRadius: '4px',
                         }}>
                           {punch.punch_number}

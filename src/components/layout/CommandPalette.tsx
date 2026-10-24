@@ -139,7 +139,7 @@ export default function CommandPalette() {
           fontSize: 'var(--text-sm)', display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontFamily: 'inherit' }}>
         <Search size={15} aria-hidden="true" />
         <span className="cmdk-trigger-label">{t('placeholderShort')}</span>
-        <kbd className="cmdk-trigger-label" style={{ marginLeft: 12, fontSize: 11, border: '1px solid var(--border)', borderRadius: 4, padding: '0 5px', fontFamily: 'inherit' }}>⌘K</kbd>
+        <kbd className="cmdk-trigger-label" style={{ marginLeft: 12, fontSize: 12, border: '1px solid var(--border)', borderRadius: 4, padding: '0 5px', fontFamily: 'inherit' }}>⌘K</kbd>
       </button>
 
       {open && (
@@ -173,7 +173,7 @@ export default function CommandPalette() {
               {showRecents ? (
                 recents.length ? (
                   <>
-                    <div style={{ padding: '6px 16px', fontSize: 11, fontWeight: 700, letterSpacing: '.06em', color: 'var(--text-muted)' }}>{t('recents')}</div>
+                    <div style={{ padding: '6px 16px', fontSize: 12, fontWeight: 700, letterSpacing: '.06em', color: 'var(--text-muted)' }}>{t('recents')}</div>
                     <ul id="cmdk-list" role="listbox" style={{ listStyle: 'none', margin: 0, padding: 0 }}>{recents.map((r, i) => row(r, i))}</ul>
                   </>
                 ) : <p style={{ margin: 0, padding: 16, color: 'var(--text-muted)', fontSize: 'var(--text-sm)' }}>{t('hint')}</p>
@@ -181,7 +181,7 @@ export default function CommandPalette() {
                 <ul id="cmdk-list" role="listbox" style={{ listStyle: 'none', margin: 0, padding: 0 }}>
                   {groups.map(g => (
                     <li key={g.kind} role="presentation">
-                      <div style={{ padding: '8px 16px 4px', fontSize: 11, fontWeight: 700, letterSpacing: '.06em', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t(`group.${g.kind}`)}</div>
+                      <div style={{ padding: '8px 16px 4px', fontSize: 12, fontWeight: 700, letterSpacing: '.06em', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t(`group.${g.kind}`)}</div>
                       <ul role="presentation" style={{ listStyle: 'none', margin: 0, padding: 0 }}>{g.hits.map((h, j) => row(h, g.offset + j))}</ul>
                     </li>
                   ))}

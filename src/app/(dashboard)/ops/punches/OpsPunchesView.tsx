@@ -57,7 +57,7 @@ const card: React.CSSProperties = {
 }
 
 function statusPill(st: string | null): React.CSSProperties {
-  const base = { padding: '2px 8px', borderRadius: 4, fontSize: 11, fontWeight: 600 }
+  const base = { padding: '2px 8px', borderRadius: 4, fontSize: 12, fontWeight: 600 }
   if (!st) return { ...base, background: 'var(--gray-100)', color: 'var(--text-muted)' }
   if (st === 'closed_final')          return { ...base, background: 'var(--success-100)', color: 'var(--success-800)' }
   if (st === 'verified_ops')          return { ...base, background: 'var(--primary-100)', color: 'var(--primary-800)' }
@@ -159,7 +159,7 @@ export default function OpsPunchesView({
       {/* Filters */}
       <div style={{ ...card, display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap' }}>
         <div>
-          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 4 }}>{t('filter.project')}</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 4 }}>{t('filter.project')}</div>
           <select
             style={{ ...input, minWidth: 260 }}
             value={selectedProjectId ?? ''}
@@ -170,7 +170,7 @@ export default function OpsPunchesView({
           </select>
         </div>
         <div>
-          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 4 }}>{t('filter.status')}</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 4 }}>{t('filter.status')}</div>
           <select
             style={{ ...input, minWidth: 200 }}
             value={selectedStatus ?? ''}
@@ -198,7 +198,7 @@ export default function OpsPunchesView({
             ].map(k => (
               <div key={k.label} style={{ ...card, marginBottom: 0, padding: 14 }}>
                 <div style={{ fontSize: 24, fontWeight: 700, color: ink(k.color) }}>{k.value}</div>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>{k.label}</div>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>{k.label}</div>
               </div>
             ))}
           </div>
@@ -269,14 +269,14 @@ export default function OpsPunchesView({
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
                       <span style={{ fontFamily: 'monospace', fontSize: 13, fontWeight: 600 }}>{p.punch_number}</span>
                       <span style={statusPill(p.post_handover_status)}>{t(`status.${p.post_handover_status ?? 'active'}`)}</span>
-                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{p.system_code} · {p.subsystem_code}{p.tag_number ? ' · ' + p.tag_number : ''}</span>
+                      <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{p.system_code} · {p.subsystem_code}{p.tag_number ? ' · ' + p.tag_number : ''}</span>
                     </div>
                     <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 4 }}>{p.description}</div>
-                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
                       {t('tracking.owner')}: {p.assigned_to_name ?? '—'} · {t('tracking.transferred')}: {fmt(p.transferred_at)} · {t('tracking.targetDate')}: {p.ops_target_date ?? '—'}
                     </div>
                     {p.ops_notes && (
-                      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4, padding: 6, background: 'var(--gray-50)', borderRadius: 4 }}>
+                      <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4, padding: 6, background: 'var(--gray-50)', borderRadius: 4 }}>
                         {p.ops_notes}
                       </div>
                     )}

@@ -26,7 +26,7 @@ export default function CancelPunchControl({ punch, projectId, tagId, userId, ro
 
   if (punch.status === 'closed' || punch.status === 'cancelled' || !canSupervisePunch(role)) return null
   if (punch.raised_by === userId) {
-    return <span style={{ fontSize: '11px', color: 'var(--text-muted)', alignSelf: 'center' }}>{t('ownPunch')}</span>
+    return <span style={{ fontSize: '12px', color: 'var(--text-muted)', alignSelf: 'center' }}>{t('ownPunch')}</span>
   }
 
   const ok = reason.trim().length >= 10
@@ -45,7 +45,7 @@ export default function CancelPunchControl({ punch, projectId, tagId, userId, ro
       <label htmlFor={`${uid}-reason`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--danger-900)', display: 'block', marginBottom: '6px' }}>{t('reasonLabel')}</label>
       <textarea id={`${uid}-reason`} rows={2} value={reason} onChange={e => setReason(e.target.value)} placeholder={t('reasonPlaceholder')}
         style={{ width: '100%', boxSizing: 'border-box', padding: '8px 10px', border: '1px solid var(--danger-200)', borderRadius: '6px', fontSize: '13px', fontFamily: 'inherit', resize: 'vertical' }} />
-      <p style={{ fontSize: '11px', color: 'var(--danger-800)', margin: '4px 0 8px' }}>{t('hint')}</p>
+      <p style={{ fontSize: '12px', color: 'var(--danger-800)', margin: '4px 0 8px' }}>{t('hint')}</p>
       {error && <p role="alert" style={{ fontSize: '12px', color: 'var(--danger-700)', margin: '0 0 8px' }}>{error}</p>}
       <div style={{ display: 'flex', gap: '8px' }}>
         <button disabled={!ok || isPending}

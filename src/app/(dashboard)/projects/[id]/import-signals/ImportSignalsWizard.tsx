@@ -49,7 +49,7 @@ export default function ImportSignalsWizard({
   const disciplineCodes = new Set(disciplines.map(d => d.code.toUpperCase()))
 
   const signalTypeColors: Record<string, string> = {
-    AI: '#3b82f6', AO: '#f59e0b', DI: '#10b981', DO: '#ef4444', PI: '#8b5cf6', PO: '#06b6d4',
+    AI: 'var(--primary-500)', AO: 'var(--warning-500)', DI: 'var(--success-500)', DO: 'var(--danger-500)', PI: 'var(--violet-500)', PO: 'var(--cyan-500)',
   }
 
   function parseNum(val: string): number | null {
@@ -282,7 +282,7 @@ export default function ImportSignalsWizard({
               {i > 0 && <div style={{ width: '32px', height: '1px', background: done ? 'var(--primary-500)' : 'var(--border)' }} />}
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <div style={{
-                  width: '24px', height: '24px', borderRadius: '50%', fontSize: '11px', fontWeight: 700,
+                  width: '24px', height: '24px', borderRadius: '50%', fontSize: '12px', fontWeight: 700,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   background: done || active ? 'var(--primary-600)' : 'var(--gray-100)',
                   color: done || active ? '#fff' : 'var(--text-muted)',
@@ -326,24 +326,24 @@ export default function ImportSignalsWizard({
             {COLUMN_GUIDE.map(([col, req, note]) => ({ col, req, desc: ts(`colNote.${note}`) })).map(item => (
               <div key={item.col} style={{ display: 'flex', gap: '8px', marginBottom: '8px', alignItems: 'flex-start' }}>
                 <span style={{
-                  padding: '1px 5px', borderRadius: '4px', fontSize: '9px', fontWeight: 700,
-                  background: item.req ? '#3b82f615' : 'var(--gray-50)',
+                  padding: '1px 5px', borderRadius: '4px', fontSize: '12px', fontWeight: 700,
+                  background: item.req ? 'var(--primary-50)' : 'var(--gray-50)',
                   color: item.req ? 'var(--primary-700)' : 'var(--text-muted)',
-                  border: `1px solid ${item.req ? '#3b82f630' : 'var(--border)'}`,
+                  border: `1px solid ${item.req ? 'var(--primary-200)' : 'var(--border)'}`,
                   flexShrink: 0, marginTop: '2px', whiteSpace: 'nowrap',
                 }}>{item.req ? 'REQ' : 'OPT'}</span>
                 <div>
-                  <div style={{ fontSize: '11px', color: 'var(--text-strong)', fontWeight: 500, fontFamily: 'monospace' }}>{item.col}</div>
-                  <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{item.desc}</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-strong)', fontWeight: 500, fontFamily: 'monospace' }}>{item.col}</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{item.desc}</div>
                 </div>
               </div>
             ))}
             <div style={{ marginTop: '10px', padding: '8px', background: 'var(--success-50)', borderRadius: '8px', border: '1px solid var(--success-200)' }}>
-              <p style={{ fontSize: '11px', color: 'var(--success-800)', margin: 0 }}>
+              <p style={{ fontSize: '12px', color: 'var(--success-800)', margin: 0 }}>
                 {ts('disciplines', { list: disciplines.map(d => d.code).join(', ') })}
               </p>
             </div>
-            <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '10px 0 0' }}>
+            <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '10px 0 0' }}>
               {ts('headerHint')}
             </p>
           </div>
@@ -392,7 +392,7 @@ export default function ImportSignalsWizard({
                 <thead>
                   <tr style={{ background: 'var(--gray-50)', borderBottom: '1px solid var(--border)' }}>
                     {['#', ts('col.signalTag'), ts('col.instrumentTag'), ts('col.type'), ts('col.description'), ts('col.service'), ts('col.range'), ts('col.unit'), ts('col.alarms'), ts('col.originDest'), 'P&ID', ts('col.loop'), ts('col.chain')].map(h => (
-                      <th key={h} style={{ padding: '9px 10px', textAlign: 'left', fontWeight: 600, color: 'var(--text-muted)', fontSize: '10px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</th>
+                      <th key={h} style={{ padding: '9px 10px', textAlign: 'left', fontWeight: 600, color: 'var(--text-muted)', fontSize: '12px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -408,7 +408,7 @@ export default function ImportSignalsWizard({
                         <td style={{ padding: '8px 10px', color: 'var(--text-muted)', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>{row.instrument_tag !== row.signal_tag ? row.instrument_tag : '='}</td>
                         <td style={{ padding: '8px 10px' }}>
                           <span style={{
-                            padding: '2px 7px', borderRadius: '999px', fontSize: '10px', fontWeight: 700,
+                            padding: '2px 7px', borderRadius: '999px', fontSize: '12px', fontWeight: 700,
                             background: badType ? 'var(--danger-100)' : alpha(signalTypeColors[row.signal_type] ?? 'var(--gray-400)', 9),
                             color: badType ? 'var(--danger-700)' : signalTypeColors[row.signal_type] ?? 'var(--text-muted)',
                           }}>{row.signal_type}</span>

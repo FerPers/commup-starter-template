@@ -228,7 +228,7 @@ export default function ImportCeWizard({ project, systems, aiReady }: {
             <table style={{ borderCollapse: 'collapse', fontSize: '12px' }}>
               <thead><tr>
                 <th style={{ position: 'sticky', left: 0, background: 'var(--gray-50)', padding: '6px 10px', textAlign: 'left', minWidth: '200px' }}>{tc('corner')}</th>
-                {review.effects.map(e => <th key={e.key} title={e.description} style={{ padding: '6px 4px', background: 'var(--gray-50)', writingMode: 'vertical-rl', transform: 'rotate(180deg)', whiteSpace: 'nowrap', maxHeight: '120px', fontSize: '11px' }}>{e.code}{e.tag ? ` · ${e.tag}` : ''}</th>)}
+                {review.effects.map(e => <th key={e.key} title={e.description} style={{ padding: '6px 4px', background: 'var(--gray-50)', writingMode: 'vertical-rl', transform: 'rotate(180deg)', whiteSpace: 'nowrap', maxHeight: '120px', fontSize: '12px' }}>{e.code}{e.tag ? ` · ${e.tag}` : ''}</th>)}
               </tr></thead>
               <tbody>{review.causes.map(c => (
                 <tr key={c.key}>

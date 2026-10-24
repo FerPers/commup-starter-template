@@ -191,7 +191,7 @@ export default function MatrixView({
             disabled={busy || !aiEnabled}
             onClick={() => generate(equipmentTypes.filter(t => (rowsByType.get(t.id) ?? []).length === 0).map(t => t.id))}
             title={aiEnabled ? tm('generateEmptyHint') : tm('aiOff')}
-            style={btn('#6d28d9', '#f5f3ff', '#ddd6fe', busy || !aiEnabled)}
+            style={btn('var(--violet-700)', 'var(--violet-50)', 'var(--violet-200)', busy || !aiEnabled)}
           >
             {tm('generateEmpty')}
           </button>
@@ -199,14 +199,14 @@ export default function MatrixView({
             disabled={busy || !aiEnabled}
             onClick={() => generate(equipmentTypes.map(t => t.id))}
             title={tm('regenerateHint')}
-            style={btn('#6d28d9', 'var(--card-bg)', '#ddd6fe', busy || !aiEnabled)}
+            style={btn('var(--violet-700)', 'var(--card-bg)', 'var(--violet-200)', busy || !aiEnabled)}
           >
             {tm('regenerate')}
           </button>
-          <button onClick={downloadTemplate} title={tm('templateHint')} style={btn('#1e40af', 'var(--card-bg)', '#bfdbfe', false)}>
+          <button onClick={downloadTemplate} title={tm('templateHint')} style={btn('var(--primary-800)', 'var(--card-bg)', 'var(--primary-200)', false)}>
             {tm('template')}
           </button>
-          <button disabled={busy} onClick={() => setShowImport(true)} title={tm('importHint')} style={btn('#166534', '#dcfce7', '#bbf7d0', busy)}>
+          <button disabled={busy} onClick={() => setShowImport(true)} title={tm('importHint')} style={btn('var(--success-700)', 'var(--success-100)', 'var(--success-200)', busy)}>
             {tm('import')}
           </button>
         </div>
@@ -229,7 +229,7 @@ export default function MatrixView({
           <div style={{ height: '6px', background: 'var(--violet-100)', borderRadius: '3px', overflow: 'hidden' }}>
             <div style={{ width: `${Math.round((progress.done / progress.total) * 100)}%`, height: '100%', background: 'var(--violet-600)', transition: 'width .3s' }} />
           </div>
-          <div style={{ marginTop: '8px', fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'ui-monospace, monospace' }}>
+          <div style={{ marginTop: '8px', fontSize: '12px', color: 'var(--text-muted)', fontFamily: 'ui-monospace, monospace' }}>
             {progress.log.map((l, i) => <div key={i}>{l}</div>)}
           </div>
         </div>
@@ -239,7 +239,7 @@ export default function MatrixView({
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '18px' }}>
         <Stat label={tm('stat.withAccepted')} value={`${stats.withAccepted} / ${equipmentTypes.length}`} />
         <Stat label={tm('stat.pending')} value={String(stats.pending)} accent={stats.pending > 0 ? 'var(--warning-700)' : undefined} />
-        <Stat label={tm('stat.accepted')} value={String(stats.accepted)} accent="#166534" />
+        <Stat label={tm('stat.accepted')} value={String(stats.accepted)} accent="var(--success-700)" />
         <Stat label={tm('stat.rejected')} value={String(stats.rejected)} />
       </div>
 
@@ -271,17 +271,17 @@ export default function MatrixView({
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: rows.length ? '10px' : 0, flexWrap: 'wrap' }}>
                 <span style={{ padding: '2px 8px', borderRadius: '6px', fontSize: '12px', fontWeight: 700, fontFamily: 'ui-monospace, monospace', background: 'var(--gray-100)', color: 'var(--text-strong)' }}>{t.code}</span>
                 <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-strong)' }}>{t.name}</span>
-                {t.category && <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{t.category}</span>}
+                {t.category && <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{t.category}</span>}
                 <span style={{ marginLeft: 'auto', display: 'flex', gap: '6px' }}>
                   {pendingIds.length > 0 && (
-                    <button disabled={busy} onClick={() => act(() => reviewMatrixRows(pendingIds, 'accepted'))} style={btn('#166534', '#dcfce7', '#bbf7d0', busy)}>
+                    <button disabled={busy} onClick={() => act(() => reviewMatrixRows(pendingIds, 'accepted'))} style={btn('var(--success-700)', 'var(--success-100)', 'var(--success-200)', busy)}>
                       {tm('acceptN', { n: pendingIds.length })}
                     </button>
                   )}
                   {aiEnabled && (
-                    <button disabled={busy} onClick={() => generate([t.id])} style={btn('#6d28d9', 'var(--card-bg)', '#ddd6fe', busy)} title={tm('proposeOne')}>✦</button>
+                    <button disabled={busy} onClick={() => generate([t.id])} style={btn('var(--violet-700)', 'var(--card-bg)', 'var(--violet-200)', busy)} title={tm('proposeOne')}>✦</button>
                   )}
-                  <button disabled={busy} onClick={() => { setAddingFor(addingFor === t.id ? null : t.id); setAddTemplate('') }} style={btn('#1e40af', '#eff6ff', '#bfdbfe', busy)}>{tm('add')}</button>
+                  <button disabled={busy} onClick={() => { setAddingFor(addingFor === t.id ? null : t.id); setAddTemplate('') }} style={btn('var(--primary-800)', 'var(--primary-50)', 'var(--primary-200)', busy)}>{tm('add')}</button>
                 </span>
               </div>
 
@@ -296,7 +296,7 @@ export default function MatrixView({
                   <button
                     disabled={busy || !addTemplate}
                     onClick={() => act(async () => { const r = await addMatrixRow({ equipmentTypeId: t.id, templateId: addTemplate }); if (!r.error) { setAddingFor(null); setAddTemplate('') } return r })}
-                    style={btn('#fff', '#2563eb', '#2563eb', busy || !addTemplate)}
+                    style={btn('#fff', 'var(--primary-600)', 'var(--primary-600)', busy || !addTemplate)}
                   >
                     {tm('addAccepted')}
                   </button>
@@ -311,21 +311,21 @@ export default function MatrixView({
                     const st = STATUS_STYLE[r.status]
                     return (
                       <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', borderRadius: '8px', background: r.status === 'rejected' ? 'var(--gray-50)' : 'transparent', border: '1px solid var(--gray-100)', opacity: r.status === 'rejected' ? 0.7 : 1 }}>
-                        <span style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '11px', fontWeight: 700, background: 'var(--indigo-100)', color: 'var(--indigo-800)', whiteSpace: 'nowrap' }}>{tm('phaseCap', { code: r.template.phase_code ?? '?' })}</span>
+                        <span style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '12px', fontWeight: 700, background: 'var(--indigo-100)', color: 'var(--indigo-800)', whiteSpace: 'nowrap' }}>{tm('phaseCap', { code: r.template.phase_code ?? '?' })}</span>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-strong)' }}>
                             <span style={{ fontFamily: 'ui-monospace, monospace' }}>{r.template.code}</span> · {r.template.title}
-                            {r.template.discipline_code && <span style={{ marginLeft: '6px', fontSize: '10px', color: 'var(--text-muted)' }}>{r.template.discipline_code}</span>}
+                            {r.template.discipline_code && <span style={{ marginLeft: '6px', fontSize: '12px', color: 'var(--text-muted)' }}>{r.template.discipline_code}</span>}
                           </div>
                           {r.reason && <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{r.reason}</div>}
                         </div>
                         {r.confidence !== null && (
-                          <span title={tm('confidence')} style={{ fontSize: '11px', fontWeight: 700, whiteSpace: 'nowrap', color: r.confidence >= 0.7 ? 'var(--success-700)' : r.confidence >= 0.4 ? 'var(--warning-700)' : 'var(--danger-700)' }}>{Math.round(r.confidence * 100)}%</span>
+                          <span title={tm('confidence')} style={{ fontSize: '12px', fontWeight: 700, whiteSpace: 'nowrap', color: r.confidence >= 0.7 ? 'var(--success-700)' : r.confidence >= 0.4 ? 'var(--warning-700)' : 'var(--danger-700)' }}>{Math.round(r.confidence * 100)}%</span>
                         )}
-                        <span style={{ padding: '2px 8px', borderRadius: '999px', fontSize: '10px', fontWeight: 700, background: st.bg, color: ink(st.color), whiteSpace: 'nowrap' }}>{tm(`status.${r.status}`)}{r.source === 'manual' ? ` · ${tm('manual')}` : ''}</span>
+                        <span style={{ padding: '2px 8px', borderRadius: '999px', fontSize: '12px', fontWeight: 700, background: st.bg, color: ink(st.color), whiteSpace: 'nowrap' }}>{tm(`status.${r.status}`)}{r.source === 'manual' ? ` · ${tm('manual')}` : ''}</span>
                         <span style={{ display: 'flex', gap: '4px' }}>
-                          {r.status !== 'accepted' && <button disabled={busy} onClick={() => act(() => reviewMatrixRows([r.id], 'accepted'))} title={tm('accept')} style={btnIcon('#166534')}>✓</button>}
-                          {r.status !== 'rejected' && <button disabled={busy} onClick={() => act(() => reviewMatrixRows([r.id], 'rejected'))} title={tm('reject')} style={btnIcon('#991b1b')}>✕</button>}
+                          {r.status !== 'accepted' && <button disabled={busy} onClick={() => act(() => reviewMatrixRows([r.id], 'accepted'))} title={tm('accept')} style={btnIcon('var(--success-700)')}>✓</button>}
+                          {r.status !== 'rejected' && <button disabled={busy} onClick={() => act(() => reviewMatrixRows([r.id], 'rejected'))} title={tm('reject')} style={btnIcon('var(--danger-800)')}>✕</button>}
                           <button disabled={busy} onClick={() => act(() => deleteMatrixRow(r.id))} title={tm('deleteRow')} style={btnIcon('var(--gray-400)')}>🗑</button>
                         </span>
                       </div>
@@ -349,7 +349,7 @@ export default function MatrixView({
 function Stat({ label, value, accent }: { label: string; value: string; accent?: string }) {
   return (
     <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '10px', padding: '12px 14px' }}>
-      <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>{label}</div>
+      <div style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>{label}</div>
       <div style={{ fontSize: '22px', fontWeight: 700, color: accent ?? 'var(--text-strong)', marginTop: '2px', fontVariantNumeric: 'tabular-nums' }}>{value}</div>
     </div>
   )

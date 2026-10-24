@@ -342,7 +342,7 @@ export default function ImportWizard({
                 ))}
               </div>
               {!manualDiscipline && (
-                <span style={{ fontSize: '11px', color: 'var(--warning-700)', whiteSpace: 'nowrap' }}>{ti('pickDiscipline')}</span>
+                <span style={{ fontSize: '12px', color: 'var(--warning-700)', whiteSpace: 'nowrap' }}>{ti('pickDiscipline')}</span>
               )}
             </div>
           )}
@@ -377,7 +377,7 @@ export default function ImportWizard({
 
           {/* Column guide */}
           <div style={{ background: 'var(--gray-50)', borderRadius: '12px', border: '1px solid var(--border)', padding: '20px' }}>
-            <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               {ti('columnsTitle')}
             </p>
             {[
@@ -397,26 +397,26 @@ export default function ImportWizard({
               { key: 'MOUNTING TYPICAL / TIPICO',req: false, note: ti('colNote.mounting') },
             ].map(col => (
               <div key={col.key} style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', marginBottom: '10px' }}>
-                <span style={{ padding: '1px 5px', borderRadius: '4px', fontSize: '9px', fontWeight: 700, flexShrink: 0, marginTop: '2px', background: col.req ? 'var(--danger-100)' : 'var(--gray-100)', color: col.req ? 'var(--danger-700)' : 'var(--text-muted)' }}>
+                <span style={{ padding: '1px 5px', borderRadius: '4px', fontSize: '12px', fontWeight: 700, flexShrink: 0, marginTop: '2px', background: col.req ? 'var(--danger-100)' : 'var(--gray-100)', color: col.req ? 'var(--danger-700)' : 'var(--text-muted)' }}>
                   {col.req ? 'REQ' : 'OPT'}
                 </span>
                 <div>
-                  <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', fontFamily: 'monospace' }}>{col.key}</div>
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{col.note}</div>
+                  <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', fontFamily: 'monospace' }}>{col.key}</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{col.note}</div>
                 </div>
               </div>
             ))}
             {!disciplinePrefill && (
               <>
                 <div style={{ borderTop: '1px solid var(--border)', margin: '12px 0' }} />
-                <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{ti('availableDisciplines')}</p>
+                <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{ti('availableDisciplines')}</p>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                  {disciplines.map(d => <span key={d.code} style={{ padding: '2px 8px', borderRadius: '5px', fontSize: '11px', fontWeight: 700, background: alpha(d.color, 9), color: ink(d.color) }}>{d.code}</span>)}
+                  {disciplines.map(d => <span key={d.code} style={{ padding: '2px 8px', borderRadius: '5px', fontSize: '12px', fontWeight: 700, background: alpha(d.color, 9), color: ink(d.color) }}>{d.code}</span>)}
                 </div>
               </>
             )}
             <div style={{ borderTop: '1px solid var(--border)', marginTop: '14px', paddingTop: '12px' }}>
-              <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: 0 }}>
+              <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: 0 }}>
                 {ti('headerHint')}
               </p>
             </div>
@@ -499,28 +499,28 @@ export default function ImportWizard({
                       <td style={tdStyle}>
                         <span style={{ fontWeight: 600, color: 'var(--text-strong)', fontFamily: 'monospace' }}>{row.tag_number}</span>
                         {existingTags?.has(row.tag_number.trim()) && (
-                          <span style={{ marginLeft: '6px', padding: '1px 6px', borderRadius: '4px', fontSize: '9px', fontWeight: 700, background: 'var(--primary-50)', color: 'var(--primary-800)', border: '1px solid var(--primary-200)', verticalAlign: 'middle' }}>{ti('exists')}</span>
+                          <span style={{ marginLeft: '6px', padding: '1px 6px', borderRadius: '4px', fontSize: '12px', fontWeight: 700, background: 'var(--primary-50)', color: 'var(--primary-800)', border: '1px solid var(--primary-200)', verticalAlign: 'middle' }}>{ti('exists')}</span>
                         )}
                       </td>
                       <td style={tdStyle}><span style={{ color: 'var(--text-muted)' }}>{row.description || '—'}</span></td>
                       <td style={tdStyle}>{(() => {
                         // Tipo explícito del Excel (columna TIPO EQUIPO) o detectado por prefijo ISA
                         if (row.equipment_type_code) {
-                          return <span style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '10px', fontWeight: 600, background: 'var(--primary-50)', color: 'var(--primary-800)', border: '1px solid var(--primary-200)', whiteSpace: 'nowrap' }}>{row.equipment_type_code}</span>
+                          return <span style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '12px', fontWeight: 600, background: 'var(--primary-50)', color: 'var(--primary-800)', border: '1px solid var(--primary-200)', whiteSpace: 'nowrap' }}>{row.equipment_type_code}</span>
                         }
                         const t = detectTagType(row.tag_number)
                         const code = detectEquipmentTypeCode(row.tag_number)
                         return t
-                          ? <span title={ti('detectedByPrefix')} style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '10px', fontWeight: 600, background: 'var(--success-50)', color: 'var(--success-700)', border: '1px solid var(--success-200)', whiteSpace: 'nowrap' }}>{t.typeName}{code ? ` (${code})` : ''}</span>
-                          : <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>—</span>
+                          ? <span title={ti('detectedByPrefix')} style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '12px', fontWeight: 600, background: 'var(--success-50)', color: 'var(--success-700)', border: '1px solid var(--success-200)', whiteSpace: 'nowrap' }}>{t.typeName}{code ? ` (${code})` : ''}</span>
+                          : <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>—</span>
                       })()}</td>
                       <td style={tdStyle}>
-                        <span style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '10px', fontWeight: 700, background: alpha(dColor, 9), color: isInvalid ? 'var(--danger-700)' : dColor }}>
+                        <span style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '12px', fontWeight: 700, background: alpha(dColor, 9), color: isInvalid ? 'var(--danger-700)' : dColor }}>
                           {row.discipline_code || '?'}
                         </span>
                       </td>
-                      <td style={tdStyle}><span style={{ color: 'var(--text-muted)', fontFamily: 'monospace', fontSize: '11px' }}>{[row.area_code, row.system_code, row.subsystem_code].join(' / ')}</span></td>
-                      {hasPid && <td style={tdStyle}><span style={{ color: 'var(--text-muted)', fontSize: '11px', fontFamily: 'monospace' }}>{row.pid_drawing ?? '—'}</span></td>}
+                      <td style={tdStyle}><span style={{ color: 'var(--text-muted)', fontFamily: 'monospace', fontSize: '12px' }}>{[row.area_code, row.system_code, row.subsystem_code].join(' / ')}</span></td>
+                      {hasPid && <td style={tdStyle}><span style={{ color: 'var(--text-muted)', fontSize: '12px', fontFamily: 'monospace' }}>{row.pid_drawing ?? '—'}</span></td>}
                       <td style={tdStyle}><span style={{ color: 'var(--text-muted)' }}>{row.manufacturer ?? '—'}</span></td>
                     </tr>
                   )
@@ -609,6 +609,6 @@ function downloadErrors(errors: ImportResult['errors'], fileName: string | null,
 }
 
 function Th({ children }: { children: React.ReactNode }) {
-  return <th style={{ padding: '10px 14px', textAlign: 'left', fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>{children}</th>
+  return <th style={{ padding: '10px 14px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>{children}</th>
 }
 const tdStyle: React.CSSProperties = { padding: '10px 14px', verticalAlign: 'middle' }

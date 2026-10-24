@@ -64,13 +64,13 @@ export default function ItemRow({
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             {item.item_number && (
-              <span style={{ fontSize: '11px', fontFamily: 'ui-monospace, monospace', color: 'var(--text-muted)', minWidth: '28px' }}>{item.item_number}</span>
+              <span style={{ fontSize: '12px', fontFamily: 'ui-monospace, monospace', color: 'var(--text-muted)', minWidth: '28px' }}>{item.item_number}</span>
             )}
             <div style={{ display: 'flex', gap: '4px' }}>
               {item.is_critical && <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--danger-500)', display: 'inline-block', flexShrink: 0, marginTop: '3px' }} title={t('item.titleCritical')} />}
               {item.is_required && !item.is_critical && <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--warning-500)', display: 'inline-block', flexShrink: 0, marginTop: '3px' }} title={t('item.titleRequired')} />}
-              {item.requires_photo && <span style={{ fontSize: '10px', color: 'var(--primary-700)' }} title={t('item.titlePhoto')}>⊙</span>}
-              {item.requires_document && <span style={{ fontSize: '10px', color: 'var(--cyan-700)' }} title={t('item.titleDocument')}>📄</span>}
+              {item.requires_photo && <span style={{ fontSize: '12px', color: 'var(--primary-700)' }} title={t('item.titlePhoto')}>⊙</span>}
+              {item.requires_document && <span style={{ fontSize: '12px', color: 'var(--cyan-700)' }} title={t('item.titleDocument')}>📄</span>}
             </div>
           </div>
           <p style={{ fontSize: '13px', color: 'var(--text-strong)', margin: '2px 0 0', lineHeight: '1.4' }}>{visibleDesc}</p>
@@ -181,7 +181,7 @@ export default function ItemRow({
             {item.unit && <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{item.unit}</span>}
           </div>
           {(item.acceptance_min !== null || item.acceptance_max !== null) && (
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
               {item.acceptance_min !== null && item.acceptance_max !== null
                 ? t('item.criterionBoth', { min: item.acceptance_min, max: item.acceptance_max, unit: item.unit ?? '' })
                 : item.acceptance_min !== null
@@ -265,7 +265,7 @@ export default function ItemRow({
       {(item.is_critical || item.item_type === 'measurement' || answeredNo || (item.item_type === 'select' && evaluateSelectionOutcome(item.options, item.option_outcomes ?? {}, response?.value_option).requiresJustification)) && (
         <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
           {answeredNo && !response?.remarks?.trim() && (
-            <span role="note" style={{ fontSize: '11px', color: 'var(--warning-700)', fontWeight: 600 }}>
+            <span role="note" style={{ fontSize: '12px', color: 'var(--warning-700)', fontWeight: 600 }}>
               {t('item.noNeedsRemarks')}{canPunch ? ` ${t('item.noSuggestPunch')}` : ''}
             </span>
           )}

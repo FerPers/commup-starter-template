@@ -181,7 +181,7 @@ export default function PunchPhotosSection({
                     style={{
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       width: '100%', height: '100%',
-                      fontSize: 11, color: 'var(--text-muted)', textDecoration: 'none',
+                      fontSize: 12, color: 'var(--text-muted)', textDecoration: 'none',
                       padding: 4, textAlign: 'center',
                     }}
                   >

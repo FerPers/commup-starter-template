@@ -25,7 +25,7 @@ export type SystemPunch = {
   tags: { id: string; tag_number: string } | null
 }
 
-const th: React.CSSProperties = { textAlign: 'left', padding: '8px 10px', fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.04em', borderBottom: '1px solid var(--border)' }
+const th: React.CSSProperties = { textAlign: 'left', padding: '8px 10px', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.04em', borderBottom: '1px solid var(--border)' }
 const td: React.CSSProperties = { padding: '8px 10px', borderBottom: '1px solid var(--border)', fontSize: '12px', verticalAlign: 'top' }
 
 export default function PssrPunchDisposition({ projectId, systemCode, punches, editable }: {
@@ -87,15 +87,15 @@ export default function PssrPunchDisposition({ projectId, systemCode, punches, e
                   <tr key={p.id} style={{ background: blocking ? 'var(--warning-50)' : undefined }}>
                     <td style={{ ...td, whiteSpace: 'nowrap' }}>
                       <Link href={`/projects/${projectId}/punches/${p.id}`} style={{ fontFamily: 'ui-monospace, monospace', fontWeight: 700, color: 'inherit', textDecoration: 'none', display: 'block' }}>{p.punch_number}</Link>
-                      <span style={{ fontSize: '10px', fontWeight: 700, padding: '1px 6px', borderRadius: '4px', background: cat.bg, color: ink(cat.color), border: `1px solid ${cat.border}` }}>{cat.label}</span>
+                      <span style={{ fontSize: '12px', fontWeight: 700, padding: '1px 6px', borderRadius: '4px', background: cat.bg, color: ink(cat.color), border: `1px solid ${cat.border}` }}>{cat.label}</span>
                     </td>
                     <td style={td}>
                       {p.description}
                       {p.tags && (
-                        <div><Link href={`/projects/${projectId}/tags/${p.tags.id}?tab=punches`} style={{ fontSize: '11px', color: 'var(--primary-700)', textDecoration: 'none', fontFamily: 'ui-monospace, monospace' }}>{p.tags.tag_number} ↗</Link></div>
+                        <div><Link href={`/projects/${projectId}/tags/${p.tags.id}?tab=punches`} style={{ fontSize: '12px', color: 'var(--primary-700)', textDecoration: 'none', fontFamily: 'ui-monospace, monospace' }}>{p.tags.tag_number} ↗</Link></div>
                       )}
                     </td>
-                    <td style={td}><span style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '11px', fontWeight: 600, background: st.bg, color: ink(st.color), whiteSpace: 'nowrap' }}>{tl(`punchStatus.${ds}`)}</span></td>
+                    <td style={td}><span style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '12px', fontWeight: 600, background: st.bg, color: ink(st.color), whiteSpace: 'nowrap' }}>{tl(`punchStatus.${ds}`)}</span></td>
                     <td style={{ ...td, minWidth: '220px' }}>
                       <select value={p.startup_disposition ?? ''} disabled={!editable || isPending} onChange={e => setDisposition(p.id, e.target.value)}
                         aria-label={`${t('dispositionLabel')} ${p.punch_number}`}
@@ -103,7 +103,7 @@ export default function PssrPunchDisposition({ projectId, systemCode, punches, e
                         <option value="">{t('noDisposition')}</option>
                         {STARTUP_DISPOSITIONS.map(d => <option key={d} value={d}>{t(`disposition.${d}`)}</option>)}
                       </select>
-                      {p.startup_disposition && <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '3px' }}>{STARTUP_DISPOSITION_HELP[p.startup_disposition as StartupDisposition]?.[lang]}</div>}
+                      {p.startup_disposition && <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '3px' }}>{STARTUP_DISPOSITION_HELP[p.startup_disposition as StartupDisposition]?.[lang]}</div>}
                     </td>
                   </tr>
                 )

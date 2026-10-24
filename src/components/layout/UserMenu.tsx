@@ -159,7 +159,7 @@ export default function UserMenu({
           width: 24, height: 24, borderRadius: '50%', flexShrink: 0,
           background: 'var(--brand-orange)', color: '#fff',
           display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 10, fontWeight: 700, letterSpacing: '0.02em',
+          fontSize: 12, fontWeight: 700, letterSpacing: '0.02em',
         }}>
           {initialsOf(userName, userEmail)}
         </span>
@@ -201,7 +201,7 @@ export default function UserMenu({
             </span>
             <div style={{ minWidth: 0 }}>
               <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{displayName}</div>
-              {userEmail && <div style={{ fontSize: 11, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{userEmail}</div>}
+              {userEmail && <div style={{ fontSize: 12, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{userEmail}</div>}
             </div>
           </div>
 
@@ -229,7 +229,7 @@ export default function UserMenu({
                   >
                     <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
                       <span style={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.orgName}</span>
-                      <span style={{ fontSize: 11, color: c.fg, background: c.bg, border: `1px solid ${c.border}`, padding: '0 7px', borderRadius: 999, textTransform: 'capitalize', flexShrink: 0 }}>
+                      <span style={{ fontSize: 12, color: c.fg, background: c.bg, border: `1px solid ${c.border}`, padding: '0 7px', borderRadius: 999, textTransform: 'capitalize', flexShrink: 0 }}>
                         {roleLabels[m.role] ?? m.role}
                       </span>
                     </span>
@@ -284,7 +284,7 @@ export default function UserMenu({
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p style={{ margin: '8px 10px 4px', fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+    <p style={{ margin: '8px 10px 4px', fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
       {children}
     </p>
   )

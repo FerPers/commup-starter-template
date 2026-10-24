@@ -169,7 +169,7 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete, ca
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <div style={{
               width: '56px', height: '56px', borderRadius: '14px',
-              background: '#3b82f615', border: '1px solid #3b82f625',
+              background: 'var(--primary-50)', border: '1px solid var(--primary-200)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: '12px', fontWeight: 700, color: 'var(--primary-700)', flexShrink: 0,
             }}>
@@ -278,7 +278,7 @@ export default function ProjectHeader({ project: initial, canEdit, canDelete, ca
                       </button>
                     )}
                   </div>
-                  <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{t('clientLogoHint')}</span>
+                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('clientLogoHint')}</span>
                 </div>
               )}
               <Field label={t('f.status')} htmlFor={`${uid}-status`}>

@@ -145,7 +145,7 @@ export default function TagDetail({
         {/* Breadcrumb hierarchy */}
         {hier && (
           <div style={{
-            fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'ui-monospace, monospace',
+            fontSize: '12px', color: 'var(--text-muted)', fontFamily: 'ui-monospace, monospace',
             letterSpacing: '0.03em', marginBottom: '10px',
           }}>
             {hier}
@@ -201,7 +201,7 @@ export default function TagDetail({
             display: 'flex', alignItems: 'center', gap: '10px',
           }}>
             <span style={{
-              fontSize: '10px', fontWeight: 600, color: 'var(--text-muted)',
+              fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)',
               textTransform: 'uppercase', letterSpacing: '0.06em',
             }}>
               P&amp;ID
@@ -219,7 +219,7 @@ export default function TagDetail({
                 }}
               >
                 {tag.pid_drawing}
-                <span style={{ opacity: 0.5, fontSize: '10px' }}>↗</span>
+                <span style={{ opacity: 0.5, fontSize: '12px' }}>↗</span>
               </a>
             ) : (
               <span style={{
@@ -232,7 +232,7 @@ export default function TagDetail({
             )}
             {tag.preservation_required && (
               <span style={{
-                marginLeft: '8px', fontSize: '11px', color: 'var(--warning-700)', fontWeight: 600,
+                marginLeft: '8px', fontSize: '12px', color: 'var(--warning-700)', fontWeight: 600,
                 background: 'var(--warning-50)', padding: '2px 8px', borderRadius: '5px',
                 border: '1px solid var(--warning-200)',
               }}>
@@ -244,7 +244,7 @@ export default function TagDetail({
         {!tag.pid_drawing && tag.preservation_required && (
           <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--gray-100)' }}>
             <span style={{
-              fontSize: '11px', color: 'var(--warning-700)', fontWeight: 600,
+              fontSize: '12px', color: 'var(--warning-700)', fontWeight: 600,
               background: 'var(--warning-50)', padding: '2px 8px', borderRadius: '5px',
               border: '1px solid var(--warning-200)',
             }}>
@@ -281,7 +281,7 @@ export default function TagDetail({
               {tab.label}
               {tab.badge !== undefined && (
                 <span style={{
-                  padding: '1px 7px', borderRadius: '999px', fontSize: '11px', fontWeight: 700,
+                  padding: '1px 7px', borderRadius: '999px', fontSize: '12px', fontWeight: 700,
                   background: active ? 'var(--primary-600)' : 'var(--gray-100)',
                   color: active ? '#fff' : 'var(--text-muted)',
                 }}>

@@ -146,17 +146,17 @@ export default function PssrTemplateEditor({
   }
 
   const STATUS_COLORS: Record<string, string> = {
-    'Ingeniería y Diseño': '#3b82f6',
-    'Documentación': '#8b5cf6',
-    'Mecánica y Tuberías': '#f59e0b',
-    'Electricidad': '#ef4444',
-    'Instrumentación y Control': '#06b6d4',
-    'Seguridad de Procesos': '#f97316',
-    'Seguridad / HSE': '#10b981',
-    'Operaciones y Capacitación': '#6366f1',
+    'Ingeniería y Diseño': 'var(--primary-500)',
+    'Documentación': 'var(--violet-500)',
+    'Mecánica y Tuberías': 'var(--warning-500)',
+    'Electricidad': 'var(--danger-500)',
+    'Instrumentación y Control': 'var(--cyan-500)',
+    'Seguridad de Procesos': 'var(--orange-500)',
+    'Seguridad / HSE': 'var(--success-500)',
+    'Operaciones y Capacitación': 'var(--indigo-500)',
     'Mantenimiento': 'var(--text-muted)',
-    'Medio Ambiente': '#22c55e',
-    'Construcción y Comisionamiento': '#d97706',
+    'Medio Ambiente': 'var(--teal-500)',
+    'Construcción y Comisionamiento': 'var(--warning-600)',
   }
 
   function catColor(cat: string) { return STATUS_COLORS[cat] ?? 'var(--text-muted)' }
@@ -273,7 +273,7 @@ export default function PssrTemplateEditor({
                 display: 'flex', gap: '14px', alignItems: 'flex-start',
               }}>
                 <span style={{
-                  fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)',
+                  fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)',
                   paddingTop: '2px', flexShrink: 0, minWidth: '24px',
                 }}>
                   {item.item_order}
@@ -284,14 +284,14 @@ export default function PssrTemplateEditor({
                     {item.requirement}
                   </div>
                   {item.notes_hint && (
-                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', fontStyle: 'italic' }}>
+                    <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px', fontStyle: 'italic' }}>
                       💡 {item.notes_hint}
                     </div>
                   )}
                 </div>
                 {!item.is_required && (
                   <span style={{
-                    fontSize: '10px', fontWeight: 600, color: 'var(--text-muted)',
+                    fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)',
                     background: 'var(--gray-100)', padding: '2px 7px', borderRadius: '4px',
                     flexShrink: 0,
                   }}>
@@ -303,7 +303,7 @@ export default function PssrTemplateEditor({
                     <button
                       onClick={() => openEdit(item)}
                       style={{
-                        padding: '5px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 600,
+                        padding: '5px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 600,
                         background: 'var(--gray-50)', border: '1px solid var(--border)', color: 'var(--text-body)', cursor: 'pointer',
                       }}
                     >
@@ -314,7 +314,7 @@ export default function PssrTemplateEditor({
                       disabled={deletingId === item.id}
                       aria-label={tA('delete')}
                       style={{
-                        padding: '5px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 600,
+                        padding: '5px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 600,
                         background: 'var(--danger-50)', border: '1px solid var(--danger-200)', color: 'var(--danger-700)', cursor: 'pointer',
                       }}
                     >

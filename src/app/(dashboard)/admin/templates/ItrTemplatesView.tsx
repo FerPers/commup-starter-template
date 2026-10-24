@@ -280,7 +280,7 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
               <div style={{ width: `${Math.round((trProgress.done / trProgress.total) * 100)}%`, height: '100%', background: 'var(--violet-600)', transition: 'width .3s' }} />
             </div>
           )}
-          <div style={{ marginTop: '8px', fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'ui-monospace, monospace' }}>
+          <div style={{ marginTop: '8px', fontSize: '12px', color: 'var(--text-muted)', fontFamily: 'ui-monospace, monospace' }}>
             {trProgress.log.map((l, i) => <div key={i}>{l}</div>)}
           </div>
         </div>
@@ -291,7 +291,7 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
             display: 'grid',
             gridTemplateColumns: '90px 1fr 110px 80px 60px 80px 90px',
             padding: '10px 20px', borderBottom: '1px solid var(--border)',
-            fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em',
+            fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em',
           }}>
             <span>{t('table.colCode')}</span>
             <span>{t('table.colTitle')}</span>
@@ -341,10 +341,10 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
                 <div>
                   <div style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-strong)' }}>{tmpl.title}</div>
                   {tmpl.title_es && (
-                    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{tmpl.title_es}</div>
+                    <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{tmpl.title_es}</div>
                   )}
                   {tmpl.is_global && (
-                    <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{t('global')}</span>
+                    <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{t('global')}</span>
                   )}
                 </div>
 
@@ -352,7 +352,7 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
                 {disc ? (
                   <span style={{
                     display: 'inline-flex', alignItems: 'center', gap: '5px',
-                    padding: '3px 8px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
+                    padding: '3px 8px', borderRadius: '999px', fontSize: '12px', fontWeight: 600,
                     background: alpha(disc.color, 8), color: ink(disc.color), width: 'fit-content',
                   }}>
                     {disc.code}
@@ -362,7 +362,7 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
                 {/* Phase */}
                 {phase ? (
                   <span style={{
-                    padding: '3px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 600,
+                    padding: '3px 8px', borderRadius: '6px', fontSize: '12px', fontWeight: 600,
                     background: alpha(phase.color, 9), color: ink(phase.color), width: 'fit-content',
                   }}>
                     {phase.code}
@@ -381,10 +381,10 @@ export default function ItrTemplatesView({ templates, disciplines, phases, canEd
                 <div role="presentation" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
                   onClick={e => e.stopPropagation()}>
                   <span style={{
-                    padding: '2px 8px', borderRadius: '999px', fontSize: '10px', fontWeight: 600,
-                    background: tmpl.is_active ? '#10b98115' : '#94a3b815',
+                    padding: '2px 8px', borderRadius: '999px', fontSize: '12px', fontWeight: 600,
+                    background: tmpl.is_active ? 'var(--success-50)' : 'var(--gray-100)',
                     color: tmpl.is_active ? 'var(--success-700)' : 'var(--text-muted)',
-                    border: `1px solid ${tmpl.is_active ? '#10b98130' : 'var(--border)'}`,
+                    border: `1px solid ${tmpl.is_active ? 'var(--success-200)' : 'var(--border)'}`,
                   }}>
                     {tmpl.is_active ? t('status.active') : t('status.inactive')}
                   </span>

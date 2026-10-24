@@ -13,7 +13,7 @@ export default function HelpSearch({ sections, base = '/ayuda?s=' }: { sections:
 
   return (
     <div style={{ padding: '0 4px' }}>
-      <label htmlFor="help-search" style={{ display: 'block', fontSize: 11, fontWeight: 700, letterSpacing: '.05em', color: 'var(--text-muted)', margin: '0 6px 6px', textTransform: 'uppercase' }}>
+      <label htmlFor="help-search" style={{ display: 'block', fontSize: 12, fontWeight: 700, letterSpacing: '.05em', color: 'var(--text-muted)', margin: '0 6px 6px', textTransform: 'uppercase' }}>
         {t('search')}
       </label>
       <input id="help-search" type="search" value={q} onChange={e => setQ(e.target.value)} placeholder={t('searchPlaceholder')}
@@ -26,7 +26,7 @@ export default function HelpSearch({ sections, base = '/ayuda?s=' }: { sections:
               <Link href={`${base}${encodeURIComponent(h.id)}`} onClick={() => setQ('')}
                 style={{ display: 'block', padding: '6px', borderRadius: 6, textDecoration: 'none' }} className="create-option">
                 <span style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-strong)' }}>{h.title}</span>
-                <span style={{ display: 'block', fontSize: 11, color: 'var(--text-muted)' }}>{h.snippet}</span>
+                <span style={{ display: 'block', fontSize: 12, color: 'var(--text-muted)' }}>{h.snippet}</span>
               </Link>
             </li>
           ))}

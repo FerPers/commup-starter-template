@@ -61,7 +61,7 @@ const card: React.CSSProperties = {
   padding: 'clamp(14px, 3vw, 20px)', marginTop: '12px',
 }
 const h2: React.CSSProperties = { fontSize: '13px', fontWeight: 700, color: 'var(--text-body)', margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '0.04em' }
-const label: React.CSSProperties = { fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }
+const label: React.CSSProperties = { fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }
 const touch: React.CSSProperties = { minHeight: '44px', padding: '10px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }
 
 export default function PunchDetail({ punch, projectId, projectName, timezone, timeline, names, orgMembers, userId, role }: {
@@ -140,7 +140,7 @@ export default function PunchDetail({ punch, projectId, projectName, timezone, t
           <h1 style={{ fontSize: '20px', fontFamily: 'ui-monospace, monospace', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>{punch.punch_number}</h1>
           <span style={{ padding: '3px 9px', borderRadius: '6px', fontSize: '12px', fontWeight: 700, background: catCfg.bg, color: ink(catCfg.color), border: `1px solid ${catCfg.border}` }}>{catCfg.label}</span>
           <span style={{ padding: '3px 9px', borderRadius: '6px', fontSize: '12px', fontWeight: 600, background: stColors.bg, color: ink(stColors.color) }}>{t(`punchStatus.${displayStatus}`)}</span>
-          {!punch.category_reviewed_at && !isClosed && <span style={{ fontSize: '11px', color: 'var(--warning-700)' }}>{tGuide('unreviewedShort')}</span>}
+          {!punch.category_reviewed_at && !isClosed && <span style={{ fontSize: '12px', color: 'var(--warning-700)' }}>{tGuide('unreviewedShort')}</span>}
         </div>
         <p style={{ fontSize: '16px', fontWeight: 500, color: 'var(--text-strong)', margin: 0, lineHeight: 1.45, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{punch.description}</p>
 
@@ -250,7 +250,7 @@ export default function PunchDetail({ punch, projectId, projectName, timezone, t
                     ? t('page.kind.reassigned', { to: e.to ? (names[e.to] ?? '—') : t('noAssignee') })
                     : t(`page.kind.${e.kind}`)}
                 </div>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '1px' }}>{when(e.at)}</div>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '1px' }}>{when(e.at)}</div>
                 {e.text && (
                   <p style={{ fontSize: '13px', color: 'var(--text-body)', margin: '4px 0 0', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{e.text}</p>
                 )}

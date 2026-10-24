@@ -38,11 +38,11 @@ interface Props {
 const FREQS = ['daily', 'weekly', 'biweekly', 'monthly', 'quarterly']
 
 const FREQ_COLORS: Record<string, string> = {
-  daily:     '#ef4444',
-  weekly:    '#f59e0b',
-  biweekly:  '#3b82f6',
-  monthly:   '#10b981',
-  quarterly: '#8b5cf6',
+  daily:     'var(--danger-500)',
+  weekly:    'var(--warning-500)',
+  biweekly:  'var(--primary-500)',
+  monthly:   'var(--success-500)',
+  quarterly: 'var(--violet-500)',
 }
 
 const DEFAULT_FORM = {
@@ -206,7 +206,7 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '16px' }}>
           {filtered.map(proc => {
             const itemCount = proc.preservation_procedure_items.length
-            const freqColor = FREQ_COLORS[proc.frequency] ?? '#64748b'
+            const freqColor = FREQ_COLORS[proc.frequency] ?? 'var(--gray-500)'
             return (
               <div
                 key={proc.id}
@@ -226,7 +226,7 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
-                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: '2px' }}>
+                    <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: '2px' }}>
                       {proc.code}
                     </div>
                     <Link href={`/admin/templates/preservation/${proc.id}`} style={{ display: 'block', fontSize: '15px', fontWeight: 700, color: 'var(--text-strong)', lineHeight: 1.3, textDecoration: 'none' }}>
@@ -301,7 +301,7 @@ export default function PreservationProceduresView({ procedures, disciplines, ca
                     title={t('previewHint')}
                     style={{
                       padding: '4px 10px', borderRadius: '6px', background: 'var(--primary-50)', color: 'var(--primary-800)',
-                      border: '1px solid var(--primary-200)', fontWeight: 600, fontSize: '11px', cursor: 'pointer',
+                      border: '1px solid var(--primary-200)', fontWeight: 600, fontSize: '12px', cursor: 'pointer',
                       whiteSpace: 'nowrap', flexShrink: 0,
                     }}
                   >

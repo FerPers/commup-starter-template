@@ -101,7 +101,7 @@ export default function TagOverviewTab({ tag, area, sys, sub, pidSignedUrl, proj
                     fontSize: '12px', color: 'var(--primary-700)', fontFamily: 'ui-monospace, monospace',
                     textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px',
                   }}>
-                    {f.value} <span style={{ opacity: 0.5, fontSize: '10px' }}>↗</span>
+                    {f.value} <span style={{ opacity: 0.5, fontSize: '12px' }}>↗</span>
                   </a>
                 ) : (
                   <span style={{
@@ -232,7 +232,7 @@ function SetpointPill({ label, value, unit, color }: { label: string; value: num
       padding: '2px 8px', borderRadius: '5px', fontSize: '12px',
       background: `color-mix(in srgb, ${color} 7%, transparent)`, border: `1px solid color-mix(in srgb, ${color} 19%, transparent)`, color,
     }}>
-      <span style={{ fontWeight: 700, fontSize: '10px' }}>{label}</span>
+      <span style={{ fontWeight: 700, fontSize: '12px' }}>{label}</span>
       <span style={{ fontFamily: 'ui-monospace, monospace' }}>
         {value}{unit ? ` ${unit}` : ''}
       </span>

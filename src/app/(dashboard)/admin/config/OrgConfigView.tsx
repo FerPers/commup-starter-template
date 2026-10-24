@@ -78,7 +78,7 @@ function PhaseRow({ phase, onSave, onDelete, isPending }: {
         <span style={{ fontSize: '13px', fontWeight: 700, color: ink(phase.color), minWidth: '32px' }}>{phase.code}</span>
         <span style={{ fontSize: '14px', color: 'var(--text-strong)', flex: 1 }}>{phase.name}</span>
         <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{phase.certificate_name ?? '—'}</span>
-        {phase.itr_client_signature && <span title={t('phases.clientSignsHint')} style={{ fontSize: '11px', fontWeight: 600, color: 'var(--violet-700)', background: 'var(--violet-50)', border: '1px solid var(--violet-200)', borderRadius: '999px', padding: '1px 8px' }}>{t('phases.clientSignsChip')}</span>}
+        {phase.itr_client_signature && <span title={t('phases.clientSignsHint')} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--violet-700)', background: 'var(--violet-50)', border: '1px solid var(--violet-200)', borderRadius: '999px', padding: '1px 8px' }}>{t('phases.clientSignsChip')}</span>}
         <div style={{ display: 'flex', gap: '6px' }}>
           <button onClick={() => setEditing(true)} disabled={isPending} style={btnOutline}>{t('phases.edit')}</button>
           <button onClick={onDelete} disabled={isPending} style={btnDanger}>{t('phases.delete')}</button>
@@ -103,7 +103,7 @@ function PhaseRow({ phase, onSave, onDelete, isPending }: {
         <input type="checkbox" checked={clientSigns} onChange={e => setClientSigns(e.target.checked)} style={{ accentColor: 'var(--violet-600)' }} />
         {t('phases.clientSigns')}
       </label>
-      <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '4px 0 0 22px' }}>{t('phases.clientSignsHint')}</p>
+      <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 22px' }}>{t('phases.clientSignsHint')}</p>
       <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
         <button
           onClick={() => { onSave({ code, name, color, certificateName: certName, itrClientSignature: clientSigns }); setEditing(false) }}
@@ -458,7 +458,7 @@ export default function OrgConfigView({
             </label>
           </div>
           {!isOwner && (
-            <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '8px 0 0', fontStyle: 'italic' }}>
+            <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '8px 0 0', fontStyle: 'italic' }}>
               {t('org.catalog.ownerOnly')}
             </p>
           )}
@@ -724,7 +724,7 @@ export default function OrgConfigView({
             ) : (
               [...new Set(initialEquipmentTypes.map(e => e.category ?? ''))].map(cat => (
                 <div key={cat || '__none'}>
-                  <div style={{ padding: '6px 16px', background: 'var(--gray-50)', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid var(--gray-100)' }}>
+                  <div style={{ padding: '6px 16px', background: 'var(--gray-50)', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid var(--gray-100)' }}>
                     {cat || t('equipmentTypes.noCategory')}
                   </div>
                   {initialEquipmentTypes.filter(e => (e.category ?? '') === cat).map(eqt => (

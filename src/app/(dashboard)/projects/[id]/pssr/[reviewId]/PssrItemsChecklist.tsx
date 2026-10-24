@@ -96,7 +96,7 @@ export default function PssrItemsChecklist({
               <span style={{ fontWeight: 700, fontSize: '12px', color: 'var(--text-strong)', textTransform: 'uppercase', letterSpacing: '0.06em', flex: 1 }}>
                 {category}
               </span>
-              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+              <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                 {catResolved}/{catItems.length}
               </span>
               <span style={{ color: 'var(--text-muted)', fontSize: '14px', marginLeft: '4px' }}>
@@ -124,7 +124,7 @@ export default function PssrItemsChecklist({
                   {/* Item row */}
                   <div style={{ padding: '14px 20px', display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
                     {/* Order */}
-                    <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', paddingTop: '2px', flexShrink: 0, minWidth: '22px' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', paddingTop: '2px', flexShrink: 0, minWidth: '22px' }}>
                       {item.item_order}
                     </span>
 
@@ -138,12 +138,12 @@ export default function PssrItemsChecklist({
                       </div>
                       {itemActions[item.id] && (
                         <Link href={`/projects/${projectId}/daily/action/${itemActions[item.id].id}`}
-                          style={{ display: 'inline-block', marginTop: 4, fontSize: '11px', fontWeight: 700, color: 'var(--violet-700)', textDecoration: 'none' }}>
+                          style={{ display: 'inline-block', marginTop: 4, fontSize: '12px', fontWeight: 700, color: 'var(--violet-700)', textDecoration: 'none' }}>
                           ⚑ {t('review.itemAction', { number: itemActions[item.id].number, status: t(`review.itemActionStatus.${itemActions[item.id].status}`) })}
                         </Link>
                       )}
                       {item.notes_hint && (
-                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', fontStyle: 'italic' }}>
+                        <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px', fontStyle: 'italic' }}>
                           💡 {item.notes_hint}
                         </div>
                       )}
@@ -154,7 +154,7 @@ export default function PssrItemsChecklist({
                           onClick={() => toggleItem(item.id)}
                           style={{
                             background: 'none', border: 'none', padding: '4px 0 0', cursor: 'pointer',
-                            fontSize: '11px', color: 'var(--primary-700)', fontWeight: 600,
+                            fontSize: '12px', color: 'var(--primary-700)', fontWeight: 600,
                           }}
                         >
                           {isItemExpanded ? t('review.itemHideDetails') : t('review.itemShowDetails')}
@@ -199,7 +199,7 @@ export default function PssrItemsChecklist({
                       )}
                       {/* Read-only details */}
                       {(readonly || !isItemExpanded) && (item.responsible ?? item.actions) && item.status !== 'pending' && (
-                        <div style={{ marginTop: '6px', fontSize: '11px', color: 'var(--text-muted)' }}>
+                        <div style={{ marginTop: '6px', fontSize: '12px', color: 'var(--text-muted)' }}>
                           {item.responsible && <span>👤 {item.responsible}</span>}
                           {item.responsible && item.actions && <span> · </span>}
                           {item.actions && <span>{item.actions}</span>}
@@ -216,7 +216,7 @@ export default function PssrItemsChecklist({
                             key={s}
                             onClick={() => handleStatusClick(item, item.status === s ? 'pending' : s)}
                             style={{
-                              padding: '5px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 700,
+                              padding: '5px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 700,
                               border: '1.5px solid',
                               borderColor: item.status === s ? sc.border : 'var(--border)',
                               background: item.status === s ? sc.bg : 'var(--card-bg)',
@@ -233,7 +233,7 @@ export default function PssrItemsChecklist({
                     {/* Read-only status */}
                     {readonly && (
                       <span style={{
-                        padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 700,
+                        padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 700,
                         background: sc.bg, color: ink(sc.color), border: `1px solid ${sc.border}`,
                         flexShrink: 0, textTransform: 'uppercase',
                       }}>

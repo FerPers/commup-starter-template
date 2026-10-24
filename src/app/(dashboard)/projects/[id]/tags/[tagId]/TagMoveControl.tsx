@@ -103,7 +103,7 @@ export default function TagMoveControl({ projectId, tagId, currentSubsystemId, s
               <label htmlFor={`${uid}-reason`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-body)', display: 'block', marginBottom: '6px' }}>{t('reasonLabel')}</label>
               <textarea id={`${uid}-reason`} rows={2} value={reason} onChange={e => setReason(e.target.value)} placeholder={t('reasonPlaceholder')}
                 style={{ width: '100%', boxSizing: 'border-box', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '6px', fontSize: '13px', fontFamily: 'inherit', resize: 'vertical' }} />
-              <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '4px 0 8px' }}>{t('hint')}</p>
+              <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 8px' }}>{t('hint')}</p>
               <button disabled={!ok || isPending} onClick={confirm}
                 style={{ ...btn, background: ok && !isPending ? 'var(--primary-600)' : 'var(--gray-100)', color: ok && !isPending ? '#fff' : 'var(--text-muted)', border: 'none', cursor: ok && !isPending ? 'pointer' : 'not-allowed' }}>
                 {isPending ? t('moving') : t('confirm')}

@@ -159,14 +159,14 @@ export default function PssrTemplatesView({ templates, canEdit }: { templates: T
                 {t.description && (
                   <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>{t.description}</div>
                 )}
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>
                   {tx('items', { n: t.pssr_template_items.length })}
                 </div>
               </div>
 
               {/* Status chip */}
               <span style={{
-                padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 600,
+                padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600,
                 background: t.is_active ? 'rgba(16,185,129,0.12)' : 'var(--gray-100)',
                 color: t.is_active ? 'var(--success-700)' : 'var(--text-muted)',
               }}>

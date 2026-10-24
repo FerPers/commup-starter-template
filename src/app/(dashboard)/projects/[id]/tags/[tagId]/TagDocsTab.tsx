@@ -36,7 +36,7 @@ export default function TagDocsTab({ tag, pidSignedUrl, pidDocId, projectId }: {
               }}>
                 {tag.pid_drawing}
               </div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
                 {pidSignedUrl ? t('docs.docAvailable') : t('docs.docNotUploaded')}
               </div>
             </div>

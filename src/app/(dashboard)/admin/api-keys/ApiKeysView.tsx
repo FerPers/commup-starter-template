@@ -37,7 +37,7 @@ const input: React.CSSProperties = {
   fontFamily: 'inherit', width: '100%', background: 'var(--card-bg)',
 }
 const labelStyle: React.CSSProperties = {
-  fontSize: 11, fontWeight: 700, color: 'var(--text-muted)',
+  fontSize: 12, fontWeight: 700, color: 'var(--text-muted)',
   textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4, display: 'block',
 }
 
@@ -133,7 +133,7 @@ export default function ApiKeysView({ keys: initialKeys }: { keys: ApiKey[] }) {
                   <tr key={k.id} style={{ borderBottom: '1px solid var(--gray-100)' }}>
                     <td style={td}><strong style={{ color: 'var(--text-strong)' }}>{k.name}</strong></td>
                     <td style={td}>
-                      <code style={{ background: 'var(--gray-100)', padding: '2px 6px', borderRadius: 4, fontSize: 11 }}>
+                      <code style={{ background: 'var(--gray-100)', padding: '2px 6px', borderRadius: 4, fontSize: 12 }}>
                         {k.key_prefix}…
                       </code>
                     </td>
@@ -150,7 +150,7 @@ export default function ApiKeysView({ keys: initialKeys }: { keys: ApiKey[] }) {
                     <td style={td}>
                       <span style={{
                         display: 'inline-block', padding: '2px 8px', borderRadius: 4,
-                        background: st.bg, color: ink(st.color), fontSize: 10, fontWeight: 700, letterSpacing: '0.05em',
+                        background: st.bg, color: ink(st.color), fontSize: 12, fontWeight: 700, letterSpacing: '0.05em',
                       }}>
                         {tx(`status.${st.status}`)}
                       </span>
@@ -195,7 +195,7 @@ export default function ApiKeysView({ keys: initialKeys }: { keys: ApiKey[] }) {
 
 // ──────────────────────────────────────────────────────────────
 const th: React.CSSProperties = {
-  padding: '10px 12px', textAlign: 'left', fontSize: 11,
+  padding: '10px 12px', textAlign: 'left', fontSize: 12,
   fontWeight: 700, color: 'var(--text-muted)',
   textTransform: 'uppercase', letterSpacing: '0.04em',
 }
@@ -204,7 +204,7 @@ const td: React.CSSProperties = {
 }
 const scopePill: React.CSSProperties = {
   display: 'inline-block', padding: '2px 6px', background: 'var(--primary-50)',
-  color: 'var(--primary-700)', borderRadius: 4, fontSize: 10, fontWeight: 600, fontFamily: 'ui-monospace, monospace',
+  color: 'var(--primary-700)', borderRadius: 4, fontSize: 12, fontWeight: 600, fontFamily: 'ui-monospace, monospace',
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -296,7 +296,7 @@ function CreateKeyModal({
                     style={{ marginTop: 2, gridRow: 'span 2' }}
                   />
                   <div style={{ fontFamily: 'ui-monospace, monospace', fontWeight: 600, color: 'var(--text-strong)' }}>{s.label}</div>
-                  <div style={{ color: 'var(--text-muted)', marginTop: 1, fontSize: 11 }}>{tx(`scope.${scopeKey(s.value)}`)}</div>
+                  <div style={{ color: 'var(--text-muted)', marginTop: 1, fontSize: 12 }}>{tx(`scope.${scopeKey(s.value)}`)}</div>
                 </label>
               )
             })}
@@ -312,7 +312,7 @@ function CreateKeyModal({
             value={expiresAt}
             onChange={e => setExpiresAt(e.target.value)}
           />
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
             {tx('create.expiryHint')}
           </div>
         </div>
@@ -392,7 +392,7 @@ function TokenRevealModal({
           <div style={{ fontWeight: 600, marginBottom: 4 }}>{tx('reveal.usage')}</div>
           <pre style={{
             background: 'var(--gray-900)', color: 'var(--gray-200)', padding: 12, borderRadius: 6,
-            fontSize: 11, overflow: 'auto', margin: 0,
+            fontSize: 12, overflow: 'auto', margin: 0,
           }}>
 {`curl https://commup.app/api/v1/tags?project_id=<uuid> \\
   -H "Authorization: Bearer ${token.substring(0, 20)}…"`}

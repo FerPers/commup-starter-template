@@ -103,7 +103,7 @@ export default function TranslationsView({ initial, aiEnabled }: { initial: Tran
         <div style={{ flex: 1, minWidth: 320 }}>
           <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-strong)', margin: 0, letterSpacing: '-0.4px' }}>{t('title')} · <span style={{ fontFamily: 'ui-monospace, monospace' }}>{tpl.code}</span></h1>
           <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '4px 0 10px' }}>{tpl.title}</p>
-          <label htmlFor={`${uid}-title-es`} style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('titleEs')}</label>
+          <label htmlFor={`${uid}-title-es`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('titleEs')}</label>
           <input
             id={`${uid}-title-es`}
             value={titleEs}
@@ -113,16 +113,16 @@ export default function TranslationsView({ initial, aiEnabled }: { initial: Tran
           />
         </div>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          <button disabled={!!busy || !aiEnabled} onClick={() => propose('missing')} style={btn('#6d28d9', '#f5f3ff', '#ddd6fe', !!busy || !aiEnabled)} title={aiEnabled ? t('missingHint') : t('aiOff')}>
+          <button disabled={!!busy || !aiEnabled} onClick={() => propose('missing')} style={btn('var(--violet-700)', 'var(--violet-50)', 'var(--violet-200)', !!busy || !aiEnabled)} title={aiEnabled ? t('missingHint') : t('aiOff')}>
             {busy === 'missing' ? t('translating') : t('missing', { n: stats.empty })}
           </button>
-          <button disabled={!!busy || !aiEnabled} onClick={() => propose('flagged')} style={btn('#6d28d9', 'var(--card-bg)', '#ddd6fe', !!busy || !aiEnabled)} title={t('flaggedHint')}>
+          <button disabled={!!busy || !aiEnabled} onClick={() => propose('flagged')} style={btn('var(--violet-700)', 'var(--card-bg)', 'var(--violet-200)', !!busy || !aiEnabled)} title={t('flaggedHint')}>
             {busy === 'flagged' ? t('translating') : t('reviewFlagged', { n: stats.empty + stats.flagged })}
           </button>
-          <button disabled={!!busy || !aiEnabled} onClick={() => propose('all')} style={btn('#6d28d9', 'var(--card-bg)', '#ddd6fe', !!busy || !aiEnabled)} title={t('allHint')}>
+          <button disabled={!!busy || !aiEnabled} onClick={() => propose('all')} style={btn('var(--violet-700)', 'var(--card-bg)', 'var(--violet-200)', !!busy || !aiEnabled)} title={t('allHint')}>
             {busy === 'all' ? t('translating') : t('retranslateAll')}
           </button>
-          <button disabled={!!busy || (changed.length === 0 && !titleChanged)} onClick={save} style={btn('#fff', '#10b981', '#10b981', !!busy || (changed.length === 0 && !titleChanged))}>
+          <button disabled={!!busy || (changed.length === 0 && !titleChanged)} onClick={save} style={btn('#fff', 'var(--success-500)', 'var(--success-500)', !!busy || (changed.length === 0 && !titleChanged))}>
             {busy === 'save' ? t('saving') : t('save', { n: changed.length + (titleChanged ? 1 : 0) })}
           </button>
         </div>
@@ -140,7 +140,7 @@ export default function TranslationsView({ initial, aiEnabled }: { initial: Tran
       </div>
 
       <div style={{ border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden', background: 'var(--card-bg)' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '56px 1fr 1fr 150px', gap: '0', background: 'var(--gray-50)', borderBottom: '1px solid var(--border)', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '56px 1fr 1fr 150px', gap: '0', background: 'var(--gray-50)', borderBottom: '1px solid var(--border)', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
           <div style={{ padding: '8px 10px' }}>#</div><div style={{ padding: '8px 10px' }}>{t('col.en')}</div><div style={{ padding: '8px 10px' }}>{t('col.es')}</div><div style={{ padding: '8px 10px' }}>{t('col.state')}</div>
         </div>
         {visible.length === 0 && <div style={{ padding: '24px', fontSize: '13px', color: 'var(--text-muted)', textAlign: 'center' }}>{t('empty')}</div>}
@@ -148,7 +148,7 @@ export default function TranslationsView({ initial, aiEnabled }: { initial: Tran
           onChange={es => setDrafts(prev => ({ ...prev, [it.id]: { es, touched: true, fromAi: false } }))}
           onMarkReviewed={() => markReviewed(it.id)} />)}
       </div>
-      <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '10px' }}>
+      <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '10px' }}>
         {t('legend')}
       </p>
     </div>
@@ -161,7 +161,7 @@ function Row({ item, draft, first, onChange, onMarkReviewed }: { item: Translati
   return (
     <>
       {first && (
-        <div style={{ gridColumn: '1 / -1', padding: '6px 10px', background: 'var(--gray-50)', fontSize: '11px', fontWeight: 700, color: 'var(--text-strong)', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>{item.section_title}</div>
+        <div style={{ gridColumn: '1 / -1', padding: '6px 10px', background: 'var(--gray-50)', fontSize: '12px', fontWeight: 700, color: 'var(--text-strong)', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>{item.section_title}</div>
       )}
       <div style={{ display: 'grid', gridTemplateColumns: '56px 1fr 1fr 150px', borderBottom: '1px solid var(--gray-100)', alignItems: 'stretch' }}>
         <div style={{ padding: '8px 10px', fontSize: '12px', color: 'var(--text-muted)', fontFamily: 'ui-monospace, monospace' }}>{item.item_number ?? ''}</div>
@@ -176,10 +176,10 @@ function Row({ item, draft, first, onChange, onMarkReviewed }: { item: Translati
           />
         </div>
         <div style={{ padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-start' }}>
-          {item.flags.map(f => <span key={f} style={{ padding: '1px 7px', borderRadius: '999px', fontSize: '10px', fontWeight: 700, background: FLAG_STYLE[f].bg, color: ink(FLAG_STYLE[f].color), whiteSpace: 'nowrap' }}>{t(`flag.${f}`)}</span>)}
-          {item.source === 'ai' && !draft.touched && !draft.fromAi && <span style={{ padding: '1px 7px', borderRadius: '999px', fontSize: '10px', fontWeight: 700, background: 'var(--violet-100)', color: 'var(--violet-800)' }}>{t('aiUnreviewed')}</span>}
+          {item.flags.map(f => <span key={f} style={{ padding: '1px 7px', borderRadius: '999px', fontSize: '12px', fontWeight: 700, background: FLAG_STYLE[f].bg, color: ink(FLAG_STYLE[f].color), whiteSpace: 'nowrap' }}>{t(`flag.${f}`)}</span>)}
+          {item.source === 'ai' && !draft.touched && !draft.fromAi && <span style={{ padding: '1px 7px', borderRadius: '999px', fontSize: '12px', fontWeight: 700, background: 'var(--violet-100)', color: 'var(--violet-800)' }}>{t('aiUnreviewed')}</span>}
           {(draft.fromAi || (item.source === 'ai' && !draft.touched)) && !nt && (
-            <button onClick={onMarkReviewed} style={{ fontSize: '11px', fontWeight: 600, color: 'var(--success-800)', background: 'var(--success-100)', border: '1px solid var(--success-200)', borderRadius: '5px', padding: '2px 8px', cursor: 'pointer' }}>{t('accept')}</button>
+            <button onClick={onMarkReviewed} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--success-800)', background: 'var(--success-100)', border: '1px solid var(--success-200)', borderRadius: '5px', padding: '2px 8px', cursor: 'pointer' }}>{t('accept')}</button>
           )}
         </div>
       </div>

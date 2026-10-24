@@ -127,7 +127,7 @@ export const cardStyle: React.CSSProperties = {
 }
 
 export const sectionLabel: React.CSSProperties = {
-  fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)',
+  fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)',
   textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 2px',
 }
 

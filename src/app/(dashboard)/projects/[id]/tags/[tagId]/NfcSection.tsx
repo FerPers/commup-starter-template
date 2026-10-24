@@ -250,7 +250,7 @@ function LinkNfcModal({
           </button>
         )}
         {!hasWebNfc && (
-          <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '0 0 12px' }}>
+          <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '0 0 12px' }}>
             {t('webNfcUnavailable')}
           </p>
         )}

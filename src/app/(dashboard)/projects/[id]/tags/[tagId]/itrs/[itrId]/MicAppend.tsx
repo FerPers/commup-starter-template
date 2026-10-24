@@ -89,7 +89,7 @@ export default function MicAppend({
       onClick={active ? stop : start}
       title={blocked ? 'El navegador bloqueó el micrófono: habilítalo en los permisos del sitio' : active ? 'Detener dictado' : 'Dictar'}
       style={{
-        padding: '4px 8px', borderRadius: '6px', fontSize: '11px',
+        padding: '4px 8px', borderRadius: '6px', fontSize: '12px',
         border: '1px solid', borderColor: active ? 'var(--danger-500)' : 'var(--gray-300)',
         background: active ? 'var(--danger-100)' : 'var(--card-bg)',
         color: active ? 'var(--danger-700)' : 'var(--text-muted)',

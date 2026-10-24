@@ -24,9 +24,9 @@ type User = { id: string; full_name: string }
 const ENTITY_TYPES = AUDIT_ENTITY_TYPES
 
 const ACTION_COLORS: Record<string, string> = {
-  created: '#10b981',
-  updated: '#3b82f6',
-  deleted: '#ef4444',
+  created: 'var(--success-500)',
+  updated: 'var(--primary-500)',
+  deleted: 'var(--danger-500)',
 }
 
 export default function AuditLogView({
@@ -172,7 +172,7 @@ export default function AuditLogView({
           display: 'grid', gridTemplateColumns: '180px 1fr 120px 120px 36px',
           padding: '10px 16px', background: 'var(--gray-50)',
           borderBottom: '1px solid var(--border)',
-          fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em',
+          fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em',
         }}>
           <span>{t('cols.date')}</span>
           <span>{t('cols.user')}</span>
@@ -211,7 +211,7 @@ export default function AuditLogView({
                   <span style={{ fontSize: '12px' }}>
                     <span style={{
                       padding: '2px 8px', borderRadius: '999px',
-                      background: 'var(--gray-100)', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 500,
+                      background: 'var(--gray-100)', color: 'var(--text-muted)', fontSize: '12px', fontWeight: 500,
                     }}>
                       {log.entity_type}
                     </span>
@@ -220,7 +220,7 @@ export default function AuditLogView({
                     <span style={{
                       padding: '2px 8px', borderRadius: '999px',
                       background: alpha(actionColor, 9), color: ink(actionColor),
-                      fontSize: '11px', fontWeight: 600, border: `1px solid ${alpha(actionColor, 19)}`,
+                      fontSize: '12px', fontWeight: 600, border: `1px solid ${alpha(actionColor, 19)}`,
                     }}>
                       {log.action}
                     </span>
@@ -276,7 +276,7 @@ export default function AuditLogView({
 // ── Shared styles ──────────────────────────────────────────────────────────
 
 const labelStyle: React.CSSProperties = {
-  fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em',
+  fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em',
 }
 
 const selectStyle: React.CSSProperties = {

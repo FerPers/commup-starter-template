@@ -143,12 +143,12 @@ export default function TagRequirementsPanel({ projectId, tagId, reqs, aiProposa
                           {c.itr_id
                             ? <Link href={`/projects/${projectId}/tags/${tagId}/itrs/${c.itr_id}`} style={{ fontFamily: 'ui-monospace, monospace', fontWeight: 700, color: 'inherit' }}>{c.code}</Link>
                             : <strong style={{ fontFamily: 'ui-monospace, monospace' }}>{c.code}</strong>}
-                          <span style={{ fontSize: 11, marginLeft: 'auto' }}>{ts(`state.${c.state}`)}</span>
+                          <span style={{ fontSize: 12, marginLeft: 'auto' }}>{ts(`state.${c.state}`)}</span>
                         </div>
-                        {c.title && <span style={{ fontSize: 11, textDecoration: 'none', opacity: 0.9 }}>{c.title}</span>}
-                        {c.client_code && <span style={{ fontSize: 11, fontFamily: 'ui-monospace, monospace', opacity: 0.9 }}>{ts('clientCode', { code: c.client_code })}</span>}
+                        {c.title && <span style={{ fontSize: 12, textDecoration: 'none', opacity: 0.9 }}>{c.title}</span>}
+                        {c.client_code && <span style={{ fontSize: 12, fontFamily: 'ui-monospace, monospace', opacity: 0.9 }}>{ts('clientCode', { code: c.client_code })}</span>}
                         {(c.origin === 'manual' || c.origin === 'ai' || c.reason) && (
-                          <span style={{ fontSize: 11, opacity: 0.85 }}>{[c.origin && c.origin !== 'matrix' ? ts(`origin.${c.origin}`) : null, c.reason].filter(Boolean).join(' · ')}</span>
+                          <span style={{ fontSize: 12, opacity: 0.85 }}>{[c.origin && c.origin !== 'matrix' ? ts(`origin.${c.origin}`) : null, c.reason].filter(Boolean).join(' · ')}</span>
                         )}
                         {canEdit && c.state !== 'outside' && (
                           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
@@ -159,7 +159,7 @@ export default function TagRequirementsPanel({ projectId, tagId, reqs, aiProposa
                         )}
                         {excluding === c.code && (
                           <form onSubmit={e => { e.preventDefault(); override(c.code, 'exclude', reason) }} style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 4, textDecoration: 'none' }}>
-                            <label htmlFor={`ex-${c.code}`} style={{ fontSize: 11, fontWeight: 600 }}>{t('reason', { min: MIN_REASON })}</label>
+                            <label htmlFor={`ex-${c.code}`} style={{ fontSize: 12, fontWeight: 600 }}>{t('reason', { min: MIN_REASON })}</label>
                             <input id={`ex-${c.code}`} value={reason} onChange={e => setReason(e.target.value)} autoFocus
                               style={{ minHeight: 32, border: '1px solid var(--border)', borderRadius: 6, padding: '0 8px', background: 'var(--card-bg)', color: 'var(--text-strong)', fontSize: 12 }} />
                             <div style={{ display: 'flex', gap: 6 }}>
@@ -183,7 +183,7 @@ export default function TagRequirementsPanel({ projectId, tagId, reqs, aiProposa
 
 const head: React.CSSProperties = { padding: '8px 12px', fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--text-muted)', borderBottom: '1px solid var(--border)' }
 const cell: React.CSSProperties = { padding: '10px 12px', fontSize: 'var(--text-sm)', borderBottom: '1px solid var(--border)' }
-const mini: React.CSSProperties = { minHeight: 28, padding: '0 8px', borderRadius: 6, border: '1px solid currentColor', background: 'transparent', color: 'inherit', fontSize: 11, fontWeight: 600, cursor: 'pointer', textDecoration: 'none' }
+const mini: React.CSSProperties = { minHeight: 28, padding: '0 8px', borderRadius: 6, border: '1px solid currentColor', background: 'transparent', color: 'inherit', fontSize: 12, fontWeight: 600, cursor: 'pointer', textDecoration: 'none' }
 
 function btn(kind: 'primary' | 'outline'): React.CSSProperties {
   return {

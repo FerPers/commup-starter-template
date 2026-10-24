@@ -106,7 +106,7 @@ export default function PssrReviewHeader({
             if (editingDueDate && canEditDate) {
               return (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px', flexWrap: 'wrap' }}>
-                  <label htmlFor={dueDateId} style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  <label htmlFor={dueDateId} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                     {t('review.dueDateLabel')}
                   </label>
                   <input
@@ -119,14 +119,14 @@ export default function PssrReviewHeader({
                   <button
                     onClick={handleSaveDueDate}
                     disabled={busy}
-                    style={{ padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 600, background: 'var(--success-500)', color: '#fff', border: 'none', cursor: 'pointer' }}
+                    style={{ padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 600, background: 'var(--success-500)', color: '#fff', border: 'none', cursor: 'pointer' }}
                   >
                     {t('review.saveDate')}
                   </button>
                   <button
                     onClick={() => { setDueDate(savedDueDate); setEditingDueDate(false) }}
                     disabled={busy}
-                    style={{ padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 600, background: 'var(--gray-100)', color: 'var(--text-muted)', border: 'none', cursor: 'pointer' }}
+                    style={{ padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 600, background: 'var(--gray-100)', color: 'var(--text-muted)', border: 'none', cursor: 'pointer' }}
                   >
                     {t('review.cancelDate')}
                   </button>
@@ -136,7 +136,7 @@ export default function PssrReviewHeader({
 
             return (
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px', flexWrap: 'wrap' }}>
-                <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                   {t('review.dueDateLabel')}
                 </span>
                 {savedDueDate ? (
@@ -154,7 +154,7 @@ export default function PssrReviewHeader({
                 {canEditDate && (
                   <button
                     onClick={() => { setDueDate(savedDueDate); setEditingDueDate(true) }}
-                    style={{ padding: '2px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 600, background: 'transparent', color: 'var(--primary-700)', border: '1px solid var(--border)', cursor: 'pointer' }}
+                    style={{ padding: '2px 8px', borderRadius: '6px', fontSize: '12px', fontWeight: 600, background: 'transparent', color: 'var(--primary-700)', border: '1px solid var(--border)', cursor: 'pointer' }}
                   >
                     {savedDueDate ? t('review.editDate') : t('review.setDate')}
                   </button>

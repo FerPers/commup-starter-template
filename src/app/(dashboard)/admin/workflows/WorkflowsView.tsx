@@ -118,7 +118,7 @@ const input: React.CSSProperties = {
   fontFamily: 'inherit', width: '100%', background: 'var(--card-bg)',
 }
 const label: React.CSSProperties = {
-  fontSize: 11, fontWeight: 700, color: 'var(--text-muted)',
+  fontSize: 12, fontWeight: 700, color: 'var(--text-muted)',
   textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4, display: 'block',
 }
 
@@ -279,14 +279,14 @@ function RuleRow({
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-strong)' }}>
             {rule.name}
-            <span style={{ marginLeft: 8, fontSize: 11, color: 'var(--text-muted)', fontWeight: 500 }}>
+            <span style={{ marginLeft: 8, fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>
               {tx('priorityLabel', { n: rule.priority })}
             </span>
           </div>
           {rule.description && (
             <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{rule.description}</div>
           )}
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
             → <strong style={{ color: 'var(--text-muted)' }}>{actionLabel}</strong>
             {executions.length > 0 && (
               <span style={{ marginLeft: 10 }}>
@@ -301,7 +301,7 @@ function RuleRow({
         <button onClick={onDelete} disabled={isPending} style={btnDanger}>{tx('delete')}</button>
       </div>
       {expanded && (
-        <div style={{ padding: '0 16px 14px', fontSize: 11, fontFamily: 'ui-monospace, monospace', color: 'var(--text-muted)' }}>
+        <div style={{ padding: '0 16px 14px', fontSize: 12, fontFamily: 'ui-monospace, monospace', color: 'var(--text-muted)' }}>
           <div style={{ marginBottom: 4, fontWeight: 700, color: 'var(--text-muted)' }}>condition_jsonlogic</div>
           <pre style={{ background: 'var(--gray-50)', padding: 10, borderRadius: 6, overflow: 'auto', margin: 0 }}>
             {JSON.stringify(rule.condition_jsonlogic, null, 2)}
@@ -438,7 +438,7 @@ function RuleEditorModal({
             <select id={`${uid}-action`} style={input} value={actionType} onChange={e => setActionType(e.target.value as WorkflowActionType)}>
               {ACTION_TYPES.map(a => <option key={a} value={a}>{tx(`action.${a}.label`)}</option>)}
             </select>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
               {tx(`action.${actionType}.description`)}
             </div>
           </div>
@@ -457,7 +457,7 @@ function RuleEditorModal({
                 }
                 setAdvancedMode(m => !m)
               }}
-              style={{ ...btnOutline, fontSize: 11, padding: '4px 8px' }}
+              style={{ ...btnOutline, fontSize: 12, padding: '4px 8px' }}
             >
               {tx(advancedMode ? 'conditions.visual' : 'conditions.advanced')}
             </button>
@@ -513,7 +513,7 @@ function RuleEditorModal({
               placeholder='{"==": [{"var": "new.category"}, "A"]}'
             />
           )}
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
             {tx.rich('conditions.fields', { code: c => <code>{c}</code> })}
           </div>
         </div>

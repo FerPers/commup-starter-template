@@ -23,7 +23,7 @@ export default function LocaleSwitcher({ variant = 'dark' }: { variant?: 'dark' 
     background: 'none',
     border: 'none',
     padding: '2px 5px',
-    fontSize: '11px',
+    fontSize: '12px',
     fontWeight: 600,
     letterSpacing: '0.06em',
     textTransform: 'uppercase',
@@ -47,7 +47,7 @@ export default function LocaleSwitcher({ variant = 'dark' }: { variant?: 'dark' 
       >
         ES
       </button>
-      <span style={{ color: ink(dividerColor), fontSize: '11px', userSelect: 'none' }}>|</span>
+      <span style={{ color: ink(dividerColor), fontSize: '12px', userSelect: 'none' }}>|</span>
       <button
         onClick={() => switchLocale('en')}
         style={{

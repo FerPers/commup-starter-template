@@ -122,7 +122,7 @@ export default function KpiGlobal({ projectKpis }: { projectKpis: ProjectKpi[] }
                       width: 42, height: 42, borderRadius: 'var(--radius-md)',
                       background: 'var(--primary-50)', border: '1px solid var(--primary-200)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 10, fontWeight: 700, color: 'var(--primary-700)', flexShrink: 0,
+                      fontSize: 12, fontWeight: 700, color: 'var(--primary-700)', flexShrink: 0,
                     }}>
                       {p.code.slice(0, 6)}
                     </div>
@@ -190,7 +190,7 @@ function StatCell({ value, color, bg, label }: { value: number; color: string; b
   return (
     <div style={{ textAlign: 'center', padding: '10px 4px', background: bg, borderRadius: 'var(--radius-md)' }}>
       <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color }}>{value}</div>
-      <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 1 }}>{label}</div>
+      <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 1 }}>{label}</div>
     </div>
   )
 }

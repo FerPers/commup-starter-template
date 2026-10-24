@@ -197,7 +197,7 @@ export default function CertificatesGlobal({
                     <a
                       href={`/projects/${proj.id}/certificates`}
                       title={proj.name}
-                      style={{ fontSize: 10, fontWeight: 700, color: 'var(--primary-700)', background: 'var(--primary-50)', padding: '2px 7px', borderRadius: 'var(--radius-sm)', textDecoration: 'none', display: 'inline-block', maxWidth: 94, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                      style={{ fontSize: 12, fontWeight: 700, color: 'var(--primary-700)', background: 'var(--primary-50)', padding: '2px 7px', borderRadius: 'var(--radius-sm)', textDecoration: 'none', display: 'inline-block', maxWidth: 94, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                     >
                       {proj.code}
                     </a>
@@ -239,7 +239,7 @@ export default function CertificatesGlobal({
                 </div>
 
                 {/* Estado */}
-                <span style={{ padding: '3px 8px', borderRadius: 'var(--radius-sm)', fontSize: 10, fontWeight: 600, background: st.bg, color: ink(st.color), whiteSpace: 'nowrap' }}>
+                <span style={{ padding: '3px 8px', borderRadius: 'var(--radius-sm)', fontSize: 12, fontWeight: 600, background: st.bg, color: ink(st.color), whiteSpace: 'nowrap' }}>
                   {statusLabels[cert.status]}
                 </span>
               </div>

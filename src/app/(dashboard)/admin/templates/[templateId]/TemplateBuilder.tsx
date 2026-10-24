@@ -384,7 +384,7 @@ export default function TemplateBuilder({ template, canEdit }: Props) {
           { icon: '⊙', color: 'var(--primary-700)', label: t('legendRequiresPhoto') },
           { icon: '○', color: 'var(--border)', label: t('legendNotApplicable') },
         ].map(l => (
-          <span key={l.label} style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: 'var(--text-muted)' }}>
+          <span key={l.label} style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: 'var(--text-muted)' }}>
             <span style={{ color: ink(l.color), fontSize: '13px' }}>{l.icon}</span>
             {l.label}
           </span>

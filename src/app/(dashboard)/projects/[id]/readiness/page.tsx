@@ -18,9 +18,9 @@ function GateBadge({ gate, label, title, href, blocked }: { gate: MatrixGate; la
       padding: '3px 9px', borderRadius: 'var(--radius-pill)', fontSize: 'var(--text-xs)', fontWeight: 600,
       background: st.bg, color: st.fg, border: `1.5px solid ${st.border}`,
     }}>
-      <span style={{ fontSize: 10 }} aria-hidden="true">{st.icon}</span>
+      <span style={{ fontSize: 12 }} aria-hidden="true">{st.icon}</span>
       {label}
-      {blocked && <span aria-hidden="true" style={{ fontSize: 10 }}>⛓</span>}
+      {blocked && <span aria-hidden="true" style={{ fontSize: 12 }}>⛓</span>}
     </Link>
   )
 }
@@ -210,11 +210,11 @@ export default async function ReadinessPage({
                       <TD>
                         <Link href={systemHref(r.system_id)} style={{ fontWeight: 600, color: 'var(--text-strong)', textDecoration: 'none' }}>{r.system_code}</Link>
                         <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>{r.system_name}</div>
-                        {parts.length > 0 && <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', marginTop: 2 }}>{parts.join(' · ')}</div>}
+                        {parts.length > 0 && <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginTop: 2 }}>{parts.join(' · ')}</div>}
                       </TD>
                       <TD>
                         <Bar pct={(w?.pct ?? 0) * 100} />
-                        <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>{t('itrsWeighing', { count: w?.itrs ?? 0 })}</div>
+                        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{t('itrsWeighing', { count: w?.itrs ?? 0 })}</div>
                       </TD>
                       <TD style={{ textAlign: 'center', color: p.a > 0 ? 'var(--danger-700)' : 'var(--text-muted)', fontWeight: 600 }}>{p.a}</TD>
                       <TD style={{ textAlign: 'center', color: p.b > 0 ? 'var(--warning-700)' : 'var(--text-muted)', fontWeight: 600 }}>{p.b}</TD>

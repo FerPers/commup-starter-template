@@ -54,9 +54,9 @@ export default async function MyItrsWidget({ userId }: { userId: string }) {
             <div style={{ padding: '14px 16px', background: 'var(--card-bg)', border: `1px solid ${overdue ? 'var(--danger-200)' : 'var(--border)'}`, borderLeft: `3px solid ${overdue ? 'var(--danger-500)' : style.color}`, borderRadius: 'var(--radius-md)', display: 'grid', gridTemplateColumns: '1fr auto', gap: 12, alignItems: 'center' }}>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                  {phase && <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 'var(--radius-sm)', background: alpha(phase.color, 9), color: ink(phase.color) }}>{phase.code}</span>}
+                  {phase && <span style={{ fontSize: 12, fontWeight: 700, padding: '1px 6px', borderRadius: 'var(--radius-sm)', background: alpha(phase.color, 9), color: ink(phase.color) }}>{phase.code}</span>}
                   <span style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--text-strong)', fontFamily: 'ui-monospace, monospace' }}>{itr.itr_number}</span>
-                  <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', background: 'var(--gray-100)', padding: '1px 6px', borderRadius: 'var(--radius-sm)' }}>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', background: 'var(--gray-100)', padding: '1px 6px', borderRadius: 'var(--radius-sm)' }}>
                     {a.role === 'executor' ? t('inspector.executor') : a.role === 'supervisor' ? t('inspector.supervisor') : t('inspector.roleClient')}
                   </span>
                 </div>
@@ -76,7 +76,7 @@ export default async function MyItrsWidget({ userId }: { userId: string }) {
                   <div style={{ width: 60, height: 4, background: 'var(--gray-100)', borderRadius: 2, overflow: 'hidden' }}>
                     <div style={{ height: '100%', width: `${itr.progress_pct}%`, background: itr.progress_pct >= 100 ? 'var(--success-500)' : 'var(--primary-500)', borderRadius: 2 }} />
                   </div>
-                  <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{itr.progress_pct}%</span>
+                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{itr.progress_pct}%</span>
                 </div>
               </div>
             </div>

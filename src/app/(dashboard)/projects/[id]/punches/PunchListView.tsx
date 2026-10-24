@@ -237,7 +237,7 @@ export default function PunchListView({
           const body = (
             <>
               <span style={{ display: 'block', fontSize: '24px', fontWeight: 800, color: ink(card.color) }}>{card.count}</span>
-              <span style={{ display: 'block', fontSize: '11px', color: ink(card.color), fontWeight: 600, marginTop: '2px' }}>{t(card.labelKey)}</span>
+              <span style={{ display: 'block', fontSize: '12px', color: ink(card.color), fontWeight: 600, marginTop: '2px' }}>{t(card.labelKey)}</span>
             </>
           )
           // G-12: las tarjetas que filtran son botones (Tab + Enter/Espacio); «Cerrados» solo informa.
@@ -377,7 +377,7 @@ export default function PunchListView({
                   />
                 </th>
                 {[...(allScope ? [t('table.colProject')] : []), t('table.colPunch'), t('table.colTag'), t('table.colCat'), t('table.colDesc'), t('table.colStatus'), t('table.colAssigned'), t('table.colDue')].map(h => (
-                  <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid var(--border)' }}>
+                  <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid var(--border)' }}>
                     {h}
                   </th>
                 ))}
@@ -413,7 +413,7 @@ export default function PunchListView({
                           href={`/projects/${punch.project_id}/punches`}
                           onClick={e => e.stopPropagation()}
                           title={punch.project_name}
-                          style={{ fontSize: '10px', fontWeight: 700, color: 'var(--primary-700)', background: 'var(--primary-50)', padding: '2px 7px', borderRadius: '4px', textDecoration: 'none', display: 'inline-block', maxWidth: '94px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                          style={{ fontSize: '12px', fontWeight: 700, color: 'var(--primary-700)', background: 'var(--primary-50)', padding: '2px 7px', borderRadius: '4px', textDecoration: 'none', display: 'inline-block', maxWidth: '94px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                         >
                           {punch.project_code}
                         </Link>
@@ -429,18 +429,18 @@ export default function PunchListView({
                       {punch.tag_id ? (
                         <div>
                           <span style={{ fontSize: '12px', fontFamily: 'ui-monospace, monospace', fontWeight: 600, color: ink(punch.discipline_color ?? 'var(--text-muted)') }}>{punch.tag_number}</span>
-                          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '1px' }}>{punch.discipline_code}</div>
+                          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '1px' }}>{punch.discipline_code}</div>
                         </div>
                       ) : (
                         <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>—</span>
                       )}
                     </td>
                     <td style={{ padding: '12px 14px' }}>
-                      <span style={{ padding: '3px 9px', borderRadius: '5px', fontSize: '11px', fontWeight: 700, background: catCfg.bg, color: ink(catCfg.color), border: `1px solid ${catCfg.border}`, whiteSpace: 'nowrap' }}>
+                      <span style={{ padding: '3px 9px', borderRadius: '5px', fontSize: '12px', fontWeight: 700, background: catCfg.bg, color: ink(catCfg.color), border: `1px solid ${catCfg.border}`, whiteSpace: 'nowrap' }}>
                         {catCfg.label}
                       </span>
                       {!punch.category_reviewed_at && punch.status !== 'closed' && punch.status !== 'cancelled' && (
-                        <div style={{ fontSize: '10px', color: 'var(--warning-700)', marginTop: '3px', whiteSpace: 'nowrap' }}>{tGuide('unreviewedShort')}</div>
+                        <div style={{ fontSize: '12px', color: 'var(--warning-700)', marginTop: '3px', whiteSpace: 'nowrap' }}>{tGuide('unreviewedShort')}</div>
                       )}
                     </td>
                     <td style={{ padding: '12px 14px', fontSize: '13px', color: 'var(--text-strong)', maxWidth: '320px' }}>
@@ -449,7 +449,7 @@ export default function PunchListView({
                       </span>
                     </td>
                     <td style={{ padding: '12px 14px' }}>
-                      <span style={{ padding: '3px 9px', borderRadius: '5px', fontSize: '11px', fontWeight: 600, background: stColors.bg, color: ink(stColors.color), whiteSpace: 'nowrap' }}>
+                      <span style={{ padding: '3px 9px', borderRadius: '5px', fontSize: '12px', fontWeight: 600, background: stColors.bg, color: ink(stColors.color), whiteSpace: 'nowrap' }}>
                         {punchStatusLabels[displayStatus] ?? punch.status}
                       </span>
                     </td>
@@ -458,7 +458,7 @@ export default function PunchListView({
                     </td>
                     <td style={{ padding: '12px 14px', fontSize: '12px', color: overdue ? 'var(--danger-700)' : punch.target_date ? 'var(--text-muted)' : 'var(--text-muted)', fontWeight: overdue ? 600 : 400, whiteSpace: 'nowrap' }}>
                       {punch.target_date ?? '—'}
-                      {overdue && <span style={{ display: 'block', fontSize: '10px' }}>{t('overdue')}</span>}
+                      {overdue && <span style={{ display: 'block', fontSize: '12px' }}>{t('overdue')}</span>}
                     </td>
                   </tr>
                 )

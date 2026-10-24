@@ -101,9 +101,9 @@ function ItemControl({ item, d }: { item: PreviewItem; d: Doc }) {
           <thead><tr><th style={{ textAlign: 'left', padding: '4px 8px', color: 'var(--text-muted)' }}>{config.rows.mode === 'fixed' ? d.row : config.rows.label}</th>{config.columns.map(c => <th key={c.key} style={{ textAlign: 'left', padding: '4px 8px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{c.label}{c.unit ? ` (${c.unit})` : ''}</th>)}</tr></thead>
           <tbody>{rows.map(label => <tr key={label}><td style={{ padding: '4px 8px', fontWeight: 600 }}>{label}</td>{config.columns.map(c => <td key={c.key} style={{ padding: '4px 8px', color: 'var(--text-muted)' }}>{c.type === 'reference' && source ? `‹${SOURCE_REFS[source][c.ref ?? ''] ?? c.ref}›` : c.type === 'result' ? (c.auto_from ? d.auto : d.resultOptions) : c.type === 'computed' ? `${d.computed}${c.tolerance !== null && c.tolerance !== undefined ? ` ±${c.tolerance}` : ''}${c.pass === 'as_found' ? ' (as found)' : ''}` : c.type === 'datetime' ? d.datetime : c.type === 'select' ? (c.options ?? []).join(' / ') : c.type === 'number' ? '0.00' : '…'}</td>)}</tr>)}</tbody>
         </table>
-        {source && <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{d.sourceNote(TABLE_SOURCE_LABELS[source].toLowerCase(), source === 'loop_signals' ? d.signal : d.effect)}</p>}
-        {config.rows.mode === 'variable' && <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{d.variableNote(config.rows.min, config.rows.max)}</p>}
-        {config.stability && <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{d.stability(config.stability.last_n)}{config.stability.min !== null ? ` ≥ ${config.stability.min}` : ''}{config.stability.max !== null ? ` ≤ ${config.stability.max}` : ''}.</p>}
+        {source && <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{d.sourceNote(TABLE_SOURCE_LABELS[source].toLowerCase(), source === 'loop_signals' ? d.signal : d.effect)}</p>}
+        {config.rows.mode === 'variable' && <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{d.variableNote(config.rows.min, config.rows.max)}</p>}
+        {config.stability && <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{d.stability(config.stability.last_n)}{config.stability.min !== null ? ` ≥ ${config.stability.min}` : ''}{config.stability.max !== null ? ` ≤ ${config.stability.max}` : ''}.</p>}
       </div>
     )
   }
@@ -234,7 +234,7 @@ function RemarksField({ d }: { d: Doc }) {
   const uid = useId()
   return (
     <div style={{ marginTop: '8px' }}>
-      <label htmlFor={`${uid}-remarks`} style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 500, display: 'block', marginBottom: '4px' }}>
+      <label htmlFor={`${uid}-remarks`} style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500, display: 'block', marginBottom: '4px' }}>
         {d.remarks}
       </label>
       <textarea
@@ -260,7 +260,7 @@ function SignatureBlock({ role, label, d }: { role: string; label: string; d: Do
       flex: '1 1 200px', border: '1px solid var(--border)', borderRadius: '10px',
       padding: '12px 16px', background: 'var(--card-bg)',
     }}>
-      <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
+      <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
         {label} — {role}
       </div>
       <div style={{
@@ -271,8 +271,8 @@ function SignatureBlock({ role, label, d }: { role: string; label: string; d: Do
         {d.digitalSig}
       </div>
       <div style={{ marginTop: '8px', display: 'flex', gap: '8px' }}>
-        <div style={{ flex: 1, borderBottom: '1px solid var(--border)', paddingBottom: '2px', fontSize: '11px', color: 'var(--text-muted)' }}>{d.name}</div>
-        <div style={{ flex: 1, borderBottom: '1px solid var(--border)', paddingBottom: '2px', fontSize: '11px', color: 'var(--text-muted)' }}>{d.date}</div>
+        <div style={{ flex: 1, borderBottom: '1px solid var(--border)', paddingBottom: '2px', fontSize: '12px', color: 'var(--text-muted)' }}>{d.name}</div>
+        <div style={{ flex: 1, borderBottom: '1px solid var(--border)', paddingBottom: '2px', fontSize: '12px', color: 'var(--text-muted)' }}>{d.date}</div>
       </div>
     </div>
   )
@@ -321,7 +321,7 @@ export default function TemplatePreview({ template }: { template: TemplateData }
             {t('title')}
           </span>
           <span style={{
-            padding: '2px 8px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
+            padding: '2px 8px', borderRadius: '999px', fontSize: '12px', fontWeight: 600,
             background: 'var(--violet-50)', color: 'var(--violet-700)', border: '1px solid var(--violet-200)',
           }}>
             {t('readOnly')}
@@ -386,7 +386,7 @@ export default function TemplatePreview({ template }: { template: TemplateData }
                 </span>
               )}
               <span style={{
-                padding: '3px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
+                padding: '3px 10px', borderRadius: '999px', fontSize: '12px', fontWeight: 600,
                 background: 'var(--gray-100)', color: 'var(--text-muted)',
               }}>
                 v{template.version}
@@ -426,7 +426,7 @@ export default function TemplatePreview({ template }: { template: TemplateData }
                 { label: lang === 'es' ? 'Supervisor' : 'Supervisor', value: '' },
               ].map(f => (
                 <div key={f.label} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <span style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                     {f.label}
                   </span>
                   <div style={{ borderBottom: '1.5px solid var(--border)', height: '24px' }} />
@@ -470,14 +470,14 @@ export default function TemplatePreview({ template }: { template: TemplateData }
               display: 'flex', alignItems: 'center', gap: '10px',
             }}>
               <span style={{
-                fontSize: '11px', fontWeight: 700,
+                fontSize: '12px', fontWeight: 700,
                 background: 'rgba(255,255,255,0.15)', borderRadius: '4px',
                 padding: '1px 7px', letterSpacing: '0.04em',
               }}>
                 {String(si + 1).padStart(2, '0')}
               </span>
               <span style={{ fontWeight: 600, fontSize: '14px' }}>{section.title}</span>
-              <span style={{ marginLeft: 'auto', fontSize: '11px', opacity: 0.6 }}>
+              <span style={{ marginLeft: 'auto', fontSize: '12px', opacity: 0.6 }}>
                 {section.itr_template_items.length} {lang === 'es' ? 'ítems' : 'items'}
               </span>
             </div>
@@ -541,7 +541,7 @@ export default function TemplatePreview({ template }: { template: TemplateData }
 
                       {/* Type badge */}
                       <span style={{
-                        padding: '2px 8px', borderRadius: '999px', fontSize: '10px', fontWeight: 600,
+                        padding: '2px 8px', borderRadius: '999px', fontSize: '12px', fontWeight: 600,
                         background: 'var(--gray-100)', color: 'var(--text-muted)', whiteSpace: 'nowrap', flexShrink: 0,
                       }}>
                         {d.type[item.item_type]}
@@ -577,7 +577,7 @@ export default function TemplatePreview({ template }: { template: TemplateData }
         </div>
 
         {/* Footer */}
-        <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '11px', color: 'var(--text-muted)' }}>
+        <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '12px', color: 'var(--text-muted)' }}>
           CommUp · {template.code} · v{template.version} · {lang === 'es' ? 'Vista de campo — solo previsualización' : 'Field view — preview only'}
         </div>
       </div>

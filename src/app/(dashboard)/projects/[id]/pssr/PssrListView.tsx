@@ -152,7 +152,7 @@ export default function PssrListView({
             {/* System header */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
               <span style={{
-                padding: '3px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 700,
+                padding: '3px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 700,
                 background: 'var(--gray-100)', color: 'var(--text-muted)', letterSpacing: '0.05em',
               }}>
                 {system?.code ?? '—'}
@@ -184,14 +184,14 @@ export default function PssrListView({
                           {review.review_number}
                         </span>
                         <span style={{
-                          padding: '2px 8px', borderRadius: '20px', fontSize: '11px', fontWeight: 600,
+                          padding: '2px 8px', borderRadius: '20px', fontSize: '12px', fontWeight: 600,
                           background: sty.bg, color: ink(sty.color),
                         }}>
                           {t(`status.${statusKey}`)}
                         </span>
                         {review.rfsu_certificate_id && (
                           <span style={{
-                            padding: '2px 8px', borderRadius: '20px', fontSize: '11px', fontWeight: 600,
+                            padding: '2px 8px', borderRadius: '20px', fontSize: '12px', fontWeight: 600,
                             background: 'var(--success-50)', color: 'var(--success-700)',
                           }}>
                             {t('list.rfsuIssued')}
@@ -309,7 +309,7 @@ export default function PssrListView({
                   onChange={e => setForm(f => ({ ...f, reviewDueDate: e.target.value }))}
                   style={inputStyle}
                 />
-                <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '4px 0 0' }}>
+                <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0' }}>
                   {t('createModal.dueDateHint')}
                 </p>
               </div>

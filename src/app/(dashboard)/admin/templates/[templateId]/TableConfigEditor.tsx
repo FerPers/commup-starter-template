@@ -70,7 +70,7 @@ export default function TableConfigEditor({ value, onChange }: { value: TableCon
 
   return (
     <div style={{ padding: '12px 14px', background: 'var(--cyan-50)', border: '1px solid var(--cyan-200)', borderRadius: '8px', marginBottom: '12px' }}>
-      <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--cyan-800)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '8px' }}>{t('title')}</div>
+      <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--cyan-800)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '8px' }}>{t('title')}</div>
 
       <label style={{ ...fieldLabel, marginBottom: '10px' }}>{t('preset')}
         <select style={small} value="" onChange={e => { const preset = TABLE_PRESETS.find(p => p.id === e.target.value); if (preset) onChange(structuredClone(preset.config)) }}>
@@ -206,7 +206,7 @@ export default function TableConfigEditor({ value, onChange }: { value: TableCon
       )}
 
       {issue && <p role="status" style={{ fontSize: '12px', color: 'var(--warning-700)', fontWeight: 600, margin: '10px 0 0' }}>{t('missing', { issue })}</p>}
-      <p style={{ fontSize: '11px', color: 'var(--cyan-800)', margin: '8px 0 0' }}>
+      <p style={{ fontSize: '12px', color: 'var(--cyan-800)', margin: '8px 0 0' }}>
         {t('footer')}
       </p>
     </div>

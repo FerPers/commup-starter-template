@@ -116,7 +116,7 @@ export default async function RequirementsPage({ params, searchParams }: {
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, alignItems: 'flex-start' }}>
         <nav aria-label={t('tree')} style={{ flex: '1 1 240px', maxWidth: 320, background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 12, padding: '8px 0', fontSize: 'var(--text-sm)' }}>
-          <div style={{ padding: '4px 14px 8px', fontSize: 11, fontWeight: 700, letterSpacing: '.06em', color: 'var(--text-muted)' }}>{t('treeHead')}</div>
+          <div style={{ padding: '4px 14px 8px', fontSize: 12, fontWeight: 700, letterSpacing: '.06em', color: 'var(--text-muted)' }}>{t('treeHead')}</div>
           <TreeLink href={node({})} label={t('allProject')} count={summary.missing} depth={0} active={!p.area && !p.system && !p.subsystem} />
           {tree.map(a => (
             <div key={a.id}>

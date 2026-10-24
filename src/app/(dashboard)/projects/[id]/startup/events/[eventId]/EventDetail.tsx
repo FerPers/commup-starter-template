@@ -149,11 +149,11 @@ export default function EventDetail({ project, event: e, params, series, names, 
                 <ResponsiveContainer width="100%" height={180}>
                   <LineChart data={data} margin={{ top: 6, right: 12, bottom: 0, left: -10 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                    <XAxis dataKey="t" type="number" domain={['dataMin', 'dataMax']} tick={{ fontSize: 10 }}
+                    <XAxis dataKey="t" type="number" domain={['dataMin', 'dataMax']} tick={{ fontSize: 12 }}
                       tickFormatter={v => new Date(Number(v)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} />
-                    <YAxis tick={{ fontSize: 10 }} />
+                    <YAxis tick={{ fontSize: 12 }} />
                     <Tooltip labelFormatter={v => new Date(Number(v)).toLocaleTimeString()} formatter={v => [String(v), param.label]} />
-                    <ReferenceLine x={eventMs} stroke="var(--danger-500)" strokeDasharray="4 2" label={{ value: e.number, fontSize: 10, position: 'top' }} />
+                    <ReferenceLine x={eventMs} stroke="var(--danger-500)" strokeDasharray="4 2" label={{ value: e.number, fontSize: 12, position: 'top' }} />
                     <Line type="monotone" dataKey="v" stroke="var(--primary-500)" strokeWidth={2} dot={false} isAnimationActive={false} />
                   </LineChart>
                 </ResponsiveContainer>

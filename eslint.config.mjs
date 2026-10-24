@@ -79,6 +79,34 @@ const eslintConfig = [
 		},
 	},
 	{
+		// G-11: piso de 12 px en todo lo que se ve en pantalla. El bloque G-10 de abajo repite estas
+		// reglas (en flat config la última configuración de una regla reemplaza a la anterior).
+		files: ["src/**/*.{ts,tsx}"],
+		ignores: [
+			"src/components/landing/**",
+			"src/lib/pdf/**",
+			"src/lib/excel/**",
+			"src/**/*.test.{ts,tsx}",
+			// Documentos para imprimir.
+			"src/**/ReportPrint.tsx",
+			"src/**/BackupDocumentView.tsx",
+		],
+		rules: {
+			"no-restricted-syntax": [
+				"error",
+				// G-11: piso de 12 px para el texto en pantalla.
+				{
+					selector: "Property[key.name='fontSize'] > Literal[value<12], Property[key.name='fontSize'] > ConditionalExpression > Literal[value<12]",
+					message: "Texto de 12 px como mínimo (G-11).",
+				},
+				{
+					selector: "Property[key.name='fontSize'] > Literal[value=/^(?:[0-9]|1[01])(?:\\.[0-9]+)?px$/], Property[key.name='fontSize'] > ConditionalExpression > Literal[value=/^(?:[0-9]|1[01])(?:\\.[0-9]+)?px$/]",
+					message: "Texto de 12 px como mínimo (G-11).",
+				},
+			],
+		},
+	},
+	{
 		// G-10: colores por token (var(--danger-700)…), no hex: así responden a oscuro y contraste.
 		// Blanco (#fff) sobre un relleno y negro (#000) sí valen. Para alfa, alpha(color, %) de @/lib/theme.
 		files: ["src/**/*.{ts,tsx}"],
@@ -103,12 +131,21 @@ const eslintConfig = [
 		rules: {
 			"no-restricted-syntax": [
 				"error",
+				// G-11: piso de 12 px para el texto en pantalla.
 				{
-					selector: "Property[key.name=/^(color|background|backgroundColor|bg|fg|text|border|borderColor|borderTop|borderBottom|borderLeft|borderRight|outline)$/] Literal[value=/#(?!(?:[fF]{3}|0{3}|[fF]{6}|0{6})(?![0-9a-fA-F]))[0-9a-fA-F]{3,6}(?![0-9a-zA-Z])/]",
+					selector: "Property[key.name='fontSize'] > Literal[value<12], Property[key.name='fontSize'] > ConditionalExpression > Literal[value<12]",
+					message: "Texto de 12 px como mínimo (G-11).",
+				},
+				{
+					selector: "Property[key.name='fontSize'] > Literal[value=/^(?:[0-9]|1[01])(?:\\.[0-9]+)?px$/], Property[key.name='fontSize'] > ConditionalExpression > Literal[value=/^(?:[0-9]|1[01])(?:\\.[0-9]+)?px$/]",
+					message: "Texto de 12 px como mínimo (G-11).",
+				},
+				{
+					selector: "Property[key.name=/^(color|background|backgroundColor|bg|fg|text|border|borderColor|borderTop|borderBottom|borderLeft|borderRight|outline)$/] Literal[value=/#(?!(?:[fF]{3}|0{3}|[fF]{6}|0{6})(?![0-9a-fA-F]))[0-9a-fA-F]{3,8}(?![0-9a-zA-Z])/]",
 					message: "Color por token de escala (var(--danger-700)…) o semántico (var(--text-muted)…), no hex (G-10).",
 				},
 				{
-					selector: "Property[key.name=/^(color|background|backgroundColor|bg|fg|text|border|borderColor|borderTop|borderBottom|borderLeft|borderRight|outline)$/] TemplateElement[value.raw=/#(?!(?:[fF]{3}|0{3}|[fF]{6}|0{6})(?![0-9a-fA-F]))[0-9a-fA-F]{3,6}(?![0-9a-zA-Z])/]",
+					selector: "Property[key.name=/^(color|background|backgroundColor|bg|fg|text|border|borderColor|borderTop|borderBottom|borderLeft|borderRight|outline)$/] TemplateElement[value.raw=/#(?!(?:[fF]{3}|0{3}|[fF]{6}|0{6})(?![0-9a-fA-F]))[0-9a-fA-F]{3,8}(?![0-9a-zA-Z])/]",
 					message: "Color por token de escala (var(--danger-700)…) o semántico (var(--text-muted)…), no hex (G-10).",
 				},
 				{

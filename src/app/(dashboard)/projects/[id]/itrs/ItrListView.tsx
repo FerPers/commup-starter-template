@@ -315,7 +315,7 @@ export default function ItrListView({
               }}
             >
               <div style={{ fontSize: '22px', fontWeight: 700, color: ink(cfg.color) }}>{counts[key] ?? 0}</div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>{t(`itrStatus.${key}`)}</div>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>{t(`itrStatus.${key}`)}</div>
             </button>
           )
         })}
@@ -554,7 +554,7 @@ export default function ItrListView({
 
                 {allScope && (
                   <Link href={`/projects/${itr.project_id}/itrs`} title={itr.project_name}
-                    style={{ fontSize: '10px', fontWeight: 700, color: 'var(--primary-700)', background: 'var(--primary-50)', padding: '2px 7px', borderRadius: '4px', textDecoration: 'none', justifySelf: 'start', maxWidth: '84px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    style={{ fontSize: '12px', fontWeight: 700, color: 'var(--primary-700)', background: 'var(--primary-50)', padding: '2px 7px', borderRadius: '4px', textDecoration: 'none', justifySelf: 'start', maxWidth: '84px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {itr.project_code}
                   </Link>
                 )}
@@ -563,7 +563,7 @@ export default function ItrListView({
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     {itr.phase_code && (
-                      <span style={{ padding: '1px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 700, background: alpha(itr.phase_color ?? 'var(--gray-500)', 9), color: ink(itr.phase_color ?? 'var(--text-muted)') }}>{itr.phase_code}</span>
+                      <span style={{ padding: '1px 6px', borderRadius: '4px', fontSize: '12px', fontWeight: 700, background: alpha(itr.phase_color ?? 'var(--gray-500)', 9), color: ink(itr.phase_color ?? 'var(--text-muted)') }}>{itr.phase_code}</span>
                     )}
                     {itr.tag_id ? (
                       <Link
@@ -578,7 +578,7 @@ export default function ItrListView({
                     )}
                   </div>
                   {itr.tag_number && (
-                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                    <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
                       {itr.tag_number} — {itr.tag_description}
                     </div>
                   )}
@@ -587,31 +587,31 @@ export default function ItrListView({
                 {/* Template */}
                 <div>
                   {itr.discipline_code && (
-                    <span style={{ fontSize: '10px', fontWeight: 600, color: ink(itr.discipline_color ?? 'var(--text-muted)'), marginRight: '6px', padding: '1px 5px', background: alpha(itr.discipline_color ?? 'var(--gray-500)', 8), borderRadius: '4px' }}>{itr.discipline_code}</span>
+                    <span style={{ fontSize: '12px', fontWeight: 600, color: ink(itr.discipline_color ?? 'var(--text-muted)'), marginRight: '6px', padding: '1px 5px', background: alpha(itr.discipline_color ?? 'var(--gray-500)', 8), borderRadius: '4px' }}>{itr.discipline_code}</span>
                   )}
                   <span style={{ fontSize: '12px', color: 'var(--text-body)' }}>{itr.template_title ?? '—'}</span>
                 </div>
 
                 {/* Inspector */}
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   <PersonName name={executor?.full_name} inactive={isInactiveMember(executor?.user_id, memberIds)} />
                 </div>
 
                 {/* Date */}
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                   {itr.scheduled_date ?? '—'}
                 </div>
 
                 {/* Progress */}
                 <div>
-                  <div style={{ fontSize: '10px', color: 'var(--text-muted)', textAlign: 'right', marginBottom: '3px' }}>{itr.progress_pct}%</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', textAlign: 'right', marginBottom: '3px' }}>{itr.progress_pct}%</div>
                   <div style={{ height: '4px', background: 'var(--gray-100)', borderRadius: '2px', overflow: 'hidden' }}>
                     <div style={{ height: '100%', width: `${itr.progress_pct}%`, background: itr.progress_pct >= 100 ? 'var(--success-500)' : 'var(--primary-500)', borderRadius: '2px' }} />
                   </div>
                 </div>
 
                 {/* Status */}
-                <span style={{ padding: '3px 8px', borderRadius: '5px', fontSize: '10px', fontWeight: 600, background: st.bg, color: ink(st.color), whiteSpace: 'nowrap', textAlign: 'center' }}>
+                <span style={{ padding: '3px 8px', borderRadius: '5px', fontSize: '12px', fontWeight: 600, background: st.bg, color: ink(st.color), whiteSpace: 'nowrap', textAlign: 'center' }}>
                   {t(`itrStatus.${itr.status}` as Parameters<typeof t>[0])}
                 </span>
 
@@ -620,7 +620,7 @@ export default function ItrListView({
                   {normalizeRequired(itr.required_signatures).map(role => {
                     const signed = itr.signatures.some(s => s.role === role)
                     return (
-                      <span key={role} style={{ width: '18px', height: '18px', borderRadius: '3px', background: signed ? 'var(--success-50)' : 'var(--gray-50)', border: `1px solid ${signed ? 'var(--success-200)' : 'var(--border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontWeight: 700, color: signed ? 'var(--success-700)' : 'var(--text-muted)' }}>
+                      <span key={role} style={{ width: '18px', height: '18px', borderRadius: '3px', background: signed ? 'var(--success-50)' : 'var(--gray-50)', border: `1px solid ${signed ? 'var(--success-200)' : 'var(--border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700, color: signed ? 'var(--success-700)' : 'var(--text-muted)' }}>
                         {SIGN_LABELS[role]}
                       </span>
                     )
@@ -648,9 +648,9 @@ function ItrCard({ itr, allScope, memberIds, statusLabel }: { itr: ItrListRow; a
     <>
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          {itr.phase_code && <span style={{ padding: '1px 6px', borderRadius: 5, fontSize: 11, fontWeight: 700, background: alpha(itr.phase_color ?? 'var(--gray-500)', 9), color: ink(itr.phase_color ?? 'var(--text-muted)') }}>{itr.phase_code}</span>}
+          {itr.phase_code && <span style={{ padding: '1px 6px', borderRadius: 5, fontSize: 12, fontWeight: 700, background: alpha(itr.phase_color ?? 'var(--gray-500)', 9), color: ink(itr.phase_color ?? 'var(--text-muted)') }}>{itr.phase_code}</span>}
           <span style={{ fontFamily: 'ui-monospace, monospace', fontWeight: 700, fontSize: 15, color: 'var(--text-strong)' }}>{itr.itr_number}</span>
-          {allScope && <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--primary-700)' }}>{itr.project_code}</span>}
+          {allScope && <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--primary-700)' }}>{itr.project_code}</span>}
           <span style={{ marginLeft: 'auto', padding: '2px 8px', borderRadius: 999, fontSize: 12, fontWeight: 600, background: st.bg, color: ink(st.color), border: `1px solid ${alpha(st.color, 25)}`, whiteSpace: 'nowrap' }}>{statusLabel}</span>
         </div>
         {itr.tag_number && <div style={{ fontSize: 14, color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{itr.tag_number} · {itr.tag_description}</div>}
@@ -703,13 +703,13 @@ function SortHeader({ label, sortKey, current, dir, onSort }: {
       onClick={() => onSort(sortKey)}
       style={{
         all: 'unset', display: 'flex', alignItems: 'center', gap: '4px',
-        fontSize: '11px', fontWeight: 700, color: active ? 'var(--primary-700)' : 'var(--text-muted)',
+        fontSize: '12px', fontWeight: 700, color: active ? 'var(--primary-700)' : 'var(--text-muted)',
         textTransform: 'uppercase', letterSpacing: '0.06em', cursor: 'pointer',
         userSelect: 'none',
       }}
     >
       {label}
-      <span style={{ fontSize: '10px', opacity: active ? 1 : 0.4 }}>
+      <span style={{ fontSize: '12px', opacity: active ? 1 : 0.4 }}>
         {active ? (dir === 'asc' ? '↑' : '↓') : '↕'}
       </span>
     </button>
@@ -722,6 +722,6 @@ const selStyle: React.CSSProperties = {
 }
 
 const thStyle: React.CSSProperties = {
-  fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)',
+  fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)',
   textTransform: 'uppercase', letterSpacing: '0.06em',
 }

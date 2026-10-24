@@ -165,7 +165,7 @@ export default function CreatePunchModal({
             <input ref={photoInput} type="file" accept="image/*" capture="environment" multiple style={{ display: 'none' }}
               onChange={e => { addPhotos(e.target.files); e.target.value = '' }} />
           </div>
-          {photos.length > 0 && <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '6px 0 0' }}>{t('punchModal.photosOffline')}</p>}
+          {photos.length > 0 && <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '6px 0 0' }}>{t('punchModal.photosOffline')}</p>}
         </div>
 
         {/* Responsable opcional (S06, C-22) */}

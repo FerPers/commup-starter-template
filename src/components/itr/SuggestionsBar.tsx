@@ -75,7 +75,7 @@ export default function SuggestionsBar({ suggestions }: { suggestions: ItrSugges
               })}
             </div>
             {s.expires_at && (
-              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
                 {t('expiresAt')}: {new Date(s.expires_at).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' })}
               </div>
             )}

@@ -202,7 +202,7 @@ export default function SetupWizard({ isNewProject, orgDisciplines = [] }: {
               }}>
                 {done ? '✓' : n}
               </div>
-              <span style={{ fontSize: '11px', color: active ? 'var(--primary-400)' : done ? 'var(--primary-500)' : '#475569', marginTop: '6px', fontWeight: active ? 600 : 400 }}>
+              <span style={{ fontSize: '12px', color: active ? 'var(--primary-400)' : done ? 'var(--primary-500)' : '#475569', marginTop: '6px', fontWeight: active ? 600 : 400 }}>
                 {label}
               </span>
             </div>
@@ -316,7 +316,7 @@ export default function SetupWizard({ isNewProject, orgDisciplines = [] }: {
                       <input type="checkbox" checked={scopeIds.has(d.id)} style={{ width: 18, height: 18 }}
                         onChange={() => setScopeIds(prev => { const n = new Set(prev); if (n.has(d.id)) n.delete(d.id); else n.add(d.id); return n })} />
                       <span aria-hidden="true" style={{ width: 10, height: 10, borderRadius: 3, background: d.color ?? 'var(--gray-400)' }} />
-                      {d.name} <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{d.code}</span>
+                      {d.name} <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{d.code}</span>
                     </label>
                   ))}
                 </div>
@@ -344,7 +344,7 @@ export default function SetupWizard({ isNewProject, orgDisciplines = [] }: {
             {/* Column headers */}
             <div style={{ display: 'grid', gridTemplateColumns: '32px 40px 1fr 90px 36px 56px', gap: '6px', padding: '0 4px', marginBottom: '4px' }}>
               {['', t('phases.col.code'), t('phases.col.name'), t('phases.col.certificate'), t('phases.col.color'), ''].map((h, i) => (
-                <span key={i} style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>{h}</span>
+                <span key={i} style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>{h}</span>
               ))}
             </div>
 
@@ -417,7 +417,7 @@ export default function SetupWizard({ isNewProject, orgDisciplines = [] }: {
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: '13px', fontWeight: 600, color: selected ? '#0f172a' : '#475569' }}>
                         {disc.code}
-                        <span style={{ marginLeft: '6px', fontSize: '10px', color: '#94a3b8', fontWeight: 400 }}>
+                        <span style={{ marginLeft: '6px', fontSize: '12px', color: '#94a3b8', fontWeight: 400 }}>
                           {disc.phases.map(p => t('disciplines.phase', { p })).join(' · ')}
                         </span>
                       </div>
@@ -572,7 +572,7 @@ const addRowBtn: React.CSSProperties = {
 }
 const arrowBtn: React.CSSProperties = {
   width: '20px', height: '13px', border: 'none', background: 'transparent',
-  cursor: 'pointer', fontSize: '9px', color: '#94a3b8', padding: 0,
+  cursor: 'pointer', fontSize: '12px', color: '#94a3b8', padding: 0,
   display: 'flex', alignItems: 'center', justifyContent: 'center',
   lineHeight: '1',
 }

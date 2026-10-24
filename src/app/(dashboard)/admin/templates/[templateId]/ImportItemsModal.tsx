@@ -286,7 +286,7 @@ export default function ImportItemsModal({ templateId, hasExistingContent, onClo
 
             {/* Column reference */}
             <div style={{ marginTop: '16px', padding: '12px 14px', background: 'var(--gray-50)', borderRadius: '8px' }}>
-              <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 {tx('columnsTitle')}
               </p>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3px 12px' }}>
@@ -296,13 +296,13 @@ export default function ImportItemsModal({ templateId, hasExistingContent, onClo
                   ['G', tx('col.requiredYn')], ['H', tx('col.photoYn')], ['I', tx('col.unit')],
                   ['J', tx('col.min')], ['K', tx('col.max')],
                 ].map(([col, label]) => (
-                  <div key={col} style={{ display: 'flex', gap: '6px', fontSize: '11px' }}>
+                  <div key={col} style={{ display: 'flex', gap: '6px', fontSize: '12px' }}>
                     <span style={{ fontFamily: 'monospace', fontWeight: 700, color: 'var(--primary-700)', minWidth: '14px' }}>{col}</span>
                     <span style={{ color: 'var(--text-muted)' }}>{label}</span>
                   </div>
                 ))}
               </div>
-              <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '8px 0 0' }}>
+              <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '8px 0 0' }}>
                 {tx('validTypes')}
               </p>
             </div>
@@ -315,11 +315,11 @@ export default function ImportItemsModal({ templateId, hasExistingContent, onClo
             {/* Warnings */}
             {parsed.warnings.length > 0 && (
               <div style={{ padding: '10px 14px', background: 'var(--warning-50)', borderRadius: '8px', marginBottom: '12px', border: '1px solid var(--warning-300)' }}>
-                <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--warning-800)', margin: '0 0 4px' }}>
+                <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--warning-800)', margin: '0 0 4px' }}>
                   {tx('warnings', { count: parsed.warnings.length })}
                 </p>
                 {parsed.warnings.map((w, i) => (
-                  <p key={i} style={{ fontSize: '11px', color: 'var(--warning-900)', margin: '2px 0 0' }}>• {w}</p>
+                  <p key={i} style={{ fontSize: '12px', color: 'var(--warning-900)', margin: '2px 0 0' }}>• {w}</p>
                 ))}
               </div>
             )}
@@ -330,21 +330,21 @@ export default function ImportItemsModal({ templateId, hasExistingContent, onClo
                 <div key={sIdx} style={{ borderBottom: sIdx < parsed.sections.length - 1 ? '1px solid var(--gray-100)' : 'none' }}>
                   <div style={{ padding: '10px 14px', background: 'var(--gray-50)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)' }}>{sec.title}</span>
-                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{tx('itemsCount', { count: sec.items.length })}</span>
+                    <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{tx('itemsCount', { count: sec.items.length })}</span>
                   </div>
                   {sec.items.slice(0, 3).map((item, iIdx) => (
                     <div key={iIdx} style={{ padding: '7px 14px 7px 22px', display: 'flex', gap: '10px', alignItems: 'center', borderTop: '1px solid var(--gray-50)' }}>
-                      <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontFamily: 'monospace', minWidth: '32px' }}>{item.item_number ?? '—'}</span>
+                      <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontFamily: 'monospace', minWidth: '32px' }}>{item.item_number ?? '—'}</span>
                       <span style={{ fontSize: '12px', color: 'var(--text-muted)', flex: 1 }}>{item.description}</span>
                       <span style={{
-                        fontSize: '10px', padding: '1px 6px', borderRadius: '999px',
+                        fontSize: '12px', padding: '1px 6px', borderRadius: '999px',
                         background: 'var(--border)', color: 'var(--text-muted)',
                       }}>{item.item_type}</span>
-                      {item.is_critical && <span style={{ fontSize: '10px', color: 'var(--danger-700)' }}>●</span>}
+                      {item.is_critical && <span style={{ fontSize: '12px', color: 'var(--danger-700)' }}>●</span>}
                     </div>
                   ))}
                   {sec.items.length > 3 && (
-                    <p style={{ padding: '6px 22px', fontSize: '11px', color: 'var(--text-muted)', margin: 0 }}>
+                    <p style={{ padding: '6px 22px', fontSize: '12px', color: 'var(--text-muted)', margin: 0 }}>
                       {tx('more', { count: sec.items.length - 3 })}
                     </p>
                   )}
@@ -364,7 +364,7 @@ export default function ImportItemsModal({ templateId, hasExistingContent, onClo
                 <p style={{ fontSize: '13px', fontWeight: 500, color: replace ? 'var(--orange-700)' : 'var(--text-muted)', margin: '0 0 2px' }}>
                   {tx('replaceTitle')}
                 </p>
-                <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: 0 }}>
+                <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: 0 }}>
                   {tx(replace ? 'replaceOn' : 'replaceOff')}
                 </p>
               </label>

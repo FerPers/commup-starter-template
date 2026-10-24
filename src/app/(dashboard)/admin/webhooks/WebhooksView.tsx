@@ -57,7 +57,7 @@ const input: React.CSSProperties = {
   fontFamily: 'inherit', width: '100%', background: 'var(--card-bg)',
 }
 const labelStyle: React.CSSProperties = {
-  fontSize: 11, fontWeight: 700, color: 'var(--text-muted)',
+  fontSize: 12, fontWeight: 700, color: 'var(--text-muted)',
   textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4, display: 'block',
 }
 
@@ -187,15 +187,15 @@ export default function WebhooksView({
                 <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 10 }}>
                   {s.name}
                   {s.project_id
-                    ? <span style={{ fontSize: 10, fontWeight: 600, background: 'var(--primary-50)', color: 'var(--primary-700)', padding: '2px 6px', borderRadius: 4 }}>
+                    ? <span style={{ fontSize: 12, fontWeight: 600, background: 'var(--primary-50)', color: 'var(--primary-700)', padding: '2px 6px', borderRadius: 4 }}>
                         {tw('projectBadge', { name: projectsById[s.project_id] ?? s.project_id.slice(0, 8) })}
                       </span>
-                    : <span style={{ fontSize: 10, fontWeight: 600, background: 'var(--gray-100)', color: 'var(--text-muted)', padding: '2px 6px', borderRadius: 4 }}>
+                    : <span style={{ fontSize: 12, fontWeight: 600, background: 'var(--gray-100)', color: 'var(--text-muted)', padding: '2px 6px', borderRadius: 4 }}>
                         {tw('allProjects')}
                       </span>
                   }
                   {s.failure_count > 0 && (
-                    <span style={{ fontSize: 10, fontWeight: 600, background: 'var(--danger-50)', color: 'var(--danger-700)', padding: '2px 6px', borderRadius: 4 }}>
+                    <span style={{ fontSize: 12, fontWeight: 600, background: 'var(--danger-50)', color: 'var(--danger-700)', padding: '2px 6px', borderRadius: 4 }}>
                       {tw('failures', { n: s.failure_count })}
                     </span>
                   )}
@@ -203,7 +203,7 @@ export default function WebhooksView({
                 <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2, fontFamily: 'ui-monospace, monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {s.endpoint_url}
                 </div>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                   <span>{tw('events')} <strong style={{ color: 'var(--text-muted)' }}>{s.event_types.join(', ')}</strong></span>
                   <span>{tw('lastOk')} <strong style={{ color: 'var(--text-muted)' }}>{fmtDate(s.last_success_at, locale)}</strong></span>
                   <span>{tw('lastError')} <strong style={{ color: s.last_error_at ? 'var(--danger-700)' : 'var(--text-muted)' }}>{fmtDate(s.last_error_at, locale)}</strong></span>
@@ -289,7 +289,7 @@ function DeliveriesTable({ deliveries }: { deliveries: Delivery[] }) {
                 <td style={td}>
                   <span style={{
                     display: 'inline-block', padding: '2px 8px', borderRadius: 4,
-                    background: c.bg, color: c.fg, fontSize: 10, fontWeight: 700, letterSpacing: '0.05em',
+                    background: c.bg, color: c.fg, fontSize: 12, fontWeight: 700, letterSpacing: '0.05em',
                   }}>
                     {statusLabel(d.status).toUpperCase()}
                   </span>
@@ -303,13 +303,13 @@ function DeliveriesTable({ deliveries }: { deliveries: Delivery[] }) {
                     <code style={{
                       background: d.last_response_code >= 200 && d.last_response_code < 300 ? 'var(--success-50)' : 'var(--danger-50)',
                       color:      d.last_response_code >= 200 && d.last_response_code < 300 ? 'var(--success-700)' : 'var(--danger-700)',
-                      padding: '1px 6px', borderRadius: 4, fontSize: 11,
+                      padding: '1px 6px', borderRadius: 4, fontSize: 12,
                     }}>
                       {d.last_response_code}
                     </code>
                   ) : '—'}
                 </td>
-                <td style={{ ...td, fontFamily: 'ui-monospace, monospace', fontSize: 11, color: 'var(--text-muted)' }}>
+                <td style={{ ...td, fontFamily: 'ui-monospace, monospace', fontSize: 12, color: 'var(--text-muted)' }}>
                   {d.domain_event_id.slice(0, 8)}…
                 </td>
               </tr>
@@ -323,7 +323,7 @@ function DeliveriesTable({ deliveries }: { deliveries: Delivery[] }) {
 
 // ──────────────────────────────────────────────────────────────
 const th: React.CSSProperties = {
-  padding: '8px 12px', textAlign: 'left', fontSize: 10,
+  padding: '8px 12px', textAlign: 'left', fontSize: 12,
   fontWeight: 700, color: 'var(--text-muted)',
   textTransform: 'uppercase', letterSpacing: '0.04em',
 }
@@ -459,7 +459,7 @@ function CreateSubscriptionModal({
               )
             })}
           </div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
             {tw.rich('form.wildcardHint', { code: () => <code>*</code> })}
           </div>
         </div>
@@ -541,7 +541,7 @@ function SecretRevealModal({
           <div style={{ fontWeight: 600, marginBottom: 4 }}>{tw('secret.verify')}</div>
           <pre style={{
             background: 'var(--gray-900)', color: 'var(--gray-200)', padding: 12, borderRadius: 6,
-            fontSize: 11, overflow: 'auto', margin: 0,
+            fontSize: 12, overflow: 'auto', margin: 0,
           }}>
 {`import crypto from 'crypto'
 

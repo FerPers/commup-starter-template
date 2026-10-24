@@ -152,7 +152,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
           [t('info.start'), fmtDate(project.start_date)], [t('info.target'), fmtDate(project.end_date)],
         ].map(([label, value]) => (
           <div key={label} style={{ flex: '1 1 160px', padding: '12px 18px' }}>
-            <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>{label}</div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>{label}</div>
             <div style={{ fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--text-strong)' }}>{value}</div>
           </div>
         ))}

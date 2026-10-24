@@ -75,10 +75,10 @@ export function PunchVerification({ punch, projectId, tagId, userId, role, photo
         <label htmlFor={`${uid}-resolve`} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-body)', display: 'block', marginBottom: '6px' }}>{t('resolveLabel')}</label>
         <textarea id={`${uid}-resolve`} rows={2} style={area} value={text} placeholder={t('resolvePlaceholder')} onChange={e => setText(e.target.value)} disabled={isPending} />
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '8px', flexWrap: 'wrap' }}>
-          <button type="button" onClick={resolve} disabled={isPending || tooShort} style={btn('#f5f3ff', '#7c3aed', '#ddd6fe', isPending || tooShort)}>
+          <button type="button" onClick={resolve} disabled={isPending || tooShort} style={btn('var(--violet-50)', 'var(--violet-600)', 'var(--violet-200)', isPending || tooShort)}>
             {t('resolve')}
           </button>
-          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{t('resolveHint')}</span>
+          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{t('resolveHint')}</span>
         </div>
         {error && <div role="alert" style={{ marginTop: '8px', fontSize: '12px', color: 'var(--danger-700)' }}>{error}</div>}
       </div>
@@ -96,10 +96,10 @@ export function PunchVerification({ punch, projectId, tagId, userId, role, photo
         <>
           <textarea rows={2} style={{ ...area, marginTop: '8px' }} value={text} placeholder={t('verifyPlaceholder')} onChange={e => setText(e.target.value)} disabled={isPending} />
           <div style={{ display: 'flex', gap: '8px', marginTop: '8px', flexWrap: 'wrap' }}>
-            <button type="button" onClick={accept} disabled={isPending} style={btn('#ecfdf5', '#059669', '#a7f3d0', isPending)}>{t('accept')}</button>
-            <button type="button" onClick={reject} disabled={isPending || !text.trim()} style={btn('var(--card-bg)', 'var(--danger-700)', '#fecaca', isPending || !text.trim())}>{t('reject')}</button>
+            <button type="button" onClick={accept} disabled={isPending} style={btn('var(--success-50)', 'var(--success-600)', 'var(--success-200)', isPending)}>{t('accept')}</button>
+            <button type="button" onClick={reject} disabled={isPending || !text.trim()} style={btn('var(--card-bg)', 'var(--danger-700)', 'var(--danger-200)', isPending || !text.trim())}>{t('reject')}</button>
           </div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '6px' }}>{t('verifyHint')}</div>
+          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '6px' }}>{t('verifyHint')}</div>
         </>
       )}
       {error && <div role="alert" style={{ marginTop: '8px', fontSize: '12px', color: 'var(--danger-700)' }}>{error}</div>}

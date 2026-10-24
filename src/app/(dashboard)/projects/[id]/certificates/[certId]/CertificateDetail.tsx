@@ -266,7 +266,7 @@ export default function CertificateDetail({
               background: phase ? alpha(phase.color, 13) : 'var(--gray-100)',
               border: `2px solid ${phase?.color ?? 'var(--border)'}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '11px', fontWeight: 700, color: ink(phase?.color ?? 'var(--text-muted)'),
+              fontSize: '12px', fontWeight: 700, color: ink(phase?.color ?? 'var(--text-muted)'),
             }}>
               {phase?.certificate_name ?? phase?.code ?? '—'}
             </div>
@@ -353,7 +353,7 @@ export default function CertificateDetail({
             { label: t('detail.infoIssuedBy'),   value: personLabel(cert.issued_by_profile?.full_name, cert.issued_by_profile?.id) },
           ].map((item, i) => (
             <div key={i} style={{ padding: '10px 0', paddingRight: '20px' }}>
-              <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '3px' }}>
+              <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '3px' }}>
                 {item.label}
               </div>
               <div style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-strong)' }}>{item.value}</div>
@@ -363,7 +363,7 @@ export default function CertificateDetail({
 
         {cert.notes && (
           <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--gray-100)' }}>
-            <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px' }}>
+            <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px' }}>
               {t('detail.notesLabel')}
             </div>
             <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0, lineHeight: '1.5' }}>{cert.notes}</p>
@@ -399,7 +399,7 @@ export default function CertificateDetail({
                 {[t('detail.itrColNumber'), t('detail.itrColTag'), t('detail.itrColTemplate'), t('detail.itrColStatus')].map((h, i) => (
                   <th key={i} style={{
                     padding: '8px 12px', textAlign: 'left',
-                    fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)',
+                    fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)',
                     textTransform: 'uppercase', letterSpacing: '0.05em',
                   }}>
                     {h}
@@ -424,7 +424,7 @@ export default function CertificateDetail({
                     </td>
                     <td style={{ padding: '9px 12px' }}>
                       <span style={{
-                        padding: '2px 8px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
+                        padding: '2px 8px', borderRadius: '999px', fontSize: '12px', fontWeight: 600,
                         background: colors.bg, color: ink(colors.color),
                       }}>
                         {label}
@@ -455,7 +455,7 @@ export default function CertificateDetail({
               }}>
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', marginBottom: '8px' }}>
                   <span style={{
-                    fontSize: '11px', fontWeight: 700, color: 'var(--warning-700)',
+                    fontSize: '12px', fontWeight: 700, color: 'var(--warning-700)',
                     background: 'var(--warning-100)', padding: '2px 8px', borderRadius: '4px', whiteSpace: 'nowrap',
                   }}>
                     {exc.punches?.punch_number}
@@ -467,7 +467,7 @@ export default function CertificateDetail({
                 <p style={{ fontSize: '12px', color: 'var(--warning-800)', margin: '0 0 8px', lineHeight: '1.5' }}>
                   <strong>{t('detail.justificationLabel')}</strong> {exc.justification}
                 </p>
-                <div style={{ fontSize: '11px', color: 'var(--warning-700)' }}>
+                <div style={{ fontSize: '12px', color: 'var(--warning-700)' }}>
                   {t('detail.approvedBy', { name: personLabel(exc.approved_by_profile?.full_name, exc.approved_by_profile?.id) })}
                   {' · '}
                   {new Date(exc.approved_at).toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' })}
@@ -516,16 +516,16 @@ export default function CertificateDetail({
                       }
                     </div>
                     <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)' }}>{roleLabel}</div>
-                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '3px' }}>
+                    <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '3px' }}>
                       <PersonName name={sig.signer_profile?.full_name} inactive={isInactiveMember(sig.user_id, memberIds)} />
                     </div>
-                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                    <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
                       {t('detail.sigSignedOn', {
                         date: new Date(sig.signed_at).toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' }),
                       })}
                     </div>
                     {sig.comments && (
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '6px', fontStyle: 'italic' }}>
+                      <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '6px', fontStyle: 'italic' }}>
                         “{sig.comments}”
                       </div>
                     )}
@@ -535,7 +535,7 @@ export default function CertificateDetail({
                         onClick={() => handleUnsign(sig.id)}
                         disabled={isPending}
                         style={{
-                          marginTop: '10px', padding: '5px 12px', fontSize: '11px', fontWeight: 500,
+                          marginTop: '10px', padding: '5px 12px', fontSize: '12px', fontWeight: 500,
                           border: '1px solid var(--border)', borderRadius: '6px',
                           background: 'var(--card-bg)', color: 'var(--text-muted)',
                           cursor: isPending ? 'wait' : 'pointer',
@@ -549,11 +549,11 @@ export default function CertificateDetail({
                   <>
                     <div style={{ borderBottom: '1px dashed var(--border)', marginBottom: '8px', height: '50px' }} />
                     <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>{roleLabel}</div>
-                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '3px' }}>
+                    <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '3px' }}>
                       {t('detail.sigPending')}
                     </div>
                     {whyNot && (
-                      <div className="no-print" style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '8px' }}>{whyNot}</div>
+                      <div className="no-print" style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '8px' }}>{whyNot}</div>
                     )}
                     {canSign && (
                       <button
@@ -807,7 +807,7 @@ function CertSignModal({
             </span>
             <button
               onClick={clearCanvas}
-              style={{ fontSize: '11px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px' }}
+              style={{ fontSize: '12px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px' }}
             >
               {t('detail.sigCanvasClear')}
             </button>

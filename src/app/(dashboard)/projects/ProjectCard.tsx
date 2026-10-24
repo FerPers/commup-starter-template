@@ -85,13 +85,13 @@ export default function ProjectCard({ project, phases, inactive = false }: {
           <div style={{ display: 'flex', gap: 16, paddingTop: 12, borderTop: '1px solid var(--gray-100)' }}>
             {project.start_date && (
               <div>
-                <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('card.start')}</div>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('card.start')}</div>
                 <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', marginTop: 2 }}>{formatDate(project.start_date)}</div>
               </div>
             )}
             {project.end_date && (
               <div>
-                <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('card.target')}</div>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('card.target')}</div>
                 <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', marginTop: 2 }}>{formatDate(project.end_date)}</div>
               </div>
             )}

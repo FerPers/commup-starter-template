@@ -103,7 +103,7 @@ function FilterPill({
       <span style={{
         padding: '1px 6px',
         borderRadius: 999,
-        fontSize: 11,
+        fontSize: 12,
         background: active ? 'rgba(0,0,0,0.08)' : 'var(--gray-100)',
         color: active ? (cfg?.color ?? '#fff') : 'var(--text-muted)',
       }}>
@@ -146,7 +146,7 @@ function PhotoCard({ photo }: { photo: ConsolidatedTagPhoto }) {
           <div style={{
             width: '100%', height: '100%',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 11, color: 'var(--text-muted)', fontFamily: 'ui-monospace, monospace',
+            fontSize: 12, color: 'var(--text-muted)', fontFamily: 'ui-monospace, monospace',
           }}>
             {photo.ext.toUpperCase() || 'FILE'}
           </div>
@@ -159,7 +159,7 @@ function PhotoCard({ photo }: { photo: ConsolidatedTagPhoto }) {
           padding: '6px 8px',
           background: cfg.bg, color: ink(cfg.color),
           borderTop: `1px solid ${cfg.border}`,
-          fontSize: 11, fontWeight: 600,
+          fontSize: 12, fontWeight: 600,
           textDecoration: 'none',
         }}
       >

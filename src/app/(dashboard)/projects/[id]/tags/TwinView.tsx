@@ -96,7 +96,7 @@ function ProgressMini({ pct, semaforo }: { pct: number; semaforo: string }) {
       <div style={{ flex: 1, height: '4px', background: 'var(--gray-100)', borderRadius: '999px', overflow: 'hidden' }}>
         <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: '999px', transition: 'width 0.3s' }} />
       </div>
-      <span style={{ fontSize: '11px', fontWeight: 600, color, minWidth: '30px', textAlign: 'right' }}>
+      <span style={{ fontSize: '12px', fontWeight: 600, color, minWidth: '30px', textAlign: 'right' }}>
         {pct}%
       </span>
     </div>
@@ -150,14 +150,14 @@ function TagCard({ tag, projectId, highlight }: { tag: Tag360; projectId: string
               {tag.tag_number}
             </span>
             <span style={{
-              padding: '1px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 700,
+              padding: '1px 6px', borderRadius: '4px', fontSize: '12px', fontWeight: 700,
               background: alpha(discColor, 9), color: ink(discColor), flexShrink: 0,
             }}>
               {tag.discipline_code ?? '?'}
             </span>
           </div>
           {tag.description && (
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {tag.description}
             </div>
           )}
@@ -167,7 +167,7 @@ function TagCard({ tag, projectId, highlight }: { tag: Tag360; projectId: string
       {/* ITR Progress */}
       {tag.itr_total > 0 && (
         <div>
-          <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginBottom: '3px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '3px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
             ITRs {tag.itr_approved}/{tag.itr_total}
           </div>
           <ProgressMini pct={Number(tag.itr_pct)} semaforo={tag.itr_semaforo} />
@@ -198,7 +198,7 @@ function TagCard({ tag, projectId, highlight }: { tag: Tag360; projectId: string
 
       {/* Preservation due */}
       {tag.preservation_next_due && (
-        <div style={{ fontSize: '10px', color: 'var(--violet-700)', background: 'var(--violet-50)', padding: '3px 7px', borderRadius: '5px', display: 'inline-block' }}>
+        <div style={{ fontSize: '12px', color: 'var(--violet-700)', background: 'var(--violet-50)', padding: '3px 7px', borderRadius: '5px', display: 'inline-block' }}>
           ⏰ {new Date(tag.preservation_next_due).toLocaleDateString(locale, { day: '2-digit', month: 'short' })}
         </div>
       )}
@@ -210,7 +210,7 @@ function Badge({ label, color, bg, title }: { label: string; color: string; bg: 
   return (
     <span
       title={title}
-      style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '10px', fontWeight: 600, background: bg, color, cursor: 'default' }}
+      style={{ padding: '2px 7px', borderRadius: '5px', fontSize: '12px', fontWeight: 600, background: bg, color, cursor: 'default' }}
     >
       {label}
     </span>
@@ -262,9 +262,9 @@ function SubsystemPanel({
           {subsystemName}
         </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{tw('tags', { count: total })}</span>
-          {red > 0 && <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--danger-700)', background: 'var(--danger-50)', padding: '1px 6px', borderRadius: '5px' }}>A:{red}</span>}
-          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{pct}%</span>
+          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{tw('tags', { count: total })}</span>
+          {red > 0 && <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--danger-700)', background: 'var(--danger-50)', padding: '1px 6px', borderRadius: '5px' }}>A:{red}</span>}
+          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{pct}%</span>
           <span style={{ color: 'var(--text-muted)', fontSize: '12px', transform: open ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s', display: 'inline-block' }}>›</span>
         </div>
       </button>
@@ -372,7 +372,7 @@ function SystemBlock({
 function Legend() {
   const tw = useTranslations('TwinView')
   return (
-    <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', fontSize: '11px', color: 'var(--text-muted)' }}>
+    <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', fontSize: '12px', color: 'var(--text-muted)' }}>
       {(Object.keys(SEMAFORO) as Sema[]).map(k => (
         <div key={k} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
           <span style={{ width: 8, height: 8, borderRadius: '50%', background: SEMAFORO[k].dot, display: 'inline-block' }} />
@@ -380,15 +380,15 @@ function Legend() {
         </div>
       ))}
       <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-        <span style={{ padding: '1px 5px', borderRadius: '4px', fontSize: '10px', fontWeight: 600, background: 'var(--danger-50)', color: 'var(--danger-700)' }}>A:N</span>
+        <span style={{ padding: '1px 5px', borderRadius: '4px', fontSize: '12px', fontWeight: 600, background: 'var(--danger-50)', color: 'var(--danger-700)' }}>A:N</span>
         {tw('legend.catA')}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-        <span style={{ padding: '1px 5px', borderRadius: '4px', fontSize: '10px', fontWeight: 600, background: 'var(--warning-50)', color: 'var(--warning-700)' }}>B:N</span>
+        <span style={{ padding: '1px 5px', borderRadius: '4px', fontSize: '12px', fontWeight: 600, background: 'var(--warning-50)', color: 'var(--warning-700)' }}>B:N</span>
         {tw('legend.catB')}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-        <span style={{ padding: '1px 5px', borderRadius: '4px', fontSize: '10px', fontWeight: 600, background: 'var(--success-50)', color: 'var(--success-700)' }}>✓N</span>
+        <span style={{ padding: '1px 5px', borderRadius: '4px', fontSize: '12px', fontWeight: 600, background: 'var(--success-50)', color: 'var(--success-700)' }}>✓N</span>
         {tw('legend.certs')}
       </div>
     </div>
@@ -432,7 +432,7 @@ function Stat({ value, label, color }: { value: string | number; label: string; 
   return (
     <div style={{ textAlign: 'center' }}>
       <div style={{ fontSize: '22px', fontWeight: 700, color, lineHeight: 1.1 }}>{value}</div>
-      <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>{label}</div>
+      <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>{label}</div>
     </div>
   )
 }
@@ -531,7 +531,7 @@ export default function TwinView({
                 {opt.key !== 'ALL' && <span style={{ width: 7, height: 7, borderRadius: '50%', background: opt.color, display: 'inline-block' }} />}
                 {opt.label}
                 <span style={{
-                  padding: '0 5px', borderRadius: '999px', fontSize: '10px', fontWeight: 700,
+                  padding: '0 5px', borderRadius: '999px', fontSize: '12px', fontWeight: 700,
                   background: active ? opt.color : 'var(--gray-100)',
                   color: active ? 'var(--on-ink)' : 'var(--text-muted)',
                 }}>

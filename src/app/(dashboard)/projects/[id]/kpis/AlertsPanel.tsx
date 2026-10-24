@@ -66,7 +66,7 @@ export default function AlertsPanel({ alerts }: Props) {
 
             {/* Severity badge */}
             <span style={{
-              padding: '2px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: 700,
+              padding: '2px 8px', borderRadius: '6px', fontSize: '12px', fontWeight: 700,
               background: alpha(cfg.border, 38), color: ink(cfg.textColor),
               flexShrink: 0, alignSelf: 'center', textTransform: 'uppercase', letterSpacing: '0.05em',
             }}>

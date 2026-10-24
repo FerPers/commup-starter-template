@@ -223,11 +223,11 @@ export default function ImportFromOrgModal({ onClose }: { onClose: () => void })
             return (
             <div key={orgId} style={{ marginBottom: 20 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, margin: '0 0 8px' }}>
-                <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   {list[0].sourceOrgName}
                   {list[0].sourceOrgIsCatalog && (
                     <span style={{
-                      fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 999,
+                      fontSize: 12, fontWeight: 700, padding: '2px 6px', borderRadius: 999,
                       background: 'var(--success-50)', color: 'var(--success-700)', border: '1px solid var(--success-300)',
                       letterSpacing: '0.04em',
                     }}>
@@ -266,7 +266,7 @@ export default function ImportFromOrgModal({ onClose }: { onClose: () => void })
                         <span>{t.code} · {t.title}</span>
                         <StateBadge t={t} />
                       </p>
-                      <p style={{ margin: '2px 0 0', fontSize: 11, color: 'var(--text-muted)' }}>
+                      <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--text-muted)' }}>
                         {t.disciplineCode} / {ti('phase', { code: t.phaseCode ?? '' })} · v{t.version} · {ti('sections', { n: t.sectionCount })} · {ti('items', { n: t.itemCount })}
                       </p>
                     </div>
@@ -298,7 +298,7 @@ export default function ImportFromOrgModal({ onClose }: { onClose: () => void })
 
 function StateBadge({ t }: { t: ImportableTemplate }) {
   const ti = useTranslations('TemplateImport')
-  const style = { fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 999, letterSpacing: '0.04em', whiteSpace: 'nowrap' as const }
+  const style = { fontSize: 12, fontWeight: 700, padding: '2px 6px', borderRadius: 999, letterSpacing: '0.04em', whiteSpace: 'nowrap' as const }
   if (t.localState === 'new') return <span style={{ ...style, background: 'var(--primary-50)', color: 'var(--primary-700)', border: '1px solid var(--primary-200)' }}>{ti('badgeNew')}</span>
   if (t.localState === 'outdated') return <span style={{ ...style, background: 'var(--warning-50)', color: 'var(--warning-700)', border: '1px solid var(--warning-200)' }} title={ti('badgeOutdatedHint')}>{ti('badgeOutdated', { v: t.localVersion ?? '' })}</span>
   return <span style={{ ...style, background: 'var(--success-50)', color: 'var(--success-700)', border: '1px solid var(--success-300)' }}>{ti('badgeSame', { v: t.localVersion ?? '' })}</span>

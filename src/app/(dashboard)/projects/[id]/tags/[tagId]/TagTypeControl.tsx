@@ -95,7 +95,7 @@ export default function TagTypeControl({ projectId, tagId, current, types, canEd
               </label>
               <textarea id={`tag-type-reason-${tagId}`} rows={2} value={reason} onChange={e => setReason(e.target.value)} placeholder={t('reason.placeholder')}
                 style={{ width: '100%', boxSizing: 'border-box', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: 6, fontSize: 13, fontFamily: 'inherit', resize: 'vertical' }} />
-              <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '4px 0 0' }}>{t('reason.hint')}</p>
+              <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '4px 0 0' }}>{t('reason.hint')}</p>
             </div>
           )}
 

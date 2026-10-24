@@ -45,7 +45,7 @@ export default async function ClientSignaturesWidget({ userId }: { userId: strin
           return (
             <Link key={itr.id} href={`/projects/${itr.project_id}/tags/${itr.tags?.id}/itrs/${itr.id}`} style={{ display: 'block', textDecoration: 'none' }}>
               <div style={{ padding: '12px 14px', background: 'var(--warning-50)', border: '1px solid var(--warning-200)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', flexWrap: 'wrap', columnGap: 12, rowGap: 4 }}>
-                {phase && <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 'var(--radius-sm)', background: alpha(phase.color, 9), color: ink(phase.color), whiteSpace: 'nowrap' }}>{phase.code}</span>}
+                {phase && <span style={{ fontSize: 12, fontWeight: 700, padding: '1px 6px', borderRadius: 'var(--radius-sm)', background: alpha(phase.color, 9), color: ink(phase.color), whiteSpace: 'nowrap' }}>{phase.code}</span>}
                 <span style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--text-strong)', fontFamily: 'ui-monospace, monospace' }}>{itr.itr_number}</span>
                 <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', flex: '1 1 180px', minWidth: 0 }}>{itr.tags?.tag_number} — {itr.tags?.description}</span>
                 <span style={{ fontSize: 'var(--text-xs)', color: 'var(--primary-700)', fontWeight: 600 }}>{itr.projects?.code}</span>

@@ -178,7 +178,7 @@ export function RedlineListPanel({
                 border: `${r.id === selectedId ? 2 : 1}px solid ${r.id === selectedId ? REDLINE_STATUS_STYLE[r.status].chipText : 'var(--border)'}`, background: 'var(--card-bg)' }}>
               <span style={{ fontFamily: 'ui-monospace, monospace', fontWeight: 700, fontSize: 13, color: 'var(--text-strong)' }}>{r.number}</span>
               <span style={{ flex: 1, minWidth: 0, fontSize: 13, color: 'var(--text-body)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.description}</span>
-              {r.page_num !== currentPage && <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{t('redline.sheet', { page: r.page_num })}</span>}
+              {r.page_num !== currentPage && <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('redline.sheet', { page: r.page_num })}</span>}
               {statusChip(r.status, t(`redline.status_${r.status}`))}
             </button>
           </li>

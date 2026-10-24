@@ -156,7 +156,7 @@ export default function KpiDashboard({
   const overallPct = totalItrs > 0 ? Math.round((totalApproved / totalItrs) * 100) : 0
 
   const thStyle = (col: keyof SubsystemKpi): React.CSSProperties => ({
-    padding: '10px 12px', fontSize: '11px', fontWeight: 600,
+    padding: '10px 12px', fontSize: '12px', fontWeight: 600,
     color: sortCol === col ? 'var(--primary-700)' : 'var(--text-muted)',
     textTransform: 'uppercase', letterSpacing: '0.04em',
     cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap',
@@ -287,12 +287,12 @@ export default function KpiDashboard({
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
               <p style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500, margin: 0 }}>{phase.name}</p>
-              <span style={{ padding: '2px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: 700, background: alpha(phase.color, 9), color: ink(phase.color) }}>
+              <span style={{ padding: '2px 8px', borderRadius: '6px', fontSize: '12px', fontWeight: 700, background: alpha(phase.color, 9), color: ink(phase.color) }}>
                 {phase.code}
               </span>
             </div>
             <p style={{ fontSize: '32px', fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 4px', letterSpacing: '-1px' }}>{phase.pct}%</p>
-            <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '0 0 10px' }}>{phase.approved} / {phase.total} ITRs</p>
+            <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 10px' }}>{phase.approved} / {phase.total} ITRs</p>
             <div style={{ height: '5px', background: 'var(--gray-100)', borderRadius: '3px', overflow: 'hidden' }}>
               <div style={{ width: `${phase.pct}%`, height: '100%', background: phase.color, borderRadius: '3px' }} />
             </div>
@@ -323,7 +323,7 @@ export default function KpiDashboard({
               <div style={{ fontSize: '28px', fontWeight: 700, color: 'var(--primary-700)', letterSpacing: '-1px' }}>
                 {lastSnapshot.completion_pct}%
               </div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{t('lastRecord')}</div>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{t('lastRecord')}</div>
             </div>
           )}
         </div>
@@ -335,14 +335,14 @@ export default function KpiDashboard({
               <XAxis
                 dataKey="date"
                 tickFormatter={formatDateTick}
-                tick={{ fontSize: 11, fill: 'var(--gray-400)' }}
+                tick={{ fontSize: 12, fill: 'var(--gray-400)' }}
                 tickLine={false}
                 axisLine={{ stroke: 'var(--border)' }}
               />
               <YAxis
                 domain={[0, 100]}
                 tickFormatter={(v: number) => `${v}%`}
-                tick={{ fontSize: 11, fill: 'var(--gray-400)' }}
+                tick={{ fontSize: 12, fill: 'var(--gray-400)' }}
                 tickLine={false}
                 axisLine={false}
                 width={40}
@@ -451,7 +451,7 @@ export default function KpiDashboard({
                       {col.label}{sortCol === col.key ? (sortDir === 'asc' ? ' ↑' : ' ↓') : ''}
                     </th>
                   ))}
-                  <th style={{ padding: '10px 12px', fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'center' }}>
+                  <th style={{ padding: '10px 12px', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'center' }}>
                     {t('colStatus')}
                   </th>
                 </tr>
@@ -464,7 +464,7 @@ export default function KpiDashboard({
                     </td>
                     <td style={{ padding: '11px 12px' }}>
                       <div style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-strong)' }}>{ss.code}</div>
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '1px' }}>{ss.name}</div>
+                      <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '1px' }}>{ss.name}</div>
                     </td>
                     <td style={{ padding: '11px 12px', fontSize: '13px', color: 'var(--text-muted)', textAlign: 'center' }}>{ss.totalItrs}</td>
                     <td style={{ padding: '11px 12px', fontSize: '13px', color: 'var(--success-700)', fontWeight: 500, textAlign: 'center' }}>{ss.approvedItrs}</td>

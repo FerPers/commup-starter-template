@@ -39,7 +39,7 @@ export default function CeMatricesView({ project, matrices, systems, canEdit }: 
   const [pending, start] = useTransition()
 
   const field = { width: '100%', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: '8px', background: 'var(--card-bg)', color: 'var(--text-strong)', fontSize: '13px', boxSizing: 'border-box' } as const
-  const th = { padding: '10px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--text-muted)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.04em', whiteSpace: 'nowrap' } as const
+  const th = { padding: '10px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--text-muted)', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.04em', whiteSpace: 'nowrap' } as const
 
   function create(e: React.FormEvent) {
     e.preventDefault()
@@ -97,7 +97,7 @@ export default function CeMatricesView({ project, matrices, systems, canEdit }: 
             <tbody>{matrices.map(m => (
               <tr key={m.id} style={{ borderBottom: '1px solid var(--border)' }}>
                 <td style={{ padding: '10px 12px', fontFamily: 'monospace', fontWeight: 700, whiteSpace: 'nowrap' }}><Link href={`/projects/${project.id}/ce-matrices/${m.id}`} style={{ color: 'var(--text-strong)' }}>{m.code}</Link></td>
-                <td style={{ padding: '10px 12px', color: 'var(--text-strong)' }}>{m.title}{m.sourceDocument && <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{m.sourceDocument}</div>}</td>
+                <td style={{ padding: '10px 12px', color: 'var(--text-strong)' }}>{m.title}{m.sourceDocument && <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{m.sourceDocument}</div>}</td>
                 <td style={{ padding: '10px 12px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{m.system ?? '—'}</td>
                 <td style={{ padding: '10px 12px', color: 'var(--text-muted)' }}>{m.revision ?? '—'}</td>
                 <td style={{ padding: '10px 12px', fontVariantNumeric: 'tabular-nums' }}>{m.causes}</td>

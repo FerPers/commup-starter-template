@@ -160,7 +160,7 @@ export default function AddToWorkPlanModal({ projectId, itrs, members, onClose, 
                 >
                   {m === 'existing' ? t('addToPlanModal.modeExisting') : t('addToPlanModal.modeNew')}
                   {m === 'existing' && plans.length === 0 && (
-                    <span style={{ marginLeft: '6px', fontSize: '10px', color: 'var(--text-muted)' }}>({t('addToPlanModal.noPlans')})</span>
+                    <span style={{ marginLeft: '6px', fontSize: '12px', color: 'var(--text-muted)' }}>({t('addToPlanModal.noPlans')})</span>
                   )}
                 </button>
               ))}
@@ -191,11 +191,11 @@ export default function AddToWorkPlanModal({ projectId, itrs, members, onClose, 
                   return (
                     <div style={{ display: 'flex', gap: '6px', marginTop: '6px', alignItems: 'center' }}>
                       {plan.disciplines && (
-                        <span style={{ fontSize: '11px', fontWeight: 600, color: ink(plan.disciplines.color), background: alpha(plan.disciplines.color, 8), padding: '2px 8px', borderRadius: '4px' }}>
+                        <span style={{ fontSize: '12px', fontWeight: 600, color: ink(plan.disciplines.color), background: alpha(plan.disciplines.color, 8), padding: '2px 8px', borderRadius: '4px' }}>
                           {plan.disciplines.code}
                         </span>
                       )}
-                      <span style={{ fontSize: '11px', fontWeight: 600, color: ink(st.color), background: st.bg, padding: '2px 8px', borderRadius: '4px' }}>
+                      <span style={{ fontSize: '12px', fontWeight: 600, color: ink(st.color), background: st.bg, padding: '2px 8px', borderRadius: '4px' }}>
                         {plan.status}
                       </span>
                     </div>
@@ -243,7 +243,7 @@ export default function AddToWorkPlanModal({ projectId, itrs, members, onClose, 
               </div>
 
               {/* Header */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', padding: '4px 8px', fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', padding: '4px 8px', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                 <span>{t('addToPlanModal.colItr')}</span>
                 <span>{t('addToPlanModal.colAssigned')}</span>
               </div>
@@ -257,7 +257,7 @@ export default function AddToWorkPlanModal({ projectId, itrs, members, onClose, 
                     <div>
                       <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-strong)', fontFamily: 'ui-monospace, monospace' }}>{itr.itrNumber}</div>
                       {itr.tagNumber && (
-                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '1px' }}>{itr.tagNumber}</div>
+                        <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '1px' }}>{itr.tagNumber}</div>
                       )}
                     </div>
                     <select

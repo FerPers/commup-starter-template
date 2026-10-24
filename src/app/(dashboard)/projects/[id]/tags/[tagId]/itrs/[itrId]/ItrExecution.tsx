@@ -342,7 +342,7 @@ export default function ItrExecution({
           <div style={{ flex: '1 1 240px', minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
               {phase && (
-                <span style={{ padding: '2px 8px', borderRadius: '5px', fontSize: '11px', fontWeight: 700, background: alpha(phase.color, 9), color: ink(phase.color) }}>
+                <span style={{ padding: '2px 8px', borderRadius: '5px', fontSize: '12px', fontWeight: 700, background: alpha(phase.color, 9), color: ink(phase.color) }}>
                   {phase.code}
                 </span>
               )}
@@ -361,7 +361,7 @@ export default function ItrExecution({
             {template && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{template.title}</span>
-                <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--primary-700)', background: 'var(--primary-50)', border: '1px solid var(--primary-200)', borderRadius: '999px', padding: '1px 6px' }}>
+                <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--primary-700)', background: 'var(--primary-50)', border: '1px solid var(--primary-200)', borderRadius: '999px', padding: '1px 6px' }}>
                   v{template.version}
                 </span>
               </div>
@@ -380,7 +380,7 @@ export default function ItrExecution({
                   aria-pressed={itemLang === l}
                   style={{
                     padding: '3px 9px',
-                    fontSize: '11px',
+                    fontSize: '12px',
                     fontWeight: 700,
                     border: 'none',
                     borderRadius: '6px',
@@ -448,14 +448,14 @@ export default function ItrExecution({
                   </Fragment>
                 ))}
               </dl>
-              <p style={{ margin: '6px 0 0', color: 'var(--text-muted)', fontSize: '11px' }}>{t('tagData.hint')}</p>
+              <p style={{ margin: '6px 0 0', color: 'var(--text-muted)', fontSize: '12px' }}>{t('tagData.hint')}</p>
             </details>
           )
         })()}
 
         {/* Progress bar */}
         <div style={{ marginTop: '14px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', marginBottom: '5px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'var(--text-muted)', marginBottom: '5px' }}>
             <span>{t('header.progress')}</span>
             <span>{effectiveProgress}%</span>
           </div>
@@ -474,20 +474,20 @@ export default function ItrExecution({
                 <div style={{ padding: '7px 10px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: sig ? '4px' : 0 }}>
                     <span style={{ fontSize: '12px' }}>{sig?.pending ? '⏳' : sig ? '✓' : '○'}</span>
-                    <span style={{ fontSize: '11px', fontWeight: 600, color: sig?.pending ? 'var(--warning-700)' : sig ? 'var(--success-700)' : 'var(--text-muted)' }}>{t(`roles.${role}` as Parameters<typeof t>[0])}</span>
+                    <span style={{ fontSize: '12px', fontWeight: 600, color: sig?.pending ? 'var(--warning-700)' : sig ? 'var(--success-700)' : 'var(--text-muted)' }}>{t(`roles.${role}` as Parameters<typeof t>[0])}</span>
                   </div>
                   {sig && (
                     <>
-                      <div style={{ fontSize: '11px', color: 'var(--text-body)', fontWeight: 500, marginLeft: '17px' }}>
+                      <div style={{ fontSize: '12px', color: 'var(--text-body)', fontWeight: 500, marginLeft: '17px' }}>
                         <PersonName name={sig.profiles?.full_name} inactive={isInactiveMember(sig.user_id, memberIds)} />{sig.signer_company ? ` · ${sig.signer_company}` : ''}
                       </div>
-                      <div style={{ fontSize: '10px', color: sig.pending ? 'var(--warning-700)' : 'var(--text-muted)', marginLeft: '17px', marginTop: '1px' }}>
+                      <div style={{ fontSize: '12px', color: sig.pending ? 'var(--warning-700)' : 'var(--text-muted)', marginLeft: '17px', marginTop: '1px' }}>
                         {sig.pending ? t('sync.pending') : formatInZone(sig.signed_at, timezone, locale)}
                       </div>
                     </>
                   )}
                   {!sig && (
-                    <div style={{ fontSize: '11px', color: assignee ? 'var(--text-muted)' : 'var(--warning-700)', marginLeft: '17px', marginTop: '2px' }}>
+                    <div style={{ fontSize: '12px', color: assignee ? 'var(--text-muted)' : 'var(--warning-700)', marginLeft: '17px', marginTop: '2px' }}>
                       {assignee ? <PersonName name={assignee.profiles?.full_name} inactive={isInactiveMember(assignee.user_id, memberIds)} /> : t('assign.unassigned')}
                     </div>
                   )}
@@ -530,7 +530,7 @@ export default function ItrExecution({
               <div key={u.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginTop: '4px' }}>
                 <p style={{ fontSize: '12px', color: 'var(--danger-900)', margin: 0, flex: 1, wordBreak: 'break-word' }}>{t('sync.unsyncedPunch', { desc: u.description.slice(0, 60), error: u.error })}</p>
                 <button onClick={async () => { if (await confirm({ message: t('sync.discardConfirm'), confirmLabel: t('sync.discard'), danger: true })) void removeFromOutbox(u.id) }}
-                  style={{ padding: '3px 8px', fontSize: '11px', borderRadius: '6px', border: '1px solid var(--danger-200)', background: 'var(--card-bg)', color: 'var(--danger-700)', cursor: 'pointer', flexShrink: 0 }}>
+                  style={{ padding: '3px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--danger-200)', background: 'var(--card-bg)', color: 'var(--danger-700)', cursor: 'pointer', flexShrink: 0 }}>
                   {t('sync.discard')}
                 </button>
               </div>
@@ -549,7 +549,7 @@ export default function ItrExecution({
             {criticalBlocked.map(item => {
               const desc = itemDescription(item, itemLang)
               return (
-                <p key={item.id} style={{ fontSize: '11px', color: 'var(--danger-900)', margin: '2px 0' }}>
+                <p key={item.id} style={{ fontSize: '12px', color: 'var(--danger-900)', margin: '2px 0' }}>
                   • {item.item_number ? `${item.item_number} ` : ''}{desc}
                 </p>
               )
@@ -651,7 +651,7 @@ export default function ItrExecution({
 
       <div className="itr-footer" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'var(--card-bg)', borderTop: '1px solid var(--border)', padding: '10px 16px calc(10px + env(safe-area-inset-bottom, 0px))', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px 10px', zIndex: 100 }}>
         {/* Teléfono (backlog 4): la línea de estado solo ocupa lugar cuando importa (sin red, sincronizando, error) */}
-        <div className={`itr-footer-status${isOffline || syncing || saveError ? ' is-alert' : ''}`} role="status" style={{ fontSize: '11px', color: isOffline ? 'var(--warning-700)' : syncing ? 'var(--primary-700)' : isPending ? 'var(--primary-700)' : lastSaved ? 'var(--success-700)' : 'var(--text-muted)' }}>
+        <div className={`itr-footer-status${isOffline || syncing || saveError ? ' is-alert' : ''}`} role="status" style={{ fontSize: '12px', color: isOffline ? 'var(--warning-700)' : syncing ? 'var(--primary-700)' : isPending ? 'var(--primary-700)' : lastSaved ? 'var(--success-700)' : 'var(--text-muted)' }}>
           {isOffline && pendingCount > 0
             ? t('footer.offlineWithPending', { count: pendingCount })
             : isOffline

@@ -133,7 +133,7 @@ export default function SignModal({
         <div style={{ marginBottom: '16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
             <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-body)' }}>{t('signModal.signatureLabel')}</span>
-            <button onClick={clearCanvas} style={{ fontSize: '11px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px' }}>
+            <button onClick={clearCanvas} style={{ fontSize: '12px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px' }}>
               {t('signModal.clearCanvas')}
             </button>
           </div>

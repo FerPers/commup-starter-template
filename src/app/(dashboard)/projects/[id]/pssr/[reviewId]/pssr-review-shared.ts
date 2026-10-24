@@ -50,17 +50,17 @@ export const STATUS_STYLES: Record<StatusKey, { color: string; bg: string }> = {
 }
 
 const CAT_COLORS: Record<string, string> = {
-  'Ingeniería y Diseño': '#3b82f6',
-  'Documentación': '#8b5cf6',
-  'Mecánica y Tuberías': '#f59e0b',
-  'Electricidad': '#ef4444',
-  'Instrumentación y Control': '#06b6d4',
-  'Seguridad de Procesos': '#f97316',
-  'Seguridad / HSE': '#10b981',
-  'Operaciones y Capacitación': '#6366f1',
+  'Ingeniería y Diseño': 'var(--primary-500)',
+  'Documentación': 'var(--violet-500)',
+  'Mecánica y Tuberías': 'var(--warning-500)',
+  'Electricidad': 'var(--danger-500)',
+  'Instrumentación y Control': 'var(--cyan-500)',
+  'Seguridad de Procesos': 'var(--orange-500)',
+  'Seguridad / HSE': 'var(--success-500)',
+  'Operaciones y Capacitación': 'var(--indigo-500)',
   'Mantenimiento': 'var(--text-muted)',
-  'Medio Ambiente': '#22c55e',
-  'Construcción y Comisionamiento': '#d97706',
+  'Medio Ambiente': 'var(--teal-500)',
+  'Construcción y Comisionamiento': 'var(--warning-600)',
 }
 
 export function catColor(cat: string) { return CAT_COLORS[cat] ?? 'var(--text-muted)' }

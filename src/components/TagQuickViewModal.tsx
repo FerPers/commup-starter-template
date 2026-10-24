@@ -92,14 +92,14 @@ export default function TagQuickViewModal({ tag, projectId, onClose }: Props) {
           {/* Badges */}
           <div style={{ display: 'flex', gap: '8px', marginTop: '12px', flexWrap: 'wrap' }}>
             <span style={{
-              padding: '3px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
+              padding: '3px 10px', borderRadius: '999px', fontSize: '12px', fontWeight: 600,
               background: alpha(tag.discipline.color, 9),
               color: ink(tag.discipline.color),
             }}>
               {tag.discipline.code} · {tag.discipline.name}
             </span>
             <span style={{
-              padding: '3px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: 500,
+              padding: '3px 10px', borderRadius: '999px', fontSize: '12px', fontWeight: 500,
               background: status.bg, color: ink(status.color),
             }}>
               {tx(`status.${statusKey}`)}
