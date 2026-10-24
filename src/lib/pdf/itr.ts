@@ -1,4 +1,5 @@
 import { continuityMeasurementRequired, continuityScopeFromRow, evaluateContinuity } from '../itr/continuity'
+import { calibrationAdvisories } from '../itr/calibration-advisory'
 import { evaluateTable, parseSourceRows } from '../itr/table'
 import { drawItrSignatures } from './itr-signatures'
 import { drawBrandBar, drawRecordQr, type PdfBranding } from './branding'
@@ -316,6 +317,8 @@ export async function renderItrPdf(itr: ItrPdfData): Promise<Uint8Array> {
     .sort((a, b) => a.order_index - b.order_index)
 
   const responseMap = Object.fromEntries(itr.itr_responses.map(rr => [rr.item_id, rr]))
+  // A37: avisos de coherencia de la calibración (tolerancia del inspector); quedan impresos para quien revisa.
+  const advisories = calibrationAdvisories(sections.flatMap(s => s.itr_template_items ?? []), id => responseMap[id])
   const attachmentsByItem = new Map<string | null, ItrAttachmentRef[]>()
   for (const att of itr.itr_attachments ?? []) {
     attachmentsByItem.set(att.item_id, [...(attachmentsByItem.get(att.item_id) ?? []), att])
@@ -433,7 +436,7 @@ export async function renderItrPdf(itr: ItrPdfData): Promise<Uint8Array> {
           for (const row of evaluation.data.rows) {
             const cells = [row.label, ...config.columns.map(c => {
               const v = row.cells[c.key]
-              if (c.type === 'result') return v === 'pass' ? 'PASS' : v === 'fail' ? 'FAIL' : v === 'not_applicable' ? 'No aplica' : 'Pendiente'
+              if (c.type === 'result') return v === 'pass' ? 'PASS' : v === 'fail' ? (c.pass === 'as_found' ? 'FAIL (AF)' : 'FAIL') : v === 'not_applicable' ? 'No aplica' : 'Pendiente'
               if (v === null || v === undefined || v === '') return '-'
               // Desviación calculada (v2): 3 decimales; «as found» fuera de tolerancia lleva la marca AF.
               if (c.type === 'computed' && typeof v === 'number') {
@@ -443,7 +446,7 @@ export async function renderItrPdf(itr: ItrPdfData): Promise<Uint8Array> {
               if (c.type === 'datetime' && typeof v === 'string') return v.replace('T', ' ')
               return String(v)
             })]
-            const rowFail = evaluation.rowFlags[row.id]?.fail || config.columns.some(c => c.type === 'result' && row.cells[c.key] === 'fail')
+            const rowFail = evaluation.rowFlags[row.id]?.fail || config.columns.some(c => c.type === 'result' && c.pass !== 'as_found' && row.cells[c.key] === 'fail')
             const lines = cells.map((value, i) => wrapText(value, r.fontRegular, 7.5, widths[i] - 6))
             const total = Math.max(...lines.map(cell => cell.length), 1)
             let offset = 0
@@ -472,6 +475,18 @@ export async function renderItrPdf(itr: ItrPdfData): Promise<Uint8Array> {
         }
         if (evaluation.asFoundOut > 0) {
           r.paragraph(`AF: ${evaluation.asFoundOut} punto(s) "as found" fuera de tolerancia (registrado; la aceptación se evalúa con "as left").`, {size: 7.5, color: COLOR.amber})
+        }
+        const advisory = advisories[item.id]
+        if (advisory) {
+          const lines = [
+            ...advisory.notes.map(n => n.code === 'no_criterion' ? 'Falta la tolerancia (2.07) o la base del error (2.08).'
+              : n.code === 'no_span' ? 'Falta el rango de salida (2.02-2.03) para el % del span.'
+              : `${n.count} punto(s) as found fuera y sin ajuste: revisar la decisión final.`),
+            ...Object.values(advisory.rows).flat().map(i => i.code === 'error_mismatch'
+              ? `${i.row}: error escrito ${i.written} no coincide con las lecturas (${i.computed}).`
+              : `${i.row}: conforme con error ${i.error}, fuera de la tolerancia +/-${i.tolerance}.`),
+          ]
+          r.paragraph(`Avisos de coherencia (no bloquean la firma): ${lines.join(' ')}`, {size: 7.5, color: COLOR.amber})
         }
         if (evaluation.stability && evaluation.config?.stability) {
           const st = evaluation.config.stability

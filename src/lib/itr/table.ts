@@ -14,6 +14,11 @@
 //     (dato para calidad), la de 'as_left' (o sin pass) rechaza;
 //   · `datetime` y criterio de estabilidad (`stability`) para series de lecturas: las últimas N
 //     lecturas deben quedar dentro de [min, max] (punto de rocío, O₂, bitácora de prueba).
+// A37 (decisión de Luis 2026-10-24): en calibración la tolerancia la escribe el inspector en el ITR y él califica
+// cada fila; la plantilla no la fija ni el formato decide. Por eso:
+//   · un `result` manual con pass 'as_found' guarda «no conforme» como evidencia (pide observación) sin rechazar;
+//   · `advisory` (solo TS, ver calibration-advisory.ts) dice de dónde salen tolerancia, base y span para AVISAR
+//     cuando el error escrito no cuadra con las lecturas o un «conforme» supera la tolerancia. No bloquea nada.
 // Las celdas calculadas/automáticas se recalculan siempre aquí y en SQL: lo que envíe el cliente no cuenta.
 //
 // Filas `source` (fase 4 · bloque D, sesión 2, decisiones §10.21–10.24): las filas salen de la foto que
@@ -105,7 +110,18 @@ export function parseSourceRows(value: unknown): SourceRow[] | null {
 
 export type TableStability = { column: string; last_n: number; min: number | null; max: number | null }
 
-export type TableConfig = { version: 1 | 2; columns: TableColumn[]; rows: TableRowsSpec; stability?: TableStability | null }
+/**
+ * A37: avisos de coherencia de una tabla de calibración. Las referencias a ítems son su `item_number` en la misma
+ * plantilla; `base_modes` traduce cada opción de la selección «Base del error» a una base de cálculo.
+ */
+export type TableAdvisory = {
+  expected: string; observed: string; error: string | null; result: string
+  tolerance_item: string; base_item: string; base_modes: Record<string, DeviationMode>
+  span_items: [string, string] | null
+  /** As found «no conforme» sin ajuste posterior: se avisa si este ítem no tiene este valor. */
+  adjust: { item: string; value: string } | null
+}
+export type TableConfig = { version: 1 | 2; columns: TableColumn[]; rows: TableRowsSpec; stability?: TableStability | null; advisory?: TableAdvisory | null }
 
 export type TableCellValue = string | number | null
 export type TableRow = { id: string; label: string; cells: Record<string, TableCellValue> }
@@ -200,6 +216,12 @@ export function checkTableConfig(options: unknown): Checked {
       column.tolerance = finite(raw.tolerance) ? raw.tolerance : null
       column.pass = raw.pass === 'as_found' || raw.pass === 'as_left' ? raw.pass : null
     }
+    if (type === 'result' && 'pass' in raw && raw.pass !== null && raw.pass !== undefined) {
+      // A37: un resultado manual de la pasada as found registra «no conforme» como evidencia (no rechaza).
+      if (raw.pass !== 'as_found' && raw.pass !== 'as_left') return bad(`Pasada inválida en «${raw.label}»`)
+      if (raw.decides === true || ('auto_from' in raw && raw.auto_from !== null && raw.auto_from !== undefined)) return bad(`«${raw.label}»: un resultado as found no decide ni se calcula`)
+      column.pass = raw.pass
+    }
     if (type === 'result' && 'auto_from' in raw && raw.auto_from !== null && raw.auto_from !== undefined) {
       if (version !== 2) return bad(`El resultado automático de «${raw.label}» requiere la versión 2`)
       if (typeof raw.auto_from !== 'string') return bad(`Resultado automático inválido en «${raw.label}»`)
@@ -261,6 +283,24 @@ export function checkTableConfig(options: unknown): Checked {
     if (smin !== null && smax !== null && smin > smax) return bad('Estabilidad: mínimo mayor que máximo')
     config.stability = { column: s.column, last_n: s.last_n as number, min: smin, max: smax }
   }
+  if ('advisory' in options && options.advisory !== null && options.advisory !== undefined) {
+    const a = options.advisory
+    if (!object(a)) return bad('Avisos de calibración inválidos')
+    const isType = (key: unknown, type: TableColumnType) => typeof key === 'string' && byKey.get(key)?.type === type
+    if (!isType(a.expected, 'number') || !isType(a.observed, 'number') || !isType(a.result, 'result')) return bad('Avisos: esperado, observado y resultado deben ser columnas de la tabla')
+    if (a.error !== null && a.error !== undefined && !isType(a.error, 'number')) return bad('Avisos: el error debe ser una columna numérica')
+    if (!text(a.tolerance_item) || !text(a.base_item) || !object(a.base_modes) || !Object.values(a.base_modes).every(m => MODES.includes(m as DeviationMode))) return bad('Avisos: tolerancia, base y bases de cálculo')
+    const span = a.span_items
+    if (span !== null && span !== undefined && !(Array.isArray(span) && span.length === 2 && span.every(text))) return bad('Avisos: el span son dos ítems (inferior y superior)')
+    const adj = a.adjust
+    if (adj !== null && adj !== undefined && !(object(adj) && text(adj.item) && text(adj.value))) return bad('Avisos: ajuste inválido')
+    config.advisory = {
+      expected: a.expected as string, observed: a.observed as string, error: typeof a.error === 'string' ? a.error : null, result: a.result as string,
+      tolerance_item: (a.tolerance_item as string).trim(), base_item: (a.base_item as string).trim(), base_modes: a.base_modes as Record<string, DeviationMode>,
+      span_items: Array.isArray(span) ? [span[0] as string, span[1] as string] : null,
+      adjust: object(adj) ? { item: adj.item as string, value: adj.value as string } : null,
+    }
+  }
   return { config, issue: null }
 }
 
@@ -317,6 +357,8 @@ export type TableIssue =
   /** A36: un resultado automático sin datos para calcular su desviación. */
   | { code: 'auto_result'; row: string; column: string }
   | { code: 'stability'; n: number }
+  /** A37: «no conforme» en as found sin observación. */
+  | { code: 'as_found_reason'; row: string }
 
 export function evaluateTable(options: unknown, value: string | null | undefined, sourceRows?: SourceRow[] | null): {
   isComplete: boolean; hasFail: boolean; errors: TableIssue[]; data: TableCapture | null; config: TableConfig | null
@@ -363,6 +405,7 @@ export function evaluateTable(options: unknown, value: string | null | undefined
     const flags: TableRowFlags = { fail: false, asFoundOut: false }
     let hasText = false
     let notApplicable = false
+    let asFoundFail = false
     // 1) Columnas capturadas por el inspector.
     for (const column of config.columns) {
       const cell: unknown = cells[column.key]
@@ -409,6 +452,7 @@ export function evaluateTable(options: unknown, value: string | null | undefined
         const v = typeof cell === 'string' ? cell : ''
         if (v === '') { if (column.required) errors.push({ code: 'missing', row: label, column: column.label }) }
         else if (!(TABLE_RESULT_VALUES as readonly string[]).includes(v)) return invalid()
+        else if (v === 'fail' && column.pass === 'as_found') { asFoundFail = true; flags.asFoundOut = true; asFoundOut++ }
         else if (v === 'fail') { hasFail = true; flags.fail = true }
         else if (v === 'not_applicable') notApplicable = true
         out[column.key] = v
@@ -441,6 +485,7 @@ export function evaluateTable(options: unknown, value: string | null | undefined
       series.push(finite(v) ? v : null)
     }
     if (notApplicable && !hasText) errors.push({ code: 'na_reason', row: label })
+    if (asFoundFail && !hasText) errors.push({ code: 'as_found_reason', row: label })
     rows.push({ id: expected[i].id, label, cells: out })
     rowFlags[expected[i].id] = flags
   }

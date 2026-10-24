@@ -57,8 +57,10 @@ describe('sondas del diagnóstico ITR en SQL (A45)', () => {
     expect(rejects(sql.get('inconsistentEffect')!)).toBe(true)
   })
 
-  it.fails('H2 · I10A v3 4.01: salida esperada 12, observada 99 y error manual 0 no pasa como conforme', () => {
-    expect(rejects(sql.get('calibrationManual')!)).toBe(true)
+  // A37 (decisión de Luis): el motor no rechaza; la tolerancia y la calificación son del inspector y el formato avisa
+  // (src/lib/itr/calibration-advisory.ts). La firma no se bloquea por esto.
+  it('H2 · I10A v3 4.01: 12 / 99 / error 0 «conforme» no lo rechaza el motor (lo avisa el formato, A37)', () => {
+    expect(rejects(sql.get('calibrationManual')!)).toBe(false)
   })
 
   it.fails('H3 · E10B v2 M.1: una tabla con el resultado vacío no queda completa', () => {

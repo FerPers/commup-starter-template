@@ -13,6 +13,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useAskDialog } from '@/components/ui'
 import { evaluateTable, reshapeTable, sourceRefText, type SourceRow, type TableCapture as Capture, type TableCellValue, type TableConfig } from '@/lib/itr/table'
+import type { TableAdvisoryResult } from '@/lib/itr/calibration-advisory'
 
 /** Captura inicial cuando aún no hay registro: filas fijas o las de la foto; las variables esperan la cantidad. */
 function blank(config: TableConfig | null, sourceRows: SourceRow[] | null): Capture | null {
@@ -22,12 +23,14 @@ function blank(config: TableConfig | null, sourceRows: SourceRow[] | null): Capt
   return null
 }
 
-export default function TableCapture({ options, value, disabled, onChange, sourceRows = null }: {
+export default function TableCapture({ options, value, disabled, onChange, sourceRows = null, advisory }: {
   options: unknown
   value: string | null
   disabled: boolean
   onChange: (value: string) => void
   sourceRows?: SourceRow[] | null
+  /** A37: avisos de coherencia de la calibración (tolerancia del inspector); no bloquean. */
+  advisory?: TableAdvisoryResult
 }) {
   const tx = useTranslations('TableCapture')
   const te = useTranslations('ActionErrors')
@@ -105,9 +108,11 @@ export default function TableCapture({ options, value, disabled, onChange, sourc
           </tr></thead>
           <tbody>{data.rows.map((row, rowIndex) => {
             const flags = evaluated.rowFlags[row.id]
-            const rowFail = flags?.fail || config.columns.some(column => column.type === 'result' && row.cells[column.key] === 'fail')
+            // A37: un «no conforme» as found queda como evidencia (ámbar), no como rechazo.
+            const rowFail = flags?.fail || config.columns.some(column => column.type === 'result' && column.pass !== 'as_found' && row.cells[column.key] === 'fail')
+            const rowAdvice = !!advisory?.rows[row.id]
             return (
-              <tr key={row.id} style={{ background: rowFail ? 'var(--danger-50)' : flags?.asFoundOut ? 'var(--warning-50)' : undefined }}>
+              <tr key={row.id} style={{ background: rowFail ? 'var(--danger-50)' : flags?.asFoundOut || rowAdvice ? 'var(--warning-50)' : undefined, outline: rowAdvice ? '2px solid var(--warning-300)' : undefined, outlineOffset: '-2px' }}>
                 <th scope="row" style={{ padding: '6px 8px', textAlign: 'left', whiteSpace: 'nowrap', fontWeight: 600 }}>{row.label}</th>
                 {config.columns.map(column => {
                   const cell = row.cells[column.key]
@@ -137,6 +142,17 @@ export default function TableCapture({ options, value, disabled, onChange, sourc
           })}</tbody>
         </table>
       </div>
+      {advisory && advisory.count > 0 && (
+        <div role="note" style={{ margin: '8px 0 0', padding: '8px 10px', borderRadius: '6px', background: 'var(--warning-50)', border: '1px solid var(--warning-200)', color: 'var(--warning-800)', fontSize: '12px' }}>
+          <strong>⚠ {tx('advisory.title')}</strong>
+          <ul style={{ margin: '4px 0 0', paddingLeft: '18px' }}>
+            {advisory.notes.map(note => <li key={note.code}>{note.code === 'as_found_no_adjust' ? tx('advisory.as_found_no_adjust', { count: note.count }) : tx(`advisory.${note.code}`)}</li>)}
+            {Object.values(advisory.rows).flat().map((issue, i) => <li key={i}>{issue.code === 'error_mismatch'
+              ? tx('advisory.error_mismatch', { row: issue.row, written: issue.written, computed: issue.computed })
+              : tx('advisory.pass_out_of_tolerance', { row: issue.row, error: issue.error, tolerance: issue.tolerance })}</li>)}
+          </ul>
+        </div>
+      )}
       {evaluated.asFoundOut > 0 && (
         <p style={{ fontSize: '12px', margin: '6px 0 0', color: 'var(--warning-700)' }}>⚑ {tx('asFoundOut', { count: evaluated.asFoundOut })}</p>
       )}

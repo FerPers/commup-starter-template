@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import ContinuityCapture, { type ContinuityContext } from './ContinuityCapture'
 import TableCapture from './TableCapture'
 import { evaluateTable, type SourceRow } from '@/lib/itr/table'
+import type { TableAdvisoryResult } from '@/lib/itr/calibration-advisory'
 import { continuityMeasurementRequired, evaluateContinuity } from '@/lib/itr/continuity'
 import { DraftInput, DraftTextarea } from './DraftFields'
 import PhotoUpload from './PhotoUpload'
@@ -27,6 +28,7 @@ export default function ItemRow({
   lang,
   sourceRows = null,
   continuity,
+  advisory,
 }: {
   item: Item
   response: Response | null
@@ -46,6 +48,8 @@ export default function ItemRow({
   sourceRows?: SourceRow[] | null
   /** A38: alcance de la continuidad fijado en el ITR y si quien mira puede fijarlo. */
   continuity?: ContinuityContext
+  /** A37: avisos de coherencia de la calibración (no bloquean). */
+  advisory?: TableAdvisoryResult
 }) {
   const t = useTranslations('ItrExecution')
   const isPassed = response?.is_passed
@@ -243,7 +247,7 @@ export default function ItemRow({
         />
       )}
 
-      {item.item_type === 'table' && <TableCapture options={item.options} value={response?.value_text ?? null} sourceRows={sourceRows} disabled={!canEdit} onChange={value => {
+      {item.item_type === 'table' && <TableCapture options={item.options} value={response?.value_text ?? null} sourceRows={sourceRows} advisory={advisory} disabled={!canEdit} onChange={value => {
         const result = evaluateTable(item.options, value, sourceRows)
         onSave(item.id, { valueText: value, isPassed: result.hasFail ? false : result.isComplete ? true : null })
       }} />}

@@ -1,4 +1,4 @@
--- fn: public.evaluate_itr_table(jsonb, text, integer)
+-- fn: public.evaluate_itr_table(jsonb,text,integer)
 -- Canónico (S03). Volcado de prod con scripts/sql/canonical-functions.mjs; no editar sin migración.
 CREATE OR REPLACE FUNCTION public.evaluate_itr_table(p_options jsonb, p_value text, p_source_count integer)
  RETURNS jsonb
@@ -8,7 +8,7 @@ CREATE OR REPLACE FUNCTION public.evaluate_itr_table(p_options jsonb, p_value te
 AS $function$
 DECLARE
   d jsonb; rows_spec jsonb; n integer; i integer := 0; row_data jsonb; col jsonb; cells jsonb; cell jsonb;
-  ctype text; ck text; reqd boolean; has_text boolean; na boolean;
+  ctype text; ck text; reqd boolean; has_text boolean; na boolean; af boolean;
   complete boolean := true; failed boolean := false; as_found_out integer := 0;
   nums jsonb; dev numeric; tol numeric;
   st jsonb := NULL; series numeric[] := '{}'; sv numeric; last_vals numeric[]; nreq integer;
@@ -42,7 +42,7 @@ BEGIN
       SELECT 1 FROM jsonb_object_keys(cells) AS ck2
       WHERE NOT EXISTS (SELECT 1 FROM jsonb_array_elements(p_options->'columns') c WHERE c->>'key' = ck2)
     ) THEN RETURN invalid; END IF;
-    has_text := false; na := false; nums := '{}'::jsonb;
+    has_text := false; na := false; af := false; nums := '{}'::jsonb;
     -- 1) Columnas capturadas.
     FOR col IN SELECT value FROM jsonb_array_elements(p_options->'columns') LOOP
       ctype := col->>'type';
@@ -88,6 +88,8 @@ BEGIN
         IF ck = '' THEN
           IF reqd THEN complete := false; END IF;
         ELSIF ck NOT IN ('pass','fail','not_applicable') THEN RETURN invalid;
+        -- A37: el resultado manual de la pasada as found registra «no conforme» como evidencia (pide observación).
+        ELSIF ck = 'fail' AND col->>'pass' = 'as_found' THEN as_found_out := as_found_out + 1; af := true;
         ELSIF ck = 'fail' THEN failed := true;
         ELSIF ck = 'not_applicable' THEN na := true; END IF;
       END IF;
@@ -116,6 +118,7 @@ BEGIN
       IF sv IS NOT NULL THEN series := array_append(series, sv); END IF;
     END IF;
     IF na AND NOT has_text THEN complete := false; END IF;
+    IF af AND NOT has_text THEN complete := false; END IF;
   END LOOP;
 
   -- 3) Estabilidad: las últimas N lecturas registradas dentro de [min, max].

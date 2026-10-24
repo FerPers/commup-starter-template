@@ -61,6 +61,11 @@ BEGIN
       IF col ? 'pass' AND jsonb_typeof(col->'pass') <> 'null' AND (col->>'pass') NOT IN ('as_found','as_left') THEN RETURN false; END IF;
       IF f->>'observed' = f->>'reference' THEN RETURN false; END IF;
     END IF;
+    -- A37: pasada de un resultado manual (as found registra sin rechazar); nunca en uno que decide o se calcula.
+    IF t = 'result' AND col ? 'pass' AND jsonb_typeof(col->'pass') <> 'null' THEN
+      IF (col->>'pass') NOT IN ('as_found','as_left') OR col->'decides' = 'true'::jsonb
+         OR (col ? 'auto_from' AND jsonb_typeof(col->'auto_from') <> 'null') THEN RETURN false; END IF;
+    END IF;
     IF t = 'result' AND col ? 'auto_from' AND jsonb_typeof(col->'auto_from') <> 'null' THEN
       IF v <> 2 OR jsonb_typeof(col->'auto_from') <> 'string' THEN RETURN false; END IF;
     END IF;

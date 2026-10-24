@@ -1573,7 +1573,9 @@
       "nextPending": "{count, plural, one {# pendiente} other {# pendientes}}",
       "nextPendingTitle": "Ir al siguiente ítem obligatorio sin llenar",
       "more": "Más acciones",
-      "contrast": "Alto contraste (sol)"
+      "contrast": "Alto contraste (sol)",
+      "advisories": "{count, plural, one {# aviso} other {# avisos}}",
+      "advisoriesTitle": "Ir a las lecturas con avisos de calibración (no bloquean la firma)"
     },
     "revoke": {
       "title": "Revocar aprobación del ITR {itrNumber}",
@@ -8315,7 +8317,15 @@
     "statusFail": "Hay resultados rechazados o fuera del rango declarado.",
     "statusComplete": "Registro diligenciado; pendiente de las aprobaciones que correspondan.",
     "statusPending": "Registro pendiente: {errors}",
-    "statusFill": "Registro pendiente: diligencia las celdas requeridas."
+    "statusFill": "Registro pendiente: diligencia las celdas requeridas.",
+    "advisory": {
+      "title": "Avisos de coherencia (no bloquean la firma)",
+      "no_criterion": "Falta la tolerancia (2.07) o la base del error (2.08): no se pueden revisar las filas.",
+      "no_span": "Falta el rango de salida (2.02–2.03): no se puede calcular el % del span.",
+      "as_found_no_adjust": "{count, plural, one {# punto as found} other {# puntos as found}} fuera y sin ajuste: revisa la decisión final del inspector.",
+      "error_mismatch": "{row}: el error escrito ({written, number}) no coincide con las lecturas ({computed, number}).",
+      "pass_out_of_tolerance": "{row}: marcado conforme con error {error, number}, fuera de la tolerancia ±{tolerance, number}."
+    }
   },
   "ActionErrors": {
     "users": {
@@ -8495,7 +8505,8 @@
       "missing": "{row}: falta {column}",
       "na_reason": "{row}: justifica el No aplica",
       "auto_result": "{row}: no se puede calcular «{column}» (faltan las lecturas para la desviación)",
-      "stability": "Se requieren al menos {n} lecturas para el criterio de estabilidad"
+      "stability": "Se requieren al menos {n} lecturas para el criterio de estabilidad",
+      "as_found_reason": "{row}: explica en la observación el «no conforme» as found"
     },
     "itrInstances": {
       "invalidRequest": "Solicitud no válida: vuelve a abrir el formulario",

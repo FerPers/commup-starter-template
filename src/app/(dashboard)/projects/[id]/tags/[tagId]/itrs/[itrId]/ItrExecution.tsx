@@ -15,6 +15,7 @@ import { revokeItrApproval } from '@/app/actions/itr-instances'
 import { uploadOrQueuePhoto, pendingAttachment, pendingSignature, signOrQueue } from '@/lib/sync/outbox'
 import { evaluateItrCompletion } from '@/lib/itr/completion'
 import { continuityScopeFromRow, type ContinuityScope } from '@/lib/itr/continuity'
+import { calibrationAdvisories } from '@/lib/itr/calibration-advisory'
 import { parseSourceRows } from '@/lib/itr/table'
 import { localItrStatus } from '@/lib/sync/outbox-utils'
 import { itemDescription } from '@/lib/itr/item-text'
@@ -254,6 +255,10 @@ export default function ItrExecution({
   })), [itr.itr_continuity_scopes])
   const completion = evaluateItrCompletion(allItems, Object.values(responses), Object.values(attachmentMap).flat(), sourceRows, continuityScopes)
   const visibleIds = new Set(completion.applicableItemIds)
+  // A37: avisos de coherencia de la calibración (tolerancia del inspector); no bloquean la firma.
+  const advisories = calibrationAdvisories(allItems, itemId => responses[itemId], visibleIds)
+  const advisoryIds = allItems.filter(item => advisories[item.id]).map(item => item.id)
+  const advisoryCount = advisoryIds.reduce((n, id) => n + advisories[id].count, 0)
   const visibleItems = allItems.filter(item => visibleIds.has(item.id))
   const criticalBlocked = visibleItems.filter(
     item => item.is_critical && responses[item.id]?.is_passed === false,
@@ -326,8 +331,8 @@ export default function ItrExecution({
     setMoreOpen(false)
     void applyTheme(theme === 'contrast' ? 'light' : 'contrast')
   }
-  function jumpToNextPending() {
-    const id = nextPendingItemId(completion.missingRequiredItemIds, itemId => {
+  function jumpToNextPending(ids: readonly string[] = completion.missingRequiredItemIds) {
+    const id = nextPendingItemId(ids, itemId => {
       const el = document.getElementById(`itr-item-${itemId}`)
       return el ? el.getBoundingClientRect().top : null
     })
@@ -638,6 +643,7 @@ export default function ItrExecution({
                   canEdit={canCapture}
                   onSave={saveResponse}
                   sourceRows={sourceRows}
+                  advisory={advisories[item.id]}
                   continuity={item.item_type === 'continuity' ? {
                     scope: continuityScopes[item.id] ?? null,
                     setByName: memberNames[continuityScopes[item.id]?.setBy ?? ''] ?? null,
@@ -725,13 +731,25 @@ export default function ItrExecution({
           {/* C-29: salta al siguiente ítem obligatorio sin llenar (circular) */}
           {canCapture && completion.missingRequiredItemIds.length > 0 && (
             <button
-              onClick={jumpToNextPending}
+              onClick={() => jumpToNextPending()}
               title={t('footer.nextPendingTitle')}
               aria-label={t('footer.nextPending', { count: completion.missingRequiredItemIds.length })}
               style={{ ...footerBtn, background: 'var(--warning-50)', border: '1px solid var(--warning-200)', color: 'var(--warning-700)' }}
             >
               ↓ <span className="desk-only">{t('footer.nextPending', { count: completion.missingRequiredItemIds.length })}</span>
               <span className="phone-only">{completion.missingRequiredItemIds.length}</span>
+            </button>
+          )}
+          {/* A37: avisos de calibración (no bloquean): lleva a la tabla con aviso; también lo ve el supervisor */}
+          {advisoryCount > 0 && (
+            <button
+              onClick={() => jumpToNextPending(advisoryIds)}
+              title={t('footer.advisoriesTitle')}
+              aria-label={t('footer.advisories', { count: advisoryCount })}
+              style={{ ...footerBtn, background: 'var(--warning-50)', border: '1px solid var(--warning-300)', color: 'var(--warning-800)' }}
+            >
+              ⚠ <span className="desk-only">{t('footer.advisories', { count: advisoryCount })}</span>
+              <span className="phone-only">{advisoryCount}</span>
             </button>
           )}
           {canEdit && <button

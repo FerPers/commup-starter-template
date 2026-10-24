@@ -41,6 +41,20 @@ export const ACCEPTANCE_CONFIGS: Record<string, unknown> = {
   ] },
   badDecidesOnSelect: { version: 1, rows: { mode: 'fixed', labels: ['R'] }, columns: [
     { key: 's', label: 'S', type: 'select', options: ['Sí'], decides: true },
+  ] },  // A37 (H7): lecturas as found de I10A con resultado manual que registra sin rechazar; la observación es obligatoria.
+  asFound: { version: 1, rows: { mode: 'fixed', labels: ['50 %'] }, columns: [
+    { key: 'expected', label: 'Esperada', type: 'number' },
+    { key: 'observed', label: 'Observada', type: 'number' },
+    { key: 'result', label: 'Resultado as found', type: 'result', pass: 'as_found' },
+    { key: 'remarks', label: 'Observación', type: 'text', required: false },
+  ] },
+  asLeft: { version: 1, rows: { mode: 'fixed', labels: ['50 %'] }, columns: [
+    { key: 'expected', label: 'Esperada', type: 'number' },
+    { key: 'observed', label: 'Observada', type: 'number' },
+    { key: 'result', label: 'Resultado as left', type: 'result', pass: 'as_left' },
+  ] },
+  badAsFoundDecides: { version: 1, rows: { mode: 'fixed', labels: ['R'] }, columns: [
+    { key: 'result', label: 'Resultado', type: 'result', pass: 'as_found', decides: true },
   ] },
 }
 
@@ -64,5 +78,9 @@ export const ACCEPTANCE_CASES: Array<[string, string, string, boolean, boolean]>
   ['outcome de una opción que no existe → inválida', 'badOutcomeOption', row({ s: 'Sí' }), false, false],
   ['outcome con un valor desconocido → inválida', 'badOutcomeValue', row({ s: 'Sí' }), false, false],
   ['dos columnas que deciden → inválida', 'badTwoDecides', row({ a: 'pass', b: 'pass' }), false, false],
-  ['decides en una selección → inválida', 'badDecidesOnSelect', row({ s: 'Sí' }), false, false],
+  ['decides en una selección → inválida', 'badDecidesOnSelect', row({ s: 'Sí' }), false, false],  ['A37: as found no conforme con observación → evidencia, sin rechazo', 'asFound', row({ expected: 12, observed: 12.4, result: 'fail', remarks: 'Desviado antes del ajuste' }), true, false],
+  ['A37: as found no conforme sin observación → incompleta', 'asFound', row({ expected: 12, observed: 12.4, result: 'fail', remarks: '' }), false, false],
+  ['A37: as found conforme → completa', 'asFound', row({ expected: 12, observed: 12.01, result: 'pass', remarks: '' }), true, false],
+  ['A37: as left no conforme → rechazo', 'asLeft', row({ expected: 12, observed: 12.4, result: 'fail' }), true, true],
+  ['A37: un resultado as found no puede decidir → inválida', 'badAsFoundDecides', row({ result: 'pass' }), false, false],
 ]

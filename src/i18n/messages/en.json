@@ -1573,7 +1573,9 @@
       "nextPending": "{count} pending",
       "nextPendingTitle": "Go to the next required item not filled in",
       "more": "More actions",
-      "contrast": "High contrast (sunlight)"
+      "contrast": "High contrast (sunlight)",
+      "advisories": "{count, plural, one {# warning} other {# warnings}}",
+      "advisoriesTitle": "Go to the readings with calibration warnings (they do not block signing)"
     },
     "revoke": {
       "title": "Revoke approval of ITR {itrNumber}",
@@ -8315,7 +8317,15 @@
     "statusFail": "There are rejected results or results outside the declared range.",
     "statusComplete": "Record completed; pending the applicable approvals.",
     "statusPending": "Record pending: {errors}",
-    "statusFill": "Record pending: fill in the required cells."
+    "statusFill": "Record pending: fill in the required cells.",
+    "advisory": {
+      "title": "Consistency warnings (they do not block signing)",
+      "no_criterion": "The tolerance (2.07) or the error basis (2.08) is missing: rows cannot be checked.",
+      "no_span": "The output range (2.02–2.03) is missing: the % of span cannot be calculated.",
+      "as_found_no_adjust": "{count, plural, one {# as found point} other {# as found points}} out with no adjustment: review the inspector's final decision.",
+      "error_mismatch": "{row}: the written error ({written, number}) does not match the readings ({computed, number}).",
+      "pass_out_of_tolerance": "{row}: marked as pass with error {error, number}, outside the ±{tolerance, number} tolerance."
+    }
   },
   "ActionErrors": {
     "users": {
@@ -8495,7 +8505,8 @@
       "missing": "{row}: {column} missing",
       "na_reason": "{row}: justify the N/A",
       "auto_result": "{row}: «{column}» cannot be calculated (the readings for the deviation are missing)",
-      "stability": "At least {n} readings are required for the stability criterion"
+      "stability": "At least {n} readings are required for the stability criterion",
+      "as_found_reason": "{row}: explain the as found fail in the remarks"
     },
     "itrInstances": {
       "invalidRequest": "Invalid request: reopen the form",

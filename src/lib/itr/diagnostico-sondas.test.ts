@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { evaluateTable } from './table'
 import { evaluateContinuity } from './continuity'
+import { calibrationAdvisories } from './calibration-advisory'
 import probes from './diagnostico-sondas.fixture.json'
 
 /**
@@ -22,10 +23,21 @@ describe('sondas del diagnóstico ITR (A45)', () => {
     expect(rejects(r), p.note).toBe(true)
   })
 
-  it.fails('H2 · I10A v3 4.01: salida esperada 12, observada 99 y error manual 0 no pasa como conforme', () => {
+  // A37 (decisión de Luis 2026-10-24): la tolerancia la define el inspector y él califica; el motor no rechaza esta
+  // captura, pero el formato la AVISA (error escrito ≠ lecturas y «conforme» fuera de su tolerancia).
+  it('H2 · I10A v3 4.01: 12 / 99 / error 0 «conforme» no lo rechaza el motor, lo avisa el formato', () => {
     const p = probes.calibrationManual
-    const r = evaluateTable(p.options, JSON.stringify(p.input))
-    expect(rejects(r), p.note).toBe(true)
+    expect(rejects(evaluateTable(p.options, JSON.stringify(p.input))), p.note).toBe(false)
+    const options = { ...p.options, advisory: { expected: 'expected', observed: 'observed', error: 'error', result: 'result', tolerance_item: '2.07', base_item: '2.08', span_items: ['2.02', '2.03'], base_modes: { '% del span': 'pct_span' }, adjust: null } }
+    const items = [
+      { id: 'lo', item_number: '2.02', item_type: 'number' }, { id: 'hi', item_number: '2.03', item_type: 'number' },
+      { id: 'tol', item_number: '2.07', item_type: 'number' }, { id: 'base', item_number: '2.08', item_type: 'select' },
+      { id: 't', item_number: '4.01', item_type: 'table', options },
+    ]
+    const answers: Record<string, object> = { lo: { value_numeric: 4 }, hi: { value_numeric: 20 }, tol: { value_numeric: 0.5 }, base: { value_option: '% del span' }, t: { value_text: JSON.stringify(p.input) } }
+    const advice = calibrationAdvisories(items, id => answers[id]).t
+    expect(Object.values(advice.rows).flat().map(i => i.code)).toContain('error_mismatch')
+    expect(Object.values(advice.rows).flat().map(i => i.code)).toContain('pass_out_of_tolerance')
   })
 
   // La corrección puede ser del motor o de la plantilla homologada (resultado obligatorio, A41/A42): si es de la
