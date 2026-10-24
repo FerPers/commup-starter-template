@@ -6,7 +6,7 @@ import { DEFAULT_TOPICS, NOTIFICATION_KINDS, NOTIFICATION_TOPICS, notificationTo
 describe('temas de push (S22, I-09)', () => {
   it('cada tipo de aviso que crea la BD tiene tema propio', () => {
     const sql = ['notify_obligation_trg', 'gate_status_transition_trg', 'notify_preservation_overdue',
-      'notify_constraints_overdue', 'notify_pssr_reviews_overdue', 'notify_registers_overdue']
+      'notify_constraints_overdue', 'notify_pssr_reviews_overdue', 'notify_registers_overdue', 'platform_health_alert']
       .map(f => readFileSync(join(__dirname, '../../../supabase/functions-sql', `${f}.sql`), 'utf8')).join('\n')
     // El tipo es el literal que va justo antes del título (un texto en mayúscula o el CASE del título).
     const kinds = [...sql.matchAll(/'([a-z_]+)',\s*(?:'[A-ZÁÉÍÓÚ]|CASE WHEN r\.status)/g)].map(m => m[1])

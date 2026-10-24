@@ -1,6 +1,7 @@
 import { hasBearerSecret } from '@/lib/security/secret-compare'
 import { type NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { withCronHeartbeat } from '@/lib/cron/heartbeat'
 import { fetchAllRows } from '@/lib/list/fetch-all'
 
 /**
@@ -19,7 +20,7 @@ const CONCURRENCY = 4
 
 type Result = { projectId: string; ok: boolean; error?: string; gateDrift?: number }
 
-export async function POST(req: NextRequest) {
+async function handler(req: NextRequest) {
   // ── Auth ──────────────────────────────────────────────────────────────
   const secret = process.env.CRON_SECRET
   if (!secret) {
@@ -78,3 +79,6 @@ export async function POST(req: NextRequest) {
     results,
   }, { status: failed > 0 ? 500 : 200 })
 }
+
+// A15: cada corrida deja su latido (página de salud y alertas).
+export const POST = withCronHeartbeat('snapshot', handler)

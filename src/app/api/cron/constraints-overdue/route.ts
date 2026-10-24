@@ -1,6 +1,7 @@
 import { hasBearerSecret } from '@/lib/security/secret-compare'
 import { type NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { withCronHeartbeat } from '@/lib/cron/heartbeat'
 
 /**
  * POST /api/cron/constraints-overdue
@@ -15,7 +16,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
  *
  * Auth: Authorization: Bearer <CRON_SECRET>
  */
-export async function POST(req: NextRequest) {
+async function handler(req: NextRequest) {
   const secret = process.env.CRON_SECRET
   if (!secret) {
     return NextResponse.json({ error: 'CRON_SECRET not configured' }, { status: 500 })
@@ -28,3 +29,6 @@ export async function POST(req: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json(data)
 }
+
+// A15: cada corrida deja su latido (página de salud y alertas).
+export const POST = withCronHeartbeat('constraints-overdue', handler)

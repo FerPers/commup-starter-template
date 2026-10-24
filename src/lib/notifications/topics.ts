@@ -45,6 +45,10 @@ const KIND_TOPIC: Record<string, NotificationTopic> = {
   register_overdue: 'overdue',
 
   punch_cat_a: 'punch_cat_a',
+
+  // A15: salud de la plataforma, solo a operadores (platform_health_alert, pg_cron cada 5 min).
+  platform_health_alert: 'overdue',
+  platform_health_recovered: 'overdue',
 }
 
 /** Tema de push de un tipo de aviso; los tipos nuevos sin mapear caen en «readiness». */
@@ -57,5 +61,5 @@ export const NOTIFICATION_KINDS = Object.keys(KIND_TOPIC)
 
 /** Avisos que piden actuar ya: el push los marca como urgentes y no se cierran solos. */
 export function isUrgentKind(kind: string): boolean {
-  return ['gate_regressed', 'hold_to_release', 'punch_cat_a', 'milestone_to_witness'].includes(kind)
+  return ['gate_regressed', 'hold_to_release', 'punch_cat_a', 'milestone_to_witness', 'platform_health_alert'].includes(kind)
 }

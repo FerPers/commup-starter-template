@@ -1,6 +1,7 @@
 import { hasBearerSecret } from '@/lib/security/secret-compare'
 import { type NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { withCronHeartbeat } from '@/lib/cron/heartbeat'
 import { sendWebPush } from '@/lib/push/web-push'
 import { isUrgentKind, notificationTopic } from '@/lib/notifications/topics'
 
@@ -39,7 +40,7 @@ type PushSub = {
   topics: string[]
 }
 
-export async function POST(req: NextRequest) {
+async function handler(req: NextRequest) {
   const secret = process.env.CRON_SECRET
   if (!secret) return NextResponse.json({ error: 'CRON_SECRET not configured' }, { status: 500 })
   if (!hasBearerSecret(req.headers.get('authorization'), secret)) {
@@ -121,3 +122,6 @@ export async function POST(req: NextRequest) {
     failed,
   })
 }
+
+// A15: cada corrida deja su latido (página de salud y alertas).
+export const POST = withCronHeartbeat('push-dispatch', handler)

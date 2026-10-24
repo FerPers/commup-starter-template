@@ -136,7 +136,8 @@
       "orgKpis": "Organization KPIs",
       "instrumentation": "Signals and loops",
       "planning": "Planning",
-      "scope": "Project scope"
+      "scope": "Project scope",
+      "platformHealth": "Platform health"
     },
     "soon": "SOON",
     "comingSoon": "Coming soon",
@@ -6017,7 +6018,9 @@
       "register_to_verify": "Register to verify",
       "register_overdue": "Register overdue",
       "redline_to_review": "Red-line to review",
-      "redline_reviewed": "Red-line reviewed"
+      "redline_reviewed": "Red-line reviewed",
+      "platform_health_alert": "Platform health",
+      "platform_health_recovered": "Platform health: resolved"
     },
     "markAll": "Mark all"
   },
@@ -8975,5 +8978,47 @@
         "inactive": "Inactive"
       }
     }
+  },
+  "PlatformHealth": {
+    "title": "Platform health",
+    "subtitle": "Checked {time}. The database checks every 5 minutes: a check that turns red notifies the operators in the bell and by push, and notifies again when it recovers.",
+    "summary": "{fail, plural, =0 {No failures} one {# failure} other {# failures}} · {warn, plural, =0 {no warnings} one {# warning} other {# warnings}}",
+    "area": {
+      "cron_http": "App crons (GitHub Actions)",
+      "pg_cron": "Database jobs (pg_cron)",
+      "queue": "Queues",
+      "delivery": "Deliveries and captures"
+    },
+    "status": {
+      "ok": "OK",
+      "warn": "Warning",
+      "fail": "Failure"
+    },
+    "col": {
+      "status": "Status",
+      "check": "Check",
+      "detail": "Detail",
+      "since": "In this state since"
+    },
+    "code": {
+      "no_runs": "No runs recorded yet.",
+      "last_failed": "The last run failed: {message}",
+      "stale": "No successful run for {minutes} min.",
+      "stuck": "A run has been going for {minutes} min.",
+      "ok_recent": "Last successful run {minutes} min ago.",
+      "queue_age": "{n, plural, =0 {Empty.} one {# queued; the oldest has waited {minutes} min.} other {# queued; the oldest has waited {minutes} min.}}",
+      "overdue": "{n, plural, =0 {No stuck deliveries.} one {# delivery with an overdue retry.} other {# deliveries with an overdue retry.}}",
+      "abandoned": "{n, plural, =0 {None abandoned in 24 h.} one {# delivery abandoned in 24 h.} other {# deliveries abandoned in 24 h.}}",
+      "handover_failed": "{n, plural, =0 {No failed or stuck packages.} one {# failed or stuck package (7 days).} other {# failed or stuck packages (7 days).}}",
+      "sync_conflicts": "{n, plural, =0 {No conflicts in 24 h.} one {# sync conflict in 24 h.} other {# sync conflicts in 24 h.}}"
+    },
+    "label": {
+      "domain_events": "Undispatched events (outbox)",
+      "notification_push_outbox": "Queued push",
+      "webhook_deliveries": "Webhooks",
+      "handover_packages": "Handover packages",
+      "sync_conflict_log": "Offline captures"
+    },
+    "never": "—"
   }
 }

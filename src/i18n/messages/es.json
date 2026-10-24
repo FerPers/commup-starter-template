@@ -136,7 +136,8 @@
       "orgKpis": "KPIs de la organización",
       "instrumentation": "Señales y lazos",
       "planning": "Planificación",
-      "scope": "Alcance del proyecto"
+      "scope": "Alcance del proyecto",
+      "platformHealth": "Salud de la plataforma"
     },
     "soon": "PRONTO",
     "comingSoon": "Próximamente",
@@ -6017,7 +6018,9 @@
       "register_to_verify": "Registro por verificar",
       "register_overdue": "Registro vencido",
       "redline_to_review": "Red-line por revisar",
-      "redline_reviewed": "Red-line revisado"
+      "redline_reviewed": "Red-line revisado",
+      "platform_health_alert": "Salud de la plataforma",
+      "platform_health_recovered": "Salud de la plataforma: resuelto"
     },
     "markAll": "Marcar todas"
   },
@@ -8975,5 +8978,47 @@
         "inactive": "Inactivo"
       }
     }
+  },
+  "PlatformHealth": {
+    "title": "Salud de la plataforma",
+    "subtitle": "Revisado {time}. La base lo revisa cada 5 minutos: un chequeo que pasa a rojo avisa a los operadores en la campana y por push, y vuelve a avisar cuando se resuelve.",
+    "summary": "{fail, plural, =0 {Sin fallas} one {# falla} other {# fallas}} · {warn, plural, =0 {sin avisos} one {# aviso} other {# avisos}}",
+    "area": {
+      "cron_http": "Crons de la app (GitHub Actions)",
+      "pg_cron": "Jobs de la base (pg_cron)",
+      "queue": "Colas",
+      "delivery": "Entregas y capturas"
+    },
+    "status": {
+      "ok": "OK",
+      "warn": "Atención",
+      "fail": "Falla"
+    },
+    "col": {
+      "status": "Estado",
+      "check": "Chequeo",
+      "detail": "Detalle",
+      "since": "En este estado desde"
+    },
+    "code": {
+      "no_runs": "Sin corridas registradas todavía.",
+      "last_failed": "La última corrida falló: {message}",
+      "stale": "Sin una corrida correcta hace {minutes} min.",
+      "stuck": "Una corrida lleva {minutes} min sin terminar.",
+      "ok_recent": "Última corrida correcta hace {minutes} min.",
+      "queue_age": "{n, plural, =0 {Vacía.} one {# en cola; lo más antiguo espera hace {minutes} min.} other {# en cola; lo más antiguo espera hace {minutes} min.}}",
+      "overdue": "{n, plural, =0 {Sin entregas atascadas.} one {# entrega con el reintento vencido.} other {# entregas con el reintento vencido.}}",
+      "abandoned": "{n, plural, =0 {Ninguna abandonada en 24 h.} one {# entrega abandonada en 24 h.} other {# entregas abandonadas en 24 h.}}",
+      "handover_failed": "{n, plural, =0 {Sin paquetes fallidos ni colgados.} one {# paquete fallido o colgado (7 días).} other {# paquetes fallidos o colgados (7 días).}}",
+      "sync_conflicts": "{n, plural, =0 {Sin conflictos en 24 h.} one {# conflicto de sincronización en 24 h.} other {# conflictos de sincronización en 24 h.}}"
+    },
+    "label": {
+      "domain_events": "Eventos sin despachar (outbox)",
+      "notification_push_outbox": "Push en cola",
+      "webhook_deliveries": "Webhooks",
+      "handover_packages": "Paquetes de handover",
+      "sync_conflict_log": "Capturas sin red"
+    },
+    "never": "—"
   }
 }

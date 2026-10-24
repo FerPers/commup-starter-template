@@ -22,7 +22,7 @@ const TOP: Record<string, string> = {
 const ADMIN: Record<string, string> = {
   templates: 'nav:itrTemplates', config: 'nav:config', users: 'nav:users', workflows: 'nav:workflows', 'api-keys': 'nav:apiKeys', webhooks: 'nav:webhooks',
   notifications: 'nav:notifications', 'data-quality': 'nav:dataQuality', audit: 'nav:auditLog', handover: 'nav:handover', gates: 'nav:gates',
-  registers: 'nav:registerTypes', 'test-equipment': 'nav:testEquipment', companies: 'nav:companies',
+  registers: 'nav:registerTypes', 'test-equipment': 'nav:testEquipment', companies: 'nav:companies', health: 'nav:platformHealth',
 }
 
 const PROJECT: Record<string, string> = {

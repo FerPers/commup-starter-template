@@ -1380,6 +1380,36 @@ export type Database = {
           },
         ]
       }
+      cron_heartbeats: {
+        Row: {
+          job: string
+          last_error: string | null
+          last_error_at: string | null
+          last_ok_at: string | null
+          last_run_at: string
+          runs_failed: number
+          runs_ok: number
+        }
+        Insert: {
+          job: string
+          last_error?: string | null
+          last_error_at?: string | null
+          last_ok_at?: string | null
+          last_run_at: string
+          runs_failed?: number
+          runs_ok?: number
+        }
+        Update: {
+          job?: string
+          last_error?: string | null
+          last_error_at?: string | null
+          last_ok_at?: string | null
+          last_run_at?: string
+          runs_failed?: number
+          runs_ok?: number
+        }
+        Relationships: []
+      }
       daily_reports: {
         Row: {
           ai_draft: Json | null
@@ -5849,6 +5879,56 @@ export type Database = {
             columns: ["tag_id"]
             isOneToOne: false
             referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      platform_health_state: {
+        Row: {
+          checked_at: string
+          detail: string | null
+          key: string
+          since: string
+          status: string
+        }
+        Insert: {
+          checked_at?: string
+          detail?: string | null
+          key: string
+          since?: string
+          status: string
+        }
+        Update: {
+          checked_at?: string
+          detail?: string | null
+          key?: string
+          since?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      platform_operators: {
+        Row: {
+          created_at: string
+          org_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          org_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          org_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_operators_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -14330,6 +14410,9 @@ export type Database = {
         Returns: boolean
       }
       pid_redline_marks_ok: { Args: { p_marks: Json }; Returns: boolean }
+      platform_health: { Args: never; Returns: Json }
+      platform_health_alert: { Args: never; Returns: number }
+      platform_health_checks: { Args: never; Returns: Json }
       preservation_due_counts: {
         Args: { p_days?: number; p_project_ids: string[] }
         Returns: {
@@ -14447,6 +14530,10 @@ export type Database = {
           p_system_id: string
         }
         Returns: string
+      }
+      record_cron_run: {
+        Args: { p_error?: string; p_job: string; p_ok: boolean }
+        Returns: undefined
       }
       record_decision: {
         Args: {
