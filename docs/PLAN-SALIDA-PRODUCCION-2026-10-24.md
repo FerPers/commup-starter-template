@@ -49,7 +49,8 @@ En términos concretos, salir significa cuatro cosas:
 - **A13 inicial:** hecho. `tests/db` corre en el job `db` contra la Supabase local (`npm run test:db`), con dos orgs y seis roles (`supabase/seed/00_actors.sql`). Una suite sin actores falla, y una que escribe rechaza una URL que no sea local (`tests/db/env.ts`). La deriva de funciones sigue comparando con prod, en solo lectura (job `drift`).
 - **A50:** hecha la base. `npm run demo:reset` y [guion](DEMO-LOCAL.md) con casos sano, listo, pendiente de firmas, regresado, bloqueado y sin información. Las capturas pendientes no se pueden sembrar en SQL. Los módulos de `scripts/demo-data/` atados a la org DEMO de prod quedan por traer.
 - **A45 preparación:** hecho. Cuatro sondas en TS y tres en SQL corren con `it.fails`, y SQL = TS.
-- **Pendientes de Luis:** la acción de seguridad y A16 (protección de rama).
+- **A16:** `main` tiene un ruleset (sin borrado ni force push). Desde el 24-oct exige TypeScript, ESLint, Vitest, Pruebas de BD (Supabase local), E2E (Playwright) y Deriva de funciones. El rol administrador del repositorio sigue con bypass, así que un push directo del dueño no espera los checks; el deploy sí los espera (`needs`).
+- **Pendiente de Luis:** la acción de seguridad.
 
 ### Ola 1 — Integridad del núcleo (bloquea la salida)
 
