@@ -16,6 +16,9 @@ export type GenerateHandoverInput = {
 export type GenerateHandoverResult = {
   error?:         string
   packageId?:     string
+  /** A10: ISSUED = completo; PARTIAL = con anexos omitidos. */
+  status?:        'ISSUED' | 'PARTIAL'
+  omittedCount?:  number
   signatureHash?: string
   jsonUrl?:       string | null
   pdfUrl?:        string | null
@@ -46,6 +49,8 @@ export const generateHandoverPackageAction = withAuth(
     revalidatePath('/admin/handover')
     return {
       packageId:     result.packageId,
+      status:        result.status,
+      omittedCount:  result.omittedCount,
       signatureHash: result.signatureHash,
       jsonUrl:       result.jsonUrl,
       pdfUrl:        result.pdfUrl,

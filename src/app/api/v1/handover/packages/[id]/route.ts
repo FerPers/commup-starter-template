@@ -25,7 +25,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const { data: pkg, error } = await admin
     .from('handover_packages')
-    .select('id, org_id, project_id, version, status, generated_by, generated_at, json_path, pdf_path, signature_hash, metadata, error_message, created_at')
+    .select('id, org_id, project_id, version, status, omitted_count, generated_by, generated_at, json_path, pdf_path, signature_hash, metadata, error_message, created_at')
     .eq('id', id)
     .eq('org_id', auth.orgId)
     .maybeSingle()

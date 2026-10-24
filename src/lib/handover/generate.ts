@@ -30,8 +30,14 @@ export type GenerateInput = {
   lang?:     'es' | 'en'
 }
 
+/** A10: ISSUED = completo; PARTIAL = firmado y verificable, pero con anexos omitidos (manifest.omitted). */
+export type IssuedStatus = 'ISSUED' | 'PARTIAL'
+
 export type GenerateResult = {
   packageId:     string
+  status:        IssuedStatus
+  /** Anexos que no entraron (tope de tamaño o error); > 0 ⇔ status PARTIAL. */
+  omittedCount:  number
   signatureHash: string
   jsonPath:      string | null
   pdfPath:       string | null
@@ -122,10 +128,14 @@ export async function generateHandoverPackage(
       )
     }
 
+    // A10: con anexos omitidos el paquete no es una entrega completa.
+    const omittedCount = bundle.manifest.omitted.length
+    const status: IssuedStatus = omittedCount > 0 ? 'PARTIAL' : 'ISSUED'
     const { error: updErr } = await admin
       .from('handover_packages')
       .update({
-        status: 'ISSUED',
+        status,
+        omitted_count: omittedCount,
         json_path: jsonPath,
         pdf_path: pdfPath,
         zip_path: zipPath,
@@ -149,13 +159,14 @@ export async function generateHandoverPackage(
       project_id: projectId,
       aggregate_type: 'handover_package',
       aggregate_id:   packageId,
-      event_type:     'handover.issued',
+      event_type:     status === 'ISSUED' ? 'handover.issued' : 'handover.partial',
       payload: {
         system_ids: systemIds,
         formats,
         signature_hash: signatureHash,
         key_id_ed25519: signingKey.keyId,
-        omitted: bundle.manifest.omitted.length,
+        omitted: omittedCount,
+        complete: status === 'ISSUED',
         source,
         key_id: keyId ?? null,
       },
@@ -164,6 +175,8 @@ export async function generateHandoverPackage(
 
     return {
       packageId,
+      status,
+      omittedCount,
       signatureHash,
       jsonPath,
       pdfPath,

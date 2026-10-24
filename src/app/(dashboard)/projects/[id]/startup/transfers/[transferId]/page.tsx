@@ -22,7 +22,7 @@ export default async function OwnershipTransferPage({ params }: { params: Promis
   const [{ data: members }, { data: pkg }] = await Promise.all([
     supabase.from('org_members').select('user_id, profiles(full_name)').eq('org_id', ctx.orgId),
     tr.handover_package_id
-      ? supabase.from('handover_packages').select('id, version, status, generated_at, signature_hash, zip_path').eq('id', tr.handover_package_id).maybeSingle()
+      ? supabase.from('handover_packages').select('id, version, status, generated_at, signature_hash, zip_path, omitted_count').eq('id', tr.handover_package_id).maybeSingle()
       : Promise.resolve({ data: null }),
   ])
   const names: Record<string, string> = {}

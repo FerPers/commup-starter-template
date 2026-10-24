@@ -60,7 +60,7 @@ BEGIN
   -- Reversión desde Operaciones: el paquete de handover emitido por el traspaso anterior queda reemplazado (§12.26).
   IF tr.is_reversal AND tr.from_stage = 'operations' THEN
     UPDATE handover_packages SET status = 'SUPERSEDED'
-     WHERE status = 'ISSUED' AND id IN (SELECT handover_package_id FROM ownership_transfers
+     WHERE status IN ('ISSUED', 'PARTIAL') AND id IN (SELECT handover_package_id FROM ownership_transfers
                                         WHERE system_id = tr.system_id AND to_stage = 'operations' AND handover_package_id IS NOT NULL);
   END IF;
   RETURN 'completed';

@@ -25,6 +25,9 @@ type Verified = {
   signature: string | null
   key_id: string | null
   files: { path: string; sha256: string; bytes: number }[]
+  /** A10: anexos que no entraron; `complete` = false ⇒ paquete PARCIAL. */
+  omitted?: { path: string; reason: string }[]
+  complete?: boolean
 }
 
 const card: React.CSSProperties = { background: 'var(--surface, #fff)', border: '1px solid var(--gray-200, #e2e8f0)', borderRadius: 12, padding: 20 }
@@ -46,6 +49,8 @@ export default async function VerifyPage({ params }: { params: Promise<{ hash: s
   const pkg = fromJson<Verified | null>(data)
   const ed = pkg?.signature_alg === 'ed25519'
   const sameKey = !!(ed && key && pkg?.key_id === key.keyId)
+  const omitted = pkg?.omitted ?? []
+  const partial = !!pkg && (pkg.complete === false || omitted.length > 0)
 
   return (
     <main style={{ maxWidth: 860, margin: '0 auto', padding: '32px 16px', display: 'grid', gap: 16 }}>
@@ -62,8 +67,12 @@ export default async function VerifyPage({ params }: { params: Promise<{ hash: s
         </section>
       ) : (
         <>
-          <section style={{ ...card, borderColor: 'var(--success-200, #bbf7d0)', background: 'var(--success-50, #f0fdf4)' }}>
-            <strong style={{ color: 'var(--success-700, #15803d)' }}>{t('found')}</strong>
+          <section style={partial
+            ? { ...card, borderColor: 'var(--warning-200, #fde68a)', background: 'var(--warning-50, #fffbeb)' }
+            : { ...card, borderColor: 'var(--success-200, #bbf7d0)', background: 'var(--success-50, #f0fdf4)' }}>
+            <strong style={{ color: partial ? 'var(--warning-700, #b45309)' : 'var(--success-700, #15803d)' }}>{t('found')}</strong>
+            {/* A10: un paquete con anexos omitidos se identifica antes de descargarlo o aceptarlo. */}
+            {partial && <p role="status" style={{ margin: '8px 0 0', fontWeight: 700, color: 'var(--warning-700, #b45309)' }}>{t('partial', { n: omitted.length })}</p>}
             <dl style={{ display: 'grid', gridTemplateColumns: 'max-content 1fr', gap: '6px 16px', margin: '12px 0 0', fontSize: 14 }}>
               <dt style={muted}>{t('organization')}</dt><dd style={{ margin: 0 }}>{pkg.organization}</dd>
               <dt style={muted}>{t('project')}</dt><dd style={{ margin: 0 }}>{pkg.project_code} — {pkg.project_name}</dd>
@@ -77,6 +86,15 @@ export default async function VerifyPage({ params }: { params: Promise<{ hash: s
               </dd>
             </dl>
           </section>
+
+          {omitted.length > 0 && (
+            <section style={card}>
+              <h2 style={{ margin: '0 0 8px', fontSize: 16 }}>{t('omittedTitle')}</h2>
+              <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13 }}>
+                {omitted.map(o => <li key={o.path}><span style={mono}>{o.path}</span> — {o.reason}</li>)}
+              </ul>
+            </section>
+          )}
 
           {ed && (
             <section style={card}>

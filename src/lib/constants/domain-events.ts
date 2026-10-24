@@ -20,7 +20,7 @@ export const BUSINESS_EVENTS = [
   'certificate.issued', 'certificate.rejected', 'certificate.revoked',
   'gate.approved', 'gate.revoked', 'gate.ready', 'gate.regressed',
   'transfer.completed',
-  'handover.issued',
+  'handover.issued', 'handover.partial',
   'import.completed',
 ] as const
 

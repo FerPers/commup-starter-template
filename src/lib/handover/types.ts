@@ -332,5 +332,7 @@ export type HandoverManifest = {
   files: HandoverManifestFile[]
   /** Anexos que no entraron (tope de tamaño o error al generarlos), con el motivo. */
   omitted: { path: string; reason: string }[]
+  /** A10: true solo si no se omitió nada. Va dentro de lo firmado: un parcial no puede pasar por completo. */
+  complete: boolean
   signature: { alg: 'Ed25519'; key_id: string }
 }

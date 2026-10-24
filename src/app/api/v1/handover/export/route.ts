@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
 
   const { data, error } = await admin
     .from('handover_packages')
-    .select('id, version, status, generated_by, generated_at, json_path, pdf_path, signature_hash, metadata, created_at')
+    .select('id, version, status, omitted_count, generated_by, generated_at, json_path, pdf_path, signature_hash, metadata, created_at')
     .eq('project_id', projectId)
     .order('generated_at', { ascending: false })
     .range(offset, offset + limit - 1)
@@ -83,7 +83,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       data: {
         id: result.packageId,
-        status: 'ISSUED',
+        // A10: PARTIAL = firmado pero con anexos omitidos (manifest.omitted); ISSUED = completo.
+        status: result.status,
+        omitted_count: result.omittedCount,
         signature_hash: result.signatureHash,
         files: {
           json: result.jsonPath ? { path: result.jsonPath, url: result.jsonUrl, expires_in: result.expiresIn } : null,

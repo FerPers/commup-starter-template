@@ -213,12 +213,15 @@ export async function buildHandoverBundle(x: BundleInput): Promise<BundleResult>
     data_sha256: dataSha256,
     files: await Promise.all(files.map(async f => ({ path: f.path, sha256: await sha256Hex(f.bytes), bytes: f.bytes.byteLength }))),
     omitted,
+    complete: omitted.length === 0,
     signature: { alg: 'Ed25519', key_id: x.key.keyId },
   }
   const manifestBytes = strToU8(JSON.stringify(manifest, null, 2))
   const signature = await signBytes(x.key, manifestBytes)
 
   const readme = [
+    // A10: un paquete con anexos omitidos lo dice antes que nada.
+    ...(omitted.length ? [`*** PAQUETE PARCIAL: ${omitted.length} anexo(s) no incluido(s) — ver el final de este archivo ***`, ''] : []),
     `CommUp — paquete de handover ${pkg.project.code} (${manifest.systems.join(', ')})`,
     `Generado: ${pkg.generated_at}`,
     '',

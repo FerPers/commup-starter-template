@@ -26,6 +26,8 @@ type Pkg = {
   metadata: Record<string, unknown>
   error_message: string | null
   created_at: string
+  /** A10: anexos que no entraron; > 0 ⇔ PARTIAL. */
+  omitted_count: number
 }
 
 const labelStyle: React.CSSProperties = {
@@ -41,6 +43,7 @@ function fmtDate(s: string | null | undefined): string {
 function statusStyle(s: string): React.CSSProperties {
   const base = { padding: '2px 8px', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)', fontWeight: 600 }
   if (s === 'ISSUED')     return { ...base, background: 'var(--success-50)', color: 'var(--success-700)' }
+  if (s === 'PARTIAL')    return { ...base, background: 'var(--warning-50)', color: 'var(--warning-700)', border: '1px solid var(--warning-200)' }
   if (s === 'FAILED')     return { ...base, background: 'var(--danger-50)',  color: 'var(--danger-700)' }
   if (s === 'GENERATING') return { ...base, background: 'var(--primary-50)', color: 'var(--primary-700)' }
   return { ...base, background: 'var(--gray-100)', color: 'var(--text-secondary)' }
@@ -58,7 +61,7 @@ export default function HandoverView({
   const [includePdf,  setIncludePdf]    = useState(true)
   const [includeZip,  setIncludeZip]    = useState(true)
   const [error, setError]               = useState<string | null>(null)
-  const [lastResult, setLastResult]     = useState<{ jsonUrl: string | null; pdfUrl: string | null; zipUrl: string | null } | null>(null)
+  const [lastResult, setLastResult]     = useState<{ jsonUrl: string | null; pdfUrl: string | null; zipUrl: string | null; omittedCount?: number } | null>(null)
   const [isPending, startTransition]    = useTransition()
 
   const projectSystems = useMemo(
@@ -96,13 +99,14 @@ export default function HandoverView({
       })
       if (res.error) return setError(res.error)
 
-      setLastResult({ jsonUrl: res.jsonUrl ?? null, pdfUrl: res.pdfUrl ?? null, zipUrl: res.zipUrl ?? null })
+      setLastResult({ jsonUrl: res.jsonUrl ?? null, pdfUrl: res.pdfUrl ?? null, zipUrl: res.zipUrl ?? null, omittedCount: res.omittedCount ?? 0 })
       setPkgs(prev => [
         {
           id: res.packageId!,
           project_id: projectId,
           version: '3.0',
-          status: 'ISSUED',
+          status: res.status ?? 'ISSUED',
+          omitted_count: res.omittedCount ?? 0,
           generated_by: null,
           generated_at: new Date().toISOString(),
           json_path: res.jsonUrl ? 'set' : null,
@@ -221,6 +225,10 @@ export default function HandoverView({
             color: 'var(--success-900)', fontSize: 'var(--text-sm)',
           }}>
             <div style={{ fontWeight: 600, marginBottom: 6 }}>{t('generator.done')}</div>
+            {/* A10: un paquete con anexos omitidos no es una entrega completa. */}
+            {!!lastResult.omittedCount && (
+              <div role="status" style={{ marginBottom: 6, color: 'var(--warning-700)', fontWeight: 600 }}>{t('partialHint', { n: lastResult.omittedCount })}</div>
+            )}
             <div style={{ display: 'flex', gap: 10 }}>
               {lastResult.jsonUrl && (
                 <a href={lastResult.jsonUrl} target="_blank" rel="noopener" style={{ textDecoration: 'none' }}>
@@ -274,7 +282,10 @@ export default function HandoverView({
                       </td>
                       <td style={{ padding: 8, color: 'var(--text-secondary)' }}>{fmtDate(pkg.generated_at)}</td>
                       <td style={{ padding: 8 }}>
-                        <span style={statusStyle(pkg.status)}>{pkg.status}</span>
+                        <span style={statusStyle(pkg.status)}>{pkg.status === 'PARTIAL' ? t('status.partial') : pkg.status}</span>
+                        {pkg.status === 'PARTIAL' && (
+                          <div style={{ color: 'var(--warning-700)', fontSize: 'var(--text-xs)', marginTop: 4 }}>{t('history.omitted', { n: pkg.omitted_count })}</div>
+                        )}
                         {pkg.error_message && (
                           <div style={{ color: 'var(--danger-700)', fontSize: 'var(--text-xs)', marginTop: 4 }}>{pkg.error_message}</div>
                         )}

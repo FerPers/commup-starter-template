@@ -2293,6 +2293,7 @@ export type Database = {
           key_id: string | null
           manifest: Json | null
           metadata: Json
+          omitted_count: number
           org_id: string
           pdf_path: string | null
           project_id: string
@@ -2313,6 +2314,7 @@ export type Database = {
           key_id?: string | null
           manifest?: Json | null
           metadata?: Json
+          omitted_count?: number
           org_id: string
           pdf_path?: string | null
           project_id: string
@@ -2333,6 +2335,7 @@ export type Database = {
           key_id?: string | null
           manifest?: Json | null
           metadata?: Json
+          omitted_count?: number
           org_id?: string
           pdf_path?: string | null
           project_id?: string

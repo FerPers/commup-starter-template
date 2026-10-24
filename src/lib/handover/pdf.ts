@@ -104,6 +104,8 @@ const T = {
   page:         { es: 'Página', en: 'Page' },
   yes:          { es: 'sí', en: 'yes' },
   critical:     { es: 'crítico', en: 'critical' },
+  partial:      { es: 'PAQUETE PARCIAL: {n} anexo(s) no incluido(s). Ver «Anexos no incluidos» al final.',
+                  en: 'PARTIAL PACKAGE: {n} annex(es) not included. See «Annexes not included» at the end.' },
 }
 
 export type HandoverPdfOptions = {
@@ -176,6 +178,8 @@ export async function renderHandoverPdf(data: HandoverPackageData, opts: Handove
   r.badge(`v${pkg.schema_version}`, { x: A4_W - MARGIN - 40, y: r.y - 14, fg: COLOR.purple, bg: COLOR.purpleBg, size: 9 })
   r.drawText(`${T.title[L]} — ${pkg.project.code}`, { x: MARGIN, y: r.y - 14, size: 15, bold: true, maxWidth: CONTENT_W - 56 })
   r.moveY(20)
+  // A10: un paquete parcial lo dice en la portada, no solo en la última página.
+  if (opts.omitted?.length) r.accentSection(T.partial[L].replace('{n}', String(opts.omitted.length)), COLOR.amber)
   r.kv(T.project[L], `${pkg.project.name}${pkg.project.org_name ? ` · ${pkg.project.org_name}` : ''}`)
   r.kv(T.client[L], pkg.project.client ?? '—')
   r.kv(T.location[L], pkg.project.location ?? '—')

@@ -19,11 +19,13 @@ AS $function$
     'signature_alg',  COALESCE(hp.signature_alg, 'hmac-sha256'),
     'signature',      hp.signature,
     'key_id',         hp.key_id,
-    'files',          COALESCE(hp.manifest -> 'files', '[]'::jsonb))
+    'files',          COALESCE(hp.manifest -> 'files', '[]'::jsonb),
+    'omitted',        COALESCE(hp.manifest -> 'omitted', '[]'::jsonb),
+    'complete',       hp.status = 'ISSUED')
   FROM handover_packages hp
   JOIN projects p ON p.id = hp.project_id
   JOIN organizations o ON o.id = hp.org_id
-  WHERE p_hash ~ '^[0-9a-f]{64}$' AND hp.signature_hash = p_hash AND hp.status = 'ISSUED'
+  WHERE p_hash ~ '^[0-9a-f]{64}$' AND hp.signature_hash = p_hash AND hp.status IN ('ISSUED', 'PARTIAL')
   ORDER BY hp.generated_at DESC
   LIMIT 1
 $function$;

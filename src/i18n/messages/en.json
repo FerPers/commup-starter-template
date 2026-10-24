@@ -2564,6 +2564,10 @@
       "done": "Package generated successfully. Download links are valid for 1 hour.",
       "zip": "Signed ZIP with annexes"
     },
+    "partialHint": "Partial package: {n} annex(es) were left out (size cap or error). It is signed and verifiable, but it is not a complete handover: the PDF index and manifest.json list what was omitted.",
+    "status": {
+      "partial": "PARTIAL"
+    },
     "history": {
       "title": "History",
       "empty": "No packages generated yet.",
@@ -2574,7 +2578,8 @@
       "signature": "Signature",
       "actions": "Actions",
       "download": "Get links",
-      "verify": "Verify"
+      "verify": "Verify",
+      "omitted": "{n} annex(es) omitted"
     },
     "errors": {
       "selectProject": "Pick a project first.",
@@ -5060,6 +5065,7 @@
       "handoverFailed": "The transfer was completed but the handover package was not generated: {error}. Use “Generate package” to retry.",
       "handover": "Handover package",
       "handoverReady": "Version {version} · {status} · {date}",
+      "handoverPartial": "Partial package: {n} annex(es) were left out. It is signed, but it is not a complete handover; check the list in the PDF index before accepting it.",
       "handoverMissing": "The system handover package has not been generated yet.",
       "downloadPdf": "Download PDF",
       "generateHandover": "Generate package",
@@ -5999,6 +6005,8 @@
   "HandoverVerify": {
     "title": "Verify handover package",
     "found": "Package issued by CommUp",
+    "partial": "PARTIAL package: {n} annex(es) were not included. The signature is authentic, but it is not a complete handover.",
+    "omittedTitle": "Annexes not included",
     "notFound": "No package was issued with this hash",
     "notFoundHint": "Check that the hash is the sha256 of handover.json as printed in the PDF index (64 hex characters).",
     "organization": "Organization",

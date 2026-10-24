@@ -21,7 +21,7 @@ type Transfer = {
   handover_package_id: string | null; content_hash: string | null
   commissioning_ack: string[] | null; operations_ack: string[] | null
 }
-type Pkg = { id: string; version: string; status: string; generated_at: string | null; signature_hash: string | null; zip_path: string | null } | null
+type Pkg = { id: string; version: string; status: string; generated_at: string | null; signature_hash: string | null; zip_path: string | null; omitted_count: number } | null
 
 const TONE: Record<string, 'amber' | 'green' | 'struck'> = { pending_signatures: 'amber', completed: 'green', cancelled: 'struck' }
 
@@ -33,6 +33,8 @@ export default function TransferView({ project, transfer: tr, pkg, names, canSig
   canSign: ('commissioning' | 'operations')[]
   canEdit: boolean
 }) {
+  // A10: un paquete PARTIAL también se descarga (avisando lo omitido); FAILED/GENERATING/SUPERSEDED no.
+  const downloadable = pkg?.status === 'ISSUED' || pkg?.status === 'PARTIAL'
   const t = useTranslations('Startup')
   // S25b (E-34): diálogos propios en vez de window.prompt / window.confirm.
   const { dialog, ask } = useAskDialog()
@@ -147,12 +149,16 @@ export default function TransferView({ project, transfer: tr, pkg, names, canSig
             <p suppressHydrationWarning style={{ ...small, margin: '4px 0 0' }}>
               {pkg ? t('ops.handoverReady', { version: pkg.version, status: pkg.status, date: when(pkg.generated_at) }) : t('ops.handoverMissing')}
             </p>
+            {/* A10: un paquete con anexos omitidos se identifica antes de descargarlo. */}
+            {pkg?.status === 'PARTIAL' && (
+              <p role="status" style={{ ...small, margin: '4px 0 0', color: 'var(--warning-700)', fontWeight: 600 }}>{t('ops.handoverPartial', { n: pkg.omitted_count })}</p>
+            )}
           </div>
           {pkg ? (
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <button type="button" style={btn('outline', isPending || pkg.status !== 'ISSUED')} disabled={isPending || pkg.status !== 'ISSUED'} onClick={() => download('pdf')}>{t('ops.downloadPdf')}</button>
+              <button type="button" style={btn('outline', isPending || !downloadable)} disabled={isPending || !downloadable} onClick={() => download('pdf')}>{t('ops.downloadPdf')}</button>
               {pkg.zip_path && (
-                <button type="button" style={btn('outline', isPending || pkg.status !== 'ISSUED')} disabled={isPending || pkg.status !== 'ISSUED'} onClick={() => download('zip')}>{t('ops.downloadZip')}</button>
+                <button type="button" style={btn('outline', isPending || !downloadable)} disabled={isPending || !downloadable} onClick={() => download('zip')}>{t('ops.downloadZip')}</button>
               )}
               {pkg.signature_hash && pkg.zip_path && (
                 <a href={`/verify/${pkg.signature_hash}`} target="_blank" rel="noopener" style={{ ...small, alignSelf: 'center' }}>{t('ops.verifyHandover')}</a>

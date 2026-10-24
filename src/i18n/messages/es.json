@@ -2564,6 +2564,10 @@
       "done": "Paquete generado con éxito. Los links de descarga son válidos 1 hora.",
       "zip": "ZIP con anexos firmado"
     },
+    "partialHint": "Paquete parcial: {n} anexo(s) no entraron (tope de tamaño o error). Está firmado y es verificable, pero no es una entrega completa: el índice PDF y manifest.json listan lo omitido.",
+    "status": {
+      "partial": "PARCIAL"
+    },
     "history": {
       "title": "Historial",
       "empty": "Aún no hay paquetes generados.",
@@ -2574,7 +2578,8 @@
       "signature": "Firma",
       "actions": "Acciones",
       "download": "Obtener links",
-      "verify": "Verificar"
+      "verify": "Verificar",
+      "omitted": "{n} anexo(s) omitido(s)"
     },
     "errors": {
       "selectProject": "Seleccioná un proyecto primero.",
@@ -5060,6 +5065,7 @@
       "handoverFailed": "El traspaso se completó, pero el paquete de handover no se generó: {error}. Usa «Generar paquete» para reintentar.",
       "handover": "Paquete de handover",
       "handoverReady": "Versión {version} · {status} · {date}",
+      "handoverPartial": "Paquete parcial: {n} anexo(s) no entraron. Está firmado, pero no es una entrega completa; revise la lista en el índice PDF antes de aceptarlo.",
       "handoverMissing": "El paquete de handover del sistema aún no se generó.",
       "downloadPdf": "Descargar PDF",
       "generateHandover": "Generar paquete",
@@ -5999,6 +6005,8 @@
   "HandoverVerify": {
     "title": "Verificar paquete de handover",
     "found": "Paquete emitido por CommUp",
+    "partial": "Paquete PARCIAL: {n} anexo(s) no se incluyeron. La firma es auténtica, pero no es una entrega completa.",
+    "omittedTitle": "Anexos no incluidos",
     "notFound": "No hay un paquete emitido con este hash",
     "notFoundHint": "Revise que el hash sea el sha256 de handover.json tal como aparece en el índice PDF (64 caracteres hexadecimales).",
     "organization": "Organización",
