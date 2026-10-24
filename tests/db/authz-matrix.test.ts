@@ -1,31 +1,32 @@
 import { beforeAll, describe, expect, it } from 'vitest'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { requireDbEnv } from './env'
 
 /**
  * A-17 (S01, 2026-10-19): matriz de autorización rol × tabla × operación DENTRO del tenant.
  * rls-smoke prueba el cruce entre orgs; esta suite prueba qué puede escribir cada rol de la MISMA org
  * por PostgREST directo (sin pasar por las actions), que es por donde se abrieron A-01…A-06.
  *
- * Corre contra la BD de CI, que hoy es PRODUCCIÓN (decisión D2, 2026-10-19). Por eso ninguna sonda
- * puede escribir, ni siquiera cuando la política la deja pasar:
+ * Nació corriendo contra PRODUCCIÓN (D2, 2026-10-19); desde A13 (2026-10-24) corre contra la Supabase local, pero las
+ * sondas siguen sin escribir, ni siquiera cuando la política la deja pasar:
  *   - INSERT: el payload omite una columna NOT NULL sin default. Postgres evalúa el WITH CHECK de RLS
  *     ANTES de las restricciones: denegado → 42501; permitido → 23502 (not_null_violation). Nunca inserta.
  *   - UPDATE: pone en NULL una columna NOT NULL de una fila existente. Denegado → el USING la filtra
  *     y no hay error (0 filas); permitido → 23502 (o el error de un trigger, que también prueba que la
  *     fila llegó a la escritura). La transacción falla, así que nada cambia.
  *   - SELECT de una columna: denegado → 42501 (privilegio de columna); permitido → sin error. Solo lee.
- *   - DELETE no tiene sonda segura: queda para cuando exista la base de pruebas (D2).
+ *   - DELETE todavía no tiene sonda: con la BD local ya se puede borrar de verdad (siguiente paso de A13).
  *
  * Usuarios: TEST_ROLE_<ROL>_EMAIL / TEST_ROLE_<ROL>_PASSWORD (OWNER, ADMIN, ARCHITECT, LEADER,
- * INSPECTOR, CLIENT), todos miembros de la org de TEST_PROJECT_A_ID. TEST_USER_A cubre su propio rol si
- * falta esa variable, y TEST_USER_B (otra org) es el «outsider». Las columnas de un rol sin usuario se
- * omiten (skip) en lugar de fallar.
+ * INSPECTOR, CLIENT), todos miembros de la org de TEST_PROJECT_A_ID, y TEST_USER_B (otra org) es el «outsider»
+ * (supabase/seed/00_actors.sql). Un actor o una fila de prueba que falte hace FALLAR la celda: antes se saltaba y
+ * la matriz quedaba verde sin haber probado ese rol.
  *
  * `gap`: lo que HOY está abierto y debería no estarlo. Esas celdas corren con `it.fails`: pasan mientras
  * el hueco exista y se ponen rojas cuando la sesión que lo corrige lo cierra — ahí se quita el `gap`.
  */
 const env = process.env
-const enabled = !!(env.TEST_SUPABASE_URL && env.TEST_SUPABASE_ANON_KEY && env.TEST_USER_A_EMAIL && env.TEST_USER_A_PASSWORD && env.TEST_PROJECT_A_ID)
+requireDbEnv(['TEST_USER_A_EMAIL', 'TEST_USER_A_PASSWORD', 'TEST_USER_B_EMAIL', 'TEST_USER_B_PASSWORD', 'TEST_PROJECT_A_ID', ...(['OWNER', 'ADMIN', 'ARCHITECT', 'LEADER', 'INSPECTOR', 'CLIENT'] as const).flatMap(r => [`TEST_ROLE_${r}_EMAIL`, `TEST_ROLE_${r}_PASSWORD`] as const)])
 
 const ROLES = ['owner', 'admin', 'architect', 'leader', 'inspector', 'client'] as const
 type Role = (typeof ROLES)[number]
@@ -193,22 +194,21 @@ async function firstId(c: SupabaseClient, table: string, filter: Record<string, 
   return (data as { id: string } | null)?.id ?? null
 }
 
-describe.skipIf(!enabled)('autorización rol × tabla × operación (A-17)', () => {
+describe('autorización rol × tabla × operación (A-17)', () => {
   beforeAll(async () => {
     const a = await signIn(env.TEST_USER_A_EMAIL!, env.TEST_USER_A_PASSWORD!)
-    const { data: me } = await a.auth.getUser()
     const pid = env.TEST_PROJECT_A_ID!
     const { data: project } = await a.from('projects').select('org_id').eq('id', pid).single()
     const orgId = project!.org_id as string
-    const { data: mine } = await a.from('org_members').select('role').eq('org_id', orgId).eq('user_id', me.user!.id).single()
 
     for (const role of ROLES) {
-      const email = env[`TEST_ROLE_${role.toUpperCase()}_EMAIL`]
-      const password = env[`TEST_ROLE_${role.toUpperCase()}_PASSWORD`]
-      if (email && password) actors.set(role, await signIn(email, password))
-      else if (mine?.role === role) actors.set(role, a)
+      const c = await signIn(env[`TEST_ROLE_${role.toUpperCase()}_EMAIL`]!, env[`TEST_ROLE_${role.toUpperCase()}_PASSWORD`]!)
+      const { data: u } = await c.auth.getUser()
+      const { data: m } = await c.from('org_members').select('role').eq('org_id', orgId).eq('user_id', u.user!.id).eq('status', 'active').maybeSingle()
+      if (m?.role !== role) throw new Error(`TEST_ROLE_${role.toUpperCase()}: es ${m?.role ?? 'ajeno a la org'}, no ${role}`)
+      actors.set(role, c)
     }
-    if (env.TEST_USER_B_EMAIL && env.TEST_USER_B_PASSWORD) actors.set('outsider', await signIn(env.TEST_USER_B_EMAIL, env.TEST_USER_B_PASSWORD))
+    actors.set('outsider', await signIn(env.TEST_USER_B_EMAIL!, env.TEST_USER_B_PASSWORD!))
 
     const { data: owner } = await a.from('org_members').select('id').eq('org_id', orgId).eq('role', 'owner').limit(1).maybeSingle()
     fx = {
@@ -233,11 +233,11 @@ describe.skipIf(!enabled)('autorización rol × tabla × operación (A-17)', () 
           ? `${actor}: debería ${expected === 'deny' ? 'denegar' : 'permitir'} — hueco abierto ${c.gap!.finding}, se cierra en ${c.gap!.session}`
           : `${actor}: ${expected === 'deny' ? 'denegado' : 'permitido'}`
         const run = isGap ? it.fails : it
-        run(title, async ({ skip }) => {
+        run(title, async () => {
           const client = actors.get(actor)
-          if (!client) return skip(`sin usuario de prueba para ${actor}`)
+          if (!client) throw new Error(`sin usuario de prueba para ${actor}`)
           const got = await probe(client, c, fx)
-          if (got === 'n/a') return skip('sin fila de prueba en el proyecto')
+          if (got === 'n/a') throw new Error('sin fila de prueba en el proyecto (supabase/seed/90_db_tests.sql)')
           expect(got).toBe(expected)
         })
       }
@@ -249,7 +249,7 @@ describe.skipIf(!enabled)('autorización rol × tabla × operación (A-17)', () 
  * A-19 (S02): ninguna función de public es ejecutable por anon, y las DEFINER internas solo por service
  * role. La sonda llama con un UUID que no existe: si la llamada pasara, no tocaría ninguna fila.
  */
-describe.skipIf(!enabled)('EXECUTE de funciones (A-19)', () => {
+describe('EXECUTE de funciones (A-19)', () => {
   const ghost = '00000000-0000-4000-8000-0000000a1900'
 
   it('anon no ejecuta funciones de public', async () => {

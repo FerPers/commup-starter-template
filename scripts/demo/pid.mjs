@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// Revisión en pantalla (supabase/seed/review.sql): genera un P&ID de prueba (pdf-lib) y lo sube al Supabase LOCAL en
+// Demo local (supabase/seed/20_demo.sql): genera un P&ID de prueba (pdf-lib) y lo sube al Supabase LOCAL en
 // project-documents/<project>/<document>/rev-A.pdf, la ruta que la semilla deja en la revisión A de PID-E2E-001.
-//   node scripts/e2e/review-pid.mjs
+//   node scripts/demo/pid.mjs   (lo corre `npm run demo:reset` después del reset)
 // Se niega a correr si la URL no es local. El plano dice «Plano de prueba CommUp, no es un plano real».
 import { execFileSync } from 'node:child_process'
 import { createClient } from '@supabase/supabase-js'
@@ -11,7 +11,7 @@ const out = execFileSync('supabase', ['status', '-o', 'env'], { encoding: 'utf8'
 const env = Object.fromEntries(out.split('\n').map(l => l.match(/^([A-Z_]+)="?(.*?)"?$/)).filter(Boolean).map(m => [m[1], m[2]]))
 const url = env.API_URL
 if (!/^http:\/\/(127\.0\.0\.1|localhost)/.test(url ?? '') || !env.SERVICE_ROLE_KEY) {
-  console.error(`review-pid: Supabase no es local (${url ?? 'sin URL'}). Corre \`supabase start\`; nunca contra prod.`)
+  console.error(`demo/pid: Supabase no es local (${url ?? 'sin URL'}). Corre \`supabase start\`; nunca contra prod.`)
   process.exit(1)
 }
 
@@ -41,5 +41,5 @@ text('PID-E2E-001 · rev A · Plano de prueba CommUp, no es un plano real', 40, 
 const bytes = await pdf.save()
 const db = createClient(url, env.SERVICE_ROLE_KEY, { auth: { persistSession: false } })
 const { error } = await db.storage.from('project-documents').upload(PATH, bytes, { contentType: 'application/pdf', upsert: true })
-if (error) { console.error('review-pid:', error.message); process.exit(1) }
-console.log(`review-pid: subido ${PATH} (${bytes.length} bytes)`)
+if (error) { console.error('demo/pid:', error.message); process.exit(1) }
+console.log(`demo/pid: subido ${PATH} (${bytes.length} bytes)`)

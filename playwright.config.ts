@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test'
 
 // G-17 (2026-10-23): recorridos E2E de campo. Corren SOLO contra el Supabase local (`supabase start` + semilla
-// supabase/seed/e2e.sql) y la app compilada con `next build` + `next start`: el lanzador `npm run e2e`
+// supabase/seed/*.sql) y la app compilada con `next build` + `next start`: el lanzador `npm run e2e`
 // (scripts/e2e/run.mjs) arma el entorno y se niega a seguir si la URL de Supabase no es local.
 const PORT = Number(process.env.E2E_PORT ?? 3100)
 

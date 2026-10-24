@@ -44,6 +44,13 @@ En términos concretos, salir significa cuatro cosas:
 
 **Salida:** las pruebas de BD corren en la CI sin escribir en prod y sin saltos; hay una demo restablecible; las sondas del ITR fallan como se espera.
 
+**Avance (24-oct):**
+
+- **A13 inicial:** hecho. `tests/db` corre en el job `db` contra la Supabase local (`npm run test:db`), con dos orgs y seis roles (`supabase/seed/00_actors.sql`). Una suite sin actores falla, y una que escribe rechaza una URL que no sea local (`tests/db/env.ts`). La deriva de funciones sigue comparando con prod, en solo lectura (job `drift`).
+- **A50:** hecha la base. `npm run demo:reset` y [guion](DEMO-LOCAL.md) con casos sano, listo, pendiente de firmas, regresado, bloqueado y sin información. Las capturas pendientes no se pueden sembrar en SQL. Los módulos de `scripts/demo-data/` atados a la org DEMO de prod quedan por traer.
+- **A45 preparación:** hecho. Cuatro sondas en TS y tres en SQL corren con `it.fails`, y SQL = TS.
+- **Pendientes de Luis:** la acción de seguridad y A16 (protección de rama).
+
 ### Ola 1 — Integridad del núcleo (bloquea la salida)
 
 | Acción | Qué hacer (verificado en código) |
@@ -116,6 +123,19 @@ A06 membresía por proyecto · A07 políticas de liberación versionadas · A09 
 | 6 | **A08:** contrato de estados. | Te traigo una propuesta con maqueta antes de tocar colores o matriz. | Ola 3 |
 | 7 | **A19:** ¿el menú sigue agrupando por fases, o ITR y Punch salen a un acceso estable fuera de las fases? | Propuesta con maqueta junto con A08. | Ola 3 |
 | 8 | **A31:** ¿la cuota de IA es un aviso o un límite duro? | Aviso mientras el uso sea interno; límite duro antes de que un cliente use IA. | Ola 5 |
+
+### 4.1 Respuestas de Luis (24-oct)
+
+| N.º | Decisión tomada |
+|---|---|
+| 1 | **Sí:** las pruebas de BD de la CI pasan a la Supabase local (reemplaza D2 del 19-oct). Prod queda para pruebas manuales. |
+| 2 | **Basta el acceso por organización** para los primeros proyectos de Geopark; A06 queda en la ola 5. |
+| 3 | **Las seis referencias** (I04A/I06A, I01A, I10A, I29C, I30C); se amplía solo lo que pidan los proyectos. |
+| 4 | **Ficha primero:** preparo valores y fuentes faltantes por plantilla (A37, A38, los 27 códigos de A39) y Luis decide sobre ella. |
+| 5 | **Copia diaria:** pérdida máxima ≤ 24 h, recuperación ≤ 8 h (copias diarias del plan de Supabase, sin PITR). A14 ensaya la restauración con ese objetivo, BD y Storage. |
+| 6 | **Propuesta con maqueta** del contrato de estados antes de tocar colores o matriz (ola 3). |
+| 7 | **Se decide con maqueta**, junto con A08. |
+| 8 | **Aviso** mientras el uso sea interno; límite duro antes de que un cliente use IA. |
 
 ## 5 Orden sugerido de trabajo
 

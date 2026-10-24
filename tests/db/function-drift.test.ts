@@ -3,6 +3,7 @@ import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { beforeAll, describe, expect, it } from 'vitest'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { requireDbEnv } from './env'
 
 /**
  * S03 (D-09/B-19/E-26/F-35, 2026-10-19): deriva entre las funciones canónicas del repo
@@ -14,7 +15,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
  * archivo sin migración. Arreglo: `node scripts/sql/canonical-functions.mjs dump` y revisar el diff.
  */
 const env = process.env
-const enabled = !!(env.TEST_SUPABASE_URL && env.TEST_SUPABASE_ANON_KEY && env.TEST_USER_A_EMAIL && env.TEST_USER_A_PASSWORD)
+requireDbEnv(['TEST_USER_A_EMAIL', 'TEST_USER_A_PASSWORD'], { readOnly: true })
 
 const DIR = join(process.cwd(), 'supabase/functions-sql')
 const files = readdirSync(DIR)
@@ -26,7 +27,7 @@ const files = readdirSync(DIR)
     return { file: f, sig: sig ?? '', md5: createHash('md5').update(body, 'utf8').digest('hex') }
   })
 
-describe.skipIf(!enabled)('funciones canónicas = BD', () => {
+describe('funciones canónicas = BD', () => {
   let a: SupabaseClient
   let remote = new Map<string, string>()
 

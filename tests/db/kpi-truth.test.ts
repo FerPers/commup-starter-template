@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { requireDbEnv } from './env'
 
 /**
  * S09 «cero filas para contar» (migración 20261104120000) contra la BD real, solo lecturas:
@@ -8,7 +9,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
  *   - take_kpi_snapshot solo para service_role y kpi_snapshots sin escritura directa (B-25).
  */
 const env = process.env
-const enabled = !!(env.TEST_SUPABASE_URL && env.TEST_SUPABASE_ANON_KEY && env.TEST_USER_A_EMAIL && env.TEST_USER_A_PASSWORD && env.TEST_PROJECT_A_ID)
+requireDbEnv(['TEST_USER_A_EMAIL', 'TEST_USER_A_PASSWORD', 'TEST_PROJECT_A_ID'])
 
 const pid = env.TEST_PROJECT_A_ID!
 let a: SupabaseClient
@@ -19,7 +20,7 @@ async function count(q: PromiseLike<{ count: number | null; error: { message: st
   return n ?? 0
 }
 
-describe.skipIf(!enabled)('S09 — KPIs contados en SQL', () => {
+describe('S09 — KPIs contados en SQL', () => {
   beforeAll(async () => {
     a = createClient(env.TEST_SUPABASE_URL!, env.TEST_SUPABASE_ANON_KEY!, { auth: { persistSession: false } })
     const { error } = await a.auth.signInWithPassword({ email: env.TEST_USER_A_EMAIL!, password: env.TEST_USER_A_PASSWORD! })

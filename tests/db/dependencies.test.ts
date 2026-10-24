@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { defaultDependencyGates } from '@/lib/systems/dependencies'
+import { requireDbEnv } from './env'
 
 /**
  * Sistematización (fase 2 del plan readiness, migración 20261015120000) contra la BD real:
@@ -14,7 +15,7 @@ import { defaultDependencyGates } from '@/lib/systems/dependencies'
  * que rls-smoke.test.ts; sin ellas se omite.
  */
 const env = process.env
-const enabled = !!(env.TEST_SUPABASE_URL && env.TEST_SUPABASE_ANON_KEY && env.TEST_USER_A_EMAIL && env.TEST_USER_A_PASSWORD && env.TEST_PROJECT_A_ID)
+requireDbEnv(['TEST_USER_A_EMAIL', 'TEST_USER_A_PASSWORD', 'TEST_PROJECT_A_ID'])
 
 const pid = env.TEST_PROJECT_A_ID!
 const stamp = `D${Date.now().toString(36).toUpperCase()}`
@@ -39,7 +40,7 @@ async function systemGates(systemId: string): Promise<GateRow[]> {
   return data as GateRow[]
 }
 
-describe.skipIf(!enabled)('sistematización — dependencias, criterio dependencies_ready y congelamiento', () => {
+describe('sistematización — dependencias, criterio dependencies_ready y congelamiento', () => {
   beforeAll(async () => {
     a = createClient(env.TEST_SUPABASE_URL!, env.TEST_SUPABASE_ANON_KEY!, { auth: { persistSession: false } })
     const { data: auth, error } = await a.auth.signInWithPassword({ email: env.TEST_USER_A_EMAIL!, password: env.TEST_USER_A_PASSWORD! })

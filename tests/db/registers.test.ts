@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { requireDbEnv } from './env'
 
 /**
  * Registros controlados (fase 3 del plan readiness, migración 20261015200000) contra la BD real:
@@ -14,7 +15,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
  * nunca se autorizan, se borran como borradores (`delete_register_item`).
  */
 const env = process.env
-const enabled = !!(env.TEST_SUPABASE_URL && env.TEST_SUPABASE_ANON_KEY && env.TEST_USER_A_EMAIL && env.TEST_USER_A_PASSWORD && env.TEST_PROJECT_A_ID)
+requireDbEnv(['TEST_USER_A_EMAIL', 'TEST_USER_A_PASSWORD', 'TEST_PROJECT_A_ID'])
 
 const pid = env.TEST_PROJECT_A_ID!
 const stamp = `R${Date.now().toString(36).toUpperCase()}`
@@ -49,7 +50,7 @@ async function createBlind(title: string, tags: { tag_id: string; role?: string 
   return data as string
 }
 
-describe.skipIf(!enabled)('registros controlados — numeración, autorización por otra persona y bloqueo de gates', () => {
+describe('registros controlados — numeración, autorización por otra persona y bloqueo de gates', () => {
   beforeAll(async () => {
     a = createClient(env.TEST_SUPABASE_URL!, env.TEST_SUPABASE_ANON_KEY!, { auth: { persistSession: false } })
     const { error } = await a.auth.signInWithPassword({ email: env.TEST_USER_A_EMAIL!, password: env.TEST_USER_A_PASSWORD! })

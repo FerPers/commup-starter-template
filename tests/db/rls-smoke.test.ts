@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createClient } from '@supabase/supabase-js'
+import { requireDbEnv } from './env'
 
 /**
  * Smoke de aislamiento multi-tenant (Sprint T). Se ejecuta solo si hay
@@ -11,7 +12,7 @@ import { createClient } from '@supabase/supabase-js'
  *   TEST_PROJECT_A_ID                          (proyecto de la org A)
  */
 const env = process.env
-const enabled = !!(env.TEST_SUPABASE_URL && env.TEST_SUPABASE_ANON_KEY && env.TEST_USER_A_EMAIL && env.TEST_USER_B_EMAIL && env.TEST_PROJECT_A_ID)
+requireDbEnv(['TEST_USER_A_EMAIL', 'TEST_USER_A_PASSWORD', 'TEST_USER_B_EMAIL', 'TEST_USER_B_PASSWORD', 'TEST_PROJECT_A_ID'])
 
 async function signedIn(email: string, password: string) {
   const c = createClient(env.TEST_SUPABASE_URL!, env.TEST_SUPABASE_ANON_KEY!, { auth: { persistSession: false } })
@@ -21,7 +22,7 @@ async function signedIn(email: string, password: string) {
 }
 
 // 30 s por test: dos logins + consultas, en paralelo con los demás archivos de BD contra el mismo proyecto.
-describe.skipIf(!enabled)('RLS multi-tenant smoke', () => {
+describe('RLS multi-tenant smoke', () => {
   it('el usuario A ve tags de su proyecto; el usuario B no ve ninguno', async () => {
     const a = await signedIn(env.TEST_USER_A_EMAIL!, env.TEST_USER_A_PASSWORD!)
     const b = await signedIn(env.TEST_USER_B_EMAIL!, env.TEST_USER_B_PASSWORD!)

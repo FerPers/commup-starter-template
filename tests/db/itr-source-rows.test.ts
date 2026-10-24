@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { TABLE_PRESETS, evaluateTable, parseSourceRows, reshapeTable } from '../../src/lib/itr/table'
+import { requireDbEnv } from './env'
 
 /**
  * ITR generados desde un lazo (fase 4 · bloque D, sesión 2; migración 20261016230000) contra la BD real:
@@ -11,7 +12,7 @@ import { TABLE_PRESETS, evaluateTable, parseSourceRows, reshapeTable } from '../
  * Siembra en TEST_PROJECT_A_ID su propia jerarquía, lazo, señal y plantilla; al final borra todo.
  */
 const env = process.env
-const enabled = !!(env.TEST_SUPABASE_URL && env.TEST_SUPABASE_ANON_KEY && env.TEST_USER_A_EMAIL && env.TEST_USER_A_PASSWORD && env.TEST_PROJECT_A_ID)
+requireDbEnv(['TEST_USER_A_EMAIL', 'TEST_USER_A_PASSWORD', 'TEST_PROJECT_A_ID'])
 
 const pid = env.TEST_PROJECT_A_ID!
 const stamp = `SR${Date.now().toString(36).toUpperCase()}`
@@ -25,7 +26,7 @@ async function must<T>(label: string, q: PromiseLike<{ data: T | null; error: { 
   return data as NonNullable<T>
 }
 
-describe.skipIf(!enabled)('ITR desde lazo — foto de filas inmutable y evaluación TS = SQL', () => {
+describe('ITR desde lazo — foto de filas inmutable y evaluación TS = SQL', () => {
   beforeAll(async () => {
     a = createClient(env.TEST_SUPABASE_URL!, env.TEST_SUPABASE_ANON_KEY!, { auth: { persistSession: false } })
     const { error } = await a.auth.signInWithPassword({ email: env.TEST_USER_A_EMAIL!, password: env.TEST_USER_A_PASSWORD! })

@@ -1,44 +1,14 @@
 -- G-17: semilla de las pruebas E2E (Playwright). Solo para el Supabase LOCAL (`supabase db reset` la carga
--- después del baseline y las migraciones; ver supabase/config.toml). Nunca contra prod.
+-- después del baseline, las migraciones y 00_actors.sql; ver supabase/config.toml). Nunca contra prod.
 -- Ids fijos con el prefijo e2e00000-… (los usa e2e/fixtures.ts). Contraseña de los usuarios: la de E2E_PASSWORD
 -- en e2e/fixtures.ts.
 --
--- Mundo mínimo: org «CommUp E2E» → proyecto E2E → área/sistema/subsistema → tag PT-E2E-001 → ITR E2E-0001
+-- Mundo mínimo: org «CommUp Demo» → proyecto E2E → área/sistema/subsistema → tag PT-E2E-001 → ITR E2E-0001
 -- (plantilla con casilla, medición con rango, texto y foto obligatoria), asignado al inspector como ejecutor.
 
--- ── Usuarios (auth) ─────────────────────────────────────────────────────────
--- GoTrue no admite NULL en los tokens: van como ''.
-INSERT INTO auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
-                        raw_app_meta_data, raw_user_meta_data, created_at, updated_at,
-                        confirmation_token, recovery_token, email_change_token_new, email_change, email_change_token_current,
-                        phone_change, phone_change_token, reauthentication_token)
-VALUES
-  ('00000000-0000-0000-0000-000000000000', 'e2e00000-0000-4000-8000-0000000000a1', 'authenticated', 'authenticated',
-   'inspector@e2e.commup.test', crypt('E2e-commup-2026!', gen_salt('bf')), now(),
-   '{"provider":"email","providers":["email"]}', '{"full_name":"Inés Inspectora"}', now(), now(),
-   '', '', '', '', '', '', '', '');
+-- Usuarios, organizaciones, disciplina «I» y fase «A»: supabase/seed/00_actors.sql.
 
-INSERT INTO auth.identities (id, user_id, provider_id, provider, identity_data, last_sign_in_at, created_at, updated_at)
-VALUES
-  (gen_random_uuid(), 'e2e00000-0000-4000-8000-0000000000a1', 'e2e00000-0000-4000-8000-0000000000a1', 'email',
-   '{"sub":"e2e00000-0000-4000-8000-0000000000a1","email":"inspector@e2e.commup.test","email_verified":true}', now(), now(), now());
-
-INSERT INTO public.profiles (id, full_name, locale) VALUES
-  ('e2e00000-0000-4000-8000-0000000000a1', 'Inés Inspectora', 'es');
-
--- ── Organización y proyecto ─────────────────────────────────────────────────
-INSERT INTO public.organizations (id, name, slug) VALUES
-  ('e2e00000-0000-4000-8000-000000000001', 'CommUp E2E', 'commup-e2e');
-
-INSERT INTO public.org_members (org_id, user_id, role, status) VALUES
-  ('e2e00000-0000-4000-8000-000000000001', 'e2e00000-0000-4000-8000-0000000000a1', 'inspector', 'active');
-
-INSERT INTO public.disciplines (id, org_id, code, name, color) VALUES
-  ('e2e00000-0000-4000-8000-0000000000d1', 'e2e00000-0000-4000-8000-000000000001', 'I', 'Instrumentación', '#2563eb');
-
-INSERT INTO public.project_phases (id, org_id, code, name, order_index) VALUES
-  ('e2e00000-0000-4000-8000-0000000000d2', 'e2e00000-0000-4000-8000-000000000001', 'A', 'Completamiento mecánico', 1);
-
+-- ── Proyecto ─────────────────────────────────────────────────────────────────
 INSERT INTO public.projects (id, org_id, name, code, timezone) VALUES
   ('e2e00000-0000-4000-8000-0000000000b1', 'e2e00000-0000-4000-8000-000000000001', 'Proyecto E2E', 'E2E', 'America/Bogota');
 

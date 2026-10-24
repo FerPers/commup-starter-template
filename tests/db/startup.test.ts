@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { requireDbEnv } from './env'
 
 /**
  * Arranque (fase 6 sesión 1, migración 20261017210000) contra la BD real, solo con borradores (se borran al
@@ -8,7 +9,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
  * point y verificación independiente (que dejan historia) se probaron con rollback en la migración.
  */
 const env = process.env
-const enabled = !!(env.TEST_SUPABASE_URL && env.TEST_SUPABASE_ANON_KEY && env.TEST_USER_A_EMAIL && env.TEST_USER_A_PASSWORD && env.TEST_PROJECT_A_ID)
+requireDbEnv(['TEST_USER_A_EMAIL', 'TEST_USER_A_PASSWORD', 'TEST_PROJECT_A_ID'])
 const pid = env.TEST_PROJECT_A_ID!
 const stamp = `S${Date.now().toString(36).toUpperCase()}`
 let a: SupabaseClient
@@ -23,7 +24,7 @@ async function one<T>(label: string, q: PromiseLike<{ data: T | null; error: { m
   return data as NonNullable<T>
 }
 
-describe.skipIf(!enabled)('arranque — procedimientos y line-ups (borradores)', () => {
+describe('arranque — procedimientos y line-ups (borradores)', () => {
   beforeAll(async () => {
     a = createClient(env.TEST_SUPABASE_URL!, env.TEST_SUPABASE_ANON_KEY!, { auth: { persistSession: false } })
     const { error } = await a.auth.signInWithPassword({ email: env.TEST_USER_A_EMAIL!, password: env.TEST_USER_A_PASSWORD! })

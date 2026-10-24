@@ -32,19 +32,20 @@ Never edit `00000000000000_baseline.sql` after this point — additive migration
 
 **Every change to prod goes through a file in `migrations/` with the same version it is registered under.** `apply_migration` (MCP) registers its own timestamp and `supabase db query` registers nothing: after applying that way, register the file's version (`supabase migration repair --status applied <version>`). Nothing is created in prod from the SQL editor or the dashboard (extensions, publications, crons, RLS toggles): it goes in a migration.
 
-## Local Supabase for E2E tests (G-17, 2026-10-23)
+## Local Supabase: E2E, DB tests and demo (G-17, A13, A50)
 
-`config.toml` exists only for the LOCAL stack used by the Playwright field journeys (`e2e/`). Prod is unchanged.
+`config.toml` exists only for the LOCAL stack used by the Playwright field journeys (`e2e/`), the DB tests (`tests/db`, `npm run test:db`) and the resettable demo ([docs/DEMO-LOCAL.md](../docs/DEMO-LOCAL.md)). Prod is unchanged.
 
 ```bash
 colima start                                   # Docker runtime on the Mac (brew install colima docker)
 SUPABASE_INTERNAL_IMAGE_REGISTRY=docker.io supabase start   # docker.io: public.ecr.aws failed with EOF here
-supabase db reset --local                      # baseline + migrations + supabase/seed/e2e.sql
+npm run demo:reset                             # baseline + migrations + supabase/seed/*.sql + the P&ID PDF
 npm run e2e                                    # builds the app against the local stack and runs Playwright
 npm run e2e -- --no-build --headed             # reuse the build, watch the browser
+npm run test:db                                # tests/db against the local stack (two orgs, six roles)
 ```
 
-`scripts/e2e/run.mjs` refuses to run unless the Supabase URL is 127.0.0.1/localhost. The seed creates org «CommUp E2E», one inspector (`inspector@e2e.commup.test`) and template/ITR ids `e2e00000-…`; each test creates its own fresh ITR, so a reset is only needed when the schema changes. CI runs the same in the `e2e` job (`supabase start` on the runner).
+`scripts/e2e/run.mjs` refuses to run unless the Supabase URL is 127.0.0.1/localhost. `scripts/db-tests/run.mjs` and `scripts/demo/reset.mjs` refuse it too. The seed (`supabase/seed/*.sql`, loaded in order) creates orgs «CommUp Demo» and «CommUp Demo B», the six roles (`<role>@e2e.commup.test`), the E2E world, the demo cases and a separate project for the DB tests; ids are `e2e00000-…`. Each E2E test creates its own fresh ITR and each DB suite seeds and removes its own hierarchy, so a reset is only needed when the schema changes or to bring the demo back. CI runs the same in the `e2e` and `db` jobs (`supabase start` on the runner).
 
 ## Reproducibility (2026-10-22)
 

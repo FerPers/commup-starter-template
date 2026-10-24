@@ -4,8 +4,8 @@
 //   npm run e2e -- --no-build   → reutiliza la compilación anterior (solo si ya se compiló contra el local)
 //   npm run e2e -- <args>       → el resto va a `playwright test` (p. ej. --headed, -g "sin red")
 //   npm run e2e -- --serve      → en vez de Playwright, sirve la compilación en :3100 (revisión en pantalla con
-//                                 supabase/seed/review.sql; launch.json «local»)
-// Requiere `supabase start` (y `supabase db reset` para la semilla supabase/seed/e2e.sql). Se niega a correr si la
+//                                 la demo de supabase/seed/20_demo.sql; launch.json «local»; docs/DEMO-LOCAL.md)
+// Requiere `supabase start` (y `npm run demo:reset` para la semilla supabase/seed/*.sql). Se niega a correr si la
 // URL no es 127.0.0.1/localhost: estas pruebas escriben respuestas, fotos y firmas.
 import { execFileSync, spawnSync } from 'node:child_process'
 

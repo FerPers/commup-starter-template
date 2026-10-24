@@ -1,5 +1,5 @@
-# Supabase LOCAL (G-17, 2026-10-23): solo para pruebas (Playwright E2E y, más adelante, tests de BD aparte de
-# prod = D2). `supabase start` + `supabase db reset` = baseline + migraciones del repo + supabase/seed/e2e.sql.
+# Supabase LOCAL (G-17, 2026-10-23; A13/A50, 2026-10-24): Playwright E2E, pruebas de BD (tests/db) y la demo restablecible.
+# `supabase start` + `npm run demo:reset` = baseline + migraciones del repo + supabase/seed/*.sql (en orden) + P&ID.
 # Prod sigue con `supabase db push` / `db query --linked` como dice supabase/README.md.
 # For detailed configuration reference documentation, visit:
 # https://supabase.com/docs/guides/local-development/cli/config
@@ -65,7 +65,7 @@ schema_paths = []
 enabled = true
 # Specifies an ordered list of seed files to load during db reset.
 # Supports glob patterns relative to supabase directory: "./seeds/*.sql"
-sql_paths = ["./seed/e2e.sql"]
+sql_paths = ["./seed/*.sql"]
 
 [db.network_restrictions]
 # Enable management of network restrictions.

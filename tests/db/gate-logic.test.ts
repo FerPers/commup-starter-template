@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { requireDbEnv } from './env'
 
 /**
  * S11 — lógica de gates (migración 20261106120000) contra la BD real, solo lecturas y rechazos:
@@ -11,12 +12,12 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
  * probaron con ROLLBACK en la migración (necesitan aprobaciones, que no se borran).
  */
 const env = process.env
-const enabled = !!(env.TEST_SUPABASE_URL && env.TEST_SUPABASE_ANON_KEY && env.TEST_USER_A_EMAIL && env.TEST_USER_A_PASSWORD && env.TEST_PROJECT_A_ID)
+requireDbEnv(['TEST_USER_A_EMAIL', 'TEST_USER_A_PASSWORD', 'TEST_PROJECT_A_ID'])
 const pid = env.TEST_PROJECT_A_ID!
 let a: SupabaseClient
 let orgId: string
 
-describe.skipIf(!enabled)('lógica de gates (S11)', () => {
+describe('lógica de gates (S11)', () => {
   beforeAll(async () => {
     a = createClient(env.TEST_SUPABASE_URL!, env.TEST_SUPABASE_ANON_KEY!, { auth: { persistSession: false } })
     const { error } = await a.auth.signInWithPassword({ email: env.TEST_USER_A_EMAIL!, password: env.TEST_USER_A_PASSWORD! })

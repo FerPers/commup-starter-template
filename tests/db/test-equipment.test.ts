@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { requireDbEnv } from './env'
 
 /**
  * Equipos de prueba calibrados (fase 4 · bloque B, migración 20261016150000) contra la BD real:
@@ -11,7 +12,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
  * dos equipos (vigente y vencido); al final reabre el ITR firmado y borra todo. Usuario A: owner/admin/architect.
  */
 const env = process.env
-const enabled = !!(env.TEST_SUPABASE_URL && env.TEST_SUPABASE_ANON_KEY && env.TEST_USER_A_EMAIL && env.TEST_USER_A_PASSWORD && env.TEST_PROJECT_A_ID)
+requireDbEnv(['TEST_USER_A_EMAIL', 'TEST_USER_A_PASSWORD', 'TEST_PROJECT_A_ID'])
 
 const pid = env.TEST_PROJECT_A_ID!
 const stamp = `TE${Date.now().toString(36).toUpperCase()}`
@@ -32,7 +33,7 @@ const addEquipment = (equipmentId: string) => a.from('itr_test_equipment').inser
   calibrated_on: '2000-01-01', calibration_due: '2999-12-31', certificate_number: 'FALSO',
 })
 
-describe.skipIf(!enabled)('equipos de prueba — calibración en la fecha de uso bloquea la firma del ITR', () => {
+describe('equipos de prueba — calibración en la fecha de uso bloquea la firma del ITR', () => {
   beforeAll(async () => {
     a = createClient(env.TEST_SUPABASE_URL!, env.TEST_SUPABASE_ANON_KEY!, { auth: { persistSession: false } })
     const { data: auth, error } = await a.auth.signInWithPassword({ email: env.TEST_USER_A_EMAIL!, password: env.TEST_USER_A_PASSWORD! })

@@ -1,0 +1,418 @@
+{
+  "_source": "docs/diagnostico-itr-2026-10-23-evidencia/sondas.json (capturas) + options de los ítems en la org DEMO de prod, captura local del 2026-10-23 (analizar.mjs). Datos sintéticos.",
+  "inconsistentEffect": {
+    "template": "I30C v3",
+    "item": "E.1",
+    "finding": "H1",
+    "options": {
+      "rows": {
+        "mode": "source",
+        "label": "Efecto",
+        "source": "ce_effects"
+      },
+      "columns": [
+        {
+          "key": "description",
+          "max": null,
+          "min": null,
+          "ref": "effect_description",
+          "type": "reference",
+          "unit": null,
+          "label": "Descripción",
+          "options": null,
+          "required": false
+        },
+        {
+          "key": "action",
+          "max": null,
+          "min": null,
+          "ref": "action",
+          "type": "reference",
+          "unit": null,
+          "label": "Acción esperada",
+          "options": null,
+          "required": false
+        },
+        {
+          "key": "link",
+          "max": null,
+          "min": null,
+          "ref": "link",
+          "type": "reference",
+          "unit": null,
+          "label": "Cruce",
+          "options": null,
+          "required": false
+        },
+        {
+          "key": "executed",
+          "max": null,
+          "min": null,
+          "type": "select",
+          "unit": null,
+          "label": "Ejecutó la acción",
+          "options": [
+            "Sí",
+            "No"
+          ],
+          "required": true
+        },
+        {
+          "key": "response_s",
+          "max": null,
+          "min": null,
+          "type": "number",
+          "unit": "s",
+          "label": "Tiempo de respuesta",
+          "options": null,
+          "required": false
+        },
+        {
+          "key": "feedback",
+          "max": null,
+          "min": null,
+          "type": "result",
+          "unit": null,
+          "label": "Confirmación (feedback) en DCS",
+          "options": null,
+          "required": true
+        },
+        {
+          "key": "result",
+          "max": null,
+          "min": null,
+          "type": "result",
+          "unit": null,
+          "label": "Resultado",
+          "options": null,
+          "required": true
+        },
+        {
+          "key": "remarks",
+          "max": null,
+          "min": null,
+          "type": "text",
+          "unit": null,
+          "label": "Observación",
+          "options": null,
+          "required": false
+        }
+      ],
+      "version": 2
+    },
+    "input": {
+      "version": 1,
+      "count": 1,
+      "rows": [
+        {
+          "id": "R1",
+          "label": "Efecto de prueba",
+          "cells": {
+            "description": null,
+            "action": null,
+            "link": null,
+            "executed": "No",
+            "response_s": null,
+            "feedback": "pass",
+            "result": "pass",
+            "remarks": ""
+          }
+        }
+      ]
+    },
+    "sourceRows": [
+      {
+        "key": "synthetic-effect",
+        "label": "Efecto de prueba",
+        "refs": {
+          "effect_description": "Dato sintético",
+          "action": "trip",
+          "link": "X"
+        }
+      }
+    ],
+    "note": "Ejecutó la acción=No, feedback=pass, resultado=pass: el select de tabla no tiene significado de rechazo."
+  },
+  "calibrationManual": {
+    "template": "I10A v3",
+    "item": "4.01",
+    "finding": "H2",
+    "options": {
+      "rows": {
+        "max": 20,
+        "min": 3,
+        "mode": "variable",
+        "label": "Punto"
+      },
+      "columns": [
+        {
+          "key": "direction",
+          "type": "select",
+          "label": "Sentido",
+          "options": [
+            "Ascendente",
+            "Descendente"
+          ],
+          "required": true
+        },
+        {
+          "key": "input",
+          "type": "number",
+          "label": "Entrada aplicada",
+          "required": true
+        },
+        {
+          "key": "pct_range",
+          "type": "number",
+          "unit": "%",
+          "label": "% del rango",
+          "required": true
+        },
+        {
+          "key": "expected",
+          "type": "number",
+          "label": "Salida esperada",
+          "required": true
+        },
+        {
+          "key": "observed",
+          "type": "number",
+          "label": "Salida observada",
+          "required": true
+        },
+        {
+          "key": "error",
+          "type": "number",
+          "unit": "%",
+          "label": "Error",
+          "required": true
+        },
+        {
+          "key": "result",
+          "type": "result",
+          "label": "Resultado",
+          "required": true
+        },
+        {
+          "key": "remarks",
+          "type": "text",
+          "label": "Observación",
+          "required": false
+        }
+      ],
+      "version": 1
+    },
+    "input": {
+      "version": 1,
+      "count": 3,
+      "rows": [
+        {
+          "id": "R1",
+          "label": "Punto 1",
+          "cells": {
+            "direction": "Ascendente",
+            "input": 50,
+            "pct_range": 50,
+            "expected": 12,
+            "observed": 99,
+            "error": 0,
+            "result": "pass",
+            "remarks": ""
+          }
+        },
+        {
+          "id": "R2",
+          "label": "Punto 2",
+          "cells": {
+            "direction": "Ascendente",
+            "input": 50,
+            "pct_range": 50,
+            "expected": 12,
+            "observed": 99,
+            "error": 0,
+            "result": "pass",
+            "remarks": ""
+          }
+        },
+        {
+          "id": "R3",
+          "label": "Punto 3",
+          "cells": {
+            "direction": "Ascendente",
+            "input": 50,
+            "pct_range": 50,
+            "expected": 12,
+            "observed": 99,
+            "error": 0,
+            "result": "pass",
+            "remarks": ""
+          }
+        }
+      ]
+    },
+    "note": "Salida esperada 12, observada 99, error manual 0 y pass: no existe fórmula que detecte la inconsistencia."
+  },
+  "optionalResult": {
+    "template": "E10B v2",
+    "item": "M.1",
+    "finding": "H3",
+    "options": {
+      "rows": {
+        "max": 10,
+        "min": 1,
+        "mode": "variable",
+        "label": "Registro"
+      },
+      "columns": [
+        {
+          "key": "receptacle",
+          "max": null,
+          "min": null,
+          "type": "text",
+          "unit": null,
+          "label": "Circuit number",
+          "options": null,
+          "required": true
+        },
+        {
+          "key": "verify_tag_number_label_is_c",
+          "max": null,
+          "min": null,
+          "type": "text",
+          "unit": null,
+          "label": "Verify Tag number label is correct",
+          "options": null,
+          "required": true
+        },
+        {
+          "key": "insulation_resistance_to_ear",
+          "max": null,
+          "min": null,
+          "type": "number",
+          "unit": "MΩ",
+          "label": "Insulation Resistance to Earth",
+          "options": null,
+          "required": true
+        },
+        {
+          "key": "polarity",
+          "max": null,
+          "min": null,
+          "type": "text",
+          "unit": null,
+          "label": "Polarity",
+          "options": null,
+          "required": true
+        },
+        {
+          "key": "verify_voltage_level_v",
+          "max": null,
+          "min": null,
+          "type": "number",
+          "unit": "V",
+          "label": "Verify Voltage level",
+          "options": null,
+          "required": true
+        },
+        {
+          "key": "verify_fuse_mcb_according_to",
+          "max": null,
+          "min": null,
+          "type": "text",
+          "unit": null,
+          "label": "Verify fuse/MCB according to design",
+          "options": null,
+          "required": true
+        },
+        {
+          "key": "visual_inspection_for_extern",
+          "max": null,
+          "min": null,
+          "type": "text",
+          "unit": null,
+          "label": "Visual inspection for external damage",
+          "options": null,
+          "required": true
+        },
+        {
+          "key": "verify_correspondence_betwee",
+          "max": null,
+          "min": null,
+          "type": "text",
+          "unit": null,
+          "label": "Verify correspondence between breaker and circuit associated outlets",
+          "options": null,
+          "required": true
+        },
+        {
+          "key": "result",
+          "max": null,
+          "min": null,
+          "type": "result",
+          "unit": null,
+          "label": "Resultado",
+          "options": null,
+          "required": false
+        },
+        {
+          "key": "remarks",
+          "max": null,
+          "min": null,
+          "type": "text",
+          "unit": null,
+          "label": "Observación",
+          "options": null,
+          "required": false
+        }
+      ],
+      "version": 1
+    },
+    "input": {
+      "version": 1,
+      "count": 1,
+      "rows": [
+        {
+          "id": "R1",
+          "label": "Registro 1",
+          "cells": {
+            "receptacle": "dato",
+            "verify_tag_number_label_is_c": "dato",
+            "insulation_resistance_to_ear": 1,
+            "polarity": "dato",
+            "verify_voltage_level_v": 1,
+            "verify_fuse_mcb_according_to": "dato",
+            "visual_inspection_for_extern": "dato",
+            "verify_correspondence_betwee": "dato",
+            "result": "",
+            "remarks": ""
+          }
+        }
+      ]
+    },
+    "note": "Tabla completa con resultado vacío; no prueba aprobación de un ITR completo."
+  },
+  "continuitySelfDeclared": {
+    "template": "I01A v3",
+    "item": "continuidad",
+    "finding": "H6",
+    "input": {
+      "version": 1,
+      "grouping": "conductors",
+      "count": 1,
+      "shields": [],
+      "measurementRequired": false,
+      "rows": [
+        {
+          "id": "C1",
+          "from": "1",
+          "to": "1",
+          "result": "pass",
+          "remarks": "",
+          "reading": null,
+          "unit": ""
+        }
+      ]
+    },
+    "note": "Un conductor sin lectura es válido según la configuración declarada por la captura; no contrasta número contra D.4 o ingeniería."
+  }
+}

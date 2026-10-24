@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { requireDbEnv } from './env'
 
 /**
  * Evidencia del punch (fase 4 · bloque A, migración 20261016120000) contra la BD real:
@@ -14,7 +15,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
  * un punch en un subsistema ajeno altera los conteos de readiness.test) y la borra al final.
  */
 const env = process.env
-const enabled = !!(env.TEST_SUPABASE_URL && env.TEST_SUPABASE_ANON_KEY && env.TEST_USER_A_EMAIL && env.TEST_USER_A_PASSWORD && env.TEST_PROJECT_A_ID)
+requireDbEnv(['TEST_USER_A_EMAIL', 'TEST_USER_A_PASSWORD', 'TEST_PROJECT_A_ID'])
 
 const pid = env.TEST_PROJECT_A_ID!
 let a: SupabaseClient
@@ -28,7 +29,7 @@ async function punch() {
   return data
 }
 
-describe.skipIf(!enabled)('punch — resolver y verificar en campo por otra persona', () => {
+describe('punch — resolver y verificar en campo por otra persona', () => {
   beforeAll(async () => {
     a = createClient(env.TEST_SUPABASE_URL!, env.TEST_SUPABASE_ANON_KEY!, { auth: { persistSession: false } })
     const { data: auth, error } = await a.auth.signInWithPassword({ email: env.TEST_USER_A_EMAIL!, password: env.TEST_USER_A_PASSWORD! })

@@ -1,4 +1,4 @@
-// G-17: datos y ayudas de los recorridos E2E. Los ids son los de supabase/seed/e2e.sql.
+// G-17: datos y ayudas de los recorridos E2E. Los ids son los de supabase/seed/00_actors.sql y 10_e2e.sql.
 import { expect, type Page } from '@playwright/test'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 

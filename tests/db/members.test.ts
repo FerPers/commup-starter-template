@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { requireDbEnv } from './env'
 
 /**
  * S15 — Miembros, auditoría y cuotas (migración 20261110120000) contra la BD real, solo rechazos (nunca escribe):
@@ -9,12 +10,12 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
  * Invitación, aceptación, suspensión, vencimiento y «nunca sin owner activo» se probaron con ROLLBACK en la migración.
  */
 const env = process.env
-const enabled = !!(env.TEST_SUPABASE_URL && env.TEST_SUPABASE_ANON_KEY && env.TEST_USER_A_EMAIL && env.TEST_USER_A_PASSWORD)
+requireDbEnv(['TEST_USER_A_EMAIL', 'TEST_USER_A_PASSWORD'])
 let a: SupabaseClient
 let me: string
 let org: string
 
-describe.skipIf(!enabled)('Miembros, auditoría y cuotas (S15)', () => {
+describe('Miembros, auditoría y cuotas (S15)', () => {
   beforeAll(async () => {
     a = createClient(env.TEST_SUPABASE_URL!, env.TEST_SUPABASE_ANON_KEY!, { auth: { persistSession: false } })
     const { data, error } = await a.auth.signInWithPassword({ email: env.TEST_USER_A_EMAIL!, password: env.TEST_USER_A_PASSWORD! })

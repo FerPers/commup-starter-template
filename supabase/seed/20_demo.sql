@@ -1,49 +1,7 @@
--- Semilla de REVISIÓN en pantalla de las vistas por rol (inspector, líder, cliente). Solo Supabase LOCAL, encima de
--- supabase/seed/e2e.sql; no la carga `supabase db reset` (no está en config.toml) para no cambiar el mundo del E2E.
---   supabase db reset && docker exec -i supabase_db_commup psql -U postgres -v ON_ERROR_STOP=1 < supabase/seed/review.sql
---   node scripts/e2e/review-pid.mjs   (sube el PDF del P&ID de prueba PID-E2E-001)
--- Usuarios nuevos con la misma contraseña que el inspector del E2E (E2E_PASSWORD en e2e/fixtures.ts):
---   leader@e2e.commup.test (Líder) · client@e2e.commup.test (Cliente) · architect@e2e.commup.test (Arquitecta: revisa
---   lo que crea el líder, p. ej. los red-lines)
--- Cada cola de «Mi trabajo» de inspector y cliente queda con al menos un elemento.
-
--- ── Usuarios ────────────────────────────────────────────────────────────────
-INSERT INTO auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
-                        raw_app_meta_data, raw_user_meta_data, created_at, updated_at,
-                        confirmation_token, recovery_token, email_change_token_new, email_change, email_change_token_current,
-                        phone_change, phone_change_token, reauthentication_token)
-VALUES
-  ('00000000-0000-0000-0000-000000000000', 'e2e00000-0000-4000-8000-0000000000a2', 'authenticated', 'authenticated',
-   'leader@e2e.commup.test', crypt('E2e-commup-2026!', gen_salt('bf')), now(),
-   '{"provider":"email","providers":["email"]}', '{"full_name":"Leo Líder"}', now(), now(),
-   '', '', '', '', '', '', '', ''),
-  ('00000000-0000-0000-0000-000000000000', 'e2e00000-0000-4000-8000-0000000000a3', 'authenticated', 'authenticated',
-   'client@e2e.commup.test', crypt('E2e-commup-2026!', gen_salt('bf')), now(),
-   '{"provider":"email","providers":["email"]}', '{"full_name":"Clara Cliente"}', now(), now(),
-   '', '', '', '', '', '', '', ''),
-  ('00000000-0000-0000-0000-000000000000', 'e2e00000-0000-4000-8000-0000000000a4', 'authenticated', 'authenticated',
-   'architect@e2e.commup.test', crypt('E2e-commup-2026!', gen_salt('bf')), now(),
-   '{"provider":"email","providers":["email"]}', '{"full_name":"Ana Arquitecta"}', now(), now(),
-   '', '', '', '', '', '', '', '');
-
-INSERT INTO auth.identities (id, user_id, provider_id, provider, identity_data, last_sign_in_at, created_at, updated_at)
-VALUES
-  (gen_random_uuid(), 'e2e00000-0000-4000-8000-0000000000a2', 'e2e00000-0000-4000-8000-0000000000a2', 'email',
-   '{"sub":"e2e00000-0000-4000-8000-0000000000a2","email":"leader@e2e.commup.test","email_verified":true}', now(), now(), now()),
-  (gen_random_uuid(), 'e2e00000-0000-4000-8000-0000000000a3', 'e2e00000-0000-4000-8000-0000000000a3', 'email',
-   '{"sub":"e2e00000-0000-4000-8000-0000000000a3","email":"client@e2e.commup.test","email_verified":true}', now(), now(), now()),
-  (gen_random_uuid(), 'e2e00000-0000-4000-8000-0000000000a4', 'e2e00000-0000-4000-8000-0000000000a4', 'email',
-   '{"sub":"e2e00000-0000-4000-8000-0000000000a4","email":"architect@e2e.commup.test","email_verified":true}', now(), now(), now());
-
-INSERT INTO public.profiles (id, full_name, locale) VALUES
-  ('e2e00000-0000-4000-8000-0000000000a2', 'Leo Líder', 'es'),
-  ('e2e00000-0000-4000-8000-0000000000a3', 'Clara Cliente', 'es'),
-  ('e2e00000-0000-4000-8000-0000000000a4', 'Ana Arquitecta', 'es');
-
-INSERT INTO public.org_members (org_id, user_id, role, status) VALUES
-  ('e2e00000-0000-4000-8000-000000000001', 'e2e00000-0000-4000-8000-0000000000a2', 'leader', 'active'),
-  ('e2e00000-0000-4000-8000-000000000001', 'e2e00000-0000-4000-8000-0000000000a3', 'client', 'active'),
-  ('e2e00000-0000-4000-8000-000000000001', 'e2e00000-0000-4000-8000-0000000000a4', 'architect', 'active');
+-- A50 (2026-10-24): demo LOCAL restablecible (`npm run demo:reset`), encima de 00_actors.sql y 10_e2e.sql en el mismo
+-- proyecto del E2E. Une lo que antes era supabase/seed/review.sql (colas de «Mi trabajo» por rol) con los casos de
+-- liberación y parte de scripts/demo-data/. Datos sintéticos; casos y resultado esperado en docs/DEMO-LOCAL.md.
+-- Solo Supabase local: nunca contra prod.
 
 -- ── Más tags ────────────────────────────────────────────────────────────────
 INSERT INTO public.tags (id, subsystem_id, project_id, discipline_id, tag_number, description) VALUES
@@ -139,7 +97,7 @@ INSERT INTO public.actions (id, org_id, project_id, seq, number, title, descript
    current_date + 1, 'medium', 'field', 'open', 'e2e00000-0000-4000-8000-0000000000a2');
 
 -- ── P&ID para el visor (red-line, pines, límites) ───────────────────────────
--- El PDF lo sube scripts/e2e/review-pid.mjs a project-documents/<project>/<document>/rev-A.pdf.
+-- El PDF lo sube scripts/demo/pid.mjs (dentro de `npm run demo:reset`) a project-documents/<project>/<document>/rev-A.pdf.
 INSERT INTO public.documents (id, org_id, project_id, number, title, doc_type) VALUES
   ('e2e00000-0000-4000-8000-0000000000e1', 'e2e00000-0000-4000-8000-000000000001', 'e2e00000-0000-4000-8000-0000000000b1',
    'PID-E2E-001', 'P&ID unidad E2E, hoja 1', 'pid');
@@ -148,3 +106,127 @@ INSERT INTO public.document_revisions (id, document_id, project_id, seq, rev, st
    1, 'A', 'ifc', current_date - 20,
    'e2e00000-0000-4000-8000-0000000000b1/e2e00000-0000-4000-8000-0000000000e1/rev-A.pdf', 'PID-E2E-001_A.pdf');
 UPDATE public.documents SET current_revision_id = 'e2e00000-0000-4000-8000-0000000000e2' WHERE id = 'e2e00000-0000-4000-8000-0000000000e1';
+
+-- ═══ A50: casos de liberación ═══════════════════════════════════════════════════════════════════════════════════
+-- Área A200 «Servicios» con un sistema por estado de la liberación A (Completamiento mecánico). Todo pasa por las RPC
+-- de la app con la identidad de cada actor (request.jwt.claims), así que respeta las mismas reglas que la pantalla:
+-- dos firmas de ITR (inspector ejecuta, líder supervisa), aprobación de Comisionamiento (owner) y co-firmas de
+-- Operaciones (admin) y HSE (arquitecta), cada una de una persona distinta.
+--
+--   A200-S01 Aire de instrumentos   sano: ITR aprobados, liberación A aprobada con todas las firmas
+--   A200-S02 Agua de servicio       listo: ITR aprobados, falta aprobar (cola de quien aprueba)
+--   A200-S03 Gas combustible        pendiente de firmas: aprobado por Comisionamiento, falta HSE
+--   A200-S04 Nitrógeno              regresado: aprobado con todas las firmas y después se reabrió un ITR
+--   A200-S05 Drenajes cerrados      sin información: sin tags ni ITR (alcance desconocido, no «0 pendientes»)
+--   A100-S01 Sistema E2E (arriba)   bloqueado: ITR sin aprobar y un punch Cat A abierto
+DO $demo$
+DECLARE
+  v_org   uuid := 'e2e00000-0000-4000-8000-000000000001';
+  v_proj  uuid := 'e2e00000-0000-4000-8000-0000000000b1';
+  v_phase uuid := 'e2e00000-0000-4000-8000-0000000000d2';
+  v_disc  uuid := 'e2e00000-0000-4000-8000-0000000000d1';
+  v_area  uuid := 'e2e00000-0000-4000-8000-000000000201';
+  v_tpl   uuid := 'e2e00000-0000-4000-8000-000000000241';
+  u_insp  uuid := 'e2e00000-0000-4000-8000-0000000000a1';
+  u_lead  uuid := 'e2e00000-0000-4000-8000-0000000000a2';
+  u_arch  uuid := 'e2e00000-0000-4000-8000-0000000000a4';
+  u_own   uuid := 'e2e00000-0000-4000-8000-0000000000a5';
+  u_adm   uuid := 'e2e00000-0000-4000-8000-0000000000a6';
+  v_gate  uuid;
+  v_sys   uuid;
+  v_sub   uuid;
+  v_tag   uuid;
+  v_itr   uuid;
+  v_appr  uuid;
+  v_reopen uuid;
+  r record;
+  n int := 0;
+BEGIN
+  SELECT id INTO v_gate FROM readiness_gates WHERE org_id = v_org AND phase_id = v_phase;
+
+  INSERT INTO areas (id, project_id, name, code) VALUES (v_area, v_proj, 'Servicios', 'A200');
+
+  INSERT INTO itr_templates (id, org_id, discipline_id, phase_id, code, title) VALUES
+    (v_tpl, v_org, v_disc, v_phase, 'I04A', 'Inspección visual de instrumento (demo)');
+  INSERT INTO itr_template_sections (id, template_id, title, order_index) VALUES
+    ('e2e00000-0000-4000-8000-000000000242', v_tpl, 'Inspección', 1);
+  INSERT INTO itr_template_items (id, section_id, template_id, description, item_type, order_index, item_number) VALUES
+    ('e2e00000-0000-4000-8000-000000000243', 'e2e00000-0000-4000-8000-000000000242', v_tpl, 'Montaje y soportes conformes', 'checkbox', 1, '1.1'),
+    ('e2e00000-0000-4000-8000-000000000244', 'e2e00000-0000-4000-8000-000000000242', v_tpl, 'Placa de identificación legible', 'checkbox', 2, '1.2');
+
+  FOR r IN SELECT * FROM (VALUES
+    (1, 'A200-S01', 'Aire de instrumentos', 'healthy',  ARRAY['PT-2101', 'PDT-2102']),
+    (2, 'A200-S02', 'Agua de servicio',     'ready',    ARRAY['FT-2201', 'LT-2202']),
+    (3, 'A200-S03', 'Gas combustible',      'pending',  ARRAY['PT-2301', 'TT-2302']),
+    (4, 'A200-S04', 'Nitrógeno',            'regressed',ARRAY['PT-2401', 'FT-2402']),
+    (5, 'A200-S05', 'Drenajes cerrados',    'empty',    ARRAY[]::text[])
+  ) AS v(i, code, name, kase, tags) LOOP
+    v_sys := ('e2e00000-0000-4000-8000-00000000021' || r.i)::uuid;
+    v_sub := ('e2e00000-0000-4000-8000-00000000022' || r.i)::uuid;
+    INSERT INTO systems (id, area_id, project_id, name, code) VALUES (v_sys, v_area, v_proj, r.name, r.code);
+    INSERT INTO subsystems (id, system_id, project_id, name, code) VALUES (v_sub, v_sys, v_proj, r.name, r.code || '-01');
+
+    FOR k IN 1 .. coalesce(array_length(r.tags, 1), 0) LOOP
+      n := n + 1;
+      v_tag := ('e2e00000-0000-4000-8000-0000000003' || lpad(n::text, 2, '0'))::uuid;
+      v_itr := ('e2e00000-0000-4000-8000-0000000004' || lpad(n::text, 2, '0'))::uuid;
+      INSERT INTO tags (id, subsystem_id, project_id, discipline_id, tag_number, description)
+      VALUES (v_tag, v_sub, v_proj, v_disc, r.tags[k], 'Instrumento de ' || lower(r.name));
+      INSERT INTO itrs (id, template_id, subsystem_id, project_id, phase_id, tag_id, itr_number)
+      VALUES (v_itr, v_tpl, v_sub, v_proj, v_phase, v_tag, 'DEMO-' || lpad(n::text, 4, '0'));
+      INSERT INTO itr_assignments (itr_id, user_id, role) VALUES (v_itr, u_insp, 'executor'), (v_itr, u_lead, 'supervisor');
+      INSERT INTO itr_responses (itr_id, item_id, value_bool, is_passed, responded_by) VALUES
+        (v_itr, 'e2e00000-0000-4000-8000-000000000243', true, true, u_insp),
+        (v_itr, 'e2e00000-0000-4000-8000-000000000244', true, true, u_insp);
+      PERFORM set_config('request.jwt.claims', json_build_object('sub', u_insp, 'role', 'authenticated')::text, true);
+      PERFORM sign_itr_atomic(v_itr, 'executor');
+      PERFORM set_config('request.jwt.claims', json_build_object('sub', u_lead, 'role', 'authenticated')::text, true);
+      PERFORM sign_itr_atomic(v_itr, 'supervisor');
+      IF r.kase = 'regressed' AND v_reopen IS NULL THEN v_reopen := v_itr; END IF;
+    END LOOP;
+
+    IF r.kase IN ('healthy', 'pending', 'regressed') THEN
+      PERFORM set_config('request.jwt.claims', json_build_object('sub', u_own, 'role', 'authenticated')::text, true);
+      v_appr := approve_system_gate(v_sys, v_gate, '[]'::jsonb, 'Liberación de la demo');
+      PERFORM set_config('request.jwt.claims', json_build_object('sub', u_adm, 'role', 'authenticated')::text, true);
+      PERFORM sign_system_gate(v_appr, 'operations', 'Recibido por Operaciones');
+      IF r.kase <> 'pending' THEN
+        PERFORM set_config('request.jwt.claims', json_build_object('sub', u_arch, 'role', 'authenticated')::text, true);
+        PERFORM sign_system_gate(v_appr, 'hse', 'Sin observaciones de HSE');
+      END IF;
+    END IF;
+  END LOOP;
+
+  -- Regresión: después de liberar, la arquitecta reabre un ITR (p. ej. por una lectura mal transcrita).
+  PERFORM set_config('request.jwt.claims', json_build_object('sub', u_arch, 'role', 'authenticated')::text, true);
+  PERFORM reopen_itr_atomic(v_reopen, 'Lectura mal transcrita: se repite la inspección');
+  PERFORM set_config('request.jwt.claims', '', true);
+END $demo$;
+
+-- ── Planificación (de scripts/demo-data/seed_skyline_plans_demo.sql) ────────────────────────────────────────────
+-- Fechas por sistema × liberación relativas al «hoy» del proyecto: vencidas, de esta semana y futuras; A200-S03 solo
+-- con pronóstico y A200-S05 sin fecha (bandeja «Sin fecha» del skyline).
+WITH plan(code, a_days, forecast_only) AS (VALUES
+  ('A100-S01', -9, false), ('A200-S01', -14, false), ('A200-S02', 3, false), ('A200-S03', -2, true), ('A200-S04', -12, false)
+),
+gates(code, shift) AS (VALUES ('A', 0), ('B', 28), ('C', 56), ('D', 84)),
+rows AS (
+  SELECT s.id AS system_id, g.id AS gate_id, project_today(s.project_id) + p.a_days + gs.shift AS d, p.forecast_only,
+         abs(hashtext(s.code)) % 7 AS slip  -- el pronóstico va 0–6 días detrás del compromiso (determinista)
+  FROM plan p
+  JOIN systems s ON s.project_id = 'e2e00000-0000-4000-8000-0000000000b1' AND s.code = p.code
+  JOIN gates gs ON true
+  JOIN readiness_gates g ON g.org_id = 'e2e00000-0000-4000-8000-000000000001' AND g.code = gs.code AND g.is_active
+)
+INSERT INTO system_gate_plans (system_id, gate_id, org_id, project_id, forecast_date, forecast_at, commitment_date, commitment_at)
+SELECT system_id, gate_id, 'e2e00000-0000-4000-8000-000000000001', 'e2e00000-0000-4000-8000-0000000000b1', d + slip, now(),
+       CASE WHEN forecast_only THEN NULL ELSE d END, CASE WHEN forecast_only THEN NULL ELSE now() END
+FROM rows;
+
+-- ── Equipos de prueba (de scripts/demo-data/seed_test_equipment_demo.sql) ───────────────────────────────────────
+-- Uno vigente, uno por vencer (< 30 días) y uno vencido, siempre relativo a hoy.
+INSERT INTO public.test_equipment (org_id, code, kind, make, model, serial_number, owner_company, certificate_number, calibrated_on, calibration_due)
+VALUES
+  ('e2e00000-0000-4000-8000-000000000001', 'CAL-01', 'loop_calibrator', 'Fluke', '754', '4417021', 'Instrumentos del Llano Ltda.', 'MET-2025-1187', current_date - 345, current_date + 20),
+  ('e2e00000-0000-4000-8000-000000000001', 'PG-01', 'pressure_gauge', 'WIKA', 'CPG1500', 'WK-88231', 'Montajes Andinos S.A.S.', 'LAB-PR-2025-0093', current_date - 380, current_date - 15),
+  ('e2e00000-0000-4000-8000-000000000001', 'MM-01', 'multimeter', 'Fluke', '87V', '99120345', 'Montajes Andinos S.A.S.', 'MET-2026-0221', current_date - 60, current_date + 305);

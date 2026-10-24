@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { requireDbEnv } from './env'
 
 /**
  * Reporte diario y relevo (fase 5 sesión 3, migración 20261017180000) contra la BD real, solo con
@@ -8,7 +9,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
  * dejan historia inmutable) se probaron con rollback en la migración y se prueban en la UI.
  */
 const env = process.env
-const enabled = !!(env.TEST_SUPABASE_URL && env.TEST_SUPABASE_ANON_KEY && env.TEST_USER_A_EMAIL && env.TEST_USER_A_PASSWORD && env.TEST_PROJECT_A_ID)
+requireDbEnv(['TEST_USER_A_EMAIL', 'TEST_USER_A_PASSWORD', 'TEST_PROJECT_A_ID'])
 
 const pid = env.TEST_PROJECT_A_ID!
 // Fecha pasada poco probable de chocar con reportes reales del proyecto de prueba.
@@ -17,7 +18,7 @@ let a: SupabaseClient
 const reports: string[] = []
 const handovers: string[] = []
 
-describe.skipIf(!enabled)('reporte diario y relevo — borradores', () => {
+describe('reporte diario y relevo — borradores', () => {
   beforeAll(async () => {
     a = createClient(env.TEST_SUPABASE_URL!, env.TEST_SUPABASE_ANON_KEY!, { auth: { persistSession: false } })
     const { error } = await a.auth.signInWithPassword({ email: env.TEST_USER_A_EMAIL!, password: env.TEST_USER_A_PASSWORD! })

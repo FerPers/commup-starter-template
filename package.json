@@ -57,7 +57,9 @@
 		"typecheck": "tsc --noEmit",
 		"help:build": "node scripts/docs/build-help.mjs",
 		"prepare": "husky",
-		"test": "vitest run",
+		"test": "vitest run --project unit",
+		"test:db": "node scripts/db-tests/run.mjs",
+		"demo:reset": "node scripts/demo/reset.mjs",
 		"test:watch": "vitest",
 		"e2e": "node scripts/e2e/run.mjs"
 	},

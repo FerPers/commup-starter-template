@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { evaluateEligibility, resolveCatBLimit } from '@/lib/certificates/eligibility'
+import { requireDbEnv } from './env'
 
 /**
  * Gate de certificados contra la BD real (Sprint T fase 2, 2026-09-04).
@@ -20,7 +21,7 @@ import { evaluateEligibility, resolveCatBLimit } from '@/lib/certificates/eligib
  * `emit_domain_event` (domain_events reales en el proyecto de prueba): usar un proyecto de QA, nunca uno de cliente.
  */
 const env = process.env
-const enabled = !!(env.TEST_SUPABASE_URL && env.TEST_SUPABASE_ANON_KEY && env.TEST_USER_A_EMAIL && env.TEST_USER_A_PASSWORD && env.TEST_PROJECT_A_ID)
+requireDbEnv(['TEST_USER_A_EMAIL', 'TEST_USER_A_PASSWORD', 'TEST_PROJECT_A_ID'])
 
 type Readiness = {
   itr_total: number
@@ -82,7 +83,7 @@ async function insertOrThrow<T>(label: string, q: PromiseLike<{ data: T | null; 
   return data as NonNullable<T>
 }
 
-describe.skipIf(!enabled)('certificate gate — compute_system_readiness + numerador de punches', () => {
+describe('certificate gate — compute_system_readiness + numerador de punches', () => {
   beforeAll(async () => {
     a = createClient(env.TEST_SUPABASE_URL!, env.TEST_SUPABASE_ANON_KEY!, { auth: { persistSession: false } })
     const { data: auth, error } = await a.auth.signInWithPassword({ email: env.TEST_USER_A_EMAIL!, password: env.TEST_USER_A_PASSWORD! })

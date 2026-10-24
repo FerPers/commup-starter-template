@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { requireDbEnv } from './env'
 
 /**
  * Gestión diaria (fase 5 del plan readiness, migración 20261017120000) contra la BD real:
@@ -13,7 +14,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
  * las restricciones; las acciones de prueba quedan canceladas o se borran como borradores.
  */
 const env = process.env
-const enabled = !!(env.TEST_SUPABASE_URL && env.TEST_SUPABASE_ANON_KEY && env.TEST_USER_A_EMAIL && env.TEST_USER_A_PASSWORD && env.TEST_PROJECT_A_ID)
+requireDbEnv(['TEST_USER_A_EMAIL', 'TEST_USER_A_PASSWORD', 'TEST_PROJECT_A_ID'])
 
 const pid = env.TEST_PROJECT_A_ID!
 const stamp = `D${Date.now().toString(36).toUpperCase()}`
@@ -44,7 +45,7 @@ async function constraintsCriterion() {
   return (data as GateRow[]).find(g => g.gate_id === ids.gate)?.criteria.find(c => c.kind === 'constraints_clear')
 }
 
-describe.skipIf(!enabled)('gestión diaria — acciones, restricciones y TQ', () => {
+describe('gestión diaria — acciones, restricciones y TQ', () => {
   beforeAll(async () => {
     a = createClient(env.TEST_SUPABASE_URL!, env.TEST_SUPABASE_ANON_KEY!, { auth: { persistSession: false } })
     const { data, error } = await a.auth.signInWithPassword({ email: env.TEST_USER_A_EMAIL!, password: env.TEST_USER_A_PASSWORD! })
