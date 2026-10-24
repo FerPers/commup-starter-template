@@ -49,13 +49,14 @@ export type QueueKind = OutboxKind | 'response'
 /**
  * Intentos máximos ante un rechazo lógico del servidor (no de red) antes de
  * descartar la entrada dejando rastro en sync_conflicts.
- * Fotos: 3 (un permiso o validación transitoria puede corregirse).
+ * Fotos: nunca (A01, revisión 2026-10-23): sync_conflicts guarda metadatos, no los bytes; una foto rechazada
+ * queda en la bandeja «No sincronizado» del ITR hasta reintentarse bien o descartarse a mano (con constancia).
  * Punches: nunca (S06, I-02): un defecto encontrado en campo no se pierde en silencio; queda en
  * la bandeja «No sincronizado» del ITR con su error hasta que se corrige o alguien lo descarta.
  * Firmas: 1 — si el servidor la rechaza es porque el ITR cambió de estado
  * (rechazado, ya firmado, aprobado) y reintentar no la haría válida.
  */
-export const OUTBOX_MAX_ATTEMPTS: Record<QueueKind, number> = { photo: 3, punch: Number.POSITIVE_INFINITY, signature: 1, response: 3 }
+export const OUTBOX_MAX_ATTEMPTS: Record<QueueKind, number> = { photo: Number.POSITIVE_INFINITY, punch: Number.POSITIVE_INFINITY, signature: 1, response: 3 }
 
 export function outboxPolicy(kind: QueueKind, attemptsSoFar: number): 'retry' | 'drop' {
   return attemptsSoFar + 1 >= OUTBOX_MAX_ATTEMPTS[kind] ? 'drop' : 'retry'

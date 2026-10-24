@@ -9,9 +9,12 @@
  * Sprint O (2026-09-07): después de las respuestas drena la bandeja de salida
  * (fotos → bucket + itr_attachments; punches → createPunch; firmas → signItr).
  * Un fallo de red detiene el replay (se reintenta luego); un rechazo del servidor
- * cuenta un intento y, al agotar la política (outboxPolicy: 3 para fotos/punches,
- * 1 para firmas), descarta la entrada dejando rastro en sync_conflicts y avisando
- * a la UI con SYNC_DROPPED_EVENT.
+ * cuenta un intento y, al agotar la política (outboxPolicy: 3 para respuestas,
+ * 1 para firmas; fotos y punches nunca), descarta la entrada dejando rastro en
+ * sync_conflicts y avisando a la UI con SYNC_DROPPED_EVENT.
+ *
+ * A01 (revisión 2026-10-23): la entrada se borra del dispositivo SOLO si el rastro quedó guardado; si
+ * log_sync_conflict falla, se queda y se reintenta en el próximo replay.
  *
  * Fase 6 (2026-10-16): al final drena la bandeja de arranque (src/lib/sync/startup-outbox.ts).
  *
@@ -98,7 +101,7 @@ export async function replayQueueOnce(): Promise<{ flushed: number; conflicts: n
           // S18 (C-07): rechazo lógico (ITR firmado/aprobado, ítem que ya no aplica). Cuenta un intento y sigue
           // con las demás; al agotar la política se descarta con rastro en sync_conflicts y aviso a la UI.
           if (outboxPolicy('response', item.attempts ?? 0) === 'drop') {
-            await supabase.rpc('log_sync_conflict', {
+            const { error: traceError } = await supabase.rpc('log_sync_conflict', {
               p_entity_type: 'itr_response',
               p_entity_id: `${item.itrId}:${item.itemId}`,
               p_local_payload: responseLocalPayload(item),
@@ -108,6 +111,7 @@ export async function replayQueueOnce(): Promise<{ flushed: number; conflicts: n
               p_winner: 'remote',
               p_notes: `Descartado tras ${(item.attempts ?? 0) + 1} intento(s): ${res.error}`,
             })
+            if (traceError) { await markResponseAttempt(item.id, res.error); continue }
             await removeFromQueue(item.id)
             conflicts++
             if (typeof window !== 'undefined') {
@@ -165,17 +169,8 @@ async function replayOutboxOnce(
         // Rechazo lógico del servidor (permiso, validación, ITR cambió de estado): contar intento.
         const attempts = (entry.attempts ?? 0) + 1
         if (outboxPolicy(entry.kind, entry.attempts ?? 0) === 'drop') {
-          await supabase.rpc('log_sync_conflict', {
-            p_project_id: entry.projectId,
-            p_entity_type: entry.kind === 'photo' ? 'itr_attachment' : entry.kind === 'punch' ? 'punch' : 'itr_signature',
-            p_entity_id: `${entry.itrId}:${entry.kind}:${entry.id}`,
-            p_local_payload: outboxPayload(entry),
-            p_remote_payload: {},
-            p_local_ts: entry.queuedAt,
-            p_remote_ts: new Date().toISOString(),
-            p_winner: 'remote',
-            p_notes: `Descartado tras ${attempts} intento(s): ${result.error}`,
-          })
+          const traceError = await traceOutboxDiscard(supabase, entry, `Descartado tras ${attempts} intento(s): ${result.error}`)
+          if (traceError) { await markOutboxAttempt(entry.id, result.error); continue }
           await removeFromOutbox(entry.id)
           dropped++
           if (typeof window !== 'undefined') {
@@ -200,6 +195,40 @@ async function replayOutboxOnce(
   if (flushed > 0 || dropped > 0) notifyOutboxChanged()
   const remaining = sendableBy(await getOutbox(), userId).length
   return { flushed, dropped, remaining }
+}
+
+/** Rastro en sync_conflicts de una entrada de la bandeja que deja el dispositivo; devuelve el error si no quedó. */
+async function traceOutboxDiscard(supabase: ReturnType<typeof createClient>, entry: OutboxEntry, notes: string) {
+  const { error } = await supabase.rpc('log_sync_conflict', {
+    p_project_id: entry.projectId,
+    p_entity_type: entry.kind === 'photo' ? 'itr_attachment' : entry.kind === 'punch' ? 'punch' : 'itr_signature',
+    p_entity_id: `${entry.itrId}:${entry.kind}:${entry.id}`,
+    p_local_payload: outboxPayload(entry),
+    p_remote_payload: {},
+    p_local_ts: entry.queuedAt,
+    p_remote_ts: new Date().toISOString(),
+    p_winner: 'remote',
+    p_notes: notes,
+  })
+  return error
+}
+
+/**
+ * A01: descarte a mano de una foto o punch «No sincronizado». Primero la constancia (hace falta red), después se
+ * borra del dispositivo; sin constancia no se borra.
+ */
+export async function discardOutboxEntry(entry: OutboxEntry): Promise<{ ok: true } | { error: 'trace_failed' }> {
+  if (entry.id === undefined) return { ok: true }
+  let traceError: unknown
+  try {
+    traceError = await traceOutboxDiscard(createClient(), entry, `Descartado por el usuario: ${entry.lastError ?? ''}`.trim())
+  } catch (err) {
+    traceError = err
+  }
+  if (traceError) return { error: 'trace_failed' }
+  await removeFromOutbox(entry.id)
+  notifyOutboxChanged()
+  return { ok: true }
 }
 
 async function sendOutboxEntry(entry: OutboxEntry): Promise<{ ok: true } | { error: string }> {

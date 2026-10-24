@@ -41,16 +41,19 @@ describe('storagePathFor', () => {
 })
 
 describe('outboxPolicy (conflictos al sincronizar)', () => {
-  it('retries photos and punches twice, drops on the third rejection', () => {
+  it('nunca descarta solas fotos ni punches (A01 / S06): quedan «No sincronizado»', () => {
     expect(outboxPolicy('photo', 0)).toBe('retry')
-    expect(outboxPolicy('photo', 1)).toBe('retry')
-    expect(outboxPolicy('photo', 2)).toBe('drop')
+    expect(outboxPolicy('photo', 50)).toBe('retry')
     // S06: un punch nunca se descarta solo; queda «No sincronizado».
     expect(outboxPolicy('punch', 2)).toBe('retry')
     expect(outboxPolicy('punch', 50)).toBe('retry')
   })
   it('drops a signature on the first rejection (ITR changed state meanwhile)', () => {
     expect(outboxPolicy('signature', 0)).toBe('drop')
+  })
+  it('una respuesta se descarta al tercer rechazo (sus valores quedan en sync_conflicts)', () => {
+    expect(outboxPolicy('response', 1)).toBe('retry')
+    expect(outboxPolicy('response', 2)).toBe('drop')
   })
 })
 

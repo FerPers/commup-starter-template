@@ -1,6 +1,6 @@
 'use client'
 
-import { PersonName, useAskDialog } from '@/components/ui'
+import { PersonName, useAskDialog, useToast } from '@/components/ui'
 import { ownershipOf } from '@/lib/sync/ownership'
 import { isInactiveMember } from '@/lib/people/inactive'
 // Pantalla de ejecución de ITR — orquestador (Q2). El estado de autosave vive
@@ -18,7 +18,8 @@ import { parseSourceRows } from '@/lib/itr/table'
 import { localItrStatus } from '@/lib/sync/outbox-utils'
 import { itemDescription } from '@/lib/itr/item-text'
 import { nextPendingItemId } from '@/lib/itr/next-pending'
-import { getOutbox, removeFromOutbox, OUTBOX_CHANGED_EVENT, SYNC_DONE_EVENT } from '@/lib/offline-queue'
+import { getOutbox, OUTBOX_CHANGED_EVENT, SYNC_DONE_EVENT, type OutboxEntry } from '@/lib/offline-queue'
+import { discardOutboxEntry } from '@/lib/sync/replay'
 import { useItrAutosave } from './useItrAutosave'
 import ItemRow from './ItemRow'
 import SignModal from './SignModal'
@@ -82,6 +83,7 @@ export default function ItrExecution({
   const [isModalPending, startModalTransition] = useTransition()
   // G-08: diálogo propio
   const { dialog, confirm } = useAskDialog()
+  const toast = useToast()
   // C-36 (S04): el idioma guardado se lee en un efecto; leerlo al inicializar desajustaba la hidratación.
   const [itemLang, setItemLangState] = useState<'es' | 'en'>(locale.startsWith('es') ? 'es' : 'en')
   useEffect(() => {
@@ -127,8 +129,11 @@ export default function ItrExecution({
   // Sprint O: fotos y firmas de este ITR que siguen en la bandeja de salida (sin red).
   const [pendingPhotos, setPendingPhotos] = useState<Attachment[]>([])
   const [pendingSignatures, setPendingSignatures] = useState<Signature[]>([])
-  /** S06 (I-02): punch que el servidor rechazó; quedan aquí hasta corregir o descartar, nunca se pierden en silencio. */
-  const [unsyncedPunches, setUnsyncedPunches] = useState<Array<{ id: number; description: string; error: string }>>([])
+  /**
+   * S06 (I-02) + A01: punch y fotos que el servidor rechazó; quedan aquí hasta reintentarse bien o descartarse a
+   * mano (con constancia en sync_conflicts), nunca se pierden en silencio.
+   */
+  const [unsynced, setUnsynced] = useState<Array<OutboxEntry & { id: number; lastError: string }>>([])
   const [justSigned, setJustSigned] = useState<Signature[]>([])
   useEffect(() => {
     setJustSigned(previous => previous.filter(local => !itr.itr_signatures.some(saved => saved.role === local.role)))
@@ -148,9 +153,8 @@ export default function ItrExecution({
         setPendingSignatures(own
           .filter((e): e is typeof e & { kind: 'signature' } => e.kind === 'signature')
           .map(e => pendingSignature(e, currentUserId, executorName)))
-        setUnsyncedPunches(own
-          .filter((e): e is typeof e & { kind: 'punch' } => e.kind === 'punch' && !!e.lastError && e.id !== undefined)
-          .map(e => ({ id: e.id!, description: e.description, error: e.lastError! })))
+        setUnsynced(own.filter((e): e is OutboxEntry & { id: number; lastError: string } =>
+          (e.kind === 'punch' || e.kind === 'photo') && !!e.lastError && e.id !== undefined))
       }).catch(() => {})
     }
     load()
@@ -522,14 +526,21 @@ export default function ItrExecution({
           </div>
         )}
 
-        {/* S06 (I-02): punch rechazados por el servidor — visibles hasta corregir o descartar */}
-        {unsyncedPunches.length > 0 && (
+        {/* S06 (I-02) + A01: punch y fotos rechazados por el servidor — visibles hasta reintentar bien o descartar */}
+        {unsynced.length > 0 && (
           <div role="alert" style={{ marginTop: '12px', padding: '10px 14px', background: 'var(--danger-50)', borderRadius: '8px', border: '1px solid var(--danger-200)' }}>
             <p style={{ fontSize: '12px', fontWeight: 700, color: 'var(--danger-700)', margin: '0 0 6px' }}>⚠ {t('sync.unsyncedTitle')}</p>
-            {unsyncedPunches.map(u => (
+            {unsynced.map(u => (
               <div key={u.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginTop: '4px' }}>
-                <p style={{ fontSize: '12px', color: 'var(--danger-900)', margin: 0, flex: 1, wordBreak: 'break-word' }}>{t('sync.unsyncedPunch', { desc: u.description.slice(0, 60), error: u.error })}</p>
-                <button onClick={async () => { if (await confirm({ message: t('sync.discardConfirm'), confirmLabel: t('sync.discard'), danger: true })) void removeFromOutbox(u.id) }}
+                <p style={{ fontSize: '12px', color: 'var(--danger-900)', margin: 0, flex: 1, wordBreak: 'break-word' }}>
+                  {u.kind === 'photo'
+                    ? t('sync.unsyncedPhoto', { name: u.fileName, error: u.lastError })
+                    : u.kind === 'punch' ? t('sync.unsyncedPunch', { desc: u.description.slice(0, 60), error: u.lastError }) : null}
+                </p>
+                <button onClick={async () => {
+                  if (!await confirm({ message: u.kind === 'photo' ? t('sync.discardPhotoConfirm') : t('sync.discardConfirm'), confirmLabel: t('sync.discard'), danger: true })) return
+                  if ('error' in await discardOutboxEntry(u)) toast.error(t('sync.discardNeedsNetwork'))
+                }}
                   style={{ padding: '3px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--danger-200)', background: 'var(--card-bg)', color: 'var(--danger-700)', cursor: 'pointer', flexShrink: 0 }}>
                   {t('sync.discard')}
                 </button>
