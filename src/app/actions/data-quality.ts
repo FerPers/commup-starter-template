@@ -1,7 +1,6 @@
 'use server'
 
 import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
-import { checkProjectAccess } from '@/lib/auth/access'
 
 export type DQSeverity = 'critical' | 'error' | 'warning'
 
@@ -56,38 +55,6 @@ export const listDataQualityIssues = withAuth(
     })
     if (error) return { error: error.message }
     return { issues: (data ?? []) as DQIssue[] }
-  },
-)
-
-export type ProjectForecast = {
-  project_id: string
-  total_itrs: number
-  itrs_approved: number
-  itrs_remaining: number
-  velocity_per_day: number
-  days_to_complete_p50: number | null
-  eta_p50: string | null
-  confidence: 'low' | 'medium' | 'high'
-  punch_a_open: number
-  blockers: number
-}
-
-export const getProjectForecast = withAuthOnly(
-  {},
-  async (
-    ctx,
-    projectId: string,
-  ): Promise<{ error?: string; forecast?: ProjectForecast }> => {
-    // SEC-006: el RPC es SECURITY DEFINER — verificar ownership antes de llamarlo
-    const access = await checkProjectAccess(ctx.supabase, ctx.orgId, projectId)
-    if (!access.ok) return { error: access.error }
-
-    const { data, error } = await ctx.supabase.rpc('analytics_project_forecast', {
-      p_project_id: projectId,
-    })
-    if (error) return { error: error.message }
-    const rows = (data ?? []) as ProjectForecast[]
-    return { forecast: rows[0] }
   },
 )
 

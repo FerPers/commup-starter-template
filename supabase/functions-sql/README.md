@@ -54,7 +54,7 @@ reproducir migraciones para saber qué calcula un gate o una cola de «Mi trabaj
 | `take_kpi_snapshot` / `preservation_is_overdue` / `preservation_due_counts` | Snapshot KPI y vencidas de preservación (S09/S10) |
 | `evaluate_performance_run` | Evaluación previa de desempeño, guardada en `evaluation_preview` (S10/B-26) |
 | `ingest_signal_samples` / `signal_series` / `ensure_signal_sample_partitions` / `cleanup_signal_samples_retention` / `performance_compute_evaluation` | IIoT: ingesta validada por muestra, serie reducida, particiones mensuales y retención, evaluación con umbrales de calidad (S12) |
-| Sellos de fecha con el día del proyecto (S10) | `sign_itr_atomic`, `refresh_itr_status`, `cancel_punch`, `verify_punch`, `finalize_preservation_record`, `itr_test_equipment_fill`, `record_decision`, `record_competency`, `person_system_level`, `add_document_revision`, `issue_document_revision`, `add_vendor_report`, `record_vendor_activity_result`, `analytics_project_forecast` |
+| Sellos de fecha con el día del proyecto (S10) | `sign_itr_atomic`, `refresh_itr_status`, `cancel_punch`, `verify_punch`, `finalize_preservation_record`, `itr_test_equipment_fill`, `record_decision`, `record_competency`, `person_system_level`, `add_document_revision`, `issue_document_revision`, `add_vendor_report`, `record_vendor_activity_result` |
 
 ## Cambiar una función
 

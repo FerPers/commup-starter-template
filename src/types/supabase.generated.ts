@@ -13,11 +13,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.5"
-  }
   public: {
     Tables: {
       actions: {
@@ -521,13 +516,6 @@ export type Database = {
             columns: ["subsystem_id"]
             isOneToOne: false
             referencedRelation: "analytics_subsystem_progress"
-            referencedColumns: ["subsystem_id"]
-          },
-          {
-            foreignKeyName: "cables_subsystem_id_fkey"
-            columns: ["subsystem_id"]
-            isOneToOne: false
-            referencedRelation: "analytics_subsystem_velocity"
             referencedColumns: ["subsystem_id"]
           },
           {
@@ -1071,13 +1059,6 @@ export type Database = {
             columns: ["subsystem_id"]
             isOneToOne: false
             referencedRelation: "analytics_subsystem_progress"
-            referencedColumns: ["subsystem_id"]
-          },
-          {
-            foreignKeyName: "certificates_subsystem_id_fkey"
-            columns: ["subsystem_id"]
-            isOneToOne: false
-            referencedRelation: "analytics_subsystem_velocity"
             referencedColumns: ["subsystem_id"]
           },
           {
@@ -3192,13 +3173,6 @@ export type Database = {
             foreignKeyName: "itrs_subsystem_id_fkey"
             columns: ["subsystem_id"]
             isOneToOne: false
-            referencedRelation: "analytics_subsystem_velocity"
-            referencedColumns: ["subsystem_id"]
-          },
-          {
-            foreignKeyName: "itrs_subsystem_id_fkey"
-            columns: ["subsystem_id"]
-            isOneToOne: false
             referencedRelation: "subsystems"
             referencedColumns: ["id"]
           },
@@ -3341,13 +3315,6 @@ export type Database = {
             columns: ["subsystem_id"]
             isOneToOne: false
             referencedRelation: "analytics_subsystem_progress"
-            referencedColumns: ["subsystem_id"]
-          },
-          {
-            foreignKeyName: "kpi_snapshots_subsystem_id_fkey"
-            columns: ["subsystem_id"]
-            isOneToOne: false
-            referencedRelation: "analytics_subsystem_velocity"
             referencedColumns: ["subsystem_id"]
           },
           {
@@ -3769,13 +3736,6 @@ export type Database = {
             columns: ["subsystem_id"]
             isOneToOne: false
             referencedRelation: "analytics_subsystem_progress"
-            referencedColumns: ["subsystem_id"]
-          },
-          {
-            foreignKeyName: "loops_subsystem_id_fkey"
-            columns: ["subsystem_id"]
-            isOneToOne: false
-            referencedRelation: "analytics_subsystem_velocity"
             referencedColumns: ["subsystem_id"]
           },
           {
@@ -5478,13 +5438,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "pid_markups_target_document_id_fkey"
-            columns: ["target_document_id"]
-            isOneToOne: false
-            referencedRelation: "documents"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "pid_markups_system_id_fkey"
             columns: ["system_id"]
             isOneToOne: false
@@ -5511,6 +5464,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "tag_360"
             referencedColumns: ["system_id"]
+          },
+          {
+            foreignKeyName: "pid_markups_target_document_id_fkey"
+            columns: ["target_document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "pid_markups_updated_by_fkey"
@@ -7979,13 +7939,6 @@ export type Database = {
             columns: ["subsystem_id"]
             isOneToOne: false
             referencedRelation: "analytics_subsystem_progress"
-            referencedColumns: ["subsystem_id"]
-          },
-          {
-            foreignKeyName: "punches_subsystem_id_fkey"
-            columns: ["subsystem_id"]
-            isOneToOne: false
-            referencedRelation: "analytics_subsystem_velocity"
             referencedColumns: ["subsystem_id"]
           },
           {
@@ -10994,13 +10947,6 @@ export type Database = {
             foreignKeyName: "tags_subsystem_id_fkey"
             columns: ["subsystem_id"]
             isOneToOne: false
-            referencedRelation: "analytics_subsystem_velocity"
-            referencedColumns: ["subsystem_id"]
-          },
-          {
-            foreignKeyName: "tags_subsystem_id_fkey"
-            columns: ["subsystem_id"]
-            isOneToOne: false
             referencedRelation: "subsystems"
             referencedColumns: ["id"]
           },
@@ -12493,32 +12439,6 @@ export type Database = {
           },
         ]
       }
-      analytics_subsystem_velocity: {
-        Row: {
-          approvals_30d: number | null
-          approvals_90d: number | null
-          org_id: string | null
-          project_id: string | null
-          subsystem_id: string | null
-          velocity_per_day_30d: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "projects_org_id_fkey"
-            columns: ["org_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "subsystems_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       data_quality_issues: {
         Row: {
           category: string | null
@@ -12593,13 +12513,6 @@ export type Database = {
             columns: ["subsystem_id"]
             isOneToOne: false
             referencedRelation: "analytics_subsystem_progress"
-            referencedColumns: ["subsystem_id"]
-          },
-          {
-            foreignKeyName: "itrs_subsystem_id_fkey"
-            columns: ["subsystem_id"]
-            isOneToOne: false
-            referencedRelation: "analytics_subsystem_velocity"
             referencedColumns: ["subsystem_id"]
           },
           {
@@ -12737,13 +12650,6 @@ export type Database = {
             columns: ["subsystem_id"]
             isOneToOne: false
             referencedRelation: "analytics_subsystem_progress"
-            referencedColumns: ["subsystem_id"]
-          },
-          {
-            foreignKeyName: "punches_subsystem_id_fkey"
-            columns: ["subsystem_id"]
-            isOneToOne: false
-            referencedRelation: "analytics_subsystem_velocity"
             referencedColumns: ["subsystem_id"]
           },
           {
@@ -12908,13 +12814,6 @@ export type Database = {
             columns: ["subsystem_id"]
             isOneToOne: false
             referencedRelation: "analytics_subsystem_progress"
-            referencedColumns: ["subsystem_id"]
-          },
-          {
-            foreignKeyName: "punches_subsystem_id_fkey"
-            columns: ["subsystem_id"]
-            isOneToOne: false
-            referencedRelation: "analytics_subsystem_velocity"
             referencedColumns: ["subsystem_id"]
           },
           {
@@ -13201,13 +13100,6 @@ export type Database = {
             foreignKeyName: "tags_subsystem_id_fkey"
             columns: ["subsystem_id"]
             isOneToOne: false
-            referencedRelation: "analytics_subsystem_velocity"
-            referencedColumns: ["subsystem_id"]
-          },
-          {
-            foreignKeyName: "tags_subsystem_id_fkey"
-            columns: ["subsystem_id"]
-            isOneToOne: false
             referencedRelation: "subsystems"
             referencedColumns: ["id"]
           },
@@ -13357,21 +13249,6 @@ export type Database = {
         Returns: {
           budget_usd: number
           used_usd: number
-        }[]
-      }
-      analytics_project_forecast: {
-        Args: { p_project_id: string }
-        Returns: {
-          blockers: number
-          confidence: string
-          days_to_complete_p50: number
-          eta_p50: string
-          itrs_approved: number
-          itrs_remaining: number
-          project_id: string
-          punch_a_open: number
-          total_itrs: number
-          velocity_per_day: number
         }[]
       }
       answer_tq: {
@@ -15135,6 +15012,10 @@ export type Database = {
         Args: { p_project_id: string }
         Returns: Json
       }
+      tag_requirements_sync: {
+        Args: { p_project_id: string }
+        Returns: boolean
+      }
       tag_subsystem_move_preview: {
         Args: { p_subsystem_id: string; p_tag_id: string }
         Returns: Json
@@ -15502,12 +15383,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends (DefaultSchemaTableNameOrOptions extends {
+  TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never) = never,
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -15531,11 +15412,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends (DefaultSchemaTableNameOrOptions extends {
+  TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never) = never,
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -15556,11 +15437,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends (DefaultSchemaTableNameOrOptions extends {
+  TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never) = never,
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -15581,11 +15462,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never) = never,
+    : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -15598,11 +15479,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never) = never,
+    : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -15679,3 +15560,4 @@ export const Constants = {
     },
   },
 } as const
+
