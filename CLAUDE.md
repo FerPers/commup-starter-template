@@ -234,6 +234,7 @@ Rules for every new page/query/action:
 
 - `project_capacities` (persona × proyecto × `commissioning` | `operations` | `hse` | `client_rep`), solo owner/admin por `assign_project_capacity` / `revoke_project_capacity`; pantalla `/projects/[id]/signatories`. **Quién firma lo decide `has_capacity(proyecto, capacidad)`**, nunca un array de roles: con designados firman solo ellos (cualquier rol); sin designados, `capacity_fallback_roles` (= `CAPACITY_FALLBACK_ROLES` en `src/lib/constants/capacities.ts`). client_rep = empresa tipo `owner` o rol client; commissioning nunca rol client.
 - En la UI: `loadMyCapacities` / `loadMyCapacitiesByProject` (`src/lib/capacities/server.ts`, RPC `my_capacities`) y los helpers `canReleaseHold` / `canWitness` / `signableCapacities` / `canSignCertificate` reciben `MyCapacities`, no el rol.
+- **Congelado en el ITR al crearlo** (`guard_itr_row`): `required_signatures` (S04) y `requires_test_equipment` (A39). La firma lee el valor del ITR, nunca el de la plantilla en vivo; un requisito nuevo que la plantilla imponga al ITR se congela igual.
 - Niveles de rol: una sola fuente `src/lib/constants/roles.ts` (`ROLE_TIERS`, `tierRoles()` si hace falta el enum); no repetir `['owner', 'admin', …]` en páginas.
 
 ## Zona horaria del proyecto (S10, D12)

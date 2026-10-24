@@ -41,10 +41,10 @@ export default async function ItrExecutionPage({
     supabase
       .from('itrs')
       .select(`
-        id, itr_number, status, progress_pct, scheduled_date, template_id, project_id, tag_id, loop_id, ce_cause_id, source_rows, required_signatures,
+        id, itr_number, status, progress_pct, scheduled_date, template_id, project_id, tag_id, loop_id, ce_cause_id, source_rows, required_signatures, requires_test_equipment,
         loops(id, loop_number), ce_causes(id, code, description, ce_matrices(id, code)),
         itr_templates(
-          id, code, title, version, requires_test_equipment,
+          id, code, title, version,
           itr_template_sections(
             id, title, order_index,
             itr_template_items(
@@ -136,7 +136,8 @@ export default async function ItrExecutionPage({
             .sort((x, y) => x.full_name.localeCompare(y.full_name))
           : undefined}
         testEquipment={{
-          requires: (itr.itr_templates as { requires_test_equipment?: boolean } | null)?.requires_test_equipment ?? false,
+          // A39: el requisito congelado al crear el ITR (lo mismo que exige la firma), no el de la plantilla hoy.
+          requires: itr.requires_test_equipment,
           used: (equipmentUsed ?? []) as EquipmentUsed[],
           options: (equipmentOptions ?? []) as EquipmentOption[],
         }}

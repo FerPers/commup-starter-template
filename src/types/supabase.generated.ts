@@ -3093,6 +3093,7 @@ export type Database = {
           progress_pct: number
           project_id: string
           required_signatures: string[]
+          requires_test_equipment: boolean
           scheduled_date: string | null
           source_rows: Json | null
           status: Database["public"]["Enums"]["itr_status"]
@@ -3111,6 +3112,7 @@ export type Database = {
           progress_pct?: number
           project_id: string
           required_signatures?: string[]
+          requires_test_equipment?: boolean
           scheduled_date?: string | null
           source_rows?: Json | null
           status?: Database["public"]["Enums"]["itr_status"]
@@ -3129,6 +3131,7 @@ export type Database = {
           progress_pct?: number
           project_id?: string
           required_signatures?: string[]
+          requires_test_equipment?: boolean
           scheduled_date?: string | null
           source_rows?: Json | null
           status?: Database["public"]["Enums"]["itr_status"]
