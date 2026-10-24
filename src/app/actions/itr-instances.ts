@@ -16,6 +16,7 @@ import type { TablesUpdate } from '@/types/supabase.generated'
 import type { ResponseConflict } from '@/lib/sync/response-utils'
 import type { ActiveContext } from '@/lib/supabase/membership'
 import { createItrRecord, isRequestId } from '@/lib/itr/create'
+import { measurementPassed } from '@/lib/itr/completion'
 import { logActivity } from '@/lib/log-activity'
 
 // NOTA sobre roles: las funciones de EJECUCIÓN de campo (upsertResponse,
@@ -242,12 +243,9 @@ export const upsertResponse = withAuth(
     // Defensive: if a numeric value is being set on a measurement item with
     // acceptance bounds, recompute is_passed server-side regardless of client.
     if ('valueNumeric' in input && input.valueNumeric !== null && input.valueNumeric !== undefined) {
-      if (item?.item_type === 'measurement' && (item.acceptance_min !== null || item.acceptance_max !== null)) {
-        const v = input.valueNumeric
-        const minOk = item.acceptance_min === null || v >= Number(item.acceptance_min)
-        const maxOk = item.acceptance_max === null || v <= Number(item.acceptance_max)
-        patch.is_passed = minOk && maxOk
-      }
+      // A29: la misma regla que evaluate_itr_capture (measurementPassed).
+      const passed = item ? measurementPassed(item, input.valueNumeric) : null
+      if (passed !== null) patch.is_passed = passed
     }
 
     // UPDATE if response exists, INSERT otherwise. We don't use upsert because

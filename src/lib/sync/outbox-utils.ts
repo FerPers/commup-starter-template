@@ -99,10 +99,11 @@ export function localItrStatus(
   const answers = Object.entries(responses).flatMap(([item_id, response]) => response ? [{
     item_id, value_text: response.value_text ?? null, value_numeric: response.value_numeric ?? null,
     value_bool: response.value_bool ?? null, value_option: response.value_option ?? null, remarks: response.remarks ?? null,
+    is_passed: response.is_passed ?? null,
   }] : [])
   const result = evaluateItrCompletion(items, answers, attachments, sourceRows)
-  const applicable = new Set(result.applicableItemIds)
-  const rejected = result.rejectedItemIds.length > 0 || items.some(item => applicable.has(item.id) && item.is_critical && responses[item.id]?.is_passed === false)
+  // A29: la misma regla de rechazo que evaluate_itr_capture (la que usa la firma).
+  const rejected = result.hasCriticalFail
   const status: LocalItrStatus = rejected ? 'rejected' : result.isComplete ? 'completed' : result.completedCount > 0 ? 'in_progress' : 'not_started'
   return { pct: result.progressPct, status }
 }

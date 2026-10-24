@@ -3,8 +3,12 @@ import { evaluateTable, type SourceRow } from './table'
 import { evaluateSelectionOutcome } from './selection-outcome'
 import type { ItrTemplateItem, ItrResponse, ItrAttachment } from '@/types/database'
 
-export type CompletionItem = Pick<ItrTemplateItem, 'id' | 'item_type' | 'is_required' | 'requires_photo' | 'requires_measurement' | 'condition_item_id' | 'condition_value'> & { options: unknown; option_outcomes?: unknown; requires_document?: boolean }
-export type CompletionResponse = Pick<ItrResponse, 'item_id' | 'value_text' | 'value_numeric' | 'value_bool' | 'value_option'> & { remarks?: string | null }
+export type CompletionItem = Pick<ItrTemplateItem, 'id' | 'item_type' | 'is_required' | 'requires_photo' | 'requires_measurement' | 'condition_item_id' | 'condition_value'> & {
+  options: unknown; option_outcomes?: unknown; requires_document?: boolean
+  /** A29: para el rechazo crítico (= evaluate_itr_capture). */
+  is_critical?: boolean; acceptance_min?: number | null; acceptance_max?: number | null
+}
+export type CompletionResponse = Pick<ItrResponse, 'item_id' | 'value_text' | 'value_numeric' | 'value_bool' | 'value_option'> & { remarks?: string | null; is_passed?: boolean | null }
 /**
  * `pending` = foto o PDF tomado sin red que espera en la bandeja del dispositivo (G-17): cuenta para diligenciar,
  * así el inspector puede firmar sin red; el replay sube la foto antes de la firma y el servidor vuelve a validar.
@@ -15,7 +19,25 @@ const hasText = (value: string | null | undefined): value is string => typeof va
 const hasNumber = (value: number | null | undefined): value is number => typeof value === 'number' && Number.isFinite(value)
 const stored = (attachment: CompletionAttachment) => hasText(attachment.file_url) || attachment.pending === true
 
-/** Diligenciamiento only. Acceptance, assigned signers and approval remain separate gates. */
+/**
+ * A29: aceptación de una medición con límites, la misma regla que evaluate_itr_capture y upsertResponse.
+ * null = no es medición, no tiene límites o no tiene valor (vale el `is_passed` guardado).
+ */
+export function measurementPassed(
+  item: Pick<CompletionItem, 'item_type' | 'acceptance_min' | 'acceptance_max'>,
+  value: number | null | undefined,
+): boolean | null {
+  if (item.item_type !== 'measurement' || !hasNumber(value)) return null
+  const min = item.acceptance_min ?? null, max = item.acceptance_max ?? null
+  if (min === null && max === null) return null
+  return (min === null || value >= Number(min)) && (max === null || value <= Number(max))
+}
+
+/**
+ * Diligenciamiento only. Acceptance, assigned signers and approval remain separate gates.
+ * A29: espejo de evaluate_itr_capture (la que usa la firma); la paridad sobre datos reales vive en
+ * tests/db/itr-completion-parity.test.ts. Un cambio de regla va en los dos lados y en sus escenarios.
+ */
 export function evaluateItrCompletion(
   items: readonly CompletionItem[],
   responses: readonly CompletionResponse[],
@@ -88,11 +110,22 @@ export function evaluateItrCompletion(
   const applicableItems = items.filter(applicable)
   const required = applicableItems.filter(item => item.is_required || (item.item_type === 'select' && evaluateSelectionOutcome(item.options, item.option_outcomes ?? {}, answers.get(item.id)?.value_option).requiresJustification))
   const rejectedItemIds = applicableItems.filter(item => (item.item_type === 'continuity' && evaluateContinuity(answers.get(item.id)?.value_text).hasFail) || (item.item_type === 'table' && evaluateTable(item.options, answers.get(item.id)?.value_text, sourceRows).hasFail) || (item.item_type === 'select' && evaluateSelectionOutcome(item.options, item.option_outcomes ?? {}, answers.get(item.id)?.value_option).outcome === 'fail')).map(item => item.id)
+  // A29 (= evaluate_itr_capture.has_critical_fail): un crítico no aceptado (medición fuera de límites, selección
+  // `fail` o el `is_passed` guardado) o cualquier rechazo de selección, continuidad o tabla.
+  const passedOf = (item: CompletionItem): boolean | null => {
+    const answer = answers.get(item.id)
+    if (item.item_type === 'select') {
+      const outcome = evaluateSelectionOutcome(item.options, item.option_outcomes ?? {}, answer?.value_option).outcome
+      return outcome === 'pass' ? true : outcome === 'fail' ? false : null
+    }
+    return measurementPassed(item, answer?.value_numeric) ?? answer?.is_passed ?? null
+  }
+  const hasCriticalFail = rejectedItemIds.length > 0 || applicableItems.some(item => item.is_critical === true && passedOf(item) === false)
   const missingRequiredItemIds = required.filter(item => !filled(item)).map(item => item.id)
   const completedCount = applicableItems.filter(filled).length
   const completedRequiredCount = required.length - missingRequiredItemIds.length
   const isComplete = applicableItems.length > 0 && invalid.size === 0 && missingRequiredItemIds.length === 0
   // This percentage represents satisfaction of required capture, not technical approval.
   const progressPct = isComplete ? 100 : required.length > 0 ? Math.min(99, Math.floor(completedRequiredCount * 100 / required.length)) : 0
-  return { isComplete, progressPct, rejectedItemIds, applicableItemIds: applicableItems.map(item => item.id), applicableCount: applicableItems.length, requiredCount: required.length, completedCount, completedRequiredCount, missingRequiredItemIds, invalidConditionItemIds: [...invalid] }
+  return { isComplete, progressPct, rejectedItemIds, hasCriticalFail, applicableItemIds: applicableItems.map(item => item.id), applicableCount: applicableItems.length, requiredCount: required.length, completedCount, completedRequiredCount, missingRequiredItemIds, invalidConditionItemIds: [...invalid] }
 }
