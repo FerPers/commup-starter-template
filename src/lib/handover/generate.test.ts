@@ -42,7 +42,7 @@ describe('generateHandoverPackage (A10)', () => {
   })
 
   it('con un anexo omitido: PARTIAL, nunca ISSUED, y handover.partial', async () => {
-    h.omitted = [{ path: 'anexos/S01/itr/x.pdf', reason: 'más de 150 ITR por paquete' }]
+    h.omitted = [{ path: 'anexos/S01/itr/x.pdf', reason: 'más de 600 ITR por paquete' }]
     // @ts-expect-error cliente de prueba con solo lo que usa el generador
     const res = await generateHandoverPackage(db(), input)
     expect(res).toMatchObject({ status: 'PARTIAL', omittedCount: 1 })

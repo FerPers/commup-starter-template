@@ -27,8 +27,12 @@ import type { HandoverManifest, HandoverPackageData } from './types'
 
 type Db = SupabaseClient<Database>
 
-/** Topes por paquete: ITR con PDF propio y bytes de archivos de documentos copiados al ZIP. */
-export const MAX_ITR_PDFS = 150
+/**
+ * Topes por paquete: ITR con PDF propio y bytes de archivos de documentos copiados al ZIP. A17 (24-oct): 600 cubre un
+ * sistema completo del proyecto de referencia (5.000 tags, ~550 ITR por sistema); 150 dejaba cada paquete de sistema
+ * en PARTIAL. Un paquete de proyecto completo se arma por sistemas hasta A11 (generación en segundo plano).
+ */
+export const MAX_ITR_PDFS = 600
 export const MAX_DOCUMENT_BYTES = 40 * 1024 * 1024
 const BATCH = 4
 

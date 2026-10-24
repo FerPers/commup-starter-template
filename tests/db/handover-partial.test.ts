@@ -48,7 +48,7 @@ describe('handover parcial (A10)', () => {
   })
 
   it('un paquete parcial se verifica, pero marcado como no completo y con lo omitido', async () => {
-    const omitted = [{ path: 'anexos/S01/itr/x.pdf', reason: 'más de 150 ITR por paquete' }]
+    const omitted = [{ path: 'anexos/S01/itr/x.pdf', reason: 'más de 600 ITR por paquete' }]
     const { data } = await svc.rpc('verify_handover_package', { p_hash: await seed('PARTIAL', omitted) })
     expect(data).toMatchObject({ status: 'PARTIAL', complete: false, omitted })
   })
