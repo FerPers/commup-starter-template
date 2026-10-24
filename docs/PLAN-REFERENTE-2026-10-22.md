@@ -216,32 +216,32 @@ Una sola sesión de maquetas en un lienzo, como en N1–N3:
 
 | Pendiente | Dónde va |
 |---|---|
-| Verificar en pantalla las vistas de inspector y cliente (barra del teléfono, Mi trabajo, punch del cliente, TQ, alto contraste) | **Al principio, junto con O** (necesita que inicies sesión con esos usuarios) |
-| Advertencia de React «key» en la página del ITR | O |
-| D16 resumen diario por correo (elegir proveedor: Resend, SES o el SMTP de Supabase) | Sesión propia cuando elijas proveedor |
+| Verificar en pantalla las vistas de inspector y cliente (barra del teléfono, Mi trabajo, punch del cliente, TQ, alto contraste) | ✅ En local con los usuarios de la semilla de revisión (7376c1f, 2026-10-23; «A mi cargo» de preservación del inspector, 2026-10-24) |
+| Advertencia de React «key» en la página del ITR | ✅ 2026-10-24: era el `conflictsSlot` (elemento que cruza del servidor como prop sin `key`); reproducida y corregida con `next dev` contra Supabase local |
+| D16 resumen diario por correo (elegir proveedor: Resend, SES o el SMTP de Supabase) | **Descartado** (Luis, 2026-10-23): para eso está «Mi trabajo» |
 | H-20: 37 archivos con `<a href="/…">` → `Link` | ✅ En V2 (2026-10-23) |
 | Q: ✅ `window.confirm`/`prompt`/`alert` → `useAskDialog`/`useToast` (G-08, 2026-10-23, regla de ESLint) y overlays propios con `DialogSurface` (G-12, 2026-10-23; y labels con `htmlFor`, elementos clicables con teclado y `jsx-a11y` en ESLint, 2026-10-23), modales accesibles (G-12), ✅ autosave del ITR (C-19, B-15, 2026-10-24), diccionario i18n por página (G-15), ✅ casts `as unknown as` (G-18, 2026-10-24), Playwright de recorridos de campo (G-17), ✅ tokens fuera de campo para oscuro y contraste (G-10, 2026-10-23: escala de estado con variante oscura, codemod hex → token por contexto, regla de ESLint) y contraste de chips y texto (G-11, 2026-10-23: chips y texto de estado en 700, `--text-muted` ≥ 4,5, `ink`/`fill` para colores de la BD; 2026-10-24: piso de 12 px con regla y paletas de identidad a tokens) | De paso en cada bloque. G-17 en una sesión propia antes de R2 (protege la ejecución de ITR) |
 | B-17 (integridad del mismo proyecto, revertido) | Ya cubierto por `guard_same_project`; se cierra en la cobertura |
-| D2 base de pruebas aparte | Al recrear LOADTEST en R5 conviene decidirlo de nuevo (hoy los tests escriben en prod) |
-| Tuyos: invitar `+smtp2` como cliente y firmar PTC-0001; probar la subida de PDF en Documentos | Cuando puedas |
-| Aplazados por ti: ITR v2 Fase 1 y calibración de la tabla v2 (después de tu revisión campo por campo) | Sin fecha; R mejora con un catálogo mejor |
+| D2 base de pruebas aparte | **Decidido** (Luis, 2026-10-24): la BD de producción sigue siendo la de pruebas mientras no haya clientes; la separación se revisa en el plan integral antes de salir a producción con datos reales |
+| Tuyos: invitar `+smtp2` como cliente y firmar PTC-0001; probar la subida de PDF en Documentos | → Plan integral: validación de punta a punta con datos completos |
+| Aplazados por ti: ITR v2 Fase 1 y calibración de la tabla v2 (después de tu revisión campo por campo) | → Plan integral, frente F11 CORE ITR (diagnóstico del 23-oct) |
 | TQ (decisión de Luis, 2026-10-23): CommUp **no** amplía el módulo de TQ (es de ingeniería y construcción; su dueño es el EDMS o el sistema del EPC). Descartados el aviso y la cola «TQ por responder» del cliente. El módulo actual queda tal cual para proyectos sin EDMS; a futuro, TQ como referencia externa ligada a una restricción del sistema | Con la integración EDMS (trimestre) |
-| Trimestre: membresía por proyecto, SSO/MFA y reautenticación al firmar, P6, EDMS, observabilidad, brechas de la API v1, red-line | Después de P |
+| Trimestre: membresía por proyecto, SSO/MFA y reautenticación al firmar, P6, EDMS, observabilidad, brechas de la API v1 (red-line ✅ F-21) | → Plan integral |
 
 **Cierre del backlog (Luis, 2026-10-23, noche):**
 
 | N.º | Punto | Decisión |
 |---|---|---|
 | 1–2 | Contadores del inspector («5 pendientes» vs «Todo 7») y colas de decidir en 0 que no son suyas | ✅ Hecho (cf1158f) |
-| 3–4 | Listas de ITR y preservación en el teléfono; barra inferior del ITR | ✅ Hecho, opción A·A·A (fe271e4). Queda del maquetado: encabezado compacto del ITR y línea de progreso arriba |
+| 3–4 | Listas de ITR y preservación en el teléfono; barra inferior del ITR | ✅ Hecho, opción A·A·A (fe271e4). Lo que quedó del maquetado (encabezado compacto del ITR y línea de progreso arriba) → plan integral, frente de navegación e identidad visual |
 | 5 | D16 resumen diario por correo | **Descartado**: no genera valor; para eso está «Mi trabajo» en la app |
 | 6 | F-21 red-line de campo | ✅ Hecho en prod: F-21a (5643273), F-21b (c47f38a), F-21c (67bafa3) |
 | 7 | Calidad de datos «ITR rechazado ≥ 3 veces» (evento viejo, enlace roto) | ✅ Hecho (74a6364) |
-| 8, 10, 12, 13 | ✅ G-11 resto (2026-10-24: piso de 12 px con regla de ESLint, paletas de identidad a tokens), ✅ autosave del ITR (C-19/B-15, 2026-10-24: borrador con debounce y guardado al ocultar, sin `router.refresh()`, lecturas en un viaje), ✅ casts (G-18, 2026-10-24: 222 `as unknown as` → 6 justificados, `fromJson`/`sqlArg`, regla de ESLint), D2 base de pruebas aparte | **Pendiente** (siguiente) |
+| 8, 10, 12, 13 | ✅ G-11 resto (2026-10-24: piso de 12 px con regla de ESLint, paletas de identidad a tokens), ✅ autosave del ITR (C-19/B-15, 2026-10-24: borrador con debounce y guardado al ocultar, sin `router.refresh()`, lecturas en un viaje), ✅ casts (G-18, 2026-10-24: 222 `as unknown as` → 6 justificados, `fromJson`/`sqlArg`, regla de ESLint), ✅ D2 decidido (prod sigue como BD de pruebas) | ✅ Hecho. De paso: A01 de la revisión del 23-oct (f36a053) |
 | 9, 11 | G-09 design system, G-15 diccionario i18n por página | **Descartados** (G-09 cubierto por los tokens de G-10/G-11) |
 | 14–15 | Tareas de Luis (PTC con `+smtp2`, subida de PDF) | Más adelante, dentro de una validación completa con una organización nueva, datos reales de ingeniería, borrado de DEMO y pruebas de punta a punta |
 | 16 | Proyectos extra de Supabase | ✅ Verificado 2026-10-23: solo queda `commup-production` |
-| 17–18 | ITR v2 Fase 1 y calibración de la tabla v2 | Retomar |
+| 17–18 | ITR v2 Fase 1 y calibración de la tabla v2 | → Plan integral, frente F11 CORE ITR (Luis, 2026-10-24) |
 | 19–24 | Trimestre (membresía por proyecto, SSO/MFA, P6, EDMS, observabilidad, API v1) | Aparte |
 
 
@@ -298,3 +298,5 @@ Son unas 20 sesiones. V va antes de M para que las pantallas nuevas nazcan con e
   - `src/lib/navigation/{menu,titles}.ts`, `docs/MANUAL-COMMUP-POR-ROL.md`
   - `src/app/(dashboard)/dashboard/`, `src/app/(dashboard)/control-tower/`
 - **O:** `scripts/loadtest/teardown.sql`, `README.md`, `package.json`, `.gitignore`, `eslint.config.mjs`
+
+**✅ Backlog cerrado (2026-10-24).** Commits: G-11 818d48f · autosave del ITR 9ad4566 · A01 f36a053 · G-18 28d1a38 · advertencia «key» del ITR. Lo que no se hizo pasa al plan integral del 23-oct (`docs/PLAN-INTEGRAL-COMMUP-2026-10-23.md`): ITR v2 y calibración (F11), validación de punta a punta con datos completos y organización nueva, separación de la BD de pruebas antes de salir a producción, trimestre (SSO/MFA, P6, EDMS, observabilidad, API v1) y el encabezado compacto del ITR. Siguiente paso: cruzar el plan integral con este documento y organizar la salida a producción.

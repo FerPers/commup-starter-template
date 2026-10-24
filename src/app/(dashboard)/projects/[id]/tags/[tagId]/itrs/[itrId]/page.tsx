@@ -142,6 +142,8 @@ export default async function ItrExecutionPage({
         }}
         conflictsSlot={
           <ResponseConflicts
+            // Elemento que cruza del servidor al cliente como prop: sin key, React (dev) avisaba «unique key» en ItrExecution.
+            key="conflicts"
             itrId={itr.id}
             userId={ctx.userId}
             timezone={projectToday.timezone}
