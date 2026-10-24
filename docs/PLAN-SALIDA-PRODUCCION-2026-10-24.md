@@ -1,6 +1,6 @@
 # Plan de salida a producción de CommUp
 
-**Fecha:** 24 de octubre de 2026 · **Base:** commit `14ac137` (backlog anterior cerrado) · **Estado:** propuesta para que Luis decida el orden y las decisiones marcadas.
+**Fecha:** 24 de octubre de 2026 · **Base:** commit `14ac137` (backlog anterior cerrado) · **Estado:** propuesta para que Luis decida el orden y las decisiones marcadas. §6 incorpora la revisión y los bocetos de Grok.
 
 Este documento traza el [plan integral del 23-oct](PLAN-INTEGRAL-COMMUP-2026-10-23.md) sobre el código real. Cada una de sus 53 acciones se contrastó con el repositorio actual, en lectura y sin tocar la BD. El resultado indica qué ya existe, qué falta y en qué orden conviene hacerlo para la primera salida a producción: los proyectos menores de Geopark. Las fuentes son la [revisión crítica](REVISION-CRITICA-COMMUP-2026-10-23.md) y el [diagnóstico del núcleo ITR](DIAGNOSTICO-CORE-ITR-2026-10-23.md).
 
@@ -39,6 +39,7 @@ En términos concretos, salir significa cuatro cosas:
 | A13 inicial | Pasar las pruebas de BD de la CI (`tests/db`, 420 pruebas que hoy se saltan) a la **Supabase local** que ya usa el E2E, con dos organizaciones y los seis roles. Las pruebas que dependen de actores deben fallar si faltan, no saltarse. | Todas las correcciones de la ola 1 necesitan pruebas que distingan antes y después. Ya existe la infraestructura local (G-17); hoy esas pruebas o escriben en prod o no corren. |
 | A50 | Unificar `supabase/seed/e2e.sql` + `review.sql` + las semillas de `scripts/demo-data/` en un **proyecto de demostración restablecible** con casos sanos, bloqueados, regresados, sin información y con capturas pendientes. | Sirve a A13, A45, A46 y a la validación de punta a punta. |
 | A16 | Confirmar en GitHub la protección de rama de `main` (D3). | Ya no hay segundo camino de deploy; solo falta este control. |
+| Seguridad | Cambiar la contraseña de la cuenta de prod que se compartió con Grok el 24-oct (era débil y quedó en otro chat) y borrar el proyecto «Proyecto Demo LNG» que creó. En adelante, las revisiones externas entran solo a la demo aislada (A50) con una cuenta temporal. | Hubo un acceso externo a producción con una cuenta real. |
 | A45 preparación | Convertir en pruebas las sondas del diagnóstico (`docs/diagnostico-itr-2026-10-23-evidencia/sondas.json`): I30C «No» + conforme, I10A 12/99/0, resultado opcional, continuidad de un conductor. | Antes de corregir el núcleo ITR hay que poder reproducirlo. |
 
 **Salida:** las pruebas de BD corren en la CI sin escribir en prod y sin saltos; hay una demo restablecible; las sondas del ITR fallan como se espera.
@@ -118,13 +119,57 @@ A06 membresía por proyecto · A07 políticas de liberación versionadas · A09 
 
 ## 5 Orden sugerido de trabajo
 
-1. Ola 0: A13 (CI con BD local y todos los roles), A50 (demo restablecible) y A45 (sondas como pruebas).
+1. Ola 0: la acción de seguridad (cambiar la contraseña compartida con Grok y borrar su proyecto), A13 (CI con BD local y todos los roles), A50 (demo restablecible) y A45 (sondas como pruebas).
 2. Ola 1 en este orden, del mayor al menor riesgo:
    - **Pérdida o duplicación de evidencia:** A02, el resto de A01 y el guard de A10.
    - **Operaciones a medias:** A03, A40, A39 código y A44 parte.
    - **Contratos:** A04, A05, A36 código y A29.
    - **Limpieza:** A09 parte y A30.
 3. Ola 2 contigo: fichas y criterios (A41, A37, A38, A39), A14 y A15, carga real y recorrido de punta a punta.
-4. En paralelo, cuando haya espacio: la propuesta de A08 y A19 con maqueta, y después el resto de la ola 3.
+4. En paralelo, cuando haya espacio: la maqueta interactiva de la Control Tower, la barra superior y el inicio del teléfono (§6), con las decisiones A08 y A19 tomadas sobre ella, y después el resto de la ola 3.
 
 Cada acción se cierra con su prueba en la CI, su verificación en pantalla cuando aplica, commit y CI en verde; las migraciones a prod solo con tu OK y prueba en seco, como hasta ahora.
+
+## 6 Visión de Grok (revisión y bocetos del 24-oct)
+
+Luis compartió la revisión que hizo Grok de la landing y de la app, con 15 bocetos. Sus recomendaciones de texto ya estaban en el plan integral (§14, A46–A53), pero en ese momento faltaban las imágenes. Aquí cada punto queda asignado a una acción y a una ola, y se aclara qué se toma tal cual y qué se ajusta. Al hacerlo se aplican los principios del plan: nada se presenta como hecho o medido sin serlo, y avance físico no equivale a liberación.
+
+### 6.1 Revisión escrita
+
+| Punto de Grok | Qué hay hoy (verificado) | Acción y ola | Ajuste |
+|---|---|---|---|
+| El dominio y la propuesta de valor están bien (tag → NFC/QR → ITR → certificado con bloqueo Cat A → dossier) | Coincide con el modelo y la guía | — | Se conserva |
+| Landing: hero con texto y números de mockup, sin capturas reales ni fotografía industrial | El hero usa mockups; los 17 renders 3D están en secciones (`/icons/3d/`), no en el hero | A51 · ola 5 | Capturas reales de la demo (A50), fotografía con licencia; los mockups se rotulan como tales |
+| Cero prueba social | La sección se titula «desafíos comunes»: no hay testimonios inventados | A52 · después del piloto | Grok propone «aunque sea un placeholder al principio»: **no se publica**. Solo casos reales y autorizados (el piloto de Geopark) |
+| Precio opaco | «Precios a medida», propuesta en 48 h | A53 · después del piloto | Rangos o ejemplos solo cuando sean defendibles; mientras tanto, explicar de qué depende la cotización |
+| About, equipo y trayectoria delgados | No hay sección de equipo | A52 | Experiencia verificable; la del equipo no se presenta como historial del producto |
+| Todo apunta a «solicitar demo» | Formulario de leads | A53 | Recorrido grabado o interactivo de la demo aislada |
+| NFC + bloqueo duro Cat A como diferenciadores, contrastados con Excel, WhatsApp y carpetas | El bloqueo de certificados es real (S17; Cat B con excepción justificada). El NFC usa Web NFC: **solo Chrome en Android**; en iPhone se escanea QR | A51 | Decir «QR en cualquier teléfono, NFC en Android». «En un segundo» se publica solo si se mide |
+| App: funcional pero cruda, mucha densidad, poca jerarquía en los indicadores | El Resumen tiene tablero por fases, «lo que bloquea hoy» y «próximos 7 días», pero con poco peso visual | A46, A27 · ola 3 | Rediseño del Resumen como Control Tower con los mismos datos |
+| Menú con muchos niveles | Menú por audiencias y fases plegables (N1) | A21, A19 · ola 3 | Se decide con maqueta (decisión 7) |
+| No pudo evaluar ejecución de ITR, firma ni bloqueo de certificado porque el proyecto estaba vacío | Hay semillas por módulo, pero no una demo poblada y restablecible | A50 · ola 0 | Coincide con la prioridad de Grok («poblar un proyecto de demo») |
+| Branding discreto, se siente herramienta interna | Marca en tokens y menú navy; el resto es neutro | A24, A49 · ola 3 | Más presencia de marca en la estructura, sin decorar módulos |
+| Los activos 3D deberían aparecer en el producto (Digital Twin, fichas de tag) | Los renders solo están en la landing; el Digital Twin son tarjetas | A49 · ola 5 | Como ilustración por **tipo de equipo** en fichas y tarjetas, rotulada; nunca como posición física ni telemetría |
+| Control Tower: modo oscuro como base «porque fatiga menos» | Existen los temas claro, oscuro y contraste (C-29) | A24–A26, A46 · ola 3 | Oscuro como presentación de la sala de control; campo sigue en claro o en «contraste» para pleno sol. No se afirma que fatigue menos |
+| Saber en 15 segundos si el proyecto está sano | — | A46 · ola 3 | Es una prueba de usabilidad con datos reales, no una promesa |
+| Debe tener: bloqueadores del día, progreso por fase con color, matriz de liberación, feeds de ITR y punch, contexto visual, próximos 7 días | Existen todos menos los feeds y la vista espacial de planta; el P&ID por estado ya existe | A22, A46, A47, A48, A49 | Ver 6.2 |
+| Grok pidió credenciales y entró a producción | Creó un proyecto en prod | Ola 0 · Seguridad | Revisiones externas solo en la demo aislada |
+
+### 6.2 Bocetos
+
+| Boceto | Qué se toma | Qué se ajusta | Acción |
+|---|---|---|---|
+| Hero con planta y panel de producto (3 variantes) | Fotografía industrial + producto visible, titular «Commissioning industrial, con trazabilidad total» | Cifras y feed del panel deben salir de la demo real; sin «Live», «Users online» ni nombres de proyectos reales ajenos (Pluto LNG, Ichthys LNG) | A51 |
+| Flujo «From Tag to Trusted Handover» (2 variantes) | Los cinco pasos y el estilo isométrico, mejor el segundo (más sobrio) | Quitar «Blockchain seal» y «Powered by Vertex Industrial Suite». Firmamos con Ed25519 + hash y los certificados son **por subsistema** (MC, RFC…), no por ITR. NFC: ver 6.1 | A51 |
+| Control Tower oscura (3 variantes) | Tarjetas de fase grandes, banner de Cat A críticos, matriz sistema × fase al centro, feeds de ITR y punch, panel visual a la derecha, hora de actualización | **«Readiness % = ITR completados / ITR totales» no se adopta**: mezcla avance físico con liberación. En CommUp un sistema con 100 % de ITR sigue bloqueado por un Cat A, el PSSR o un line-up. La matriz muestra estado de liberación por gate y, aparte, el avance físico. Nada de «Live» ni «Forecast completion» mientras no exista (A30). El panel derecho usa el **P&ID por estado y los límites del sistema**, que existen; el 3D solo si hay modelo real | A46, A47, A48, A49 |
+| Matriz genérica «NextGen Communications» | La idea de «No aplica» por celda | No es de comisionamiento; se descarta como referencia | A47 |
+| Menús con ITR, Punch y Certificados dentro de cada fase (3 variantes) | Fases como organizador visible con su estado | Es la decisión A19: repetir módulos por fase frente a un acceso estable con filtro de fase. Se decide con maqueta | A19, A21 |
+| Barra superior con selector de proyecto | Proyecto activo siempre visible, búsqueda, avisos, «＋ Crear» y usuario | Ya existen búsqueda, avisos y crear; falta el proyecto visible (brecha A18) | A18 |
+| Inicio del teléfono | Proyecto actual, fases, accesos a ITR y Punch, aviso de críticos y escaneo destacado al centro | Coincide con la barra Mi trabajo · Escanear · Crear · Menú; agregar el proyecto y el aviso | A18, A21, A43 |
+| Menú de administración aparte con «Volver a la app» | La separación | Hoy la administración está plegada en el mismo menú; se evalúa en la maqueta | A21 |
+
+**Logos:** casi todos los bocetos usan isotipos distintos al de CommUp. Cualquier maqueta o pieza usa los PNG de `public/logos/`.
+
+### 6.3 Orden
+
+La Control Tower, la barra superior y el inicio del teléfono entran en la **ola 3** como una maqueta interactiva con datos y reglas reales. En esa misma maqueta se toman las decisiones 6 (contrato de estados) y 7 (menú). La maqueta puede hacerse en paralelo a las olas 0 y 1 sin frenar la integridad. La landing (hero, flujo, prueba social, oferta) va después del piloto, con capturas reales de la demo aislada.
