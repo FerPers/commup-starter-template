@@ -6,6 +6,7 @@ import { countPending } from '@/lib/offline-queue'
 import { replayQueueOnce } from '@/lib/sync/replay'
 import { currentUserId } from '@/lib/sync/owner'
 import { discardEntries } from '@/lib/sync/session'
+import { downloadCaptures } from '@/lib/sync/export-captures-client'
 
 /**
  * S18 (C-08/A-09, decisión de Luis 2026-10-20): cerrar sesión con capturas sin red pendientes obliga a
@@ -63,6 +64,10 @@ export default function SignOutDialog({ pending, onCancel, onDone }: {
         {error && <p role="alert" style={{ fontSize: 12, color: 'var(--danger-700)', margin: '8px 0 0' }}>{error}</p>}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'flex-end', marginTop: 18 }}>
           <button type="button" onClick={onCancel} disabled={busy !== null} style={btn('ghost')}>{t('cancel')}</button>
+          {/* A01: llevárselas en un ZIP (con fotos) antes de descartar; sin red es la única copia que queda. */}
+          <button type="button" onClick={() => { downloadCaptures('all', 'sign_out').catch(() => setError(t('exportFailed'))) }} disabled={busy !== null} title={t('exportHint')} style={btn('ghost')}>
+            ⤓ {t('export')}
+          </button>
           <button type="button" onClick={discard} disabled={busy !== null} style={btn('danger')}>
             {busy === 'discard' ? t('working') : t('discardAndExit')}
           </button>

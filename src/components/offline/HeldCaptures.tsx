@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import { claimLegacyEntries, OUTBOX_CHANGED_EVENT, pendingByOwner } from '@/lib/offline-queue'
 import { replayQueueOnce } from '@/lib/sync/replay'
 import { discardEntries, rememberDeviceUser } from '@/lib/sync/session'
+import { downloadCaptures } from '@/lib/sync/export-captures-client'
 import type { OwnerCounts } from '@/lib/sync/ownership'
 
 /**
@@ -56,6 +57,10 @@ export default function HeldCaptures({ userId }: { userId: string }) {
             {t('claim')}
           </button>
         )}
+        {/* A01: exportar lo retenido (con fotos) antes de descartarlo; funciona sin red. */}
+        <button type="button" onClick={() => { downloadCaptures('held', 'held').catch(() => setError(t('exportFailed'))) }} disabled={busy} title={t('exportHint')} style={{ padding: '5px 12px', borderRadius: 6, border: '1px solid var(--warning-500)', background: 'var(--card-bg)', color: 'var(--warning-800)', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>
+          ⤓ {t('export')}
+        </button>
         <button type="button" onClick={discard} disabled={busy} style={{ padding: '5px 12px', borderRadius: 6, border: '1px solid var(--danger-200)', background: 'var(--card-bg)', color: 'var(--danger-700)', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>
           {t('discard')}
         </button>

@@ -20,6 +20,7 @@ import { itemDescription } from '@/lib/itr/item-text'
 import { nextPendingItemId } from '@/lib/itr/next-pending'
 import { getOutbox, OUTBOX_CHANGED_EVENT, SYNC_DONE_EVENT, type OutboxEntry } from '@/lib/offline-queue'
 import { discardOutboxEntry } from '@/lib/sync/replay'
+import { downloadCaptures } from '@/lib/sync/export-captures-client'
 import { useItrAutosave } from './useItrAutosave'
 import ItemRow from './ItemRow'
 import SignModal from './SignModal'
@@ -529,7 +530,14 @@ export default function ItrExecution({
         {/* S06 (I-02) + A01: punch y fotos rechazados por el servidor — visibles hasta reintentar bien o descartar */}
         {unsynced.length > 0 && (
           <div role="alert" style={{ marginTop: '12px', padding: '10px 14px', background: 'var(--danger-50)', borderRadius: '8px', border: '1px solid var(--danger-200)' }}>
-            <p style={{ fontSize: '12px', fontWeight: 700, color: 'var(--danger-700)', margin: '0 0 6px' }}>⚠ {t('sync.unsyncedTitle')}</p>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', margin: '0 0 6px' }}>
+              <p style={{ fontSize: '12px', fontWeight: 700, color: 'var(--danger-700)', margin: 0 }}>⚠ {t('sync.unsyncedTitle')}</p>
+              {/* A01: llevárselas (con fotos) antes de descartar; funciona sin red. */}
+              <button type="button" title={t('sync.exportHint')} onClick={() => { downloadCaptures({ outbox: unsynced }, 'unsynced').catch(() => toast.error(t('sync.exportFailed'))) }}
+                style={{ padding: '3px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--danger-200)', background: 'var(--card-bg)', color: 'var(--danger-700)', cursor: 'pointer', flexShrink: 0 }}>
+                ⤓ {t('sync.export')}
+              </button>
+            </div>
             {unsynced.map(u => (
               <div key={u.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginTop: '4px' }}>
                 <p style={{ fontSize: '12px', color: 'var(--danger-900)', margin: 0, flex: 1, wordBreak: 'break-word' }}>
