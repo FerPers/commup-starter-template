@@ -2,10 +2,10 @@
 
 import { evaluateSelectionOutcome } from '@/lib/itr/selection-outcome'
 import { useTranslations } from 'next-intl'
-import ContinuityCapture from './ContinuityCapture'
+import ContinuityCapture, { type ContinuityContext } from './ContinuityCapture'
 import TableCapture from './TableCapture'
 import { evaluateTable, type SourceRow } from '@/lib/itr/table'
-import { evaluateContinuity } from '@/lib/itr/continuity'
+import { continuityMeasurementRequired, evaluateContinuity } from '@/lib/itr/continuity'
 import { DraftInput, DraftTextarea } from './DraftFields'
 import PhotoUpload from './PhotoUpload'
 import { itemDescription } from '@/lib/itr/item-text'
@@ -26,6 +26,7 @@ export default function ItemRow({
   onAttachmentRemoved,
   lang,
   sourceRows = null,
+  continuity,
 }: {
   item: Item
   response: Response | null
@@ -43,6 +44,8 @@ export default function ItemRow({
   lang: 'es' | 'en'
   /** Fase 4-D: foto del ITR para tablas con filas desde lazo o matriz C&E. */
   sourceRows?: SourceRow[] | null
+  /** A38: alcance de la continuidad fijado en el ITR y si quien mira puede fijarlo. */
+  continuity?: ContinuityContext
 }) {
   const t = useTranslations('ItrExecution')
   const isPassed = response?.is_passed
@@ -245,8 +248,10 @@ export default function ItemRow({
         onSave(item.id, { valueText: value, isPassed: result.hasFail ? false : result.isComplete ? true : null })
       }} />}
 
-      {item.item_type === 'continuity' && <ContinuityCapture value={response?.value_text ?? null} disabled={!canEdit} onChange={value => {
-        const result = evaluateContinuity(value)
+      {item.item_type === 'continuity' && <ContinuityCapture value={response?.value_text ?? null} disabled={!canEdit}
+        context={continuity ?? { scope: null, setByName: null, canSetScope: false }} measurementRequired={continuityMeasurementRequired(item.options)}
+        ids={{ itrId, itemId: item.id, projectId, tagId }} onChange={value => {
+        const result = evaluateContinuity(value, continuity?.scope ?? null, continuityMeasurementRequired(item.options))
         onSave(item.id, { valueText: value, isPassed: result.hasFail ? false : result.isComplete ? true : null })
       }} />}
 

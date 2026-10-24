@@ -2481,6 +2481,71 @@ export type Database = {
           },
         ]
       }
+      itr_continuity_scopes: {
+        Row: {
+          grouping_mode: string
+          item_id: string
+          itr_id: string
+          project_id: string
+          quantity: number
+          reason: string | null
+          set_at: string
+          set_by: string
+          shields: string[]
+        }
+        Insert: {
+          grouping_mode: string
+          item_id: string
+          itr_id: string
+          project_id: string
+          quantity: number
+          reason?: string | null
+          set_at?: string
+          set_by: string
+          shields?: string[]
+        }
+        Update: {
+          grouping_mode?: string
+          item_id?: string
+          itr_id?: string
+          project_id?: string
+          quantity?: number
+          reason?: string | null
+          set_at?: string
+          set_by?: string
+          shields?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "itr_continuity_scopes_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "itr_template_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "itr_continuity_scopes_itr_id_fkey"
+            columns: ["itr_id"]
+            isOneToOne: false
+            referencedRelation: "itr_list_v"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "itr_continuity_scopes_itr_id_fkey"
+            columns: ["itr_id"]
+            isOneToOne: false
+            referencedRelation: "itrs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "itr_continuity_scopes_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       itr_number_counters: {
         Row: {
           base: string
@@ -13844,7 +13909,14 @@ export type Database = {
         Returns: undefined
       }
       evaluate_itr_capture: { Args: { p_itr_id: string }; Returns: Json }
-      evaluate_itr_continuity: { Args: { p_value: string }; Returns: Json }
+      evaluate_itr_continuity: {
+        Args: {
+          p_measurement_required: boolean
+          p_scope: Json
+          p_value: string
+        }
+        Returns: Json
+      }
       evaluate_itr_table:
         | { Args: { p_options: Json; p_value: string }; Returns: Json }
         | {
@@ -14705,6 +14777,17 @@ export type Database = {
       set_gate_weights: {
         Args: { p_org_id: string; p_weights: Json }
         Returns: undefined
+      }
+      set_itr_continuity_scope: {
+        Args: {
+          p_count: number
+          p_grouping: string
+          p_item_id: string
+          p_itr_id: string
+          p_reason?: string
+          p_shields: string[]
+        }
+        Returns: Json
       }
       set_lineup_item: {
         Args: {

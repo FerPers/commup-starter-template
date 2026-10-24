@@ -1,6 +1,6 @@
 'use server'
 
-import { evaluateContinuity } from '@/lib/itr/continuity'
+import { continuityMeasurementRequired, continuityScopeFromRow, evaluateContinuity } from '@/lib/itr/continuity'
 import { evaluateTable, parseSourceRows } from '@/lib/itr/table'
 import { evaluateSelectionOutcome } from '@/lib/itr/selection-outcome'
 import { EDITOR_ROLES, PRIVILEGED_ROLES } from '@/lib/auth/permissions'
@@ -18,6 +18,7 @@ import type { ActiveContext } from '@/lib/supabase/membership'
 import { createItrRecord, isRequestId } from '@/lib/itr/create'
 import { measurementPassed } from '@/lib/itr/completion'
 import { logActivity } from '@/lib/log-activity'
+import { fromJson, sqlArg } from '@/lib/supabase/casts'
 
 // NOTA sobre roles: las funciones de EJECUCIÓN de campo (upsertResponse,
 // saveItrAttachment, deleteItrAttachment, signItr) son auth-only a propósito —
@@ -189,13 +190,15 @@ export const upsertResponse = withAuth(
 
     // B-15: todas las lecturas en un solo viaje (antes eran seis secuenciales); nada se escribe hasta validar.
     const responseCols = 'id, value_option, value_text, value_numeric, value_bool, remarks, is_passed, responded_at, responded_by'
-    const [itrRes, signaturesRes, itemRes, existingRes, assignmentRes] = await Promise.all([
+    const [itrRes, signaturesRes, itemRes, existingRes, scopeRes, assignmentRes] = await Promise.all([
       ctx.supabase.from('itrs').select('status, template_id, project_id, source_rows, projects!inner(org_id)').eq('id', itrId).single(),
       ctx.supabase.from('itr_signatures').select('id').eq('itr_id', itrId).limit(1),
       ctx.supabase.from('itr_template_items')
         .select('template_id, item_type, acceptance_min, acceptance_max, options, option_outcomes')
         .eq('id', itemId).single(),
       ctx.supabase.from('itr_responses').select(responseCols).eq('itr_id', itrId).eq('item_id', itemId).maybeSingle(),
+      // A38: alcance de continuidad fijado por el líder (solo cuenta para continuidad; 0 o 1 fila).
+      ctx.supabase.from('itr_continuity_scopes').select('grouping_mode, quantity, shields').eq('itr_id', itrId).eq('item_id', itemId).maybeSingle(),
       EDITOR_ROLES.includes(ctx.role)
         ? Promise.resolve({ data: { id: 'editor' } })
         : ctx.supabase.from('itr_assignments').select('id').eq('itr_id', itrId).eq('role', 'executor').eq('user_id', ctx.userId).maybeSingle(),
@@ -253,7 +256,7 @@ export const upsertResponse = withAuth(
     const existing = existingRes.data
     if (existingRes.error) return { error: t('itrInstances.responseCheckFailed') }
     if (item.item_type === 'continuity') {
-      const result = evaluateContinuity('valueText' in input ? input.valueText : existing?.value_text)
+      const result = evaluateContinuity('valueText' in input ? input.valueText : existing?.value_text, continuityScopeFromRow(scopeRes.data), continuityMeasurementRequired(item.options))
       if (!result.data) return { error: t('itrInstances.continuityInvalid') }
       patch.is_passed = result.hasFail ? false : result.isComplete ? true : null
     }
@@ -608,5 +611,28 @@ export const returnItrToExecutor = withAuthOnly(
     revalidatePath(`/projects/${input.projectId}/itrs`)
     revalidatePath('/my-work')
     return {}
+  },
+)
+
+// ── Alcance de la continuidad (A38) ──────────────────────────────────────────
+// Lo fija un líder o superior que no es el ejecutor, antes de la primera firma; cambiarlo exige motivo (≥ 10).
+// La RPC lo valida todo, lo audita y recalcula el estado del ITR.
+export const setContinuityScope = withAuth(
+  { role: EDITOR_ROLES, guards: [{ resource: 'project', field: 'projectId' }] },
+  async (ctx, input: { itrId: string; itemId: string; projectId: string; tagId: string; grouping: 'pairs' | 'conductors'; count: number; shields: string[]; reason?: string }): Promise<{ error?: string; changed?: boolean }> => {
+    const t = await getTranslations('ActionErrors')
+    if (!UUID_RE.test(input.itrId) || !UUID_RE.test(input.itemId)) return { error: t('itrInstances.invalidRequest') }
+    const { data: itrRow } = await ctx.supabase.from('itrs').select('project_id').eq('id', input.itrId).maybeSingle()
+    if (!itrRow || itrRow.project_id !== input.projectId) return { error: t('itrInstances.itrNotFound') }
+    const { data, error } = await ctx.supabase.rpc('set_itr_continuity_scope', {
+      p_itr_id: input.itrId, p_item_id: input.itemId, p_grouping: input.grouping, p_count: input.count,
+      p_shields: input.shields, p_reason: input.reason?.trim() ?? sqlArg<string>(null),
+    })
+    if (error) {
+      const code = ['executor_cannot_scope', 'invalid_item', 'itr_signed', 'invalid_scope', 'reason_required'].find(c => error.message.includes(c))
+      return { error: code ? t(`itrInstances.continuityScope.${code}`) : error.message }
+    }
+    revalidatePath(`/projects/${input.projectId}/tags/${input.tagId}/itrs/${input.itrId}`)
+    return { changed: fromJson<{ changed: boolean }>(data).changed }
   },
 )

@@ -105,10 +105,13 @@ En términos concretos, salir significa cuatro cosas:
 **Salida:** primer lote homologado y activo; restauración probada; recorrido completo con datos reales aceptado por Luis.
 
 **Avance:**
-- **Ficha A37/A38/A39 (24-oct):** `docs/FICHA-A37-A38-A39-2026-10-24.md`, en espera de las decisiones de Luis. Hallazgos principales:
+- **Ficha A37/A38/A39 (24-oct):** `docs/FICHA-A37-A38-A39-2026-10-24.md`; Luis aprobó todas las recomendaciones. Hallazgos principales:
   - Los 27 cambios de A39 no fueron decisiones: el relleno de la marca buscó un texto que las v2 ya no tenían.
   - I10A no exige equipo de prueba en ninguna versión.
   - Del primer lote, solo I10A, I01A e I30C dependen de esta ficha.
+- **A39 contenido (24-oct):** hecho (migración `20261226120000`). 34 revisiones de los 27 códigos vuelven a exigir equipo de prueba (los 25 que miden con instrumento, todas las de I10A e I30C); E17B y E42-1B dejan de exigirlo. Se retiran 140 ítems de texto que duplicaban la sección nativa (T.n de 27 borradores, 7.01–7.07 de I10A v3), solo en borradores sin ITR. Los generadores v2 y `sincronizar-catalogo.mjs` copian ahora `requires_test_equipment` y `required_signatures` (H5) y el atajo «T» marca la revisión en vez de crear texto. Ningún ITR existente cambia de regla (A39 código).
+- **A38 (24-oct):** hecho (migración `20261227120000`). El alcance de la continuidad (agrupación, cantidad, pantallas) lo fija un líder que no es el ejecutor, por RPC `set_itr_continuity_scope`, y queda congelado en el ITR; cambiarlo exige motivo y queda auditado con el alcance anterior. Sin alcance, o con una captura que no lo cubre exactamente, la continuidad no se completa (TS = SQL; la sonda H6 pasó de `it.fails` a prueba normal). La lectura obligatoria la fija la plantilla (casilla en el editor). I01A v3: fuera D.4 (el alcance es la única cantidad) y lectura no obligatoria. El PDF del ITR imprime el alcance fijado. Sigue abierta 38-4: si Geopark entrega listado de cables con conductores, el alcance se derivará de ahí.
+- **A37:** espera las tolerancias de Luis (tabla 37-3 de la ficha).
 
 ### Ola 3 — Orientación y lectura (en paralelo, no bloquea la salida)
 

@@ -93,8 +93,11 @@ describe('structured selection acceptance', () => {
 it('requires every continuity row and treats conductor failure as rejection', () => {
  const data = { version: 1, grouping: 'conductors', count: 2, shields: [], measurementRequired: false, rows: [{ id: 'C1', from: 'A1', to: 'B1', result: 'fail', remarks: '', reading: null, unit: '' }] }
  const items = [item('c', { item_type: 'continuity' })]
- const evaluate = () => evaluateItrCompletion(items, [response('c', { value_text: JSON.stringify(data) })])
+ const scopes = { c: { grouping: 'conductors' as const, count: 2, shields: [] } }
+ const evaluate = (s: Record<string, (typeof scopes)['c']> = scopes) => evaluateItrCompletion(items, [response('c', { value_text: JSON.stringify(data) })], [], null, s)
  expect(evaluate()).toMatchObject({ isComplete: false, rejectedItemIds: ['c'] })
  data.rows.push({ ...data.rows[0], id: 'C2', result: 'pass' })
  expect(evaluate()).toMatchObject({ isComplete: true, rejectedItemIds: ['c'] })
+ // A38: sin el alcance que fija un líder no se completa, aunque las filas estén.
+ expect(evaluate({})).toMatchObject({ isComplete: false, missingRequiredItemIds: ['c'], rejectedItemIds: ['c'] })
 })

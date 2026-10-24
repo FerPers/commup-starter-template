@@ -1,4 +1,4 @@
-import { evaluateContinuity } from '../itr/continuity'
+import { continuityMeasurementRequired, continuityScopeFromRow, evaluateContinuity } from '../itr/continuity'
 import { evaluateTable, parseSourceRows } from '../itr/table'
 import { drawItrSignatures } from './itr-signatures'
 import { drawBrandBar, drawRecordQr, type PdfBranding } from './branding'
@@ -105,6 +105,8 @@ export type ItrPdfData = {
   itr_test_equipment?: ItrTestEquipmentRef[]
   /** Fase 4-D: foto de filas (señales del lazo / efectos de la causa) y su origen. */
   source_rows?: unknown
+  /** A38: alcance de la continuidad fijado por un líder, por ítem. */
+  itr_continuity_scopes?: Array<{ item_id: string; grouping_mode: string; quantity: number; shields: string[] | null; set_at?: string | null; reason?: string | null }>
   loops?: { loop_number: string } | null
   ce_causes?: { code: string; description: string; ce_matrices: { code: string } | null } | null
   document_refs?: ItrDocumentRef[]
@@ -340,12 +342,17 @@ export async function renderItrPdf(itr: ItrPdfData): Promise<Uint8Array> {
         r.paragraph(`${item.item_number ?? ''} ${item.description_es?.trim() ? item.description_es.trim() : item.description}`, {size: 9})
         if (item.description_es?.trim() && item.description_es.trim() !== item.description.trim()) r.paragraph(item.description, {size: 8, oblique: true})
         if (item.acceptance_text) r.paragraph(`Criterio: ${item.acceptance_text}`, {size: 8})
-        const evaluation = evaluateContinuity(resp?.value_text)
+        const scope = continuityScopeFromRow(itr.itr_continuity_scopes?.find(s => s.item_id === item.id))
+        const measurementRequired = continuityMeasurementRequired(item.options)
+        const evaluation = evaluateContinuity(resp?.value_text, scope, measurementRequired)
+        r.paragraph(scope
+          ? `Alcance fijado: ${scope.grouping === 'pairs' ? 'pares' : 'conductores'} ${scope.count}; pantallas: ${scope.shields.join(', ') || 'ninguna'}${scope.setAt ? ` (${scope.setAt.slice(0, 10)})` : ''}${scope.reason ? `; último cambio: ${scope.reason}` : ''}.`
+          : 'Sin alcance fijado por un líder: la continuidad no se puede dar por completa.', {size: 8, color: scope ? undefined : COLOR.red})
         if (!evaluation.data) {
           r.paragraph(resp?.value_text ? 'Registro de continuidad inválido; revisar captura.' : 'Continuidad pendiente de captura.', {color: COLOR.red})
         } else {
           const capture = evaluation.data
-          r.paragraph(`${capture.grouping === 'pairs' ? 'Pares' : 'Conductores'}: ${capture.count}. Pantallas: ${capture.shields.join(', ') || 'Ninguna'}. Lectura ${capture.measurementRequired ? 'obligatoria' : 'opcional'}.`, {size: 8})
+          r.paragraph(`Capturado: ${capture.grouping === 'pairs' ? 'pares' : 'conductores'} ${capture.count}; pantallas: ${capture.shields.join(', ') || 'ninguna'}. Lectura ${measurementRequired ? 'obligatoria' : 'opcional'}.`, {size: 8})
           if (!evaluation.isComplete) r.paragraph('Captura incompleta: revisar terminales, resultados y requisitos aplicables.', {size: 8, color: COLOR.red})
           const widths = [48, 78, 78, 61, 47, 40, CONTENT_W - 352]
           const labels = ['Conductor', 'Origen', 'Destino', 'Resultado', 'Lectura', 'Unidad', 'Observaciones']

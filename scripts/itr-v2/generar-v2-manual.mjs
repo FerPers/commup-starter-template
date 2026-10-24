@@ -7,8 +7,9 @@
 // La especificación describe secciones e ítems con el mismo estándar v2:
 //   R.n referencias · D.n datos del elemento · numeración original en Inspección ·
 //   M.n registros de ensayo (mediciones, selecciones informativas o tablas) ·
-//   T.1–T.5 equipo de prueba · O.1 observaciones.
-// Atajos: "R.1", "T" y "O.1" como cadenas expanden los bloques estándar; type "check"
+//   O.1 observaciones. El equipo de prueba es la sección nativa del ITR (A39): el atajo "T"
+//   no crea ítems, marca la revisión con requires_test_equipment.
+// Atajos: "R.1" y "O.1" como cadenas expanden los bloques estándar; type "check"
 // = selección Conforme/No conforme/No aplica con resultado.
 //
 // Uso (desde la raíz del repo, con .env.local):
@@ -48,13 +49,6 @@ const KEY_RE = /^[a-z][a-z0-9_]{0,31}$/
 const STD = {
   'R.1': { n: 'R.1', type: 'text', en: 'Identification and revision of the drawings, specifications or procedure used for this inspection.', es: 'Identificación y revisión de los planos, especificaciones o procedimiento utilizados para esta inspección.' },
   'O.1': { n: 'O.1', type: 'text', required: false, en: 'Inspection remarks and references to findings recorded in the Punch List, where applicable.', es: 'Observaciones de la inspección y referencias a hallazgos registrados en Punch List, cuando correspondan.' },
-  T: [
-    { n: 'T.1', type: 'text', en: 'Test equipment make.', es: 'Fabricante del equipo de prueba.' },
-    { n: 'T.2', type: 'text', en: 'Test equipment model.', es: 'Modelo del equipo de prueba.' },
-    { n: 'T.3', type: 'text', en: 'Test equipment serial number.', es: 'Número de serie del equipo de prueba.' },
-    { n: 'T.4', type: 'date', en: 'Calibration expiry date of the test equipment.', es: 'Fecha de vencimiento de la calibración del equipo de prueba.' },
-    { n: 'T.5', type: 'text', document: true, en: 'Calibration certificate of the test equipment (attach the certificate).', es: 'Certificado de calibración del equipo de prueba (adjuntar el certificado).' },
-  ],
 }
 
 function col(c) {
@@ -82,10 +76,12 @@ function validateTable(t, where) {
 function expand(spec) {
   const sections = []
   const stats = { items: 0, photos: 0, docs: 0, tables: 0, checks: 0 }
+  let testEquipment = false
   for (const sec of spec.sections) {
     const items = []
     for (const raw of sec.items) {
-      const list = typeof raw === 'string' ? (raw === 'T' ? STD.T : [STD[raw]]) : [raw]
+      if (raw === 'T') { testEquipment = true; continue }
+      const list = typeof raw === 'string' ? [STD[raw]] : [raw]
       if (list.some(x => !x)) throw new Error(`${spec.code}: atajo desconocido «${raw}»`)
       for (const it of list) {
         const where = `${spec.code} ${it.n}`
@@ -110,17 +106,17 @@ function expand(spec) {
         items.push(row)
       }
     }
-    sections.push({ title: sec.title, items })
+    if (items.length) sections.push({ title: sec.title, items })
   }
   const numbers = sections.flatMap(s => s.items.map(i => i.item_number))
   const dup = numbers.filter((n, i) => numbers.indexOf(n) !== i)
   if (dup.length) throw new Error(`${spec.code}: numeración repetida ${[...new Set(dup)].join(', ')}`)
-  return { sections, stats }
+  return { sections, stats, testEquipment }
 }
 
 async function loadVersions(code) {
   const { data, error } = await db.from('itr_templates')
-    .select('id, code, title, title_es, discipline_id, phase_id, equipment_type_id, version, is_active, is_global')
+    .select('id, code, title, title_es, discipline_id, phase_id, equipment_type_id, version, is_active, is_global, requires_test_equipment, required_signatures')
     .eq('org_id', ORG).eq('code', code).order('version')
   if (error) throw error
   return data ?? []
@@ -132,16 +128,18 @@ async function lookupCreate(spec) {
   const { data: d } = await db.from('disciplines').select('id').eq('org_id', ORG).eq('code', c.discipline).maybeSingle()
   const { data: p } = await db.from('project_phases').select('id').eq('org_id', ORG).eq('code', c.phase).maybeSingle()
   if (!d || !p) throw new Error(`create: disciplina «${c.discipline}» o fase «${c.phase}» no existen en la org`)
-  return { id: null, title: c.title, title_es: c.title_es, discipline_id: d.id, phase_id: p.id, equipment_type_id: null, version: 0, is_global: false }
+  return { id: null, title: c.title, title_es: c.title_es, discipline_id: d.id, phase_id: p.id, equipment_type_id: null, version: 0, is_global: false, requires_test_equipment: false, required_signatures: undefined }
 }
 
-async function apply(spec, active, versions, sections) {
+async function apply(spec, active, versions, sections, testEquipment) {
   const next = Math.max(0, ...versions.map(v => v.version)) + 1
   const { data: tpl, error: tErr } = await db.from('itr_templates').insert({
     org_id: ORG, code: spec.code, title: spec.title ?? active.title, title_es: spec.title_es ?? active.title_es,
     description: `Revisión ${next} (borrador Fase 2, diseño manual, ${TODAY}${active.id ? '' : ', plantilla nueva'}): ${spec.note} Fuente: estructura del Word original.`,
     discipline_id: active.discipline_id, phase_id: active.phase_id, equipment_type_id: active.equipment_type_id,
     version: next, is_active: false, is_global: active.is_global,
+    // A39: la revisión conserva los requisitos de la activa (equipo y firmas); el atajo "T" lo exige.
+    requires_test_equipment: testEquipment || !!active.requires_test_equipment, required_signatures: active.required_signatures,
   }).select('id').single()
   if (tErr) throw tErr
   for (const [si, section] of sections.entries()) {
@@ -163,7 +161,7 @@ async function main() {
       if (!available.includes(code)) throw new Error('sin especificación en scripts/itr-v2/manual')
       const spec = JSON.parse(readFileSync(path.join(SPECS, `${code}.json`), 'utf8'))
       if (spec.code !== code) throw new Error(`la especificación declara ${spec.code}`)
-      const { sections, stats } = expand(spec)
+      const { sections, stats, testEquipment } = expand(spec)
       const versions = await loadVersions(code)
       let active = versions.find(v => v.is_active)
       if (!active && versions.length) throw new Error(`sin plantilla activa (existen v${versions.map(v => v.version).join('/')} inactivas)`)
@@ -173,7 +171,7 @@ async function main() {
       let note = spec.note
       if (APPLY) {
         if (newer.length && !FORCE) note = `NO GENERADO: ya existe borrador v${newer.map(v => v.version).join('/')} (usa --force o bórralo antes)`
-        else created = await apply(spec, active, versions, sections)
+        else created = await apply(spec, active, versions, sections, testEquipment)
       }
       out.push([code, active.id ? active.version : '(nueva)', created.id, created.version, stats.items, stats.checks, stats.photos, stats.docs, stats.tables, note])
       console.log(`${code}: ${sections.length} secciones, ${stats.items} ítems (${stats.checks} selecciones, ${stats.photos} fotos, ${stats.docs} documentos, ${stats.tables} tablas)${created.id ? ` → v${created.version} ${created.id}` : ''}${note.startsWith('NO') ? ' — ' + note : ''}`)

@@ -1,4 +1,4 @@
-import { evaluateContinuity } from './continuity'
+import { continuityMeasurementRequired, evaluateContinuity, type ContinuityScope } from './continuity'
 import { evaluateTable, type SourceRow } from './table'
 import { evaluateSelectionOutcome } from './selection-outcome'
 import type { ItrTemplateItem, ItrResponse, ItrAttachment } from '@/types/database'
@@ -44,7 +44,10 @@ export function evaluateItrCompletion(
   attachments: readonly CompletionAttachment[] = [],
   /** Fase 4-D: foto del ITR (itrs.source_rows) para las tablas con filas desde lazo o matriz C&E. */
   sourceRows: SourceRow[] | null = null,
+  /** A38: alcance de continuidad fijado en el ITR, por id de ítem (itr_continuity_scopes). Sin alcance = incompleta. */
+  continuityScopes: Readonly<Record<string, ContinuityScope>> = {},
 ) {
+  const continuity = (item: CompletionItem) => evaluateContinuity(answers.get(item.id)?.value_text, continuityScopes[item.id] ?? null, continuityMeasurementRequired(item.options))
   const byId = new Map(items.map(item => [item.id, item]))
   const answers = new Map(responses.map(response => [response.item_id, response]))
   const invalid = new Set<string>()
@@ -86,7 +89,7 @@ export function evaluateItrCompletion(
     if (item.requires_document && !attachments.some(attachment => attachment.item_id === item.id && stored(attachment) && attachment.file_type === 'application/pdf')) return false
     if (item.requires_measurement && !hasNumber(answer?.value_numeric)) return false
     switch (item.item_type) {
-      case 'continuity': return evaluateContinuity(answer?.value_text).isComplete
+      case 'continuity': return continuity(item).isComplete
       case 'table': return evaluateTable(item.options, answer?.value_text, sourceRows).isComplete
       case 'text': return hasText(answer?.value_text)
       case 'number':
@@ -109,7 +112,7 @@ export function evaluateItrCompletion(
   }
   const applicableItems = items.filter(applicable)
   const required = applicableItems.filter(item => item.is_required || (item.item_type === 'select' && evaluateSelectionOutcome(item.options, item.option_outcomes ?? {}, answers.get(item.id)?.value_option).requiresJustification))
-  const rejectedItemIds = applicableItems.filter(item => (item.item_type === 'continuity' && evaluateContinuity(answers.get(item.id)?.value_text).hasFail) || (item.item_type === 'table' && evaluateTable(item.options, answers.get(item.id)?.value_text, sourceRows).hasFail) || (item.item_type === 'select' && evaluateSelectionOutcome(item.options, item.option_outcomes ?? {}, answers.get(item.id)?.value_option).outcome === 'fail')).map(item => item.id)
+  const rejectedItemIds = applicableItems.filter(item => (item.item_type === 'continuity' && continuity(item).hasFail) || (item.item_type === 'table' && evaluateTable(item.options, answers.get(item.id)?.value_text, sourceRows).hasFail) || (item.item_type === 'select' && evaluateSelectionOutcome(item.options, item.option_outcomes ?? {}, answers.get(item.id)?.value_option).outcome === 'fail')).map(item => item.id)
   // A29 (= evaluate_itr_capture.has_critical_fail): un crítico no aceptado (medición fuera de límites, selección
   // `fail` o el `is_passed` guardado) o cualquier rechazo de selección, continuidad o tabla.
   const passedOf = (item: CompletionItem): boolean | null => {

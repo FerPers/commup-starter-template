@@ -155,5 +155,9 @@ export const miniBtn: React.CSSProperties = {
 }
 
 export function normalizeItemType(form: ItemFormValues, itemType: ItrItemType): ItemFormValues {
-  return { ...form, item_type: itemType, requires_measurement: itemType === 'continuity' || itemType === 'table' ? false : form.requires_measurement }
+  return {
+    ...form, item_type: itemType, requires_measurement: itemType === 'continuity' || itemType === 'table' ? false : form.requires_measurement,
+    // A38: en continuidad `options` solo dice si la lectura es obligatoria; no hereda las opciones de otro tipo.
+    options: itemType === 'continuity' && form.item_type !== 'continuity' ? null : form.options,
+  }
 }

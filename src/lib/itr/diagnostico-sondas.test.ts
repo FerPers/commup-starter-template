@@ -37,13 +37,12 @@ describe('sondas del diagnóstico ITR (A45)', () => {
     expect(r.isComplete, p.note).toBe(false)
   })
 
-  // Hoy el evaluador solo recibe la captura: la cantidad la declara el mismo ejecutor. La firma de abajo (cantidad
-  // de ingeniería, D.4 o listado de conductores) es provisional hasta la política de A38.
-  it.fails('H6 · continuidad: un conductor declarado cuando ingeniería dice cuatro no queda completo', () => {
+  // A38: el alcance lo fija un líder y queda en el ITR; el ejecutor ya no declara la cantidad.
+  it('H6 · continuidad: un conductor declarado cuando el alcance fijado dice cuatro no queda completo', () => {
     const p = probes.continuitySelfDeclared
-    const evaluateAgainst = evaluateContinuity as (value: string, engineering: { expectedCount: number }) => ReturnType<typeof evaluateContinuity>
-    const r = evaluateAgainst(JSON.stringify(p.input), { expectedCount: 4 })
+    const r = evaluateContinuity(JSON.stringify(p.input), { grouping: 'conductors', count: 4, shields: [] }, false)
     expect(r.isComplete, p.note).toBe(false)
+    expect(r.scopeMismatch).toBe(true)
   })
 
   it('las capturas de las sondas son válidas para el motor actual (no fallan por estructura)', () => {
@@ -54,6 +53,6 @@ describe('sondas del diagnóstico ITR (A45)', () => {
     ] as const) {
       expect(r.errors, p.template).toEqual([])
     }
-    expect(evaluateContinuity(JSON.stringify(probes.continuitySelfDeclared.input)).errors).toEqual([])
+    expect(evaluateContinuity(JSON.stringify(probes.continuitySelfDeclared.input), { grouping: 'conductors', count: 1, shields: [] }, false).errors).toEqual([])
   })
 })

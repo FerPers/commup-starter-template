@@ -342,6 +342,7 @@ export async function loadItrPdf(db: Db, x: { projectId: string; itrId: string; 
         captured_at
       ),
       itr_test_equipment ( used_on, calibrated_on, calibration_due, certificate_number, snapshot ),
+      itr_continuity_scopes ( item_id, grouping_mode, quantity, shields, set_by, set_at, reason ),
       tags ( tag_number, description, manufacturer, model, serial_number, datasheet_number, pid_drawing, range_min, range_max, eng_unit, revision ),
       projects ( code, name )
     `)

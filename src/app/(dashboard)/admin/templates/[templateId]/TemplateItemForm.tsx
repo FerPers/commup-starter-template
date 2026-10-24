@@ -10,6 +10,7 @@ import { useId, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import type { ItrItemType } from '@/types/database'
 import { checkTableConfig, type TableConfig } from '@/lib/itr/table'
+import { continuityMeasurementRequired } from '@/lib/itr/continuity'
 import TableConfigEditor from './TableConfigEditor'
 import {
   ITEM_TYPE_DEFS,
@@ -181,6 +182,14 @@ export default function TemplateItemForm({
       )}
 
       {isTable && <TableConfigEditor value={tableConfig} onChange={config => setForm(f => ({ ...f, options: config }))} />}
+      {form.item_type === 'continuity' && (
+        // A38 (38-3): la lectura obligatoria la decide la plantilla, no quien ejecuta.
+        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 500, color: 'var(--text-body)', marginBottom: '12px' }}>
+          <input type="checkbox" checked={continuityMeasurementRequired(form.options)}
+            onChange={e => setForm(f => ({ ...f, options: e.target.checked ? { measurement_required: true } : null }))} />
+          {t('continuityReadingRequired')}
+        </label>
+      )}
 
       {isMeasurement && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 100px', gap: '10px', marginBottom: '10px' }}>

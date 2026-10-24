@@ -1507,7 +1507,8 @@
       "previewError": "Error al previsualizar",
       "exportError": "Error al exportar",
       "translateTitle": "Revisar y traducir al español (con ayuda de IA)",
-      "translateLabel": "ES · Traducción"
+      "translateLabel": "ES · Traducción",
+      "continuityReadingRequired": "La prueba exige lectura y unidad en cada conductor"
     },
     "tr": {
       "searching": "Buscando plantillas con traducciones pendientes…",
@@ -6618,7 +6619,6 @@
   },
   "Continuity": {
     "countError": "Indica una cantidad entera de 1 a 500 y pantallas sin identificadores repetidos.",
-    "confirmRemove": "Este cambio retira filas con información. ¿Confirmas cambiar la configuración?",
     "legend": "Registro de continuidad por conductor",
     "grouping": "Organización",
     "groupingAria": "Organización del cable",
@@ -6629,10 +6629,7 @@
     "countAria": "Cantidad de pares o conductores",
     "shields": "Pantallas / blindajes (un identificador por línea)",
     "shieldsAria": "Identificadores de pantallas",
-    "measurement": "El procedimiento exige lectura y unidad",
-    "update": "Actualizar configuración",
-    "create": "Crear filas",
-    "help": "Cada conductor requiere sus terminales y resultado. «No aplica» exige justificación. Las filas nuevas quedan pendientes.",
+    "help": "Cada conductor requiere sus terminales y resultado. «No aplica» exige justificación. La lectura es opcional.",
     "col": {
       "id": "Conductor / pantalla",
       "from": "Terminal origen",
@@ -6651,7 +6648,28 @@
     "status": {
       "fail": "Hay resultados rechazados.",
       "complete": "Registro diligenciado; pendiente de las aprobaciones que correspondan.",
-      "pending": "Registro pendiente: completa terminales, resultados y requisitos del procedimiento."
+      "pending": "Registro pendiente: completa terminales, resultados y requisitos del procedimiento.",
+      "noScope": "Sin alcance: un líder debe fijarlo antes de ejecutar la prueba."
+    },
+    "rowsLegend": "Filas del alcance",
+    "helpReading": "Cada conductor requiere sus terminales, resultado, lectura y unidad. «No aplica» exige justificación.",
+    "scopeChanged": "El alcance cambió después de la última captura: las filas se ajustan al guardar la próxima.",
+    "scope": {
+      "missing": "Falta el alcance de esta prueba (pares o conductores y pantallas). Lo fija un líder que no sea el ejecutor; hasta entonces el registro no se puede completar.",
+      "title": "Alcance:",
+      "pairs": "{count, plural, one {# par} other {# pares}}",
+      "conductors": "{count, plural, one {# conductor} other {# conductores}}",
+      "shields": "pantallas: {list}",
+      "noShields": "sin pantallas",
+      "setBy": "fijado por {name}",
+      "reason": "último cambio: {reason}",
+      "formHelp": "Fija el alcance según la ingeniería (listado de cables o plano). El ejecutor no lo puede cambiar; un cambio posterior exige motivo.",
+      "save": "Fijar alcance",
+      "saveChange": "Guardar cambio",
+      "change": "Cambiar alcance",
+      "cancel": "Cancelar",
+      "reasonLabel": "Motivo del cambio (mín. 10 caracteres)",
+      "reasonMin": "Indica el motivo del cambio (mínimo 10 caracteres)."
     }
   },
   "SwipeCapture": {
@@ -8515,7 +8533,14 @@
       "signatureInvalid": "La firma no es válida o es demasiado grande",
       "reasonMin3": "Indica un motivo (al menos 3 caracteres)",
       "reopenUnverified": "La reapertura respondió sin detalle verificable; actualiza el ITR antes de continuar",
-      "rejectReasonMin10": "Explica qué hay que corregir (mínimo 10 caracteres)"
+      "rejectReasonMin10": "Explica qué hay que corregir (mínimo 10 caracteres)",
+      "continuityScope": {
+        "executor_cannot_scope": "El ejecutor de este ITR no puede fijar el alcance de su propia prueba.",
+        "invalid_item": "El ítem no es una prueba de continuidad de este ITR.",
+        "itr_signed": "El ITR ya tiene firmas: el alcance solo se cambia tras la reapertura auditada.",
+        "invalid_scope": "Alcance inválido: cantidad de 1 a 500 y hasta 50 pantallas sin repetir.",
+        "reason_required": "Cambiar el alcance exige un motivo de al menos 10 caracteres."
+      }
     },
     "sourceItrs": {
       "invalidRequest": "Solicitud no válida: vuelve a abrir el formulario",

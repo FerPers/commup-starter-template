@@ -1,5 +1,6 @@
 import { evaluateItrCompletion, type CompletionItem, type CompletionResponse, type CompletionAttachment } from '../itr/completion'
 import type { SourceRow } from '../itr/table'
+import type { ContinuityScope } from '../itr/continuity'
 
 /**
  * Utilidades puras de la bandeja de salida (Sprint O). Sin imports de Next ni
@@ -95,13 +96,15 @@ export function localItrStatus(
   responses: Readonly<Record<string, Partial<CompletionResponse> & { is_passed?: boolean | null } | undefined>>,
   attachments: readonly CompletionAttachment[] = [],
   sourceRows: SourceRow[] | null = null,
+  /** A38: alcance de continuidad del ITR por ítem (sin él, la continuidad no se completa). */
+  continuityScopes: Readonly<Record<string, ContinuityScope>> = {},
 ): { pct: number; status: LocalItrStatus } {
   const answers = Object.entries(responses).flatMap(([item_id, response]) => response ? [{
     item_id, value_text: response.value_text ?? null, value_numeric: response.value_numeric ?? null,
     value_bool: response.value_bool ?? null, value_option: response.value_option ?? null, remarks: response.remarks ?? null,
     is_passed: response.is_passed ?? null,
   }] : [])
-  const result = evaluateItrCompletion(items, answers, attachments, sourceRows)
+  const result = evaluateItrCompletion(items, answers, attachments, sourceRows, continuityScopes)
   // A29: la misma regla de rechazo que evaluate_itr_capture (la que usa la firma).
   const rejected = result.hasCriticalFail
   const status: LocalItrStatus = rejected ? 'rejected' : result.isComplete ? 'completed' : result.completedCount > 0 ? 'in_progress' : 'not_started'

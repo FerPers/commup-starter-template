@@ -108,6 +108,8 @@ export type ItrData = {
   loop_id?: string | null
   ce_cause_id?: string | null
   source_rows?: Json | null
+  /** A38: alcance de la continuidad fijado por un líder, por ítem (itr_continuity_scopes). */
+  itr_continuity_scopes?: Array<{ item_id: string; grouping_mode: string; quantity: number; shields: string[]; set_by: string; set_at: string; reason: string | null }>
   loops?: { id: string; loop_number: string } | null
   ce_causes?: { id: string; code: string; description: string; ce_matrices: { id: string; code: string } | null } | null
 }

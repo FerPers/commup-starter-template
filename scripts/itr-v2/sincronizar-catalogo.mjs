@@ -97,6 +97,8 @@ async function copyTemplate(src, target, cfg, version, activate) {
     code: src.code, title: src.title, title_es: src.title_es,
     description: version === 1 ? (stripProvenance(src.description) || `Importada de «${src.orgName}» (v${src.version}, ${TODAY}).`) : `Revisión ${version}: importada de «${src.orgName}» (v${src.version}, ${TODAY}).${stripProvenance(src.description) ? ' ' + stripProvenance(src.description) : ''}`,
     version, is_active: activate, is_global: false,
+    // H5 (A39): la copia conserva los requisitos del origen, no los predeterminados del destino.
+    requires_test_equipment: !!src.requires_test_equipment, required_signatures: src.required_signatures,
   }).select('id').single()
   fail(error, `insertar ${src.code}`)
   const idMap = new Map()
@@ -166,18 +168,18 @@ async function main() {
   const cfg = await config(source, target)
 
   const { data: srcTemplates, error } = await db.from('itr_templates')
-    .select(`id, code, title, title_es, description, version, disciplines(code), project_phases(code), equipment_types(code), ${SECTIONS}`)
+    .select(`id, code, title, title_es, description, version, requires_test_equipment, required_signatures, disciplines(code), project_phases(code), equipment_types(code), ${SECTIONS}`)
     .eq('org_id', source.id).eq('is_active', true).not('code', 'ilike', 'QA-%').order('code')
   fail(error, 'plantillas origen')
-  const { data: dstTemplates } = await db.from('itr_templates').select(`id, code, version, is_active, ${SECTIONS}`).eq('org_id', target.id)
+  const { data: dstTemplates } = await db.from('itr_templates').select(`id, code, version, is_active, requires_test_equipment, required_signatures, ${SECTIONS}`).eq('org_id', target.id)
   const latest = new Map()
-  for (const t of dstTemplates ?? []) { const p = latest.get(t.code); if (!p || t.version > p.version) latest.set(t.code, { ...t, hash: templateContentHash(t.itr_template_sections) }) }
+  for (const t of dstTemplates ?? []) { const p = latest.get(t.code); if (!p || t.version > p.version) latest.set(t.code, { ...t, hash: templateContentHash(t.itr_template_sections, t) }) }
 
   const out = [['codigo', 'accion', 'version_origen', 'version_destino', 'id_destino', 'matriz', 'nota']]
   const tally = { created: 0, revision: 0, unchanged: 0, error: 0 }
   for (const src of srcTemplates) {
     src.orgName = source.name
-    const hash = templateContentHash(src.itr_template_sections)
+    const hash = templateContentHash(src.itr_template_sections, src)
     const local = latest.get(src.code)
     try {
       if (local && local.hash === hash) {

@@ -14,6 +14,7 @@ import { useTranslations, useLocale } from 'next-intl'
 import { revokeItrApproval } from '@/app/actions/itr-instances'
 import { uploadOrQueuePhoto, pendingAttachment, pendingSignature, signOrQueue } from '@/lib/sync/outbox'
 import { evaluateItrCompletion } from '@/lib/itr/completion'
+import { continuityScopeFromRow, type ContinuityScope } from '@/lib/itr/continuity'
 import { parseSourceRows } from '@/lib/itr/table'
 import { localItrStatus } from '@/lib/sync/outbox-utils'
 import { itemDescription } from '@/lib/itr/item-text'
@@ -54,6 +55,7 @@ export default function ItrExecution({
   assignable,
   punchAssignees = [],
   timezone,
+  memberNames = {},
 }: {
   itr: ItrData
   projectId: string
@@ -76,6 +78,8 @@ export default function ItrExecution({
   punchAssignees?: Array<{ user_id: string; full_name: string }>
   /** Zona del proyecto: la hora de cada firma se muestra en ella y rotulada (el servidor corre en UTC). */
   timezone: string
+  /** A38: nombre de quien fijó el alcance de la continuidad. */
+  memberNames?: Record<string, string>
 }) {
   const router = useRouter()
   const t = useTranslations('ItrExecution')
@@ -243,7 +247,12 @@ export default function ItrExecution({
 
   const allItems = sections.flatMap(s => s.itr_template_items)
   const sourceRows = parseSourceRows(itr.source_rows)
-  const completion = evaluateItrCompletion(allItems, Object.values(responses), Object.values(attachmentMap).flat(), sourceRows)
+  // A38: alcance de la continuidad por ítem; sin él, la continuidad no se completa (igual que evaluate_itr_capture).
+  const continuityScopes = useMemo(() => Object.fromEntries((itr.itr_continuity_scopes ?? []).flatMap(row => {
+    const scope = continuityScopeFromRow(row)
+    return scope ? [[row.item_id, scope] as [string, ContinuityScope]] : []
+  })), [itr.itr_continuity_scopes])
+  const completion = evaluateItrCompletion(allItems, Object.values(responses), Object.values(attachmentMap).flat(), sourceRows, continuityScopes)
   const visibleIds = new Set(completion.applicableItemIds)
   const visibleItems = allItems.filter(item => visibleIds.has(item.id))
   const criticalBlocked = visibleItems.filter(
@@ -253,7 +262,7 @@ export default function ItrExecution({
   const memberIds = useMemo(() => new Set(memberIdList), [memberIdList])
   // Sprint O: estado calculado en local (espejo del servidor) para poder firmar sin red
   // antes de que las respuestas encoladas lleguen al servidor.
-  const localEvaluation = localItrStatus(allItems, responses, [...Object.values(serverAttachments).flat(), ...pendingPhotos], sourceRows)
+  const localEvaluation = localItrStatus(allItems, responses, [...Object.values(serverAttachments).flat(), ...pendingPhotos], sourceRows, continuityScopes)
   const localStatus = localEvaluation.status
   const effectiveProgress = itr.status === 'approved' ? itr.progress_pct : localEvaluation.pct
   const effectiveStatus = itr.status === 'approved' ? 'approved' : localStatus
@@ -629,6 +638,13 @@ export default function ItrExecution({
                   canEdit={canCapture}
                   onSave={saveResponse}
                   sourceRows={sourceRows}
+                  continuity={item.item_type === 'continuity' ? {
+                    scope: continuityScopes[item.id] ?? null,
+                    setByName: memberNames[continuityScopes[item.id]?.setBy ?? ''] ?? null,
+                    // A38: lo fija un líder o superior que no es el ejecutor, antes de la primera firma (la RPC lo vuelve a exigir).
+                    canSetScope: ROLE_TIERS.editor.includes(currentUserRole) && executor?.user_id !== currentUserId
+                      && effectiveSignatures.length === 0 && itr.status !== 'approved',
+                  } : undefined}
                   onAddPunch={openPunchModal}
                   canPunch={canEdit}
                   itrId={itr.id}

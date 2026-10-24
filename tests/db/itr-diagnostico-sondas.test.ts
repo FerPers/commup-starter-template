@@ -17,6 +17,7 @@ requireDbEnv(['TEST_USER_A_EMAIL', 'TEST_USER_A_PASSWORD'])
 type SqlResult = { is_complete: boolean; has_fail: boolean }
 const rejects = (r: SqlResult) => r.has_fail || !r.is_complete
 let a: SupabaseClient
+const H6_SCOPE = { grouping: 'conductors', count: 4, shields: [] }
 const sql = new Map<string, SqlResult>()
 
 describe('sondas del diagnóstico ITR en SQL (A45)', () => {
@@ -28,7 +29,8 @@ describe('sondas del diagnóstico ITR en SQL (A45)', () => {
       inconsistentEffect: a.rpc('evaluate_itr_table', { p_options: probes.inconsistentEffect.options, p_value: JSON.stringify(probes.inconsistentEffect.input), p_source_count: probes.inconsistentEffect.sourceRows.length }),
       calibrationManual: a.rpc('evaluate_itr_table', { p_options: probes.calibrationManual.options, p_value: JSON.stringify(probes.calibrationManual.input) }),
       optionalResult: a.rpc('evaluate_itr_table', { p_options: probes.optionalResult.options, p_value: JSON.stringify(probes.optionalResult.input) }),
-      continuitySelfDeclared: a.rpc('evaluate_itr_continuity', { p_value: JSON.stringify(probes.continuitySelfDeclared.input) }),
+      // A38: el alcance fijado por el líder (cuatro conductores) frente a la captura de uno.
+      continuitySelfDeclared: a.rpc('evaluate_itr_continuity', { p_value: JSON.stringify(probes.continuitySelfDeclared.input), p_scope: H6_SCOPE, p_measurement_required: false }),
     }
     for (const [key, call] of Object.entries(calls)) {
       const { data, error: rpcError } = await call
@@ -42,7 +44,7 @@ describe('sondas del diagnóstico ITR en SQL (A45)', () => {
       inconsistentEffect: evaluateTable(probes.inconsistentEffect.options, JSON.stringify(probes.inconsistentEffect.input), probes.inconsistentEffect.sourceRows),
       calibrationManual: evaluateTable(probes.calibrationManual.options, JSON.stringify(probes.calibrationManual.input)),
       optionalResult: evaluateTable(probes.optionalResult.options, JSON.stringify(probes.optionalResult.input)),
-      continuitySelfDeclared: evaluateContinuity(JSON.stringify(probes.continuitySelfDeclared.input)),
+      continuitySelfDeclared: evaluateContinuity(JSON.stringify(probes.continuitySelfDeclared.input), { grouping: 'conductors', count: 4, shields: [] }, false),
     }
     for (const [key, r] of Object.entries(ts)) {
       expect({ is_complete: sql.get(key)?.is_complete, has_fail: sql.get(key)?.has_fail }, key).toEqual({ is_complete: r.isComplete, has_fail: r.hasFail })
@@ -61,5 +63,9 @@ describe('sondas del diagnóstico ITR en SQL (A45)', () => {
 
   it.fails('H3 · E10B v2 M.1: una tabla con el resultado vacío no queda completa', () => {
     expect(sql.get('optionalResult')!.is_complete).toBe(false)
+  })
+
+  it('H6 · continuidad: un conductor no cubre el alcance de cuatro fijado por el líder (A38)', () => {
+    expect(sql.get('continuitySelfDeclared')!.is_complete).toBe(false)
   })
 })

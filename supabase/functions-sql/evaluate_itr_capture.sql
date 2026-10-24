@@ -10,7 +10,10 @@ WITH RECURSIVE
 items AS MATERIALIZED (
   SELECT i.*, r.value_text, r.value_numeric, r.value_bool, r.value_option, r.remarks,
     i.option_outcomes ->> r.value_option AS selection_outcome,
-    CASE WHEN i.item_type::text='continuity' THEN public.evaluate_itr_continuity(r.value_text) END AS continuity,
+    CASE WHEN i.item_type::text='continuity' THEN public.evaluate_itr_continuity(r.value_text,
+      (SELECT pg_catalog.jsonb_build_object('grouping', s.grouping_mode, 'count', s.quantity, 'shields', pg_catalog.to_jsonb(s.shields))
+       FROM public.itr_continuity_scopes s WHERE s.itr_id = itr.id AND s.item_id = i.id),
+      COALESCE(i.options -> 'measurement_required' = 'true'::jsonb, false)) END AS continuity,
     CASE WHEN i.item_type::text='table' THEN public.evaluate_itr_table(i.options, r.value_text, pg_catalog.jsonb_array_length(itr.source_rows)) END AS table_eval,
     CASE WHEN i.item_type::text='select' THEN CASE i.option_outcomes ->> r.value_option WHEN 'pass' THEN true WHEN 'fail' THEN false ELSE NULL END
     WHEN i.item_type::text='measurement' AND r.value_numeric IS NOT NULL

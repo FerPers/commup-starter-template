@@ -1507,7 +1507,8 @@
       "previewError": "Error generating preview",
       "exportError": "Error exporting",
       "translateTitle": "Review and translate into Spanish (AI-assisted)",
-      "translateLabel": "ES · Translation"
+      "translateLabel": "ES · Translation",
+      "continuityReadingRequired": "The test requires a reading and unit on each conductor"
     },
     "tr": {
       "searching": "Looking for templates with missing translations…",
@@ -6618,7 +6619,6 @@
   },
   "Continuity": {
     "countError": "Enter a whole number from 1 to 500 and shields without repeated identifiers.",
-    "confirmRemove": "This change removes rows that contain data. Change the configuration anyway?",
     "legend": "Continuity record per conductor",
     "grouping": "Arrangement",
     "groupingAria": "Cable arrangement",
@@ -6629,10 +6629,7 @@
     "countAria": "Number of pairs or conductors",
     "shields": "Shields / screens (one identifier per line)",
     "shieldsAria": "Shield identifiers",
-    "measurement": "The procedure requires a reading and unit",
-    "update": "Update configuration",
-    "create": "Create rows",
-    "help": "Each conductor needs its terminals and result. “Not applicable” requires a justification. New rows start pending.",
+    "help": "Each conductor needs its terminals and result. “Not applicable” requires a justification. The reading is optional.",
     "col": {
       "id": "Conductor / shield",
       "from": "From terminal",
@@ -6651,7 +6648,28 @@
     "status": {
       "fail": "There are failed results.",
       "complete": "Record filled in; pending the required approvals.",
-      "pending": "Record pending: complete terminals, results and procedure requirements."
+      "pending": "Record pending: complete terminals, results and procedure requirements.",
+      "noScope": "No scope: a leader must set it before the test is run."
+    },
+    "rowsLegend": "Scope rows",
+    "helpReading": "Each conductor needs its terminals, result, reading and unit. “Not applicable” requires a justification.",
+    "scopeChanged": "The scope changed after the last capture: rows adjust when the next one is saved.",
+    "scope": {
+      "missing": "This test has no scope yet (pairs or conductors and shields). A leader who is not the executor sets it; until then the record cannot be completed.",
+      "title": "Scope:",
+      "pairs": "{count, plural, one {# pair} other {# pairs}}",
+      "conductors": "{count, plural, one {# conductor} other {# conductors}}",
+      "shields": "shields: {list}",
+      "noShields": "no shields",
+      "setBy": "set by {name}",
+      "reason": "last change: {reason}",
+      "formHelp": "Set the scope from engineering (cable schedule or drawing). The executor cannot change it; a later change requires a reason.",
+      "save": "Set scope",
+      "saveChange": "Save change",
+      "change": "Change scope",
+      "cancel": "Cancel",
+      "reasonLabel": "Reason for the change (min. 10 characters)",
+      "reasonMin": "Enter the reason for the change (at least 10 characters)."
     }
   },
   "SwipeCapture": {
@@ -8515,7 +8533,14 @@
       "signatureInvalid": "The signature is invalid or too large",
       "reasonMin3": "Enter a reason (at least 3 characters)",
       "reopenUnverified": "The reopening returned no verifiable detail; refresh the ITR before continuing",
-      "rejectReasonMin10": "Explain what must be corrected (at least 10 characters)"
+      "rejectReasonMin10": "Explain what must be corrected (at least 10 characters)",
+      "continuityScope": {
+        "executor_cannot_scope": "The executor of this ITR cannot set the scope of their own test.",
+        "invalid_item": "The item is not a continuity test of this ITR.",
+        "itr_signed": "The ITR already has signatures: the scope can only change after the audited reopening.",
+        "invalid_scope": "Invalid scope: a quantity from 1 to 500 and up to 50 non-repeated shields.",
+        "reason_required": "Changing the scope requires a reason of at least 10 characters."
+      }
     },
     "sourceItrs": {
       "invalidRequest": "Invalid request: reopen the form",

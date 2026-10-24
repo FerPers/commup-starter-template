@@ -9,7 +9,7 @@
 // revisión nueva inactiva (version = max+1) con el estándar v2:
 //   Referencias de ejecución (R.1) · Inspección (numeración original, selección
 //   Conforme/No conforme/No aplica con resultado, fotos según regla §7.1) ·
-//   [Equipo de prueba (T.1–T.5) si el original lo trae] · Observaciones (O.1)
+//   Observaciones (O.1). Si el original trae equipo de prueba, la revisión lo exige con la sección nativa (A39).
 //
 // Uso (desde la raíz del repo, con .env.local):
 //   node scripts/itr-v2/generar-v2-listas.mjs --codes M01A,H01A           # vista previa
@@ -281,7 +281,7 @@ function bilingual(raw, dbItems) {
 
 async function loadActive(code) {
   const { data, error } = await db.from('itr_templates')
-    .select('id, code, title, title_es, description, discipline_id, phase_id, equipment_type_id, version, is_global, itr_template_items(id, item_number, description, description_es, order_index)')
+    .select('id, code, title, title_es, description, discipline_id, phase_id, equipment_type_id, version, is_global, requires_test_equipment, required_signatures, itr_template_items(id, item_number, description, description_es, order_index)')
     .eq('org_id', ORG).eq('code', code).eq('is_active', true).maybeSingle()
   if (error) throw error
   return data
@@ -373,17 +373,9 @@ function buildPlan(code, active, checklist) {
     { title: 'Inspección', items: inspection },
     ...(matrixSection.length ? [{ title: 'Registros de ensayo', items: matrixSection }] : []),
   ]
-  if (checklist.equipment) {
-    sections.push({ title: 'Equipo de prueba', items: [
-      { item_number: 'T.1', description: 'Test equipment make.', description_es: 'Fabricante del equipo de prueba.', item_type: 'text' },
-      { item_number: 'T.2', description: 'Test equipment model.', description_es: 'Modelo del equipo de prueba.', item_type: 'text' },
-      { item_number: 'T.3', description: 'Test equipment serial number.', description_es: 'Número de serie del equipo de prueba.', item_type: 'text' },
-      { item_number: 'T.4', description: 'Calibration expiry date of the test equipment.', description_es: 'Fecha de vencimiento de la calibración del equipo de prueba.', item_type: 'date' },
-      { item_number: 'T.5', description: 'Calibration certificate of the test equipment (attach the certificate).', description_es: 'Certificado de calibración del equipo de prueba (adjuntar el certificado).', item_type: 'text', requires_document: true },
-    ].map((it, i) => ({ is_required: true, requires_photo: false, requires_document: false, options: null, option_outcomes: {}, order_index: i, ...it })) })
-  }
+  // A39: el equipo de prueba es la sección nativa del ITR (marca requires_test_equipment), no texto T.1–T.5.
   sections.push({ title: 'Observaciones', items: [{ item_number: 'O.1', description: 'Inspection remarks and references to findings recorded in the Punch List, where applicable.', description_es: 'Observaciones de la inspección y referencias a hallazgos registrados en Punch List, cuando correspondan.', item_type: 'text', is_required: false, requires_photo: false, options: null, option_outcomes: {}, order_index: 0 }] })
-  return { code, active, sections, warnings, untranslated, photos, itemCount: checklist.items.length, dataFields, dataSkipped }
+  return { code, active, sections, warnings, untranslated, photos, itemCount: checklist.items.length, dataFields, dataSkipped, testEquipment: !!checklist.equipment }
 }
 
 async function apply(plan) {
@@ -394,6 +386,8 @@ async function apply(plan) {
     description: `Revisión ${next} (borrador Fase 2${FAMILY && FAMILY !== 'C' ? ' ' + FAMILY : ''}, ${TODAY}): lista de chequeo del original con selección Conforme/No conforme/No aplica${FAMILY && FAMILY !== 'C' ? ', campos de registro (N-R) en los ítems que exigen valor' : ''}, referencias y observaciones. Fuente: estructura del Word original.`,
     discipline_id: plan.active.discipline_id, phase_id: plan.active.phase_id, equipment_type_id: plan.active.equipment_type_id,
     version: next, is_active: false, is_global: plan.active.is_global,
+    // A39: la revisión conserva los requisitos de la activa (equipo y firmas); el original con equipo lo exige.
+    requires_test_equipment: plan.testEquipment || !!plan.active.requires_test_equipment, required_signatures: plan.active.required_signatures,
   }).select('id').single()
   if (tErr) throw tErr
   for (const [si, section] of plan.sections.entries()) {

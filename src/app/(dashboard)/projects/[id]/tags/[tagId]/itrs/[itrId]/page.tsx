@@ -60,7 +60,8 @@ export default async function ItrExecutionPage({
         project_phases(code, name, color),
         itr_assignments(id, user_id, role, profiles(full_name)),
         itr_responses(id, item_id, value_text, value_numeric, value_bool, value_option, remarks, is_passed, responded_at),
-        itr_signatures(id, role, signed_at, user_id, signature_image, signer_company, profiles(full_name))
+        itr_signatures(id, role, signed_at, user_id, signature_image, signer_company, profiles(full_name)),
+        itr_continuity_scopes(item_id, grouping_mode, quantity, shields, set_by, set_at, reason)
       `)
       .eq('id', itrId)
       .eq('project_id', projectId)
@@ -124,6 +125,7 @@ export default async function ItrExecutionPage({
         currentUserId={ctx.userId}
         currentUserRole={membership.role}
         canEdit={canEdit}
+        memberNames={Object.fromEntries((members ?? []).map(m => [m.user_id, (m.profiles as { full_name: string } | null)?.full_name ?? '']))}
         timezone={projectToday.timezone}
         attachments={attachments}
         memberIds={(members ?? []).map(m => m.user_id)}

@@ -9,6 +9,7 @@ import { revalidatePath } from 'next/cache'
 import { getTranslations } from 'next-intl/server'
 import { validateOptionOutcomes } from '@/lib/itr/selection-outcome'
 import { checkTableConfig, type TableConfig } from '@/lib/itr/table'
+import { continuityMeasurementRequired, type ContinuityOptions } from '@/lib/itr/continuity'
 import { localState, templateContentHash, type LocalState } from '@/lib/itr/clone'
 import { detectItrPhase } from '@/lib/utils'
 import { normalizeRequired } from '@/lib/itr/signatures'
@@ -167,12 +168,17 @@ export interface ItemPayload {
   acceptance_min?: number | null
   acceptance_max?: number | null
   acceptance_text?: string | null
-  /** string[] para listas; TableConfig para tablas de registro; null en el resto. */
-  options?: string[] | TableConfig | null
+  /** string[] para listas; TableConfig para tablas de registro; en continuidad, si la lectura es obligatoria (A38); null en el resto. */
+  options?: string[] | TableConfig | ContinuityOptions | null
   option_outcomes?: Record<string, 'pass' | 'fail' | 'not_applicable'>
   order_index: number
   condition_item_id?: string | null
   condition_value?: string | null
+}
+
+/** A38: en continuidad solo se guarda si la lectura es obligatoria; cualquier otra cosa = lectura opcional (null). */
+function continuityOptions(options: unknown): ContinuityOptions | null {
+  return continuityMeasurementRequired(options) ? { measurement_required: true } : null
 }
 
 function selectItemMissingOptions(data: Partial<ItemPayload>): boolean {
@@ -189,6 +195,7 @@ export const createItem = withAuthOnly(
   ): Promise<{ id?: string; error?: string }> => {
     const t = await getTranslations('ActionErrors')
     if (selectItemMissingOptions(data)) return { error: t('itrTemplates.selectNeedsOption') }
+    if (data.item_type === 'continuity') data = { ...data, options: continuityOptions(data.options) }
     if (data.item_type === 'table') { const c = checkTableConfig(data.options); if (!c.config) return { error: t('itrTemplates.tableInvalid', { issue: c.issue ?? '' }) } }
     if (!validateOptionOutcomes(data.options ?? null, data.option_outcomes ?? {})) return { error: t('itrTemplates.outcomesInvalid') }
     if (data.item_type !== 'select' && Object.keys(data.option_outcomes ?? {}).length) return { error: t('itrTemplates.outcomesSelectOnly') }
@@ -210,6 +217,7 @@ export const updateItem = withAuthOnly(
     const { data: current, error: readError } = await ctx.supabase.from('itr_template_items')
       .select('item_type, options, option_outcomes').eq('id', itemId).single()
     if (readError || !current) return { error: t('itrTemplates.itemNotFound') }
+    if ((data.item_type ?? current.item_type) === 'continuity' && 'options' in data) data = { ...data, options: continuityOptions(data.options) }
     const merged = { ...current, ...data }
     if (merged.item_type === 'select' && !(Array.isArray(merged.options) && merged.options.length)) return { error: t('itrTemplates.selectNeedsOption') }
     if (merged.item_type === 'table') { const c = checkTableConfig(merged.options); if (!c.config) return { error: t('itrTemplates.tableInvalid', { issue: c.issue ?? '' }) } }

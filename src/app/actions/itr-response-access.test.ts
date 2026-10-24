@@ -15,7 +15,7 @@ import { upsertResponse } from './itr-instances'
 
 type Result = { data?: unknown; error?: { message: string } | null; count?: number }
 let itr: Result, item: Result, project: Result, existing: Result
-let items: Result, responses: Result, attachments: Result, signatures: Result, auditError: boolean, assignment: Result
+let items: Result, responses: Result, attachments: Result, signatures: Result, auditError: boolean, assignment: Result, scope: Result
 let writes: Array<{ table: string; value: unknown }>
 let rpcs: Array<{ name: string; args: unknown }>
 let rpcError: { message: string } | null
@@ -42,6 +42,7 @@ function database() {
       if (table === 'itr_attachments') return attachments
       if (table === 'itr_signatures') return signatures
       if (table === 'itr_assignments') return assignment
+      if (table === 'itr_continuity_scopes') return scope
       throw new Error(`Unexpected table ${table}`)
     }
     return query
@@ -57,6 +58,7 @@ beforeEach(() => {
   responses = { data: [answer('item', 'Evidence')], count: 1 }
   attachments = { data: [] }
   signatures = { data: [] }
+  scope = { data: null }
   auditError = false
   assignment = { data: { id: 'a' } }
   rpcs = []
@@ -163,6 +165,16 @@ it('derives continuity acceptance on the server instead of trusting the browser'
  const valueText = JSON.stringify({ version: 1, grouping: 'conductors', count: 1, shields: [], measurementRequired: false, rows: [{ id: 'C1', from: 'A', to: 'B', result: 'fail', remarks: '', reading: null, unit: '' }] })
  await upsertResponse({ ...input, valueText, isPassed: true })
  expect(writes.find(w => w.table === 'itr_responses')?.value).toMatchObject({ is_passed: false })
+})
+it('A38: a passing continuity only counts as passed when it covers the scope set by a leader', async () => {
+ item = { data: { template_id: 'revision-1', item_type: 'continuity' } }
+ const valueText = JSON.stringify({ version: 1, grouping: 'conductors', count: 1, shields: [], measurementRequired: false, rows: [{ id: 'C1', from: 'A', to: 'B', result: 'pass', remarks: '', reading: null, unit: '' }] })
+ await upsertResponse({ ...input, valueText, isPassed: true })
+ expect(writes.find(w => w.table === 'itr_responses')?.value).toMatchObject({ is_passed: null })
+ writes = []
+ scope = { data: { grouping_mode: 'conductors', quantity: 1, shields: [] } }
+ await upsertResponse({ ...input, valueText })
+ expect(writes.find(w => w.table === 'itr_responses')?.value).toMatchObject({ is_passed: true })
 })
 it('rejects malformed continuity before writing a response', async () => {
  item = { data: { template_id: 'revision-1', item_type: 'continuity' } }

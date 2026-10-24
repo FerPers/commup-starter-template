@@ -148,6 +148,12 @@ const CASES: Case[] = [
     payload: () => ({ itr_id: fakeUuid, user_id: fakeUuid }), // falta role; además sin GRANT de INSERT
     allow: [],
   },
+  {
+    // A38: el alcance de la continuidad solo lo escribe set_itr_continuity_scope (líder+, no el ejecutor).
+    name: 'itr_continuity_scopes: insertar directo (solo por RPC)', op: 'insert', table: 'itr_continuity_scopes',
+    payload: () => ({ itr_id: fakeUuid, item_id: fakeUuid, project_id: fakeUuid, grouping_mode: 'pairs', quantity: 1 }), // falta set_by; sin GRANT de INSERT
+    allow: [],
+  },
 ]
 
 type Outcome = 'allow' | 'deny'
