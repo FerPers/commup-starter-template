@@ -38,7 +38,9 @@ INSERT INTO public.itr_signatures(itr_id,user_id,role,signature_image) VALUES(p_
 result_status:=CASE WHEN NOT EXISTS(SELECT 1 FROM unnest(roles) r WHERE NOT EXISTS(SELECT 1 FROM public.itr_signatures WHERE itr_id=p_itr_id AND role::text=r)) THEN 'approved' ELSE 'completed' END;
 UPDATE public.itrs SET status=result_status::public.itr_status,progress_pct=100,completed_date=public.project_today(v.project_id),
   tag_snapshot=CASE WHEN first_sig THEN public.itr_tag_snapshot(v.tag_id) ELSE tag_snapshot END,
-  tag_snapshot_at=CASE WHEN first_sig THEN now() ELSE tag_snapshot_at END
+  tag_snapshot_at=CASE WHEN first_sig THEN now() ELSE tag_snapshot_at END,
+  -- A08 (E2): firmar de nuevo cierra la devolución (queda en activity_log).
+  returned_at=NULL,returned_by=NULL,return_reason=NULL
 WHERE id=p_itr_id;
 INSERT INTO public.activity_log(org_id,user_id,entity_type,entity_id,action,payload) VALUES(org,uid,'itr',p_itr_id,'signed',jsonb_build_object('role',p_role,'status',result_status));
 IF result_status='approved' THEN

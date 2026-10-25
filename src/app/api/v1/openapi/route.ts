@@ -120,7 +120,9 @@ const SPEC = {
         properties: {
           id:             { type: 'string', format: 'uuid' },
           itr_number:     { type: 'string' },
-          status:         { type: 'string', enum: ['not_started','in_progress','completed','approved','rejected'] },
+          // A08: «completed» no es aprobado; solo «approved» acepta el ITR.
+          status:         { type: 'string', enum: ['not_started','in_progress','completed','approved','rejected'],
+                            description: 'not_started: sin iniciar. in_progress: en progreso. completed: diligenciado, todavía sin todas las firmas (NO es aprobado). approved: todas las firmas requeridas; el único estado aceptado. rejected: no conforme (falla crítica en la captura).' },
           progress_pct:   { type: 'number' },
           scheduled_date: { type: 'string', format: 'date', nullable: true },
           tag_id:         { type: 'string', format: 'uuid' },

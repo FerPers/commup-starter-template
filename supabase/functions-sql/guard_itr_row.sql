@@ -38,6 +38,8 @@ NEW.required_signatures:=public.itr_signing_roles((SELECT t.required_signatures 
 NEW.requires_test_equipment:=COALESCE((SELECT t.requires_test_equipment FROM public.itr_templates t WHERE t.id=NEW.template_id),false);
 -- A44: un ITR nace sin foto del tag (la toma la primera firma).
 NEW.tag_snapshot:=NULL; NEW.tag_snapshot_at:=NULL;
+-- A08 (E2): un ITR nace sin devolución.
+NEW.returned_at:=NULL; NEW.returned_by:=NULL; NEW.return_reason:=NULL;
 END IF;
 IF NOT trusted AND NEW.status='approved' THEN RAISE EXCEPTION 'Approval requires atomic signing'; END IF;
 RETURN NEW;

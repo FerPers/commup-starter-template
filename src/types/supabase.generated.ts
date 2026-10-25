@@ -3170,6 +3170,9 @@ export type Database = {
           project_id: string
           required_signatures: string[]
           requires_test_equipment: boolean
+          return_reason: string | null
+          returned_at: string | null
+          returned_by: string | null
           scheduled_date: string | null
           source_rows: Json | null
           status: Database["public"]["Enums"]["itr_status"]
@@ -3191,6 +3194,9 @@ export type Database = {
           project_id: string
           required_signatures?: string[]
           requires_test_equipment?: boolean
+          return_reason?: string | null
+          returned_at?: string | null
+          returned_by?: string | null
           scheduled_date?: string | null
           source_rows?: Json | null
           status?: Database["public"]["Enums"]["itr_status"]
@@ -3212,6 +3218,9 @@ export type Database = {
           project_id?: string
           required_signatures?: string[]
           requires_test_equipment?: boolean
+          return_reason?: string | null
+          returned_at?: string | null
+          returned_by?: string | null
           scheduled_date?: string | null
           source_rows?: Json | null
           status?: Database["public"]["Enums"]["itr_status"]
@@ -12619,8 +12628,12 @@ export type Database = {
           project_code: string | null
           project_id: string | null
           project_name: string | null
+          return_reason: string | null
+          returned_at: string | null
           scheduled_date: string | null
           search_text: string | null
+          signatures_done: number | null
+          signatures_required: number | null
           status: Database["public"]["Enums"]["itr_status"] | null
           subsystem_id: string | null
           system_id: string | null

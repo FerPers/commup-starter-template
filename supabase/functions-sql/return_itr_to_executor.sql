@@ -25,6 +25,8 @@ BEGIN
   SELECT org_id INTO v_org FROM projects WHERE id = v.project_id;
   SELECT COALESCE(jsonb_agg(jsonb_build_object('role', role, 'user_id', user_id, 'signed_at', signed_at)), '[]') INTO v_sigs FROM itr_signatures WHERE itr_id = p_itr_id;
   DELETE FROM itr_signatures WHERE itr_id = p_itr_id;
+  -- A08 (E2): el ITR queda «Devuelto», con quién y por qué, hasta la siguiente firma o una reapertura.
+  UPDATE itrs SET returned_at = now(), returned_by = auth.uid(), return_reason = v_reason WHERE id = p_itr_id;
   INSERT INTO activity_log (org_id, user_id, entity_type, entity_id, action, payload)
   VALUES (v_org, auth.uid(), 'itr', p_itr_id, 'returned', jsonb_build_object('reason', v_reason, 'byRole', v_role, 'previousSignatures', v_sigs));
   SELECT user_id INTO v_exec FROM itr_assignments WHERE itr_id = p_itr_id AND role = 'executor';

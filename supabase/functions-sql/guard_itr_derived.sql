@@ -13,6 +13,11 @@ BEGIN
      AND (NEW.status, NEW.progress_pct, NEW.completed_date) IS DISTINCT FROM (OLD.status, OLD.progress_pct, OLD.completed_date) THEN
     RAISE EXCEPTION 'El estado y el avance del ITR se calculan de su contenido y sus firmas' USING ERRCODE = '42501';
   END IF;
+  -- A08 (E2): la devolución la registra solo return_itr_to_executor; la limpian la firma y la reapertura auditada.
+  IF current_user <> pg_get_userbyid((SELECT relowner FROM pg_class WHERE oid = 'public.itrs'::regclass))
+     AND (NEW.returned_at, NEW.returned_by, NEW.return_reason) IS DISTINCT FROM (OLD.returned_at, OLD.returned_by, OLD.return_reason) THEN
+    RAISE EXCEPTION 'La devolución del ITR solo la registra «Devolver al ejecutor»' USING ERRCODE = '42501';
+  END IF;
   RETURN NEW;
 END;
 $function$;

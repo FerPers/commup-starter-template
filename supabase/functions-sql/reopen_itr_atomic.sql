@@ -17,6 +17,7 @@ SELECT COALESCE(jsonb_agg(to_jsonb(s)),'[]'::jsonb),count(*) INTO signatures,n F
 IF n=0 AND v.status<>'approved' THEN RAISE EXCEPTION 'No signatures to revoke'; END IF;
 INSERT INTO public.activity_log(org_id,user_id,entity_type,entity_id,action,payload) VALUES(org,uid,'itr',p_itr_id,'revoked',jsonb_build_object('reason',trim(p_reason),'previousStatus',v.status,'previousSignatures',signatures,'template_id',v.template_id,'responses',COALESCE((SELECT jsonb_agg(to_jsonb(r)) FROM public.itr_responses r WHERE r.itr_id=p_itr_id),'[]'::jsonb),'attachments',COALESCE((SELECT jsonb_agg(to_jsonb(a)) FROM public.itr_attachments a WHERE a.itr_id=p_itr_id),'[]'::jsonb)));
 DELETE FROM public.itr_signatures WHERE itr_id=p_itr_id;
-UPDATE public.itrs SET status=CASE WHEN v.status='approved' THEN 'completed'::public.itr_status ELSE v.status END WHERE id=p_itr_id;
+UPDATE public.itrs SET status=CASE WHEN v.status='approved' THEN 'completed'::public.itr_status ELSE v.status END,
+  returned_at=NULL,returned_by=NULL,return_reason=NULL WHERE id=p_itr_id;
 RETURN jsonb_build_object('revoked_count',n,'previous_signatures',signatures,'project_id',v.project_id,'tag_id',v.tag_id,'itr_number',v.itr_number);
 END $function$;
