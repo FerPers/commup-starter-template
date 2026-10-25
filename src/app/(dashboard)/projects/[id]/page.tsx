@@ -99,6 +99,9 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
   const states = rows.map(r => rowState(r.gates))
   const blockedNow = states.filter(s => s === 'blocked' || s === 'regressed').length
   const regressedNow = states.filter(s => s === 'regressed').length
+  // A46/A22: cifras con su lista filtrada y la hora del cálculo; «0 bloqueos» no es verde (puede faltar información).
+  const countOf = (s: (typeof states)[number]) => states.filter(x => x === s).length
+  const computedLabel = matrix.computedAt ? formatInZone(matrix.computedAt, project.timezone, locale) : null
   const toSignNow = board.reduce((n, p) => n + p.toSign, 0)
 
   const blockerText = (g: MatrixGate): string => {
@@ -172,10 +175,21 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
         </div>
         <Link href={`${base}/readiness?blocked=1`} style={{ ...card, padding: '14px 18px', textDecoration: 'none', borderColor: blockedNow > 0 ? 'var(--danger-200)' : 'var(--border)' }}>
           <div style={{ ...small, fontWeight: 600 }}>{t('kpi.today')}</div>
-          <div style={{ fontSize: 26, fontWeight: 700, color: blockedNow > 0 ? 'var(--danger-700)' : 'var(--success-700)' }}>{t('kpi.blocked', { count: blockedNow })}</div>
+          <div style={{ fontSize: 26, fontWeight: 700, color: blockedNow > 0 ? 'var(--danger-700)' : 'var(--text-strong)' }}>{t('kpi.blocked', { count: blockedNow })}</div>
           <div style={small}>{t('kpi.todayDetail', { sign: toSignNow, regressed: regressedNow })}</div>
+          <div style={small}>{t('kpi.freshness', { nodata: countOf('nodata'), time: computedLabel ?? t('kpi.neverComputed') })}</div>
         </Link>
       </div>
+
+      {/* A46/A22: cada cifra abre su lista filtrada */}
+      <nav aria-label={t('figures.label')} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        <Link href={`${base}/punches?cat=A&status=active`} style={{ ...chipLink, ...(catA > 0 ? { borderColor: 'var(--danger-200)', color: 'var(--danger-700)' } : {}) }}>{t('figures.catA')} <strong>{catA}</strong></Link>
+        <Link href={`${base}/readiness?state=blocked`} style={{ ...chipLink, ...(countOf('blocked') > 0 ? { borderColor: 'var(--danger-200)', color: 'var(--danger-700)' } : {}) }}>{t('figures.blocked')} <strong>{countOf('blocked')}</strong></Link>
+        <Link href={`${base}/readiness?state=regressed`} style={{ ...chipLink, ...(regressedNow > 0 ? { borderColor: 'var(--danger-200)', color: 'var(--danger-700)' } : {}) }}>{t('figures.regressed')} <strong>{regressedNow}</strong></Link>
+        <Link href={`${base}/readiness?state=ready`} style={chipLink}>{t('figures.ready')} <strong>{countOf('ready')}</strong></Link>
+        <Link href={`${base}/readiness?state=signing`} style={chipLink}>{t('figures.signing')} <strong>{countOf('signing')}</strong></Link>
+        <Link href={`${base}/readiness?state=nodata`} style={{ ...chipLink, borderStyle: 'dashed' }}>{t('figures.nodata')} <strong>{countOf('nodata')}</strong></Link>
+      </nav>
 
       {/* Tablero por fases */}
       <section aria-labelledby="phase-board" style={{ ...card, overflow: 'hidden' }}>
@@ -331,7 +345,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
       {/* Completamiento e ingeniería: franja chica (reemplaza las tarjetas del directorio y el banner del Twin) */}
       <section aria-label={t('strip.label')} style={{ ...card, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', padding: '12px 18px' }}>
         <Link href={`${base}/itrs`} style={chipLink}>{t('strip.itrs')} <strong>{itrApproved}/{itrTotal}</strong></Link>
-        <Link href={`${base}/punches`} style={chipLink}>{t('strip.punches')} <strong>{openPunch}</strong>{catA > 0 && <span style={{ color: 'var(--danger-700)' }}> · {t('strip.catA', { count: catA })}</span>}</Link>
+        <Link href={`${base}/punches?status=active`} style={chipLink}>{t('strip.punches')} <strong>{openPunch}</strong>{catA > 0 && <span style={{ color: 'var(--danger-700)' }}> · {t('strip.catA', { count: catA })}</span>}</Link>
         <Link href={`${base}/certificates`} style={chipLink}>{t('strip.certificates')} <strong>{certIssued}</strong></Link>
         <span style={{ width: 1, alignSelf: 'stretch', background: 'var(--border)', margin: '0 4px' }} aria-hidden="true" />
         <Link href={`${base}/tags`} style={chipLink}>{t('strip.tags')} <strong>{tagCount ?? 0}</strong></Link>

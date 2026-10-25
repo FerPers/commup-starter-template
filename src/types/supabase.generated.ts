@@ -14481,6 +14481,18 @@ export type Database = {
           requirements: number
         }[]
       }
+      project_gate_actors: {
+        Args: { p_project_id: string }
+        Returns: {
+          capacity: string
+          gate_code: string
+          gate_id: string
+          item_count: number
+          kind: string
+          people: Json
+          system_id: string
+        }[]
+      }
       project_itr_phase_counts: {
         Args: { p_org_id?: string; p_project_id?: string }
         Returns: {

@@ -492,7 +492,8 @@
       "clear": "Clear",
       "count": "{filtered} of {total} punches",
       "selectAll": "Select {count} punches",
-      "assignedToMe": "Assigned to me"
+      "assignedToMe": "Assigned to me",
+      "active": "Not closed (open or in progress)"
     },
     "bulk": {
       "selected": "{count, plural, one {# punch selected} other {# punches selected}}",
@@ -2335,7 +2336,8 @@
       "nextState": "State",
       "blocker": "Blocker",
       "commitment": "Commitment",
-      "conditions": "Open conditions"
+      "conditions": "Open conditions",
+      "actor": "Who must act"
     },
     "gateTitle": "{name}: {status} · {failing} criteria not met — click for details",
     "blocker": {
@@ -2400,7 +2402,19 @@
     "conditionsOpen": "{count, plural, one {# open condition} other {# open conditions}}",
     "export": "Excel",
     "showing": "{shown} of {total} systems",
-    "itrsWeighing": "{count} ITRs"
+    "itrsWeighing": "{count} ITRs",
+    "actors": {
+      "sign": "{capacity} signature",
+      "approve": "Approve the release",
+      "review": "Review the release",
+      "punch": "{count, plural, one {Close # Cat A} other {Close # Cat A}}",
+      "punch_b": "{count, plural, one {Close Cat B: # open, over the limit} other {Close Cat B: # open, over the limit}}",
+      "itr_rejected": "{count, plural, one {Fix # nonconforming ITR} other {Fix # nonconforming ITRs}}",
+      "itrs": "{count, plural, one {# ITR to approve} other {# ITRs to approve}}",
+      "scope": "Define the scope",
+      "more": "{names} and {count} more",
+      "nobody": "no one assigned"
+    }
   },
   "DataQuality": {
     "title": "Data quality",
@@ -6044,8 +6058,10 @@
       "gates": "{done} / {total} milestones",
       "readinessPct": "{pct} % current approvals",
       "today": "Today",
-      "blocked": "{count, plural, =0 {No blockers} one {# system blocked} other {# systems blocked}}",
-      "todayDetail": "{sign} to sign · {regressed} regressed"
+      "blocked": "{count, plural, =0 {0 known blockers} one {# system blocked} other {# systems blocked}}",
+      "todayDetail": "{sign} to sign · {regressed} regressed",
+      "freshness": "{nodata} with no information · computed {time}",
+      "neverComputed": "not computed"
     },
     "board": {
       "title": "By phase (milestone)",
@@ -6077,7 +6093,7 @@
     "blocked": {
       "title": "Blocking today",
       "all": "Blocked only →",
-      "none": "No system is blocked or regressed."
+      "none": "No known blockers. That does not mean start-up can proceed: check what has no information or is waiting for signatures."
     },
     "upcoming": {
       "title": "Next 7 days",
@@ -6108,6 +6124,15 @@
       "systems": "Systems",
       "twin": "Digital Twin",
       "import": "Import…"
+    },
+    "figures": {
+      "label": "Release figures",
+      "catA": "Open Cat A",
+      "blocked": "Blocked",
+      "regressed": "Regressed",
+      "ready": "To approve",
+      "signing": "To sign",
+      "nodata": "No information"
     }
   },
   "TagsHub": {

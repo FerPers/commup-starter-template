@@ -74,6 +74,8 @@ function applyFilters<Q extends FilterQ>(
   else if (f.project) q = q.eq('project_id', f.project) as Q
   if (f.cat && CATS.includes(f.cat)) q = q.eq('category', f.cat) as Q
   if (f.status && STATUSES.includes(f.status)) q = q.eq('status', f.status) as Q
+  // A22: «sin cerrar» = abierto o en proceso (lo que cuenta como Cat A abierto en el Resumen y en la matriz).
+  else if (f.status === 'active') q = q.or('status.eq.open,status.eq.in_progress') as Q
   if (f.disc) q = q.eq('discipline_code', f.disc) as Q
   if (f.system) q = q.eq('system_code', f.system) as Q
   if (f.assigned && /^[0-9a-f-]{36}$/i.test(f.assigned)) q = q.eq('assigned_to', f.assigned) as Q

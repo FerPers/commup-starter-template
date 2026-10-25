@@ -10,6 +10,7 @@ import { gatePolicy, type MatrixGate } from './gates'
 import { dependencyBlocks, type SystemType } from '@/lib/systems/dependencies'
 import type { MatrixRow } from './matrix'
 import { fromJson } from '@/lib/supabase/casts'
+import type { GateActor } from './actors'
 
 export type MatrixData = {
   rows: MatrixRow[]
@@ -30,11 +31,15 @@ export type MatrixData = {
   today: string
   timezone: string
   catBLimit: number | null
+  /** A47 · E5: quién debe actuar en la liberación siguiente de cada sistema (system_id → actor). */
+  actors: Map<string, GateActor>
+  /** A46: hora del último cálculo de la matriz guardada (null = nunca calculada). */
+  computedAt: string | null
 }
 
 export async function loadMatrix(supabase: SupabaseClient<Database>, projectId: string, orgId: string): Promise<MatrixData> {
   const since = new Date(Date.now() - 86_400_000).toISOString()
-  const [gates, progress, punches, systems, deps, org, plans, conditions, events, day] = await Promise.all([
+  const [gates, progress, punches, systems, deps, org, plans, conditions, events, day, actors, computed] = await Promise.all([
     supabase.rpc('compute_project_gates', { p_project_id: projectId }),
     supabase.rpc('compute_project_progress', { p_project_id: projectId }),
     supabase.rpc('system_open_punches', { p_project_id: projectId }),
@@ -46,7 +51,11 @@ export async function loadMatrix(supabase: SupabaseClient<Database>, projectId: 
     fetchAllRows(() => supabase.from('actions').select('source_id').eq('project_id', projectId).eq('source_kind', 'gate').in('status', ['open', 'in_progress', 'done'])),
     supabase.from('domain_events').select('payload').eq('project_id', projectId).eq('aggregate_type', 'gate').gte('occurred_at', since).limit(1000),
     getProjectToday(supabase, projectId),
+    supabase.rpc('project_gate_actors', { p_project_id: projectId }),
+    supabase.from('system_gate_status').select('computed_at').eq('project_id', projectId).not('computed_at', 'is', null)
+      .order('computed_at', { ascending: false }).limit(1).maybeSingle(),
   ])
+  if (actors.error) console.error('[ControlTower] actors rpc error:', actors.error)
   if (gates.error) console.error('[ControlTower] gates rpc error:', gates.error)
 
   const rows: MatrixRow[] = (gates.data ?? []).map(r => ({
@@ -84,5 +93,7 @@ export async function loadMatrix(supabase: SupabaseClient<Database>, projectId: 
     today: day.today,
     timezone: day.timezone,
     catBLimit: typeof rawLimit === 'number' ? Math.max(0, Math.trunc(rawLimit)) : null,
+    actors: new Map((actors.data ?? []).map(a => [a.system_id, { ...a, people: fromJson<GateActor['people']>(a.people ?? []) }])),
+    computedAt: computed.data?.computed_at ?? null,
   }
 }

@@ -3,6 +3,8 @@ import { getActiveMembership } from '@/lib/supabase/membership'
 import { buildDailyWorkbook } from '@/lib/excel/daily'
 import { blockerCount, filterMatrix, nextGate, parseMatrixFilters, rowState } from '@/lib/readiness/matrix'
 import { loadMatrix } from '@/lib/readiness/matrix-server'
+import { actorText } from '@/lib/readiness/actors'
+import { gateState } from '@/lib/states'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,7 +19,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   const { data: project } = await supabase.from('projects').select('id, code').eq('id', id).eq('org_id', orgId).maybeSingle()
   if (!project) return new Response('Project not found', { status: 404 })
 
-  const [t, tg] = await Promise.all([getTranslations('ControlTower'), getTranslations('Gates')])
+  const [t, tg, ts] = await Promise.all([getTranslations('ControlTower'), getTranslations('Gates'), getTranslations('States')])
   const data = await loadMatrix(supabase, project.id, orgId)
   const rows = filterMatrix(data.rows, parseMatrixFilters(sp), {
     commitment: (s, g) => data.commitments.get(`${s}:${g}`) ?? null,
@@ -29,7 +31,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   const bytes = buildDailyWorkbook([{
     name: t('title'),
     headers: [t('col.area'), t('col.system'), t('col.physical'), t('col.punchA'), t('col.punchB'), ...gateCodes,
-      t('col.next'), t('col.nextState'), t('col.blocker'), t('col.commitment'), t('col.conditions')],
+      t('col.next'), t('col.nextState'), t('col.blocker'), t('col.actor'), t('col.commitment'), t('col.conditions')],
     rows: rows.map(r => {
       const next = nextGate(r.gates)
       const p = data.punches.get(r.system_id) ?? { a: 0, b: 0 }
@@ -38,9 +40,24 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       const n = blockerCount(blocker)
       return [
         r.area_code, `${r.system_code} — ${r.system_name}`, Number(((data.weighted.get(r.system_id)?.pct ?? 0) * 100).toFixed(1)), p.a, p.b,
-        ...gateCodes.map(code => t(`gateStatus.${r.gates.find(g => g.code === code)?.status ?? 'not_ready'}`)),
+        // A47: la celda dice la causa del «no listo» (sin información · en ejecución · bloqueado), como la pantalla.
+        ...gateCodes.map(code => {
+          const g = r.gates.find(x => x.code === code)
+          const st = gateState({ status: g?.status ?? 'not_ready', workState: g?.work_state })
+          return ts(`${st.family}.${st.key}`)
+        }),
         next?.code ?? '', t(`rowState.${rowState(r.gates)}`),
         by ? t('blockedBy', { systems: by.join(', ') }) : blocker ? `${blocker.label ?? tg(`kind.${blocker.kind}`)}${n ? ` (${n})` : ''}` : '',
+        (() => {
+          const a = data.actors.get(r.system_id)
+          return a ? actorText(a, {
+            action: (k, v) => t(`actors.${k}`, v),
+            capacity: c => tg(`capacity.${c as 'hse'}`),
+            criterion: k => tg(`kind.${k as 'previous_gate'}`),
+            more: (names, count) => t('actors.more', { names, count }),
+            nobody: t('actors.nobody'),
+          }) : ''
+        })(),
         next ? data.commitments.get(`${r.system_id}:${next.gate_id}`) ?? '' : '',
         r.gates.reduce((sum, g) => sum + (g.approval?.id ? (data.openConditions.get(g.approval.id) ?? 0) : 0), 0),
       ]

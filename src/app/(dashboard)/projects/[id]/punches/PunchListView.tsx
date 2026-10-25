@@ -322,6 +322,7 @@ export default function PunchListView({
 
         <select value={filters.status} onChange={e => url.set({ status: e.target.value })} style={selStyle}>
           <option value="">{t('filters.allStatuses')}</option>
+          <option value="active">{t('filters.active')}</option>
           {(['open', 'in_progress', 'closed', 'cancelled'] as const).map(k => (
             <option key={k} value={k}>{punchStatusLabels[k]}</option>
           ))}

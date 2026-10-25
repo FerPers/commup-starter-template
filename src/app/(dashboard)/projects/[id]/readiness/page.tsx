@@ -7,6 +7,7 @@ import { gateCellStyle, type MatrixGate } from '@/lib/readiness/gates'
 import { TONE_STYLE, gateState } from '@/lib/states'
 import { ROW_STATES, blockerCount, filterMatrix, nextGate, parseMatrixFilters, readinessSummary, rowState, type RowState } from '@/lib/readiness/matrix'
 import { loadMatrix, type MatrixData } from '@/lib/readiness/matrix-server'
+import { actorText, type GateActor } from '@/lib/readiness/actors'
 import ReadinessFilters from './ReadinessFilters'
 
 // Estado del hold point por sistema (fase 1): aprobado / listo / no listo / regresión.
@@ -110,6 +111,14 @@ export default async function ReadinessPage({
     const n = blockerCount(g.blocker)
     return n ? t('next.blockerCount', { label, count: n }) : label
   }
+  // A47 · E5: quién debe actuar en la liberación siguiente (deducido del motivo; D8).
+  const actorLine = (a: GateActor) => actorText(a, {
+    action: (k, v) => t(`actors.${k}`, v),
+    capacity: c => tg(`capacity.${c as 'hse'}`),
+    criterion: k => tg(`kind.${k as 'previous_gate'}`),
+    more: (names, count) => t('actors.more', { names, count }),
+    nobody: t('actors.nobody'),
+  })
   const query = new URLSearchParams(Object.entries(params0).filter(([, v]) => !!v) as [string, string][])
   const systemHref = (systemId: string, gateId?: string) => `/projects/${projectId}/systems/${systemId}${gateId ? `?gate=${gateId}` : ''}`
 
@@ -189,8 +198,9 @@ export default async function ReadinessPage({
                   <TH style={{ width: 180 }}>{t('col.physical')}</TH>
                   <TH style={{ width: 64, textAlign: 'center' }}>{t('col.punchA')}</TH>
                   <TH style={{ width: 64, textAlign: 'center' }}>{t('col.punchB')}</TH>
-                  <TH style={{ width: 240 }}>{t('col.gates')}</TH>
+                  <TH style={{ minWidth: 240 }}>{t('col.gates')}</TH>
                   <TH style={{ minWidth: 260 }}>{t('col.next')}</TH>
+                  <TH style={{ minWidth: 180 }}>{t('col.actor')}</TH>
                 </TR>
               </THead>
               <TBody>
@@ -254,6 +264,9 @@ export default async function ReadinessPage({
                             {t('noBlockers')}{conditions > 0 && <span style={{ color: 'var(--warning-700)', fontWeight: 500 }}> · {t('conditionsOpen', { count: conditions })}</span>}
                           </span>
                         )}
+                      </TD>
+                      <TD style={{ fontSize: 'var(--text-sm)', color: 'var(--text-body)' }}>
+                        {data.actors.get(r.system_id) ? actorLine(data.actors.get(r.system_id)!) : '—'}
                       </TD>
                     </TR>
                   )

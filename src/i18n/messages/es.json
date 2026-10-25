@@ -492,7 +492,8 @@
       "clear": "Limpiar",
       "count": "{filtered} de {total} punches",
       "selectAll": "Seleccionar {count} punches",
-      "assignedToMe": "Asignados a mí"
+      "assignedToMe": "Asignados a mí",
+      "active": "Sin cerrar (abierto o en proceso)"
     },
     "bulk": {
       "selected": "{count, plural, one {# punch seleccionado} other {# punches seleccionados}}",
@@ -2335,7 +2336,8 @@
       "nextState": "Estado",
       "blocker": "Bloqueo",
       "commitment": "Compromiso",
-      "conditions": "Condiciones abiertas"
+      "conditions": "Condiciones abiertas",
+      "actor": "Quién debe actuar"
     },
     "gateTitle": "{name}: {status} · {failing} criterio(s) sin cumplir — clic para ver el detalle",
     "blocker": {
@@ -2400,7 +2402,19 @@
     "conditionsOpen": "{count, plural, one {# condición abierta} other {# condiciones abiertas}}",
     "export": "Excel",
     "showing": "{shown} de {total} sistemas",
-    "itrsWeighing": "{count} ITR"
+    "itrsWeighing": "{count} ITR",
+    "actors": {
+      "sign": "Firma de {capacity}",
+      "approve": "Aprobar la liberación",
+      "review": "Revisar la liberación",
+      "punch": "{count, plural, one {Cerrar # Cat A} other {Cerrar # Cat A}}",
+      "punch_b": "{count, plural, one {Cerrar Cat B: # abierto, sobre el tope} other {Cerrar Cat B: # abiertos, sobre el tope}}",
+      "itr_rejected": "{count, plural, one {Corregir # ITR no conforme} other {Corregir # ITR no conformes}}",
+      "itrs": "{count, plural, one {# ITR por aprobar} other {# ITR por aprobar}}",
+      "scope": "Definir el alcance",
+      "more": "{names} y {count} más",
+      "nobody": "sin responsable asignado"
+    }
   },
   "DataQuality": {
     "title": "Calidad de datos",
@@ -6044,8 +6058,10 @@
       "gates": "{done} / {total} liberaciones",
       "readinessPct": "{pct} % aprobados vigentes",
       "today": "Hoy",
-      "blocked": "{count, plural, =0 {Sin bloqueos} one {# sistema bloqueado} other {# sistemas bloqueados}}",
-      "todayDetail": "{sign} por firmar · {regressed} en regresión"
+      "blocked": "{count, plural, =0 {0 bloqueos conocidos} one {# sistema bloqueado} other {# sistemas bloqueados}}",
+      "todayDetail": "{sign} por firmar · {regressed} en regresión",
+      "freshness": "{nodata} sin información · calculado {time}",
+      "neverComputed": "sin calcular"
     },
     "board": {
       "title": "Por fase (liberación)",
@@ -6077,7 +6093,7 @@
     "blocked": {
       "title": "Lo que bloquea hoy",
       "all": "Solo con bloqueo →",
-      "none": "Ningún sistema está bloqueado ni en regresión."
+      "none": "Ningún bloqueo conocido. No quiere decir que se pueda arrancar: mira lo que está sin información o por firmar."
     },
     "upcoming": {
       "title": "Próximos 7 días",
@@ -6108,6 +6124,15 @@
       "systems": "Sistemas",
       "twin": "Digital Twin",
       "import": "Importar…"
+    },
+    "figures": {
+      "label": "Cifras de liberación",
+      "catA": "Cat A abiertos",
+      "blocked": "Bloqueados",
+      "regressed": "En regresión",
+      "ready": "Por aprobar",
+      "signing": "Por firmar",
+      "nodata": "Sin información"
     }
   },
   "TagsHub": {
