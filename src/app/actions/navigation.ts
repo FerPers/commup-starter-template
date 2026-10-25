@@ -1,37 +1,33 @@
 'use server'
 
 import { withAuth } from '@/lib/auth/withAuth'
-import { EVENT_PHASE, pickActivePhase, type Phase } from '@/lib/navigation/menu'
-
-/** Ventana de «actividad reciente» para elegir la fase abierta del menú. */
-const ACTIVITY_DAYS = 14
+import { pickOpenPhase, type MenuPhase } from '@/lib/navigation/menu'
+import { isDone, nextGate } from '@/lib/readiness/matrix'
+import type { MatrixGate } from '@/lib/readiness/gates'
+import { fromJson } from '@/lib/supabase/casts'
 
 /**
- * N1: fase del proyecto con más actividad reciente (la abierta por defecto en el menú por fases de owner/admin).
- * Cuenta eventos del bus (`domain_events`, índice por proyecto y fecha) más las tablas de arranque y gestión, que no
- * emiten eventos. Solo conteos `head` (sin filas); el menú lo pide una vez por proyecto y sesión.
+ * A19 · C (D1/D2, Luis 2026-10-25): fases de la org para el menú del proyecto. Una por gate activo con fase, con
+ * cuántos sistemas lo tienen liberado y vigente, y la que se abre por defecto (la liberación siguiente de más
+ * sistemas). Lee la matriz guardada (`system_gate_status`, una fila por sistema; RLS de miembros), sin recalcular.
  */
-export const getActivePhase = withAuth(
+export const getMenuPhases = withAuth(
   { guards: [{ resource: 'project', field: 'projectId' }] },
-  async (ctx, input: { projectId: string }): Promise<{ phase: Phase }> => {
+  async (ctx, input: { projectId: string }): Promise<{ phases: MenuPhase[]; openGateId: string | null }> => {
     const db = ctx.supabase
-    const since = new Date(Date.now() - ACTIVITY_DAYS * 86_400_000).toISOString()
-    const count = async (q: PromiseLike<{ count: number | null }>) => (await q).count ?? 0
-    const byTypes = (types: string[]) => db.from('domain_events').select('id', { count: 'exact', head: true })
-      .eq('project_id', input.projectId).gte('occurred_at', since).in('aggregate_type', types)
-    const typesOf = (phase: Phase) => Object.entries(EVENT_PHASE).filter(([, p]) => p === phase).map(([t]) => t)
-    const recent = (table: 'procedure_run_steps' | 'lineup_items' | 'startup_events' | 'performance_runs' | 'actions' | 'project_constraints' | 'daily_reports' | 'technical_queries' | 'pssr_reviews', column: string) =>
-      db.from(table).select('project_id', { count: 'exact', head: true }).eq('project_id', input.projectId).gte(column, since)
-
-    const [prep, mc, com, pssr, runs, lineups, events, perf, actions, constraints, reports, tqs] = await Promise.all([
-      count(byTypes(typesOf('prep'))), count(byTypes(typesOf('mc'))), count(byTypes(typesOf('com'))),
-      count(recent('pssr_reviews', 'updated_at')),
-      count(recent('procedure_run_steps', 'done_at')), count(recent('lineup_items', 'set_at')),
-      count(recent('startup_events', 'recorded_at')), count(recent('performance_runs', 'updated_at')),
-      count(recent('actions', 'updated_at')), count(recent('project_constraints', 'updated_at')),
-      count(recent('daily_reports', 'created_at')), count(recent('technical_queries', 'updated_at')),
+    const [{ data: gates }, { data: status }] = await Promise.all([
+      db.from('readiness_gates').select('id, code, name, order_index, project_phases(code)')
+        .eq('org_id', ctx.orgId).eq('is_active', true).not('phase_id', 'is', null).order('order_index').limit(100),
+      // bounded: una fila por sistema del proyecto
+      db.from('system_gate_status').select('gates').eq('project_id', input.projectId).limit(5000),
     ])
-    const su = runs + lineups + events + perf + (await count(byTypes(typesOf('su'))))
-    return { phase: pickActivePhase({ prep, mc, com: com + pssr, su, mgmt: actions + constraints + reports + tqs }) }
+    const rows = (status ?? []).map(r => fromJson<MatrixGate[]>(r.gates ?? []))
+    const phases: MenuPhase[] = (gates ?? []).flatMap(g => {
+      const phaseCode = (g.project_phases as { code: string } | null)?.code
+      if (!phaseCode) return []
+      const approved = rows.filter(gs => gs.some(x => x.gate_id === g.id && isDone(x.status))).length
+      return [{ gateId: g.id, gateCode: g.code, gateName: g.name, phaseCode, approved, total: rows.length }]
+    })
+    return { phases, openGateId: pickOpenPhase(phases, rows.map(gs => nextGate(gs)?.gate_id ?? null)) }
   },
 )

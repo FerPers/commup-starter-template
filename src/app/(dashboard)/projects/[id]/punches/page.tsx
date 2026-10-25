@@ -10,7 +10,7 @@ import ClientPunchSummary from './ClientPunchSummary'
 import { fetchPunchPage, fetchPunchSummary, PUNCH_SORT_KEYS } from '@/lib/list/punch-query'
 import { LIST_PAGE_SIZE, parseDir, parsePage, parseSort } from '@/lib/list/params'
 
-type Search = { page?: string; sort?: string; dir?: string; cat?: string; status?: string; disc?: string; system?: string; q?: string; view?: string; scope?: string; project?: string; assigned?: string }
+type Search = { page?: string; sort?: string; dir?: string; cat?: string; status?: string; disc?: string; system?: string; q?: string; view?: string; scope?: string; project?: string; assigned?: string; phase?: string }
 
 export default async function PunchListPage({
   params,
@@ -36,11 +36,11 @@ export default async function PunchListPage({
   const page = parsePage(sp.page)
   const sort = parseSort(sp.sort, PUNCH_SORT_KEYS, 'created_at')
   const dir = parseDir(sp.dir, sort === 'created_at' ? 'desc' : 'asc')
-  const filters = { cat: sp.cat, status: sp.status, disc: sp.disc, system: sp.system, q: sp.q }
+  const filters = { cat: sp.cat, status: sp.status, disc: sp.disc, system: sp.system, q: sp.q, phase: sp.phase }
   const scope = { orgId: ctx.orgId, projectId }
 
   // N1: el cliente entra por el resumen por categoría; elegir una (o «ver todos») abre la lista.
-  const anyFilter = [sp.cat, sp.status, sp.disc, sp.system, sp.q, sp.page].some(Boolean) || sp.view === 'list'
+  const anyFilter = [sp.cat, sp.status, sp.disc, sp.system, sp.q, sp.phase, sp.page].some(Boolean) || sp.view === 'list'
   if (ctx.role === 'client' && !anyFilter) {
     const [{ data: proj }, summary] = await Promise.all([
       supabase.from('projects').select('id, name').eq('id', projectId).eq('org_id', ctx.orgId).single(),
@@ -57,6 +57,7 @@ export default async function PunchListPage({
     { data: disciplines },
     { data: systems },
     { data: orgMembers },
+    { data: phases },
   ] = await Promise.all([
     supabase.from('projects').select('id, name').eq('id', projectId).eq('org_id', ctx.orgId).single(),
     fetchPunchPage(supabase, scope, { filters, page, sort, dir }),
@@ -64,6 +65,7 @@ export default async function PunchListPage({
     supabase.from('disciplines').select('id, code, name, color').eq('org_id', ctx.orgId).order('code'),
     supabase.from('systems').select('id, code, name').eq('project_id', projectId).order('code'),
     supabase.from('org_members').select('user_id, profiles(full_name)').eq('org_id', ctx.orgId).order('role'),
+    supabase.from('project_phases').select('code, name').eq('org_id', ctx.orgId).order('order_index'),
   ])
 
   if (!project) notFound()
@@ -83,7 +85,8 @@ export default async function PunchListPage({
         page={page}
         pageSize={LIST_PAGE_SIZE}
         summary={summary}
-        filters={{ cat: sp.cat ?? '', status: sp.status ?? '', disc: sp.disc ?? '', system: sp.system ?? '', q: sp.q ?? '' }}
+        filters={{ cat: sp.cat ?? '', status: sp.status ?? '', disc: sp.disc ?? '', system: sp.system ?? '', q: sp.q ?? '', phase: sp.phase ?? '' }}
+        phases={phases ?? []}
         disciplines={disciplines ?? []}
         systems={systems ?? []}
         orgMembers={orgMembers ?? []}

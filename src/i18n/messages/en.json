@@ -60,11 +60,6 @@
       "engineering": "Engineering",
       "planning": "Views & planning",
       "lastProject": "Last project",
-      "phase_prep": "Preparation",
-      "phase_mc": "Completion (MC)",
-      "phase_com": "Pre-com / Commissioning",
-      "phase_su": "Start-up & performance",
-      "phase_mgmt": "Management",
       "more": "More…",
       "portfolio": "Portfolio",
       "adminOrg": "Organization",
@@ -77,7 +72,14 @@
       "recent": "Recent",
       "allProjects": "All",
       "seeAllProjects": "See all projects →",
-      "pickProject": "Pick a project"
+      "pickProject": "Pick a project",
+      "g_work": "Work",
+      "g_field": "Field and close-out",
+      "g_startup": "Start-up and operation",
+      "g_mgmt": "Management",
+      "config": "Project setup",
+      "phases": "Phases",
+      "byPhase": "By phase"
     },
     "nav": {
       "dashboard": "Portfolio",
@@ -137,7 +139,11 @@
       "instrumentation": "Signals and loops",
       "planning": "Planning",
       "scope": "Project scope",
-      "platformHealth": "Platform health"
+      "platformHealth": "Platform health",
+      "phaseItrs": "{phase} ITRs",
+      "phasePunches": "{phase} punch",
+      "phaseReadiness": "Systems to release",
+      "phaseApproved": "{approved}/{total}"
     },
     "soon": "SOON",
     "comingSoon": "Coming soon",
@@ -493,7 +499,9 @@
       "count": "{filtered} of {total} punches",
       "selectAll": "Select {count} punches",
       "assignedToMe": "Assigned to me",
-      "active": "Not closed (open or in progress)"
+      "active": "Not closed (open or in progress)",
+      "allPhases": "All phases",
+      "noPhase": "No phase (no source ITR)"
     },
     "bulk": {
       "selected": "{count, plural, one {# punch selected} other {# punches selected}}",

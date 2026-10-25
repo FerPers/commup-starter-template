@@ -2,7 +2,7 @@ import type { PunchListFilters } from './punch-query'
 
 // G-14: filtros de la lista de punch ↔ URL, compartidos por la pantalla y el Excel (que exporta lo filtrado).
 
-export const PUNCH_FILTER_KEYS = ['cat', 'status', 'disc', 'system', 'q', 'project', 'assigned'] as const
+export const PUNCH_FILTER_KEYS = ['cat', 'status', 'disc', 'system', 'q', 'project', 'assigned', 'phase'] as const
 
 /** Filtros de la lista tal como van en la URL (`assigned=me` → la persona en sesión). */
 export function punchFiltersFromSearch(sp: URLSearchParams, userId: string): PunchListFilters {

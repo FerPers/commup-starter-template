@@ -20,6 +20,11 @@ export const NAV_STORAGE = {
   recentProjects: 'commup:nav:recentProjects',
   /** N1: «Más…» abierto o cerrado (decisión: se recuerda). */
   moreOpen: 'commup:nav:moreOpen',
-  /** N1: prefijo (sessionStorage) de la fase de más actividad por proyecto, para no recalcularla en cada página. */
-  activePhase: 'commup:nav:activePhase:',
+  /** A19 · C: prefijo (sessionStorage) de las fases de la org del proyecto, para no pedirlas en cada página. */
+  menuPhases: 'commup:nav:menuPhases:',
+  /** A19 · C (D2): prefijo (localStorage) de las fases que el usuario dejó abiertas en ese proyecto. */
+  openPhases: 'commup:nav:openPhases:',
+  /** A19 · C: «Configuración del proyecto» y «Por fase» abiertos o cerrados. */
+  configOpen: 'commup:nav:configOpen',
+  byPhaseOpen: 'commup:nav:byPhaseOpen',
 } as const

@@ -60,11 +60,6 @@
       "engineering": "Ingeniería",
       "planning": "Vistas y planificación",
       "lastProject": "Último proyecto",
-      "phase_prep": "Preparación",
-      "phase_mc": "Completamiento (MC)",
-      "phase_com": "Pre-com / Comisionamiento",
-      "phase_su": "Arranque y desempeño",
-      "phase_mgmt": "Gestión",
       "more": "Más…",
       "portfolio": "Portafolio",
       "adminOrg": "Organización",
@@ -77,7 +72,14 @@
       "recent": "Recientes",
       "allProjects": "Todos",
       "seeAllProjects": "Ver todos los proyectos →",
-      "pickProject": "Elige un proyecto"
+      "pickProject": "Elige un proyecto",
+      "g_work": "Trabajo",
+      "g_field": "Campo y cierre",
+      "g_startup": "Arranque y operación",
+      "g_mgmt": "Gestión",
+      "config": "Configuración del proyecto",
+      "phases": "Fases",
+      "byPhase": "Por fase"
     },
     "nav": {
       "dashboard": "Portafolio",
@@ -137,7 +139,11 @@
       "instrumentation": "Señales y lazos",
       "planning": "Planificación",
       "scope": "Alcance del proyecto",
-      "platformHealth": "Salud de la plataforma"
+      "platformHealth": "Salud de la plataforma",
+      "phaseItrs": "ITR de {phase}",
+      "phasePunches": "Punch de {phase}",
+      "phaseReadiness": "Sistemas por liberar",
+      "phaseApproved": "{approved}/{total}"
     },
     "soon": "PRONTO",
     "comingSoon": "Próximamente",
@@ -493,7 +499,9 @@
       "count": "{filtered} de {total} punches",
       "selectAll": "Seleccionar {count} punches",
       "assignedToMe": "Asignados a mí",
-      "active": "Sin cerrar (abierto o en proceso)"
+      "active": "Sin cerrar (abierto o en proceso)",
+      "allPhases": "Todas las fases",
+      "noPhase": "Sin fase (sin ITR de origen)"
     },
     "bulk": {
       "selected": "{count, plural, one {# punch seleccionado} other {# punches seleccionados}}",

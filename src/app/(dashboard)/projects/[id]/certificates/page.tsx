@@ -14,7 +14,7 @@ export default async function CertificatesPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ scope?: string }>
+  searchParams: Promise<{ scope?: string; phase?: string }>
 }) {
   const [{ id: projectId }, sp] = await Promise.all([params, searchParams])
 
@@ -168,6 +168,7 @@ export default async function CertificatesPage({
       phases={phases ?? []}
       subsystemRows={subsystemRows}
       canEdit={canEdit}
+      initialPhaseCode={sp.phase}
     />
     </>
   )

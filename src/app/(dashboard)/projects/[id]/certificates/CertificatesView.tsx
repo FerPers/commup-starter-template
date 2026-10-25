@@ -67,12 +67,15 @@ export default function CertificatesView({
   phases,
   subsystemRows,
   canEdit,
+  initialPhaseCode,
 }: {
   projectId: string
   projectName: string
   phases: Phase[]
   subsystemRows: SubsystemRow[]
   canEdit: boolean
+  /** A19: `?phase=<código>` (atajo del menú) abre esa fase. */
+  initialPhaseCode?: string
 }) {
   const t      = useTranslations('Certificates')
   const locale = useLocale()
@@ -82,7 +85,7 @@ export default function CertificatesView({
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
 
-  const [selectedPhaseId, setSelectedPhaseId] = useState<string>(phases[0]?.id ?? '')
+  const [selectedPhaseId, setSelectedPhaseId] = useState<string>((phases.find(p => p.code === initialPhaseCode) ?? phases[0])?.id ?? '')
   const [issueModal, setIssueModal] = useState<{
     subsystem: SubsystemRow
     phase: Phase

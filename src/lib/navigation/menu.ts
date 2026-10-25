@@ -1,10 +1,15 @@
 /**
- * Menú por fase y rol (N1, decisiones de Luis 2026-10-21; maquetas «Maquetas N1»).
+ * Menú por rol (N1, decisiones de Luis 2026-10-21) con la opción C de A19 (maqueta «A08 + A19», aprobada 2026-10-25):
+ * los módulos quedan fijos por tipo de trabajo y las fases son de la ORG (dinámicas: las pinta el sidebar con
+ * `getMenuPhases`), cada una con «liberados / total» y atajos a las listas ya filtradas por esa fase.
  *
- * Cada ítem declara su PERMISO (`tier`, la misma fuente que el guard de su página: test de paridad) y su
- * AUDIENCIA (a quién le sirve a diario). Lo que el rol puede ver pero no le corresponde va a «Más…».
- * - inspector → field · líder → lead · arquitecto → plan (vista de planificación) · owner/admin → mgmt · cliente → client
- * - mgmt ve el proyecto por fases plegables (abierta la de más actividad); el resto, una lista plana en orden de fase.
+ * Cada ítem declara su PERMISO (`tier`, la misma fuente que el guard de su página: test de paridad), su AUDIENCIA (a
+ * quién le sirve a diario) y su GRUPO fijo. Lo que el rol puede ver pero no le corresponde va a «Más…».
+ * - inspector → field · líder → lead · arquitecto → plan · owner/admin → mgmt · cliente → client
+ * - mgmt: grupos fijos + «Configuración del proyecto» plegada + una sección plegable por fase de la org.
+ * - lead (D9 ajustada): los mismos grupos fijos con sus ítems de audiencia; las fases van juntas en un plegable
+ *   «Por fase» para no pasar de su meta de 17 entradas.
+ * - inspector, arquitecto y cliente: lista plana (sin cambios de estructura).
  * Sin dependencias de React: el menú lateral (`sidebar.tsx`) solo pinta lo que devuelve `buildMenu`.
  */
 
@@ -12,8 +17,9 @@ import { ROLE_TIERS } from '@/lib/constants/roles'
 
 export type Audience = 'field' | 'lead' | 'plan' | 'mgmt' | 'client'
 export type Tier = keyof typeof ROLE_TIERS
-export type Phase = 'prep' | 'mc' | 'com' | 'su' | 'mgmt'
-export const PHASES: readonly Phase[] = ['prep', 'mc', 'com', 'su', 'mgmt']
+/** Grupos fijos del proyecto (A19 · C). `config` se pinta plegado. */
+export type MenuGroup = 'work' | 'field' | 'startup' | 'mgmt' | 'config'
+export const MENU_GROUPS: readonly MenuGroup[] = ['work', 'field', 'startup', 'mgmt', 'config']
 
 export const ROLE_AUDIENCE: Record<string, Audience> = {
   inspector: 'field', leader: 'lead', architect: 'plan', admin: 'mgmt', owner: 'mgmt', client: 'client',
@@ -28,7 +34,7 @@ export type MenuItemDef = {
   /** Permiso (= guard de la página); sin tier = todos los miembros. */
   tier?: Tier
   audience: readonly Audience[]
-  phase?: Phase
+  group?: MenuGroup
   /** Subrutas con ítem propio (no activan este) */
   notUnder?: readonly string[]
   /** N2c: otras rutas del mismo hub que también activan este ítem (pestañas por ruta). */
@@ -50,41 +56,45 @@ export const PROJECT_TOP: readonly MenuItemDef[] = [
   { key: 'readiness', href: '/projects/{p}/readiness', labelKey: 'readiness', audience: ['lead', 'plan', 'mgmt', 'client'] },
 ]
 
-/** Ítems del proyecto por fase (orden = orden en el menú). */
+/** Ítems del proyecto por grupo fijo (orden = orden en el menú y en las listas planas). */
 export const PROJECT_ITEMS: readonly MenuItemDef[] = [
-  // Planificación primero para el arquitecto (se reordena en buildMenu)
-  { key: 'systems', href: '/projects/{p}/systems', labelKey: 'systems', audience: ['lead', 'plan', 'mgmt'], phase: 'prep' },
-  { key: 'tags', href: '/projects/{p}/tags', labelKey: 'tags', audience: ['field', 'lead', 'mgmt'], phase: 'prep' },
-  { key: 'documents', href: '/projects/{p}/documents', labelKey: 'documents', audience: ['lead', 'mgmt', 'client'], phase: 'prep' },
+  // Trabajo: acceso estable a lo de todos los días, en cualquier fase (A19).
+  { key: 'systems', href: '/projects/{p}/systems', labelKey: 'systems', audience: ['lead', 'plan', 'mgmt'], group: 'work' },
+  { key: 'tags', href: '/projects/{p}/tags', labelKey: 'tags', audience: ['field', 'lead', 'mgmt'], group: 'work' },
+  { key: 'itrs', href: '/projects/{p}/itrs', labelKey: 'itrs', audience: ['field', 'lead', 'mgmt'], group: 'work' },
+  { key: 'punches', href: '/projects/{p}/punches', labelKey: 'punchList', audience: ['field', 'lead', 'mgmt', 'client'], group: 'work' },
   // N2d: los P&ID son documentos (Documentos › P&ID con visor).
-  { key: 'vendors', href: '/projects/{p}/vendors', labelKey: 'vendors', audience: ['lead', 'mgmt'], phase: 'prep' },
-  { key: 'signatories', href: '/projects/{p}/signatories', labelKey: 'signatories', audience: ['mgmt'], phase: 'prep' },
-  // R1: disciplinas del alcance (todos lo ven; lo cambian Propietario, Administrador y Arquitecto).
-  { key: 'scope', href: '/projects/{p}/scope', labelKey: 'scope', audience: ['plan', 'mgmt'], phase: 'prep' },
-  { key: 'import', href: '/projects/{p}/import', labelKey: 'import', tier: 'privileged', audience: ['mgmt'], phase: 'prep' },
-  { key: 'itrs', href: '/projects/{p}/itrs', labelKey: 'itrs', audience: ['field', 'lead', 'mgmt'], phase: 'mc' },
-  { key: 'punches', href: '/projects/{p}/punches', labelKey: 'punchList', audience: ['field', 'lead', 'mgmt', 'client'], phase: 'mc' },
-  { key: 'preservation', href: '/projects/{p}/preservation', labelKey: 'preservation', audience: ['field', 'lead', 'mgmt'], phase: 'mc', badge: 'preservation' },
-  { key: 'registers', href: '/projects/{p}/registers', labelKey: 'registers', audience: ['field', 'lead', 'mgmt'], phase: 'mc' },
+  { key: 'documents', href: '/projects/{p}/documents', labelKey: 'documents', audience: ['lead', 'mgmt', 'client'], group: 'work' },
+  // Campo y cierre
+  { key: 'preservation', href: '/projects/{p}/preservation', labelKey: 'preservation', audience: ['field', 'lead', 'mgmt'], group: 'field', badge: 'preservation' },
+  { key: 'registers', href: '/projects/{p}/registers', labelKey: 'registers', audience: ['field', 'lead', 'mgmt'], group: 'field' },
+  { key: 'certificates', href: '/projects/{p}/certificates', labelKey: 'certificates', audience: ['lead', 'mgmt', 'client'], group: 'field' },
+  { key: 'pssr', href: '/projects/{p}/pssr', labelKey: 'pssr', audience: ['lead', 'mgmt', 'client'], group: 'field' },
   // N2c: un solo ítem para el hub (pestañas Señales · Lazos · Matrices C&E · Importar).
-  { key: 'signals', href: '/projects/{p}/signals', labelKey: 'instrumentation', audience: ['mgmt'], phase: 'com',
+  { key: 'signals', href: '/projects/{p}/signals', labelKey: 'instrumentation', audience: ['mgmt'], group: 'field',
     also: ['/projects/{p}/loops', '/projects/{p}/ce-matrices', '/projects/{p}/import-signals'] },
-  { key: 'certificates', href: '/projects/{p}/certificates', labelKey: 'certificates', audience: ['lead', 'mgmt', 'client'], phase: 'com' },
-  { key: 'pssr', href: '/projects/{p}/pssr', labelKey: 'pssr', audience: ['lead', 'mgmt', 'client'], phase: 'com' },
-  { key: 'startup', href: '/projects/{p}/startup', labelKey: 'startup', audience: ['field', 'lead', 'mgmt'], phase: 'su',
+  // Arranque y operación
+  { key: 'startup', href: '/projects/{p}/startup', labelKey: 'startup', audience: ['field', 'lead', 'mgmt'], group: 'startup',
     notUnder: ['/projects/{p}/startup/performance', '/projects/{p}/startup/operations'] },
-  { key: 'performance', href: '/projects/{p}/startup/performance', labelKey: 'performance', audience: ['mgmt', 'client'], phase: 'su' },
-  { key: 'operations', href: '/projects/{p}/startup/operations', labelKey: 'operations', audience: ['mgmt', 'client'], phase: 'su' },
-  { key: 'daily', href: '/projects/{p}/daily', labelKey: 'daily', audience: ['lead', 'plan', 'mgmt', 'client'], phase: 'mgmt' },
+  { key: 'performance', href: '/projects/{p}/startup/performance', labelKey: 'performance', audience: ['mgmt', 'client'], group: 'startup' },
+  { key: 'operations', href: '/projects/{p}/startup/operations', labelKey: 'operations', audience: ['mgmt', 'client'], group: 'startup' },
+  // Gestión
+  { key: 'daily', href: '/projects/{p}/daily', labelKey: 'daily', audience: ['lead', 'plan', 'mgmt', 'client'], group: 'mgmt' },
   // N2c: Planificación = look-ahead de gates + planes de trabajo (pestañas por ruta).
-  { key: 'planning', href: '/projects/{p}/planning/lookahead', labelKey: 'planning', audience: ['plan', 'mgmt'], phase: 'mgmt',
+  { key: 'planning', href: '/projects/{p}/planning/lookahead', labelKey: 'planning', audience: ['plan', 'mgmt'], group: 'mgmt',
     also: ['/projects/{p}/work-plans', '/projects/{p}/planning'] },
-  { key: 'kpis', href: '/projects/{p}/kpis', labelKey: 'kpis', audience: ['plan', 'mgmt'], phase: 'mgmt' },
+  { key: 'kpis', href: '/projects/{p}/kpis', labelKey: 'kpis', audience: ['plan', 'mgmt'], group: 'mgmt' },
+  // Configuración del proyecto (plegada)
+  { key: 'scope', href: '/projects/{p}/scope', labelKey: 'scope', audience: ['plan', 'mgmt'], group: 'config' },
+  { key: 'vendors', href: '/projects/{p}/vendors', labelKey: 'vendors', audience: ['lead', 'mgmt'], group: 'config' },
+  { key: 'signatories', href: '/projects/{p}/signatories', labelKey: 'signatories', audience: ['mgmt'], group: 'config' },
+  { key: 'import', href: '/projects/{p}/import', labelKey: 'import', tier: 'privileged', audience: ['mgmt'], group: 'config' },
 ]
 
 /** Portafolio (organización). Lo que no es de su audiencia va a «Más…». */
 export const PORTFOLIO_ITEMS: readonly MenuItemDef[] = [
-  { key: 'projects', href: '/projects', labelKey: 'projects', audience: ['mgmt'] },
+  // exact: dentro de un proyecto (/projects/…) no se marca «Proyectos», que es la lista.
+  { key: 'projects', href: '/projects', labelKey: 'projects', audience: ['mgmt'], exact: true },
   // El cliente entra al Portafolio (homeForRole): la entrada tiene que estar en su menú, no en «Más…»
   { key: 'dashboard', href: '/dashboard', labelKey: 'dashboard', audience: ['plan', 'mgmt', 'client'] },
   { key: 'opsPunches', href: '/ops/punches', labelKey: 'opsPunches', audience: ['mgmt'] },
@@ -127,13 +137,20 @@ export function allowed(item: MenuItemDef, role: string): boolean {
 }
 
 export type MenuLink = { key: string; href: string; labelKey: string; exact?: boolean; notUnder?: string[]; also?: string[]; badge?: MenuItemDef['badge'] }
+
+/** Cómo se pintan las fases de la org: una sección plegable por fase (gerencia) o todas juntas en «Por fase» (líder). */
+export type PhaseMode = 'each' | 'together' | null
+
 export type MenuModel = {
   audience: Audience
   personal: MenuLink[]
-  /** Ítems del proyecto sin fase (lista plana) o arriba de las fases (mgmt). */
+  /** Arriba del proyecto (Resumen, Liberación…) o, en las audiencias de lista plana, todo el proyecto. */
   project: MenuLink[]
-  /** Solo mgmt: el proyecto por fases plegables. */
-  phases: { phase: Phase; items: MenuLink[] }[]
+  /** Grupos fijos con encabezado (gerencia y líder). */
+  groups: { group: Exclude<MenuGroup, 'config'>; items: MenuLink[] }[]
+  /** «Configuración del proyecto», plegada (gerencia y líder). */
+  config: MenuLink[]
+  phaseMode: PhaseMode
   portfolio: MenuLink[]
   more: MenuLink[]
   admin: { key: string; items: MenuLink[] }[]
@@ -155,14 +172,22 @@ export function buildMenu(role: string, projectId: string | null): MenuModel {
 
   const personal = PERSONAL_ITEMS.filter(ok).filter(mine).map(i => link(i, projectId))
   let project: MenuLink[] = []
-  let phases: MenuModel['phases'] = []
+  let groups: MenuModel['groups'] = []
+  let config: MenuLink[] = []
+  let phaseMode: PhaseMode = null
   if (projectId) {
     const top = PROJECT_TOP.filter(ok)
     const items = PROJECT_ITEMS.filter(ok)
-    if (audience === 'mgmt') {
-      project = top.map(i => link(i, projectId))
-      phases = PHASES.map(phase => ({ phase, items: items.filter(i => i.phase === phase).map(i => link(i, projectId)) }))
-        .filter(p => p.items.length > 0)
+    if (audience === 'mgmt' || audience === 'lead') {
+      // Gerencia ve todo lo permitido; el líder, lo de su audiencia (el resto, en «Más…»).
+      const shown = audience === 'mgmt' ? items : items.filter(mine)
+      project = (audience === 'mgmt' ? top : top.filter(mine)).map(i => link(i, projectId))
+      groups = (['work', 'field', 'startup', 'mgmt'] as const)
+        .map(group => ({ group, items: shown.filter(i => i.group === group).map(i => link(i, projectId)) }))
+        .filter(g => g.items.length > 0)
+      config = shown.filter(i => i.group === 'config').map(i => link(i, projectId))
+      phaseMode = audience === 'mgmt' ? 'each' : 'together'
+      if (audience === 'lead') more.push(...top.filter(i => !mine(i)).map(i => link(i, projectId)), ...items.filter(i => !mine(i)).map(i => link(i, projectId)))
     } else {
       // Arquitecto: planificación primero (decisión N1: es la vista del rol).
       const ordered = audience === 'plan'
@@ -176,27 +201,43 @@ export function buildMenu(role: string, projectId: string | null): MenuModel {
   const portfolio = portfolioOk.filter(mine).map(i => link(i, projectId))
   more.push(...portfolioOk.filter(i => !mine(i)).map(i => link(i, projectId)))
   const admin = ADMIN_GROUPS.map(g => ({ key: g.key, items: g.items.filter(ok).map(i => link(i, projectId)) })).filter(g => g.items.length > 0)
-  return { audience, personal, project, phases, portfolio, more, admin }
-}
-
-/** Entradas visibles sin desplegar nada; cada fase cuenta como una. «Más…» y Administración son plegables y no cuentan. */
-export function visibleEntries(m: MenuModel): number {
-  return m.personal.length + m.project.length + m.phases.length + m.portfolio.length
+  return { audience, personal, project, groups, config, phaseMode, portfolio, more, admin }
 }
 
 /**
- * Fase abierta por defecto (decisión N1): la de más actividad reciente del proyecto. Sin actividad, Completamiento;
- * en empate gana la que va primero en la obra (MC antes que el resto: es donde más gente trabaja).
+ * Entradas visibles sin desplegar nada: cada plegable cuenta como una («Configuración», «Por fase»). «Más…» y
+ * Administración no cuentan. Las secciones por fase de gerencia dependen de la org y no entran aquí.
  */
-export function pickActivePhase(counts: Partial<Record<Phase, number>>): Phase {
-  const order: Phase[] = ['mc', 'prep', 'com', 'su', 'mgmt']
-  return order.reduce((best, p) => ((counts[p] ?? 0) > (counts[best] ?? 0) ? p : best), 'mc' as Phase)
+export function visibleEntries(m: MenuModel): number {
+  return m.personal.length + m.project.length + m.groups.reduce((n, g) => n + g.items.length, 0)
+    + (m.config.length > 0 ? 1 : 0) + (m.phaseMode === 'together' ? 1 : 0) + m.portfolio.length
 }
 
-/** Tipos de evento del bus (domain_events.aggregate_type) por fase. */
-export const EVENT_PHASE: Record<string, Phase> = {
-  tag: 'prep', system: 'prep', subsystem: 'prep',
-  itr: 'mc', punch: 'mc',
-  certificate: 'com', signal: 'com', loop: 'com',
-  transfer: 'su', handover_package: 'su',
+/** Una fase de la org en el menú (A19 · C): su gate, cuántos sistemas lo tienen liberado y el código de la fase. */
+export type MenuPhase = { gateId: string; gateCode: string; gateName: string; phaseCode: string; approved: number; total: number }
+
+/** Atajos de una fase: las listas de siempre, ya filtradas por esa fase (nunca un módulo aparte). */
+export function phaseShortcuts(projectId: string, p: MenuPhase): { key: 'phaseItrs' | 'phasePunches' | 'phaseReadiness'; href: string }[] {
+  const code = encodeURIComponent(p.phaseCode)
+  return [
+    { key: 'phaseItrs', href: `/projects/${projectId}/itrs?phase=${code}` },
+    { key: 'phasePunches', href: `/projects/${projectId}/punches?phase=${code}` },
+    { key: 'phaseReadiness', href: `/projects/${projectId}/readiness?gate=${encodeURIComponent(p.gateCode)}` },
+  ]
+}
+
+/**
+ * Fase abierta por defecto (D2): la liberación siguiente de más sistemas; en empate, la que va primero. Sin sistemas
+ * pendientes, ninguna. `nextGateIds` = id del siguiente gate de cada sistema (`nextGate` de la matriz).
+ */
+export function pickOpenPhase(phases: readonly MenuPhase[], nextGateIds: readonly (string | null)[]): string | null {
+  const count = new Map<string, number>()
+  for (const id of nextGateIds) if (id) count.set(id, (count.get(id) ?? 0) + 1)
+  let best: string | null = null
+  let bestN = 0
+  for (const p of phases) {
+    const n = count.get(p.gateId) ?? 0
+    if (n > bestN) { best = p.gateId; bestN = n }
+  }
+  return best
 }

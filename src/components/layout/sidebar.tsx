@@ -17,8 +17,8 @@ import {
 import { useOfflineSync } from '@/hooks/useOfflineSync'
 import { NAV_STORAGE } from '@/lib/constants/navigation'
 import type { OrgMemberRole } from '@/types/database'
-import { buildMenu, type MenuLink, type Phase } from '@/lib/navigation/menu'
-import { getActivePhase } from '@/app/actions/navigation'
+import { buildMenu, phaseShortcuts, type MenuLink, type MenuPhase } from '@/lib/navigation/menu'
+import { getMenuPhases } from '@/app/actions/navigation'
 import ProjectSwitcher, { rememberRecentProject } from './ProjectSwitcher'
 
 /**
@@ -167,23 +167,46 @@ export default function Sidebar({
   const inMore = menu.more.some(item => isActive(pathname, item))
   const toggle = (key: string, value: boolean, set: (v: boolean) => void) => { set(value); writeStorage(key, value ? '1' : '0') }
 
-  // Owner/admin: fases plegables; abierta la de más actividad del proyecto (una consulta por proyecto y sesión).
-  const [openPhases, setOpenPhases] = useState<Set<Phase>>(new Set())
+  // A19 · C: fases de la org (una consulta por proyecto y sesión). Abiertas: las que el usuario dejó abiertas en este
+  // proyecto (se recuerdan en el dispositivo) o, la primera vez, la liberación siguiente de más sistemas (D2).
+  const [phases, setPhases] = useState<MenuPhase[]>([])
+  const [openPhases, setOpenPhases] = useState<Set<string>>(new Set())
+  const [configOpen, setConfigOpen] = useState(false)
+  const [byPhaseOpen, setByPhaseOpen] = useState(false)
   useEffect(() => {
-    if (!projectId || menu.phases.length === 0) return
-    const cacheKey = NAV_STORAGE.activePhase + projectId
-    const cached = readStorage(cacheKey, true) as Phase | null
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- abre la fase guardada en la sesión al cambiar de proyecto
-    if (cached) { setOpenPhases(new Set([cached])); return }
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- lee las preferencias tras montar (localStorage no existe en SSR)
+    setConfigOpen(readStorage(NAV_STORAGE.configOpen) === '1')
+    setByPhaseOpen(readStorage(NAV_STORAGE.byPhaseOpen) === '1')
+  }, [])
+  useEffect(() => {
+    if (!projectId || !menu.phaseMode) return
+    const apply = (data: { phases: MenuPhase[]; openGateId: string | null }) => {
+      setPhases(data.phases)
+      const saved = readStorage(NAV_STORAGE.openPhases + projectId)
+      setOpenPhases(new Set(saved !== null ? saved.split(',').filter(Boolean) : data.openGateId ? [data.openGateId] : []))
+    }
+    const cached = readStorage(NAV_STORAGE.menuPhases + projectId, true)
+    if (cached) { try { apply(JSON.parse(cached)); return } catch { /* caché dañada: se vuelve a pedir */ } }
     let alive = true
-    getActivePhase({ projectId }).then(res => {
-      if (!alive || !('phase' in res) || !res.phase) return
-      writeStorage(cacheKey, res.phase, true)
-      setOpenPhases(new Set([res.phase]))
-    }).catch(() => { /* sin red: quedan plegadas */ })
+    getMenuPhases({ projectId }).then(res => {
+      if (!alive || !('phases' in res)) return
+      writeStorage(NAV_STORAGE.menuPhases + projectId, JSON.stringify(res), true)
+      apply(res)
+    }).catch(() => { /* sin red: sin fases en el menú */ })
     return () => { alive = false }
-  }, [projectId, menu.phases.length])
-  const togglePhase = (p: Phase) => setOpenPhases(prev => { const n = new Set(prev); if (n.has(p)) n.delete(p); else n.add(p); return n })
+  }, [projectId, menu.phaseMode])
+  const togglePhase = (gateId: string) => setOpenPhases(prev => {
+    const n = new Set(prev)
+    if (n.has(gateId)) n.delete(gateId); else n.add(gateId)
+    if (projectId) writeStorage(NAV_STORAGE.openPhases + projectId, [...n].join(','))
+    return n
+  })
+  const inConfig = menu.config.some(item => isActive(pathname, item))
+  // Atajos de fase: la lista de siempre ya filtrada (nunca se marcan activos: el módulo fijo sí).
+  const phaseLinks = (p: MenuPhase) => projectId ? phaseShortcuts(projectId, p).map(s => (
+    <SidebarLink key={s.key} href={s.href} label={t(`nav.${s.key}`, { phase: p.phaseCode })}
+      Icon={s.key === 'phaseItrs' ? ClipboardCheck : s.key === 'phasePunches' ? Flag : Radar} active={false} accent compact />
+  )) : null
 
   const link = (item: MenuLink, opts?: { accent?: boolean; compact?: boolean }) => (
     <SidebarLink key={item.key} href={item.href} label={tNav(item.labelKey)} Icon={ICONS[item.key] ?? LayoutDashboard}
@@ -237,15 +260,43 @@ export default function Sidebar({
           <GroupHeader><span style={{ color: 'var(--brand-orange)' }}>{currentProjectId || !projectId ? t('groups.project') : t('groups.lastProject')}</span></GroupHeader>
           <ProjectSwitcher currentId={projectId} projectNames={projectNames} />
           {menu.project.map(item => link(item, { accent: true }))}
-          {menu.phases.map(({ phase, items }) => {
-            const open = openPhases.has(phase) || items.some(i => isActive(pathname, i))
-            return (
-              <div key={phase}>
-                <FoldButton open={open} onClick={() => togglePhase(phase)} label={t(`groups.phase_${phase}`)} count={items.length} />
-                {open && items.map(item => link(item, { accent: true, compact: true }))}
-              </div>
-            )
-          })}
+          {/* A19 · C: módulos fijos por tipo de trabajo (gerencia y líder) */}
+          {menu.groups.map(({ group, items }) => (
+            <div key={group}>
+              <SubHeader>{t(`groups.g_${group}`)}</SubHeader>
+              {items.map(item => link(item, { accent: true, compact: true }))}
+            </div>
+          ))}
+          {menu.config.length > 0 && (
+            <div>
+              <FoldButton open={configOpen || inConfig} onClick={() => toggle(NAV_STORAGE.configOpen, !configOpen, setConfigOpen)} label={t('groups.config')} count={menu.config.length} />
+              {(configOpen || inConfig) && menu.config.map(item => link(item, { accent: true, compact: true }))}
+            </div>
+          )}
+          {/* Fases de la org: gerencia, una sección plegable por fase; líder, todas juntas en «Por fase» */}
+          {menu.phaseMode === 'each' && phases.length > 0 && (
+            <>
+              <SubHeader>{t('groups.phases')}</SubHeader>
+              {phases.map(p => (
+                <div key={p.gateId}>
+                  <FoldButton open={openPhases.has(p.gateId)} onClick={() => togglePhase(p.gateId)} label={p.gateName}
+                    count={0} meta={t('nav.phaseApproved', { approved: p.approved, total: p.total })} />
+                  {openPhases.has(p.gateId) && phaseLinks(p)}
+                </div>
+              ))}
+            </>
+          )}
+          {menu.phaseMode === 'together' && phases.length > 0 && (
+            <div>
+              <FoldButton open={byPhaseOpen} onClick={() => toggle(NAV_STORAGE.byPhaseOpen, !byPhaseOpen, setByPhaseOpen)} label={t('groups.byPhase')} count={phases.length} />
+              {byPhaseOpen && phases.map(p => (
+                <div key={p.gateId}>
+                  <SubHeader>{p.gateName} · {t('nav.phaseApproved', { approved: p.approved, total: p.total })}</SubHeader>
+                  {phaseLinks(p)}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* 3 · Portafolio */}
@@ -286,8 +337,8 @@ export default function Sidebar({
   )
 }
 
-/** Encabezado plegable (fases, «Más…», Administración). */
-function FoldButton({ open, onClick, label, count, header }: { open: boolean; onClick: () => void; label: string; count: number; header?: boolean }) {
+/** Encabezado plegable (fases, «Más…», Administración). `meta` = dato fijo a la derecha (liberados / total de una fase). */
+function FoldButton({ open, onClick, label, count, header, meta }: { open: boolean; onClick: () => void; label: string; count: number; header?: boolean; meta?: string }) {
   return (
     <button type="button" onClick={onClick} aria-expanded={open}
       style={{
@@ -298,7 +349,9 @@ function FoldButton({ open, onClick, label, count, header }: { open: boolean; on
       }}>
       {open ? <ChevronDown size={12} aria-hidden="true" /> : <ChevronRight size={12} aria-hidden="true" />}
       <span style={{ flex: 1 }}>{label}</span>
-      {!open && <span style={{ fontSize: 'var(--text-xs)', fontWeight: 500, color: 'var(--sidebar-text-faint)' }}>{count}</span>}
+      {meta
+        ? <span style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--sidebar-text-dim)', whiteSpace: 'nowrap' }}>{meta}</span>
+        : !open && <span style={{ fontSize: 'var(--text-xs)', fontWeight: 500, color: 'var(--sidebar-text-faint)' }}>{count}</span>}
     </button>
   )
 }

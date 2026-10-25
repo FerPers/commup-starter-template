@@ -12870,6 +12870,7 @@ export type Database = {
           id: string | null
           impact: string | null
           itr_id: string | null
+          itr_phase_id: string | null
           org_id: string | null
           priority: Database["public"]["Enums"]["punch_priority"] | null
           project_code: string | null
@@ -12897,6 +12898,13 @@ export type Database = {
           verified_by: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "itrs_phase_id_fkey"
+            columns: ["itr_phase_id"]
+            isOneToOne: false
+            referencedRelation: "project_phases"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "projects_org_id_fkey"
             columns: ["org_id"]

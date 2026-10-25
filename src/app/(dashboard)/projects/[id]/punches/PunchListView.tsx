@@ -38,6 +38,7 @@ export default function PunchListView({
   projects,
   punches,
   disciplines,
+  phases,
   systems,
   orgMembers,
   currentUserRole,
@@ -52,6 +53,8 @@ export default function PunchListView({
   projects?: Project[]
   punches: PunchListRow[]
   disciplines: Discipline[]
+  /** A19: fases de la org para el filtro (la del ITR que originó el punch). */
+  phases?: { code: string; name: string }[]
   systems: System[]
   orgMembers: OrgMember[]
   currentUserRole: string
@@ -59,7 +62,7 @@ export default function PunchListView({
   page: number
   pageSize: number
   summary: PunchSummary
-  filters: { cat: string; status: string; disc: string; system: string; q: string; project?: string; assigned?: string }
+  filters: { cat: string; status: string; disc: string; system: string; q: string; project?: string; assigned?: string; phase?: string }
 }) {
   const allScope = projects !== undefined
   const memberIds = useMemo(() => memberIdSet(orgMembers), [orgMembers])
@@ -103,7 +106,7 @@ export default function PunchListView({
 
   const filtered = punches
 
-  const hasFilters = [filters.q, filters.cat, filters.status, filters.disc, filters.system, filters.project, filters.assigned].some(Boolean)
+  const hasFilters = [filters.q, filters.cat, filters.status, filters.disc, filters.system, filters.project, filters.assigned, filters.phase].some(Boolean)
   const today = browserToday()
 
   const filteredIds = useMemo(() => new Set(filtered.map(p => p.id)), [filtered])
@@ -320,6 +323,14 @@ export default function PunchListView({
           <option value="C">{t('catLabels.C')}</option>
         </select>
 
+        {phases && phases.length > 0 && (
+          <select value={filters.phase ?? ''} onChange={e => url.set({ phase: e.target.value })} style={selStyle} aria-label={t('filters.allPhases')}>
+            <option value="">{t('filters.allPhases')}</option>
+            {phases.map(p => <option key={p.code} value={p.code}>{p.code} — {p.name}</option>)}
+            <option value="none">{t('filters.noPhase')}</option>
+          </select>
+        )}
+
         <select value={filters.status} onChange={e => url.set({ status: e.target.value })} style={selStyle}>
           <option value="">{t('filters.allStatuses')}</option>
           <option value="active">{t('filters.active')}</option>
@@ -348,7 +359,7 @@ export default function PunchListView({
 
         {hasFilters && (
           <button
-            onClick={() => { setSearch(''); url.clear(['q', 'cat', 'status', 'disc', 'system', 'project', 'assigned']) }}
+            onClick={() => { setSearch(''); url.clear(['q', 'cat', 'status', 'disc', 'system', 'project', 'assigned', 'phase']) }}
             style={{ padding: '8px 12px', background: 'var(--gray-100)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '12px', color: 'var(--text-muted)', cursor: 'pointer' }}
           >
             {t('filters.clear')}

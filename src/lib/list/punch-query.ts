@@ -10,7 +10,9 @@ export type PunchSortKey = typeof PUNCH_SORT_KEYS[number]
 
 export type PunchListFilters = { cat?: string; status?: string; disc?: string; system?: string; q?: string; project?: string
   /** N0 (H-19): punch asignados a esta persona (id ya resuelto; «me» lo traduce la página). */
-  assigned?: string }
+  assigned?: string
+  /** A19 · E6: código de fase de la org (la del ITR de origen); `none` = punch sin ITR («Sin fase»). */
+  phase?: string }
 
 /** Fila plana de punch_list_v */
 export type PunchListRow = {
@@ -64,10 +66,10 @@ const VIEW_COLS =
 const CATS = ['A', 'B', 'C']
 const STATUSES = ['open', 'in_progress', 'closed', 'cancelled']
 
-type FilterQ = { eq: (c: string, v: string) => FilterQ; or: (f: string) => FilterQ }
+type FilterQ = { eq: (c: string, v: string) => FilterQ; or: (f: string) => FilterQ; in: (c: string, v: string[]) => FilterQ; is: (c: string, v: null) => FilterQ }
 
 function applyFilters<Q extends FilterQ>(
-  query: Q, scope: { orgId: string; projectId?: string }, f: PunchListFilters, tagIds: string[] | null,
+  query: Q, scope: { orgId: string; projectId?: string }, f: PunchListFilters, tagIds: string[] | null, phaseIds: string[] | null = null,
 ): Q {
   let q = query.eq('org_id', scope.orgId) as Q
   if (scope.projectId) q = q.eq('project_id', scope.projectId) as Q
@@ -78,6 +80,9 @@ function applyFilters<Q extends FilterQ>(
   else if (f.status === 'active') q = q.or('status.eq.open,status.eq.in_progress') as Q
   if (f.disc) q = q.eq('discipline_code', f.disc) as Q
   if (f.system) q = q.eq('system_code', f.system) as Q
+  // A19: fase del ITR que originó el punch (punch_list_v.itr_phase_id); sin ITR = «Sin fase». Código inexistente → 0 filas.
+  if (f.phase === 'none') q = q.is('itr_id', null) as Q
+  else if (phaseIds) q = q.in('itr_phase_id', phaseIds.length ? phaseIds : ['00000000-0000-0000-0000-000000000000']) as Q
   if (f.assigned && /^[0-9a-f-]{36}$/i.test(f.assigned)) q = q.eq('assigned_to', f.assigned) as Q
   const search = normalizeSearch(f.q)
   if (search) {
@@ -91,6 +96,13 @@ function applyFilters<Q extends FilterQ>(
 
 /** Tope de tags resueltos por búsqueda (cabe en la URL); al alcanzarlo el resultado es parcial (B-22). */
 export const SEARCH_TAG_CAP = 150
+
+/** Ids de las fases de la org con ese código (A19); `none` y vacío no filtran por id. */
+async function resolvePhaseIds(supabase: Client, orgId: string, code: string | undefined): Promise<string[] | null> {
+  if (!code || code === 'none') return null
+  const { data } = await supabase.from('project_phases').select('id').eq('org_id', orgId).eq('code', code)
+  return (data ?? []).map(p => p.id)
+}
 
 async function resolveTagIds(supabase: Client, scope: { orgId: string; projectId?: string }, search: string): Promise<string[]> {
   let q = supabase.from('tags').select('id').ilike('tag_number', `%${search}%`).limit(SEARCH_TAG_CAP)
@@ -107,10 +119,13 @@ export async function fetchPunchPage(
   const size = opts.pageSize ?? LIST_PAGE_SIZE
   const [from, to] = rangeFor(opts.page, size)
   const search = normalizeSearch(opts.filters.q)
-  const tagIds = search ? await resolveTagIds(supabase, scope, search) : null
+  const [tagIds, phaseIds] = await Promise.all([
+    search ? resolveTagIds(supabase, scope, search) : Promise.resolve(null),
+    resolvePhaseIds(supabase, scope.orgId, opts.filters.phase),
+  ])
   // bounded: .range(from, to) más abajo
   const base = supabase.from('punch_list_v').select(VIEW_COLS, { count: 'exact' })
-  const { data, count, error } = await applyFilters(base, scope, opts.filters, tagIds)
+  const { data, count, error } = await applyFilters(base, scope, opts.filters, tagIds, phaseIds)
     .order(opts.sort, { ascending: opts.dir === 'asc', nullsFirst: false })
     .order('id', { ascending: true })
     .range(from, to)
