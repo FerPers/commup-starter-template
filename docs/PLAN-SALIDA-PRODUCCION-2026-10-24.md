@@ -132,6 +132,8 @@ En términos concretos, salir significa cuatro cosas:
 | A43 | El ITR muestra «N pendientes» como salto, no como lista de faltantes y rechazos; no muestra proyecto ni sistema; las tablas anchas no tienen modo por fila en el teléfono; falta el encabezado compacto del teléfono (resto de la maqueta A·A·A). |
 | A19 | ITR y Punch cuelgan del grupo de la fase MC en el menú. **Decisión de producto.** |
 
+**Avance (25-oct):** maqueta A08 + A19 hecha; Luis aprobó la paleta A (violeta = espera a otra persona) y el menú C. Plan de implementación de A08, A25, A47 y A19 en `docs/PLAN-A08-A25-A47-A19-2026-10-25.md` (7 etapas, 3 migraciones; D1 y D2 por confirmar).
+
 ### Ola 4 — Piloto Geopark
 
 A33 (observar a inspector, líder y representante de la operadora en campo, con línea base de tiempo y errores), A34 (piloto medido: cierre, horas de dossier, capturas recuperadas, aceptación del receptor), A27 (capturas de referencia de pantallas y estados), A21 (validar el menú con usuarios reales) y A42 (siguientes lotes de plantillas según el piloto).
