@@ -2385,6 +2385,8 @@
     "rowState": {
       "regressed": "Regressed",
       "blocked": "Blocked",
+      "nodata": "No information",
+      "working": "In progress",
       "signing": "Waiting for signatures",
       "ready": "Ready to approve",
       "done": "All released"

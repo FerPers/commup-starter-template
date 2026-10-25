@@ -7,11 +7,11 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/supabase.generated'
 import type { MatrixGate } from './gates'
-import { isDone, nextGate, readinessSummary, rowState, type RowState } from './matrix'
+import { ROW_STATES, isDone, nextGate, readinessSummary, rowState, type RowState } from './matrix'
 import { addDaysIso, todayIn } from '@/lib/time/zone'
 import { fromJson } from '@/lib/supabase/casts'
 
-export const ROW_STATES: RowState[] = ['regressed', 'blocked', 'signing', 'ready', 'done']
+export { ROW_STATES }
 
 export type ProjectReadiness = {
   id: string

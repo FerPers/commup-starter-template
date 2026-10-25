@@ -10,6 +10,18 @@ const row = (code: string, gates: MatrixGate[], area = 'A1'): MatrixRow => ({
 })
 
 describe('matriz de Control Tower (S23)', () => {
+  it('A47: «Solo con bloqueo» deja fuera lo que está en ejecución o sin información', () => {
+    const rows = [
+      row('S1', [g('MC', 1, 'not_ready', { work_state: 'blocked' })]),
+      row('S2', [g('MC', 1, 'not_ready', { work_state: 'work' })]),
+      row('S3', [g('MC', 1, 'not_ready', { work_state: 'nodata' })]),
+      row('S4', [g('MC', 1, 'regressed')]),
+    ]
+    const ctx = { commitment: () => null, changedIds: new Set<string>(), today: '2026-10-25' }
+    expect(filterMatrix(rows, { blocked: true }, ctx).map(r => r.system_code).sort()).toEqual(['S1', 'S4'])
+    expect(filterMatrix(rows, { state: 'nodata' }, ctx).map(r => r.system_code)).toEqual(['S3'])
+  })
+
   it('siguiente gate: la regresión manda; si no, el primero sin aprobar', () => {
     expect(nextGate([g('MC', 1, 'approved'), g('RFC', 2, 'not_ready')])?.code).toBe('RFC')
     expect(nextGate([g('MC', 1, 'regressed'), g('RFC', 2, 'ready')])?.code).toBe('MC')
@@ -22,6 +34,10 @@ describe('matriz de Control Tower (S23)', () => {
     expect(rowState([g('MC', 1, 'approved_needs_review')])).toBe('regressed')
     expect(rowState([g('MC', 1, 'approved')])).toBe('done')
     expect(rowState([g('MC', 1, 'not_ready')])).toBe('blocked')
+    // A47 · E4: «no listo» según su causa; sin causa (gate guardado antes de E4) sigue bloqueado
+    expect(rowState([g('MC', 1, 'not_ready', { work_state: 'nodata' })])).toBe('nodata')
+    expect(rowState([g('MC', 1, 'not_ready', { work_state: 'work' })])).toBe('working')
+    expect(rowState([g('MC', 1, 'not_ready', { work_state: 'blocked' })])).toBe('blocked')
   })
 
   it('número del bloqueo según el criterio', () => {

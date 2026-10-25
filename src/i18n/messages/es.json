@@ -2385,6 +2385,8 @@
     "rowState": {
       "regressed": "En regresión",
       "blocked": "Bloqueado",
+      "nodata": "Sin información",
+      "working": "En ejecución",
       "signing": "Esperando firmas",
       "ready": "Listo para aprobar",
       "done": "Todo liberado"

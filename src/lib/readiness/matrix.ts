@@ -16,19 +16,25 @@ export function nextGate(gates: readonly MatrixGate[]): MatrixGate | null {
     ?? null
 }
 
-export type RowState = 'regressed' | 'blocked' | 'signing' | 'ready' | 'done'
+export type RowState = 'regressed' | 'blocked' | 'nodata' | 'working' | 'signing' | 'ready' | 'done'
 
-/** Estado de la fila según su siguiente gate (lo que se filtra y colorea). */
+/**
+ * Estado de la fila según su siguiente gate (lo que se filtra y colorea). A47 · E4: «no listo» se lee por su causa
+ * (`work_state`): bloqueado (no avanza con el trabajo planeado), sin información (no se sabe qué falta) o en
+ * ejecución. Sin causa (gate guardado antes de E4) queda bloqueado, como antes.
+ */
 export function rowState(gates: readonly MatrixGate[]): RowState {
   const g = nextGate(gates)
   if (!g) return 'done'
   if (g.status === 'regressed' || g.status === 'approved_needs_review') return 'regressed'
   if (g.status === 'pending_signatures') return 'signing'
   if (g.status === 'ready' || g.status === 'ready_with_conditions') return 'ready'
+  if (g.work_state === 'nodata') return 'nodata'
+  if (g.work_state === 'work') return 'working'
   return 'blocked'
 }
 
-const STATE_RISK: Record<RowState, number> = { regressed: 0, blocked: 1, signing: 2, ready: 3, done: 4 }
+const STATE_RISK: Record<RowState, number> = { regressed: 0, blocked: 1, nodata: 2, working: 3, signing: 4, ready: 5, done: 6 }
 
 /** Cuántas cosas faltan según el criterio que falla (el número que acompaña al texto). */
 export function blockerCount(b: GateBlocker | null | undefined): number | null {
@@ -67,14 +73,14 @@ export type MatrixFilters = {
   sort?: 'risk' | 'code' | 'commitment'
 }
 
-const STATES: RowState[] = ['regressed', 'blocked', 'signing', 'ready', 'done']
+export const ROW_STATES: readonly RowState[] = ['regressed', 'blocked', 'nodata', 'working', 'signing', 'ready', 'done']
 
 /** Filtros desde la URL (todo lo desconocido se ignora). */
 export function parseMatrixFilters(sp: Record<string, string | undefined>): MatrixFilters {
   const days = Number(sp.committed)
   return {
     area: sp.area?.trim() ? sp.area : undefined,
-    state: STATES.includes(sp.state as RowState) ? (sp.state as RowState) : undefined,
+    state: ROW_STATES.includes(sp.state as RowState) ? (sp.state as RowState) : undefined,
     q: sp.q?.trim() ? sp.q.trim() : undefined,
     committedDays: Number.isInteger(days) && days > 0 && days <= 365 ? days : undefined,
     changed: sp.changed === '1',

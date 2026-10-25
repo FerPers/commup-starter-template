@@ -7,6 +7,8 @@ import { isCapacity, type MyCapacities } from '@/lib/constants/capacities'
 import { useRouter } from 'next/navigation'
 import { useEffect, useId, useState, useTransition } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
+import { gateState, type GateWorkState } from '@/lib/states'
+import { gateWorkState } from '@/lib/readiness/work-state'
 import { formatInZone } from '@/lib/time/zone'
 import { Modal } from '@/components/ui'
 import { useAskDialog } from '@/components/ui/AskDialog'
@@ -24,6 +26,7 @@ import {
 } from '@/app/actions/gates'
 import {
   GATE_STATUS_STYLE,
+  gateCellStyle,
   canApprove,
   canRevoke,
   evidencePath,
@@ -74,14 +77,17 @@ const btn = (variant: 'primary' | 'outline' | 'danger'): React.CSSProperties => 
   color: variant === 'outline' ? 'var(--text-strong)' : '#fff',
 })
 
-export function StatusBadge({ status, label }: { status: GateStatus; label: string }) {
-  const st = GATE_STATUS_STYLE[status]
+/** A47 · E4: con `workState`, un gate «no listo» dice su causa (sin información · en ejecución · bloqueado). */
+export function StatusBadge({ status, label, workState }: { status: GateStatus; label: string; workState?: GateWorkState | null }) {
+  const ts = useTranslations('States')
+  const st = gateCellStyle({ status, work_state: workState })
+  const cause = status === 'not_ready' && workState ? gateState({ status, workState }) : null
   return (
     <span style={{
       display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 10px', borderRadius: 999,
-      fontSize: 'var(--text-xs)', fontWeight: 700, background: st.bg, color: st.fg, border: `1.5px solid ${st.border}`,
+      fontSize: 'var(--text-xs)', fontWeight: 700, background: st.bg, color: st.fg, border: `1.5px ${st.borderStyle} ${st.border}`,
     }}>
-      <span aria-hidden="true">{st.icon}</span>{label}
+      <span aria-hidden="true">{st.icon}</span>{label}{cause && ` · ${ts(`${cause.family}.${cause.key}`)}`}
     </span>
   )
 }
@@ -463,7 +469,7 @@ export default function SystemGatesView({ orgId, role, userId, caps, canEdit, pr
                 <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-strong)' }}>{g.gate_code}</div>
                 <div style={small}>{g.gate_name}</div>
               </div>
-              <StatusBadge status={g.status} label={t(`status.${g.status}`)} />
+              <StatusBadge status={g.status} workState={gateWorkState(g.status, g.criteria)} label={t(`status.${g.status}`)} />
             </div>
 
             {/* S23 (D-19): los gates ya aprobados se colapsan; queda abierto el siguiente que pide trabajo */}

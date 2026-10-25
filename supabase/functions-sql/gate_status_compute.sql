@@ -11,6 +11,8 @@ AS $function$
            'order', g.gate_order, 'computed_level', g.computed_level, 'status', g.status,
            'failing', (SELECT COUNT(*) FROM jsonb_array_elements(g.criteria) cr WHERE cr ->> 'result' = 'fail'),
            'approval', g.approval,
+           -- A08 (E4): «no listo» según su causa (nodata · work · blocked); null en los demás estados.
+           'work_state', public.gate_work_state(g.status, g.criteria),
            -- S23 (D-01): primer criterio que falla (bloqueante), sin las listas del detalle, para la fila de la matriz.
            'blocker', (SELECT jsonb_build_object('kind', cr ->> 'kind', 'label', cr ->> 'label',
                          'detail', (SELECT COALESCE(jsonb_object_agg(d.key, d.value), '{}'::jsonb)

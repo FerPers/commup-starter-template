@@ -6,7 +6,7 @@
  */
 
 import { isCapacity, type MyCapacities } from '@/lib/constants/capacities'
-import { gateState } from '@/lib/states/gate'
+import { gateState, type GateWorkState } from '@/lib/states/gate'
 import { TONE_STYLE } from '@/lib/states/tones'
 
 export type GateStatus =
@@ -124,6 +124,8 @@ export type MatrixGate = {
   failing: number
   approval: Approval | null
   blocker?: GateBlocker | null
+  /** A47 · E4: causa de un gate «no listo» (`gate_work_state`); null en los demás estados o antes de recalcular. */
+  work_state?: GateWorkState | null
 }
 
 /**
@@ -141,6 +143,15 @@ export const GATE_STATUS_STYLE = Object.fromEntries((Object.keys(GATE_ICON) as G
   const tone = TONE_STYLE[st.tone]
   return [status, { bg: tone.bg, fg: tone.fg, border: st.accent ? TONE_STYLE[st.accent].fg : tone.border, icon: GATE_ICON[status] }]
 })) as Record<GateStatus, { bg: string; fg: string; border: string; icon: string }>
+
+const WORK_ICON: Record<GateWorkState, string> = { nodata: '?', work: '▸', blocked: '✕' }
+
+/** A47 · E4: estilo de la celda de un gate con la causa de «no listo» (rayado = sin información, azul = en ejecución). */
+export function gateCellStyle(g: { status: GateStatus; work_state?: GateWorkState | null }): { bg: string; fg: string; border: string; borderStyle: 'solid' | 'dashed'; icon: string } {
+  if (g.status !== 'not_ready' || !g.work_state) return { ...GATE_STATUS_STYLE[g.status], borderStyle: 'solid' }
+  const tone = TONE_STYLE[gateState({ status: g.status, workState: g.work_state }).tone]
+  return { bg: tone.bg, fg: tone.fg, border: tone.border, borderStyle: tone.borderStyle, icon: WORK_ICON[g.work_state] }
+}
 
 export const isApproved = (s: GateStatus) =>
   s === 'approved' || s === 'approved_with_conditions' || s === 'approved_needs_review' || s === 'regressed'

@@ -14065,6 +14065,10 @@ export type Database = {
         Args: { p_rows: Json; p_table: string }
         Returns: string[]
       }
+      gate_work_state: {
+        Args: { p_criteria: Json; p_status: string }
+        Returns: string
+      }
       generate_handover_package: {
         Args: { p_project_id: string; p_system_ids?: string[] }
         Returns: Json

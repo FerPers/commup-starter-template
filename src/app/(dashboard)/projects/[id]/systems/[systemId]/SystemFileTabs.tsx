@@ -14,6 +14,7 @@ import { Chip } from '@/app/(dashboard)/projects/[id]/daily/daily-ui'
 import { CERT_TONE, RESULT_TONE, type CertificateStatus, type PerfResult, type PerfRunStatus } from '@/lib/performance/catalog'
 import { PACKAGE_TONE, type PackageStatus } from '@/lib/vendors/catalog'
 import type { GateStatus } from '@/lib/readiness/gates'
+import type { GateWorkState } from '@/lib/states'
 import type { SystemType } from '@/lib/systems/dependencies'
 import { SYSTEM_TABS, systemTabHref, type SystemTab } from '@/lib/systems/file-tabs'
 import { TypeChip } from '../system-ui'
@@ -47,7 +48,7 @@ export function SystemFileShell({ project, system, tab, summary, ownership, perf
     attention: number
     weightedPct: number
     itrs: number
-    next: { code: string; status: GateStatus } | null
+    next: { code: string; status: GateStatus; work_state: GateWorkState | null } | null
     commitment: { gate: string; date: string; late: boolean; forecast: string | null } | null
     /** E2: tags del sistema con pin en la revisión vigente de un P&ID. */
     pid: { pinned: number; total: number } | null
@@ -80,7 +81,7 @@ export function SystemFileShell({ project, system, tab, summary, ownership, perf
           </h1>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginTop: 10 }}>
             {summary.next
-              ? <StatusBadge status={summary.next.status} label={`${summary.next.code} · ${tg(`status.${summary.next.status}`)}`} />
+              ? <StatusBadge status={summary.next.status} workState={summary.next.work_state} label={`${summary.next.code} · ${tg(`status.${summary.next.status}`)}`} />
               : <StatusBadge status="approved" label={t('file.allApproved')} />}
             <StageChip stage={ownership.stage} />
             {vendors.map(v => (

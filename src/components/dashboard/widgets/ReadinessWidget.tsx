@@ -4,6 +4,7 @@ import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import { Card } from '@/components/ui'
 import { loadPortfolioReadiness } from '@/lib/readiness/portfolio-server'
+import { TONE_STYLE } from '@/lib/states'
 
 /**
  * N2b (D-38) + V1 (Portafolio unificado, decisión de Luis 2026-10-22): la tabla de liberación por proyecto vive aquí,
@@ -69,8 +70,8 @@ export default async function ReadinessWidget({ orgId }: { orgId: string }) {
                       </td>
                       <td style={td}>{(p.weighted * 100).toFixed(1)} %</td>
                       <td style={td}><Link href={`/projects/${p.id}/readiness?blocked=1`} style={{ textDecoration: 'none' }}>{n(p.counts.regressed + p.counts.blocked, 'var(--danger-700)')}</Link></td>
-                      <td style={td}><Link href={`/projects/${p.id}/readiness?state=ready`} style={{ textDecoration: 'none' }}>{n(p.counts.ready, 'var(--success-700)')}</Link></td>
-                      <td style={td}><Link href={`/projects/${p.id}/readiness?state=signing`} style={{ textDecoration: 'none' }}>{n(p.counts.signing, 'var(--primary-700)')}</Link></td>
+                      <td style={td}><Link href={`/projects/${p.id}/readiness?state=ready`} style={{ textDecoration: 'none' }}>{n(p.counts.ready, TONE_STYLE.wait.fg)}</Link></td>
+                      <td style={td}><Link href={`/projects/${p.id}/readiness?state=signing`} style={{ textDecoration: 'none' }}>{n(p.counts.signing, TONE_STYLE.wait.fg)}</Link></td>
                       <td style={td}><Link href={dailyTabHref(p.id, 'constraints')} style={{ textDecoration: 'none' }}>{n(p.constraintsN4, 'var(--danger-700)')}</Link></td>
                       <td style={td}><Link href={`/projects/${p.id}/readiness?committed=7`} style={{ textDecoration: 'none' }}>{n(p.commitmentsSoon, 'var(--warning-700)')}</Link></td>
                     </>

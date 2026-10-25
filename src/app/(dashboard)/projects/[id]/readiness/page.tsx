@@ -3,20 +3,21 @@ import { notFound, redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import Link from 'next/link'
 import { Card, Table, THead, TBody, TR, TH, TD, TableWrapper } from '@/components/ui'
-import { GATE_STATUS_STYLE, type MatrixGate } from '@/lib/readiness/gates'
-import { blockerCount, filterMatrix, nextGate, parseMatrixFilters, readinessSummary, rowState, type RowState } from '@/lib/readiness/matrix'
+import { gateCellStyle, type MatrixGate } from '@/lib/readiness/gates'
+import { TONE_STYLE, gateState } from '@/lib/states'
+import { ROW_STATES, blockerCount, filterMatrix, nextGate, parseMatrixFilters, readinessSummary, rowState, type RowState } from '@/lib/readiness/matrix'
 import { loadMatrix, type MatrixData } from '@/lib/readiness/matrix-server'
 import ReadinessFilters from './ReadinessFilters'
 
 // Estado del hold point por sistema (fase 1): aprobado / listo / no listo / regresión.
 // ⛓ = bloqueado por un sistema del que depende (fase 2).
 function GateBadge({ gate, label, title, href, blocked }: { gate: MatrixGate; label: string; title: string; href: string; blocked?: boolean }) {
-  const st = GATE_STATUS_STYLE[gate.status]
+  const st = gateCellStyle(gate)
   return (
     <Link href={href} title={title} style={{
       display: 'inline-flex', alignItems: 'center', gap: 4, textDecoration: 'none',
       padding: '3px 9px', borderRadius: 'var(--radius-pill)', fontSize: 'var(--text-xs)', fontWeight: 600,
-      background: st.bg, color: st.fg, border: `1.5px solid ${st.border}`,
+      background: st.bg, color: st.fg, border: `1.5px ${st.borderStyle} ${st.border}`,
     }}>
       <span style={{ fontSize: 12 }} aria-hidden="true">{st.icon}</span>
       {label}
@@ -43,10 +44,11 @@ function Bar({ pct }: { pct: number }) {
   )
 }
 
+// A08/A47: el color del siguiente gate = tono del contrato (listo y por firmar esperan a otra persona, en violeta).
 const STATE_TONE: Record<RowState, string> = {
-  regressed: 'var(--danger-800)', blocked: 'var(--danger-700)', signing: 'var(--primary-700)', ready: 'var(--success-700)', done: 'var(--success-800)',
+  regressed: TONE_STYLE.bad.fg, blocked: TONE_STYLE.bad.fg, nodata: TONE_STYLE.nodata.fg, working: TONE_STYLE.work.fg,
+  signing: TONE_STYLE.wait.fg, ready: TONE_STYLE.wait.fg, done: TONE_STYLE.ok.fg,
 }
-const ROW_STATES: RowState[] = ['regressed', 'blocked', 'signing', 'ready', 'done']
 
 export default async function ReadinessPage({
   params,
@@ -61,9 +63,10 @@ export default async function ReadinessPage({
   const orgId = ctx.orgId
   const [{ id: projectId }, params0] = await Promise.all([params, searchParams])
 
-  const [t, tg, { data: project }] = await Promise.all([
+  const [t, tg, ts, { data: project }] = await Promise.all([
     getTranslations('ControlTower'),
     getTranslations('Gates'),
+    getTranslations('States'),
     supabase.from('projects').select('id, code, name').eq('id', projectId).eq('org_id', orgId).maybeSingle(),
   ])
   if (!project) notFound()
@@ -222,7 +225,8 @@ export default async function ReadinessPage({
                         <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                           {r.gates.map(g => {
                             const by = data.blocks.get(`${r.system_id}:${g.gate_id}`)
-                            const title = t('gateTitle', { name: g.name, status: t(`gateStatus.${g.status}`), failing: g.failing })
+                            const gs = gateState({ status: g.status, workState: g.work_state })
+                            const title = t('gateTitle', { name: g.name, status: ts(`${gs.family}.${gs.key}`, gs.params), failing: g.failing })
                             return (
                               <GateBadge key={g.gate_id} gate={g} label={g.code} href={systemHref(r.system_id, g.gate_id)} blocked={!!by}
                                 title={by ? `${title}\n${t('blockedBy', { systems: by.join(', ') })}` : title} />

@@ -73,15 +73,18 @@ export function moveVertex(points: Pt[], i: number, p: Pt, size: PageSize, ortho
 }
 
 /**
- * Color «Por estado» de un sistema = su liberación siguiente. Ámbar = bloqueado (el caso común), rojo = regresión,
- * azul = esperando firmas, verde azulado = lista para aprobar, verde = todo aprobado. Distintos también en luminosidad.
+ * Color «Por estado» de un sistema = su liberación siguiente, con los tonos del contrato A08 sobre la hoja blanca del
+ * P&ID (tokens que no cambian con el tema): rojo = regresión o bloqueado, gris = sin información, azul = en ejecución,
+ * violeta = espera aprobación o firmas, verde = todo liberado. Distintos también en luminosidad.
  */
 export const ROW_STATE_COLORS: Record<RowState, string> = {
-  regressed: '#b91c1c',
-  blocked: '#d97706',
-  signing: '#2563eb',
-  ready: '#0f766e',
-  done: '#15803d',
+  regressed: 'var(--solid-danger-700)',
+  blocked: 'var(--danger-500)',
+  nodata: 'var(--gray-400)',
+  working: 'var(--primary-500)',
+  signing: 'var(--violet-600)',
+  ready: 'var(--violet-500)',
+  done: 'var(--solid-success-700)',
 }
 
-export const ROW_STATE_ORDER: readonly RowState[] = ['regressed', 'blocked', 'signing', 'ready', 'done']
+export const ROW_STATE_ORDER: readonly RowState[] = ['regressed', 'blocked', 'nodata', 'working', 'signing', 'ready', 'done']

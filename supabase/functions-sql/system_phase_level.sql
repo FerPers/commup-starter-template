@@ -1,4 +1,4 @@
--- fn: public.system_phase_level(uuid,uuid,integer,timestamp with time zone)
+-- fn: public.system_phase_level(uuid, uuid, integer, timestamp with time zone)
 -- Canónico (S03). Volcado de prod con scripts/sql/canonical-functions.mjs; no editar sin migración.
 CREATE OR REPLACE FUNCTION public.system_phase_level(p_system_id uuid, p_phase_id uuid, p_limit integer, p_punches_before timestamp with time zone DEFAULT NULL::timestamp with time zone)
  RETURNS jsonb
@@ -23,7 +23,9 @@ AS $function$
   it AS (
     SELECT i.subsystem_id,
            COUNT(*) AS t,
-           COUNT(*) FILTER (WHERE i.status = 'approved') AS ap
+           COUNT(*) FILTER (WHERE i.status = 'approved') AS ap,
+           -- A08 (E4): ITR no conformes (falla crítica): bloquean, no son trabajo pendiente.
+           COUNT(*) FILTER (WHERE i.status = 'rejected') AS rj
     FROM itrs i
     WHERE i.subsystem_id IN (SELECT id FROM ss)
       AND i.phase_id = p_phase_id
@@ -31,7 +33,7 @@ AS $function$
   ),
   lvl AS (
     SELECT ss.id, ss.code,
-           COALESCE(it.t, 0) AS t, COALESCE(it.ap, 0) AS ap,
+           COALESCE(it.t, 0) AS t, COALESCE(it.ap, 0) AS ap, COALESCE(it.rj, 0) AS rj,
            COALESCE(pun.a, 0) AS a, COALESCE(pun.b, 0) AS b,
            CASE
              WHEN COALESCE(pun.a, 0) > 0 THEN 'cat_a'
@@ -60,6 +62,8 @@ AS $function$
     'subsystems_yellow', COUNT(*) FILTER (WHERE level = 'yellow'),
     'itr_total',         COALESCE(SUM(t), 0),
     'itr_approved',      COALESCE(SUM(ap), 0),
+    'itr_rejected',      COALESCE(SUM(rj), 0),
+    'open_cat_a',        COALESCE(SUM(a), 0),
     'open_cat_b',        COALESCE(SUM(b), 0),
     'red_subsystems',    COALESCE(jsonb_agg(jsonb_build_object(
                             'id', id, 'code', code, 'reason', red_reason,

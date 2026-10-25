@@ -48,10 +48,10 @@ Proyecto E2E, liberación A (Completamiento mecánico). Los casos se siembran co
 | A200-S02 Agua de servicio | Listo: ITR aprobados, falta aprobar | `ready` (cola de owner/admin/arquitecta) |
 | A200-S03 Gas combustible | Aprobado por Comisionamiento y Operaciones, falta HSE | `pending_signatures` |
 | A200-S04 Nitrógeno | Aprobado con las tres firmas y después se reabrió un ITR | `regressed` |
-| A100-S01 Sistema E2E | ITR sin aprobar y un punch Cat A abierto | `not_ready` (bloqueado) |
-| A200-S05 Drenajes cerrados | Sin tags ni ITR: alcance desconocido | `not_ready` |
+| A100-S01 Sistema E2E | ITR sin aprobar y un punch Cat A abierto | `not_ready` · Bloqueado (`work_state = blocked`) |
+| A200-S05 Drenajes cerrados | Sin tags ni ITR: alcance desconocido | `not_ready` · Sin información (`work_state = nodata`) |
 
-El último caso queda igual que un bloqueo: es la brecha de A47 (la matriz no distingue «sin información»). Cuando A47 la cierre, aquí debe cambiar el estado esperado.
+Desde A47 (E4, migración `20261231120000`) la matriz distingue los dos últimos casos: el primero se ve «Bloqueado» y el segundo «Sin información». Las fases B–D de la demo no tienen ITR, así que también salen «Sin información».
 
 Además: dos TQ (una por responder del cliente y una respondida), dos acciones, cuatro punch (A, B y C en distintos pasos), una preservación vencida, un ITR esperando la firma del cliente, fechas de plan vencidas, de esta semana, futuras, solo pronóstico y sin fecha, y tres equipos de prueba (vigente, por vencer y vencido).
 

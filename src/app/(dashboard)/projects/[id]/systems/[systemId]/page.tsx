@@ -6,6 +6,7 @@ import { loadMyCapacities } from '@/lib/capacities/server'
 import { getProjectToday } from '@/lib/time/project-zones'
 import { isApproved, type SystemGate } from '@/lib/readiness/gates'
 import { nextGate } from '@/lib/readiness/matrix'
+import { gateWorkState } from '@/lib/readiness/work-state'
 import { parseSystemTab } from '@/lib/systems/file-tabs'
 import type { OwnershipStage } from '@/lib/startup/catalog'
 import type { PackageStatus } from '@/lib/vendors/catalog'
@@ -93,7 +94,7 @@ export default async function SystemFilePage({ params, searchParams }: {
     attention: gates.filter(g => g.status === 'regressed' || g.status === 'approved_needs_review').length,
     weightedPct: progressRows.reduce((sum, p) => sum + Number(p.weight) * Number(p.pct), 0),
     itrs: progressRows.reduce((n, p) => n + p.itr_total, 0),
-    next: next ? { code: next.code, status: next.status } : null,
+    next: next ? { code: next.code, status: next.status, work_state: gateWorkState(next.status, gates.find(g => g.gate_id === next.gate_id)?.criteria) } : null,
     commitment: next && nextPlan?.commitment_date
       ? { gate: next.code, date: nextPlan.commitment_date, late: nextPlan.commitment_date < day.today, forecast: nextPlan.forecast_date }
       : null,
