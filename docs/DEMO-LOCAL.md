@@ -53,6 +53,14 @@ Proyecto E2E, liberación A (Completamiento mecánico). Los casos se siembran co
 
 Desde A47 (E4, migración `20261231120000`) la matriz distingue los dos últimos casos: el primero se ve «Bloqueado» y el segundo «Sin información». Las fases B–D de la demo no tienen ITR, así que también salen «Sin información».
 
+Contrato de estados (A08 · E7), en A100-S01:
+
+| ITR | Caso | Qué se ve |
+|---|---|---|
+| DEMO-0009 | El inspector firmó; falta el líder | «Diligenciado · por firmar 1/2» en violeta; cola «Firmar» del líder |
+| DEMO-0010 | El inspector firmó y el líder lo devolvió | «Devuelto» con su motivo en la lista, en Mi trabajo del inspector y como aviso en la ejecución |
+| DEMO-0011 | Falla el ítem crítico de continuidad | «No conforme» en rojo; de ahí sale P-0005 (Cat B), el único punch con ITR de origen: «Punch de A» del menú lo encuentra |
+
 Además: dos TQ (una por responder del cliente y una respondida), dos acciones, cuatro punch (A, B y C en distintos pasos), una preservación vencida, un ITR esperando la firma del cliente, fechas de plan vencidas, de esta semana, futuras, solo pronóstico y sin fecha, y tres equipos de prueba (vigente, por vencer y vencido).
 
 ## Lo que falta

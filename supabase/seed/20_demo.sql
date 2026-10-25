@@ -203,6 +203,69 @@ BEGIN
   PERFORM set_config('request.jwt.claims', '', true);
 END $demo$;
 
+-- ── Contrato de estados (A08 · E7): ITR por firmar, devuelto y no conforme, y un punch con ITR de origen ─────────────
+-- En A100-S01 (ya bloqueado por su Cat A, así que la matriz no cambia). Con las RPC y la identidad de cada actor:
+--   DEMO-0009 por firmar 1/2: el inspector firmó, falta el líder (cola «Firmar» del líder)
+--   DEMO-0010 devuelto: el inspector firmó y el líder lo devolvió con su motivo (cola «Ejecutar» del inspector)
+--   DEMO-0011 no conforme: falla el ítem crítico de continuidad; de ahí sale un punch Cat B con ITR de origen
+--             (fase A: «Punch de A» del menú lo encuentra)
+DO $estados$
+DECLARE
+  v_org   uuid := 'e2e00000-0000-4000-8000-000000000001';
+  v_proj  uuid := 'e2e00000-0000-4000-8000-0000000000b1';
+  v_phase uuid := 'e2e00000-0000-4000-8000-0000000000d2';
+  v_disc  uuid := 'e2e00000-0000-4000-8000-0000000000d1';
+  v_sub   uuid := 'e2e00000-0000-4000-8000-0000000000c3';
+  v_tpl   uuid := 'e2e00000-0000-4000-8000-000000000241';  -- I04A inspección visual (demo), dos ítems
+  v_tplc  uuid := 'e2e00000-0000-4000-8000-000000000510';  -- I06A continuidad (demo), ítem crítico
+  u_insp  uuid := 'e2e00000-0000-4000-8000-0000000000a1';
+  u_lead  uuid := 'e2e00000-0000-4000-8000-0000000000a2';
+BEGIN
+  INSERT INTO itr_templates (id, org_id, discipline_id, phase_id, code, title) VALUES
+    (v_tplc, v_org, v_disc, v_phase, 'I06A', 'Continuidad de cable (demo)');
+  INSERT INTO itr_template_sections (id, template_id, title, order_index) VALUES
+    ('e2e00000-0000-4000-8000-000000000511', v_tplc, 'Continuidad', 1);
+  INSERT INTO itr_template_items (id, section_id, template_id, description, item_type, order_index, item_number, is_critical) VALUES
+    ('e2e00000-0000-4000-8000-000000000512', 'e2e00000-0000-4000-8000-000000000511', v_tplc,
+     'Continuidad de todos los conductores', 'checkbox', 1, '1.1', true);
+
+  INSERT INTO tags (id, subsystem_id, project_id, discipline_id, tag_number, description) VALUES
+    ('e2e00000-0000-4000-8000-000000000501', v_sub, v_proj, v_disc, 'PT-E2E-004', 'Transmisor de presión E2E'),
+    ('e2e00000-0000-4000-8000-000000000502', v_sub, v_proj, v_disc, 'TT-E2E-005', 'Transmisor de temperatura E2E'),
+    ('e2e00000-0000-4000-8000-000000000503', v_sub, v_proj, v_disc, 'CBL-E2E-006', 'Cable de señal E2E');
+  INSERT INTO itrs (id, template_id, subsystem_id, project_id, phase_id, tag_id, itr_number) VALUES
+    ('e2e00000-0000-4000-8000-000000000521', v_tpl,  v_sub, v_proj, v_phase, 'e2e00000-0000-4000-8000-000000000501', 'DEMO-0009'),
+    ('e2e00000-0000-4000-8000-000000000522', v_tpl,  v_sub, v_proj, v_phase, 'e2e00000-0000-4000-8000-000000000502', 'DEMO-0010'),
+    ('e2e00000-0000-4000-8000-000000000523', v_tplc, v_sub, v_proj, v_phase, 'e2e00000-0000-4000-8000-000000000503', 'DEMO-0011');
+  INSERT INTO itr_assignments (itr_id, user_id, role) VALUES
+    ('e2e00000-0000-4000-8000-000000000521', u_insp, 'executor'), ('e2e00000-0000-4000-8000-000000000521', u_lead, 'supervisor'),
+    ('e2e00000-0000-4000-8000-000000000522', u_insp, 'executor'), ('e2e00000-0000-4000-8000-000000000522', u_lead, 'supervisor'),
+    ('e2e00000-0000-4000-8000-000000000523', u_insp, 'executor'), ('e2e00000-0000-4000-8000-000000000523', u_lead, 'supervisor');
+  INSERT INTO itr_responses (itr_id, item_id, value_bool, is_passed, responded_by) VALUES
+    ('e2e00000-0000-4000-8000-000000000521', 'e2e00000-0000-4000-8000-000000000243', true, true, u_insp),
+    ('e2e00000-0000-4000-8000-000000000521', 'e2e00000-0000-4000-8000-000000000244', true, true, u_insp),
+    ('e2e00000-0000-4000-8000-000000000522', 'e2e00000-0000-4000-8000-000000000243', true, true, u_insp),
+    ('e2e00000-0000-4000-8000-000000000522', 'e2e00000-0000-4000-8000-000000000244', true, true, u_insp),
+    ('e2e00000-0000-4000-8000-000000000523', 'e2e00000-0000-4000-8000-000000000512', false, false, u_insp);
+
+  PERFORM set_config('request.jwt.claims', json_build_object('sub', u_insp, 'role', 'authenticated')::text, true);
+  PERFORM sign_itr_atomic('e2e00000-0000-4000-8000-000000000521', 'executor');
+  PERFORM sign_itr_atomic('e2e00000-0000-4000-8000-000000000522', 'executor');
+  PERFORM set_config('request.jwt.claims', json_build_object('sub', u_lead, 'role', 'authenticated')::text, true);
+  PERFORM return_itr_to_executor('e2e00000-0000-4000-8000-000000000522',
+    'Falta la foto de la placa y el número de serie del transmisor');
+  -- El estado del ITR lo recalcula la app al guardar cada respuesta (refresh_itr_status, como el ejecutor).
+  PERFORM set_config('request.jwt.claims', json_build_object('sub', u_insp, 'role', 'authenticated')::text, true);
+  PERFORM refresh_itr_status('e2e00000-0000-4000-8000-000000000523');
+  PERFORM set_config('request.jwt.claims', '', true);
+
+  INSERT INTO punches (id, project_id, subsystem_id, tag_id, punch_number, category, description, discipline_id,
+                       raised_by, assigned_to, status, priority, target_date, itr_id) VALUES
+    ('e2e00000-0000-4000-8000-000000000531', v_proj, v_sub, 'e2e00000-0000-4000-8000-000000000503', '', 'B',
+     'Conductor 3 abierto en la prueba de continuidad', v_disc, u_insp, u_insp, 'open', 'major', current_date + 5,
+     'e2e00000-0000-4000-8000-000000000523');
+END $estados$;
+
 -- ── Planificación (de scripts/demo-data/seed_skyline_plans_demo.sql) ────────────────────────────────────────────
 -- Fechas por sistema × liberación relativas al «hoy» del proyecto: vencidas, de esta semana y futuras; A200-S03 solo
 -- con pronóstico y A200-S05 sin fecha (bandeja «Sin fecha» del skyline).

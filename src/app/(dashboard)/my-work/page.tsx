@@ -355,9 +355,13 @@ export default async function MyWorkPage({ searchParams }: { searchParams: Promi
       return (
         <Row key={itr.id} href={itrHref(itr)} stripe={TONE_STYLE[state.tone].fg} tag={<OfflineReadyChip url={itrHref(itr)} />}
           code={itr.itr_number} phase={itr.project_phases}
-          what={`${itr.tags ? `${itr.tags.tag_number} — ${itr.tags.description}` : itr.itr_number}${state.key === 'returned' && itr.return_reason ? ` · ${itr.return_reason}` : ''}`}
+          what={itr.tags ? `${itr.tags.tag_number} — ${itr.tags.description}` : itr.itr_number}
           project={itr.projects?.code}
-          right={itr.status === 'not_started' && !itr.returned_at ? duePill(itr.scheduled_date, itr.project_id) : <StateChip state={state} />} />
+          right={itr.status === 'not_started' && !itr.returned_at ? duePill(itr.scheduled_date, itr.project_id)
+            // A08: el motivo de la devolución se lee completo (en el teléfono la descripción se corta).
+            : state.key === 'returned' && itr.return_reason
+              ? <span style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-start' }}><StateChip state={state} /><span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-secondary)' }}>{itr.return_reason}</span></span>
+              : <StateChip state={state} />} />
       )
     }) },
     itrs_review: { more: '/itrs?status=completed', rows: queues.review.map(a => {
