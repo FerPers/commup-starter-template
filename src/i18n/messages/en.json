@@ -9020,5 +9020,113 @@
       "sync_conflict_log": "Offline captures"
     },
     "never": "—"
+  },
+  "States": {
+    "layers": {
+      "scope": {
+        "name": "Scope",
+        "question": "Is the work to be done identified?"
+      },
+      "filled": {
+        "name": "Filled in",
+        "question": "Was everything applicable captured?"
+      },
+      "conforming": {
+        "name": "Conforming",
+        "question": "Does the result meet the criterion?"
+      },
+      "approved": {
+        "name": "Approved",
+        "question": "Did another qualified person review and sign it?"
+      },
+      "released": {
+        "name": "Released",
+        "question": "Did the system pass the hold point, and is it still valid?"
+      },
+      "handedOver": {
+        "name": "Handed over",
+        "question": "Did Operations receive it with its package?"
+      }
+    },
+    "itr": {
+      "notStarted": "Not started",
+      "inProgress": "In progress",
+      "inProgressPct": "In progress · {pct}%",
+      "returned": "Returned",
+      "filledIn": "Filled in · awaiting signatures",
+      "awaitingSignatures": "Filled in · signatures {done}/{required}",
+      "nonconforming": "Nonconforming",
+      "approved": "Approved"
+    },
+    "punch": {
+      "open": "Open",
+      "inProgress": "In progress",
+      "resolved": "Resolved · to verify",
+      "closed": "Closed",
+      "cancelled": "Cancelled"
+    },
+    "punchCategory": {
+      "A": "Cat A",
+      "B": "Cat B",
+      "C": "Cat C"
+    },
+    "certificate": {
+      "pending": "Pending",
+      "blocked": "Blocked",
+      "signing": "Signing",
+      "signingCount": "Signing {done}/{required}",
+      "issued": "Issued",
+      "revoked": "Revoked"
+    },
+    "pssr": {
+      "draft": "Draft",
+      "inProgress": "In progress",
+      "toApprove": "Awaiting approval",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
+    "gate": {
+      "noData": "No information",
+      "inExecution": "In progress",
+      "blocked": "Blocked",
+      "notReady": "Not ready",
+      "ready": "Ready for approval",
+      "readyWithConditions": "Ready with conditions",
+      "pendingSignatures": "Awaiting signatures",
+      "pendingSignaturesCount": "Awaiting signatures {done}/{required}",
+      "released": "Released",
+      "releasedWithConditions": "Released with conditions",
+      "needsReview": "To review · new condition",
+      "regressed": "Regressed"
+    },
+    "transferStage": {
+      "commissioning": "Commissioning",
+      "shadowing": "Shadowing",
+      "jointOperation": "Joint operation",
+      "operations": "Handed over to Operations"
+    },
+    "transfer": {
+      "pendingSignatures": "Transfer awaiting signatures",
+      "pendingSignaturesCount": "Transfer awaiting signatures {done}/{required}",
+      "completed": "Transfer signed",
+      "cancelled": "Cancelled"
+    },
+    "handover": {
+      "draft": "Draft",
+      "generating": "Generating",
+      "issued": "Issued",
+      "partial": "Partial",
+      "failed": "Failed",
+      "superseded": "Superseded"
+    },
+    "requirement": {
+      "untyped": "No information",
+      "missing": "Not generated",
+      "generated": "Generated",
+      "inProgress": "In progress",
+      "approved": "Approved",
+      "excluded": "Excluded",
+      "outside": "Outside requirements"
+    }
   }
 }

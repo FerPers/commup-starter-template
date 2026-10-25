@@ -261,6 +261,13 @@ Rules for every new page/query/action:
 - **Importar plantillas entre orgs (A40, migración `20261221120000`):** solo por la RPC `clone_itr_template_from_catalog` (una transacción: firmas, equipo de prueba, ítems, condiciones, matriz del código nuevo, activación al final y auditoría); `p_expected_latest_version` evita revisiones duplicadas (`CU409`). «Al día» = `templateContentHash(secciones, cabecera)`: un dato de cabecera nuevo que el ITR congele va también en la huella.
 - `src/app/actions/itr-matrix.ts`: la IA **propone** filas en `equipment_type_templates` (tipo de equipo × plantilla ITR) con motivo y confianza; un editor acepta/rechaza en `/admin/templates/matrix`. Regenerar nunca pisa decisiones humanas. Respaldo por tag: `suggestItrsForTag` (no persiste). Reglas: la IA nunca asigna; sugiere por fase; puede cruzar disciplinas si lo justifica.
 
+## Contrato de estados (A08)
+
+- Plan `docs/PLAN-A08-A25-A47-A19-2026-10-25.md` (maqueta aprobada por Luis 2026-10-25: paleta A, menú C). Seis capas: Alcance → Diligenciado → Conforme → Aprobado → Liberado → Entregado; un 100 % en una no dice nada de la siguiente.
+- **Todo estado en pantalla sale de `src/lib/states/`** (`itrState`, `punchState`, `punchCategoryState`, `certificateState`, `pssrState`, `gateState`, `transferStageState`, `transferState`, `handoverState`, `requirementState`) y se pinta con `<StateChip state={…} />` (`src/components/ui/StateChip.tsx`); etiquetas en `States.<familia>.<clave>` (es y en). Tonos: gris = no empezó · rayado (`--nodata-bg`) = sin información, nunca 0 · azul = en trabajo · **violeta = espera a otra persona** · verde = aceptado · verde sólido solo Liberado y Entregado · ámbar = condiciones o desactualizado · rojo = bloquea o falló.
+- `completed` del ITR = «Diligenciado · por firmar», nunca verde; `rejected` = «No conforme»; el estado del punch no es rojo (la categoría sí). Los códigos de BD y API no cambian. Un estado nuevo = clave en su archivo + etiqueta es/en; `src/lib/states/contract.test.ts` prueba las reglas «nunca» y la paridad de etiquetas.
+- Hasta E3 conviven las paletas viejas (`ITR_STATUS_COLORS`, `PUNCH_STATUS_COLORS`, `GATE_STATUS_STYLE`): pantallas nuevas ya usan `@/lib/states`.
+
 ## Styling Convention
 
 Existing components use **inline styles** (React `style={{}}`) rather than Tailwind classes. Keep this pattern consistent within existing files. New modules may use either approach, but be consistent within a file.

@@ -1,5 +1,6 @@
 export { Button, type ButtonProps, type ButtonVariant, type ButtonSize } from './Button';
 export { Badge, type BadgeProps, type BadgeVariant, type BadgeSize } from './Badge';
+export { StateChip, type StateChipProps } from './StateChip';
 export { Card, CardHeader, type CardProps, type CardHeaderProps, type CardPadding } from './Card';
 export { Input, type InputProps, type InputSize } from './Input';
 export { Select, type SelectProps, type SelectSize } from './Select';

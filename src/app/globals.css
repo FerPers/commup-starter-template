@@ -199,6 +199,10 @@
   --on-ink:            #ffffff;
   /* Acento claro sobre superficies siempre oscuras (escáner, avisos push). */
   --on-dark-accent:    #bfdbfe;
+  /* A08: «Sin información» (no se sabe; nunca cuenta como 0). Rayado sobre la escala gris, que ya cambia
+     en cada tema; el borde va punteado (`TONE_STYLE.nodata`). */
+  --nodata-bg:         repeating-linear-gradient(135deg, var(--gray-50) 0 6px, var(--gray-200) 6px 9px);
+  --nodata-border:     var(--gray-400);
 
   /* Colores de la BD usados como texto (ink() en src/lib/theme): luminosidad OKLCH
      acotada para ≥ 4.5:1 sobre la tarjeta del tema. */
