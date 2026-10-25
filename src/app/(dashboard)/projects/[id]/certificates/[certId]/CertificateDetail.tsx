@@ -1,13 +1,13 @@
 'use client'
 
 import Link from 'next/link'
-import { DialogSurface, PersonName, useToast } from '@/components/ui'
+import { DialogSurface, PersonName, StateChip, useToast } from '@/components/ui'
 import { isInactiveMember } from '@/lib/people/inactive'
 import { useId, useMemo, useState, useTransition, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import { revokeCertificate, reopenCertificate, signCertificate, removeCertificateSignature } from '@/app/actions/certificates'
-import { ITR_STATUS_COLORS } from '@/lib/constants/status-colors'
+import { CERTIFICATE_SIGNATURES_REQUIRED, certificateState, itrState, type ItrStatus } from '@/lib/states'
 import { alpha, ink } from '@/lib/theme'
 import { CERT_ROLE_CAPACITY, can, type CertSignRole, type MyCapacities } from '@/lib/constants/capacities'
 
@@ -60,13 +60,6 @@ type SignatureRow = {
 }
 
 // ── Config (colors only) — ITR palette is shared; cert palette stays local ──
-
-const CERT_STATUS_COLORS = {
-  pending:   { color: 'var(--text-muted)',  bg: 'var(--gray-100)' },
-  in_review: { color: 'var(--primary-700)', bg: 'var(--primary-50)' },
-  issued:    { color: 'var(--success-700)', bg: 'var(--success-50)' },
-  rejected:  { color: 'var(--danger-700)',  bg: 'var(--danger-100)' },
-} as const
 
 // ── Main component ─────────────────────────────────────────────────────────
 
@@ -124,20 +117,8 @@ export default function CertificateDetail({
 
   const phase     = cert.project_phases
   const subsystem = cert.subsystems
-  const certColors = CERT_STATUS_COLORS[cert.status] ?? CERT_STATUS_COLORS.pending
-  const certStatusLabels: Record<string, string> = {
-    pending:   t('detail.certStatus.pending'),
-    in_review: t('detail.certStatus.in_review'),
-    issued:    t('detail.certStatus.issued'),
-    rejected:  t('detail.certStatus.rejected'),
-  }
-  const itrStatusLabels: Record<string, string> = {
-    not_started: t('detail.itrStatus.not_started'),
-    in_progress: t('detail.itrStatus.in_progress'),
-    completed:   t('detail.itrStatus.completed'),
-    approved:    t('detail.itrStatus.approved'),
-    rejected:    t('detail.itrStatus.rejected'),
-  }
+  // A08: emitido con firmas pendientes = «Emitido · firmas n/3» (espera a otras personas); verde solo con todas.
+  const certState = certificateState({ status: cert.status, isBlocked: cert.is_blocked, signaturesDone: signatures.length, signaturesRequired: CERTIFICATE_SIGNATURES_REQUIRED })
 
   const approvedItrs = itrs.filter(i => i.status === 'approved').length
 
@@ -278,12 +259,7 @@ export default function CertificateDetail({
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{
-              padding: '5px 14px', borderRadius: '999px', fontSize: '12px', fontWeight: 600,
-              background: certColors.bg, color: ink(certColors.color),
-            }}>
-              {certStatusLabels[cert.status] ?? cert.status}
-            </span>
+            <StateChip state={certState} size="md" />
             {cert.status === 'issued' && (
               <a
                 href={`/projects/${projectId}/certificates/${cert.id}/pdf`}
@@ -409,8 +385,6 @@ export default function CertificateDetail({
             </thead>
             <tbody>
               {itrs.map((itr, idx) => {
-                const colors = ITR_STATUS_COLORS[itr.status as keyof typeof ITR_STATUS_COLORS] ?? ITR_STATUS_COLORS.not_started
-                const label  = itrStatusLabels[itr.status] ?? itr.status
                 return (
                   <tr key={itr.id} style={{ borderBottom: idx < itrs.length - 1 ? '1px solid var(--gray-50)' : 'none' }}>
                     <td style={{ padding: '9px 12px', fontWeight: 500, color: 'var(--text-strong)' }}>
@@ -423,12 +397,7 @@ export default function CertificateDetail({
                       {itr.itr_templates ? `${itr.itr_templates.code} — ${itr.itr_templates.title}` : '—'}
                     </td>
                     <td style={{ padding: '9px 12px' }}>
-                      <span style={{
-                        padding: '2px 8px', borderRadius: '999px', fontSize: '12px', fontWeight: 600,
-                        background: colors.bg, color: ink(colors.color),
-                      }}>
-                        {label}
-                      </span>
+                      <StateChip state={itrState({ status: itr.status as ItrStatus })} />
                     </td>
                   </tr>
                 )

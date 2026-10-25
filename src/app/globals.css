@@ -737,8 +737,9 @@ body.drawer-locked { overflow: hidden; }
     min-width: 18px; height: 18px;
     padding: 0 5px;
     border-radius: var(--radius-pill);
-    background: var(--danger-500);
-    color: #fff;
+    /* A25: contador de obligaciones normales = naranja de marca, no rojo de alarma. */
+    background: var(--brand-orange);
+    color: var(--brand-navy-dark);
     font-size: 12px;
     font-weight: 700;
     line-height: 18px;

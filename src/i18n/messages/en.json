@@ -241,20 +241,6 @@
     "title": "Portfolio",
     "subtitle": "General completion status overview",
     "hello": "Hello, {name}",
-    "itrStatus": {
-      "not_started": "Not started",
-      "in_progress": "In progress",
-      "completed": "Completed",
-      "approved": "Approved",
-      "rejected": "Rejected"
-    },
-    "punchStatus": {
-      "open": "Open",
-      "in_progress": "In progress",
-      "closed": "Closed",
-      "cancelled": "Cancelled",
-      "resolved": "Resolved · to verify"
-    },
     "kpi": {
       "punchesOpen": "Open punches",
       "punchesOpenSub": "Cat A: {catA} · Cat B: {catB}",
@@ -411,13 +397,6 @@
   "ItrList": {
     "title": "ITRs",
     "testPackPdf": "↓ Test Pack PDF",
-    "itrStatus": {
-      "not_started": "Not started",
-      "in_progress": "In progress",
-      "completed": "Completed",
-      "approved": "Approved",
-      "rejected": "Rejected"
-    },
     "filters": {
       "search": "Search ITR, tag, template, project...",
       "allPhases": "All phases",
@@ -484,7 +463,8 @@
       "filtersN": "Filters · {count}",
       "mine": "Assigned to me",
       "done": "Done"
-    }
+    },
+    "returnReason": "Reason"
   },
   "PunchList": {
     "title": "Punch",
@@ -688,17 +668,11 @@
     "blocked": "Blocked",
     "title": "Certificates",
     "subtitle": "All organization projects",
-    "status": {
-      "pending": "Pending",
-      "in_review": "In review",
-      "issued": "Issued",
-      "rejected": "Rejected"
-    },
     "summary": {
       "issued": "Issued",
       "in_review": "In review",
       "pending": "Pending",
-      "rejected": "Rejected"
+      "rejected": "Revoked"
     },
     "filters": {
       "search": "Search number, subsystem, project...",
@@ -779,19 +753,6 @@
       "itrColTag": "Tag",
       "itrColTemplate": "Template",
       "itrColStatus": "Status",
-      "itrStatus": {
-        "not_started": "Not started",
-        "in_progress": "In progress",
-        "completed": "Completed",
-        "approved": "Approved",
-        "rejected": "Rejected"
-      },
-      "certStatus": {
-        "pending": "Pending",
-        "in_review": "In review",
-        "issued": "Issued",
-        "rejected": "Revoked"
-      },
       "exceptionsTitle": "Cat B Punch Exceptions",
       "justificationLabel": "Justification:",
       "approvedBy": "Approved by {name}",
@@ -1528,13 +1489,6 @@
     "pageSubtitle": "Inspection & Test Records library — define once, execute in the field"
   },
   "ItrExecution": {
-    "status": {
-      "not_started": "Not started",
-      "in_progress": "In progress",
-      "completed": "Completed",
-      "approved": "Approved",
-      "rejected": "Rejected"
-    },
     "roles": {
       "executor": "Executor",
       "supervisor": "Supervisor",
@@ -1716,6 +1670,10 @@
       "confirm": "Return",
       "sending": "Returning…",
       "back": "Back"
+    },
+    "returned": {
+      "title": "Returned on {date}. Reason:",
+      "next": "Fix what was noted and sign again."
     }
   },
   "Tags": {
@@ -2310,15 +2268,7 @@
       "noSignals": "No signals in this loop. Import them with the LOOP column in «Import signals».",
       "noItr": "No ITR",
       "outdatedHint": "The loop changed (signals or chain) after the ITR was generated",
-      "outdated": "⚠ outdated",
-      "itrStatus": {
-        "not_started": "Not started",
-        "in_progress": "In progress",
-        "completed": "Completed",
-        "approved": "Approved",
-        "rejected": "Rejected",
-        "on_hold": "On hold"
-      }
+      "outdated": "⚠ outdated"
     },
     "chain": {
       "title": "Loop-check chain, range and alarms",
@@ -2397,10 +2347,10 @@
       "punchesB": "{count} Cat B punch(es) open — require justification at issuance"
     },
     "gateStatus": {
-      "approved": "approved",
-      "approved_with_conditions": "approved with conditions",
-      "approved_needs_review": "approved — review new condition",
-      "regressed": "approved — regressed",
+      "approved": "released",
+      "approved_with_conditions": "released with conditions",
+      "approved_needs_review": "to review · new condition",
+      "regressed": "regressed",
       "ready": "ready to approve",
       "ready_with_conditions": "ready with conditions",
       "not_ready": "not ready",
@@ -2437,7 +2387,7 @@
       "blocked": "Blocked",
       "signing": "Waiting for signatures",
       "ready": "Ready to approve",
-      "done": "All approved"
+      "done": "All released"
     },
     "next": {
       "signing": "waiting for signatures",
@@ -2582,9 +2532,6 @@
       "zip": "Signed ZIP with annexes"
     },
     "partialHint": "Partial package: {n} annex(es) were left out (size cap or error). It is signed and verifiable, but it is not a complete handover: the PDF index and manifest.json list what was omitted.",
-    "status": {
-      "partial": "PARTIAL"
-    },
     "history": {
       "title": "History",
       "empty": "No packages generated yet.",
@@ -2611,7 +2558,7 @@
     "status": {
       "draft": "Draft",
       "inProgress": "In progress",
-      "pendingApproval": "Pending approval",
+      "pendingApproval": "Awaiting approval",
       "approved": "Approved",
       "approvedDone": "Approved ✓",
       "rejected": "Rejected"
@@ -3046,11 +2993,8 @@
       "overdue": "due {date}",
       "today": "today",
       "scheduled": "{date}",
-      "inProgress": "in progress {pct}%",
       "readyToApprove": "ready to approve",
       "sign": "sign",
-      "signPending": "your signature pending",
-      "rejected": "rejected · fix",
       "overdueDays": "{days, plural, one {# day overdue} other {# days overdue}}",
       "verify": "Verify",
       "escalate": "{days, plural, one {overdue # day} other {overdue # days}} · escalate",
@@ -3066,13 +3010,6 @@
       "close": "Close",
       "regressed": "Regressed",
       "needsReview": "New condition"
-    },
-    "punchStatus": {
-      "open": "Open",
-      "in_progress": "In progress",
-      "closed": "Closed",
-      "cancelled": "Cancelled",
-      "resolved": "Resolved · to verify"
     },
     "constraintLevel": "L{n}",
     "shift": {
@@ -3129,10 +3066,10 @@
     "notReadyHint": "It cannot be approved until the criteria in red are met.",
     "noAuthority": "Ready to approve. Roles that can approve: {roles}.",
     "status": {
-      "approved": "Approved",
-      "approved_with_conditions": "Approved with conditions",
-      "approved_needs_review": "Approved — review new condition",
-      "regressed": "Approved — regressed",
+      "approved": "Released",
+      "approved_with_conditions": "Released with conditions",
+      "approved_needs_review": "To review · new condition",
+      "regressed": "Regressed",
       "ready": "Ready to approve",
       "ready_with_conditions": "Ready with conditions",
       "not_ready": "Not ready",
@@ -4400,9 +4337,9 @@
       },
       "gateStatus": {
         "pending_signatures": "Pending signatures",
-        "approved": "Approved",
-        "approved_with_conditions": "Approved with conditions",
-        "approved_needs_review": "Review",
+        "approved": "Released",
+        "approved_with_conditions": "Released with conditions",
+        "approved_needs_review": "To review",
         "regressed": "Regressed",
         "ready": "Ready",
         "ready_with_conditions": "Ready with conditions",
@@ -5640,9 +5577,9 @@
       "cancelled": "Cancelled"
     },
     "gateStatus": {
-      "approved": "approved",
-      "approved_with_conditions": "approved with conditions",
-      "approved_needs_review": "approved, new condition to review",
+      "approved": "released",
+      "approved_with_conditions": "released with conditions",
+      "approved_needs_review": "released, new condition to review",
       "pending_signatures": "pending signatures",
       "ready": "ready, not approved",
       "ready_with_conditions": "ready with conditions, not approved",
@@ -6534,13 +6471,6 @@
     "clientLogoHint": "PNG or JPG up to 2 MB: shown on formal PDFs and in the Portfolio. A WebP shows on screen, but the PDF prints the name."
   },
   "TagItrs": {
-    "status": {
-      "not_started": "Not started",
-      "in_progress": "In progress",
-      "completed": "Completed",
-      "approved": "Approved",
-      "rejected": "Rejected"
-    },
     "sign": {
       "executor": "Exec",
       "supervisor": "Sup",
@@ -7501,14 +7431,6 @@
     "add": "Add",
     "delete": "Delete",
     "noItr": "No ITR",
-    "itrStatus": {
-      "not_started": "Not started",
-      "in_progress": "In progress",
-      "completed": "Completed",
-      "approved": "Approved",
-      "rejected": "Rejected",
-      "on_hold": "On hold"
-    },
     "outdatedHint": "The cause changed effects or links after the ITR was generated",
     "outdated": "⚠ outdated",
     "import": {
@@ -8004,9 +7926,9 @@
         "created": "ITR created",
         "updated": "ITR updated",
         "deleted": "ITR deleted",
-        "completed": "ITR completed",
+        "completed": "ITR filled in (awaiting signatures)",
         "approved": "ITR approved",
-        "rejected": "ITR rejected"
+        "rejected": "ITR nonconforming"
       },
       "certificate": {
         "created": "Certificate created",
@@ -9075,6 +8997,7 @@
       "blocked": "Blocked",
       "signing": "Signing",
       "signingCount": "Signing {done}/{required}",
+      "issuedSigning": "Issued · signatures {done}/{required}",
       "issued": "Issued",
       "revoked": "Revoked"
     },

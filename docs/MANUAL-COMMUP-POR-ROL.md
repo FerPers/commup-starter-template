@@ -55,6 +55,34 @@ CommUp es la plataforma para gestionar el **completamiento y el comisionamiento*
 | **Paquete de vendor (VND)** | El alcance de un proveedor: interfaces, movilización, FAT/SAT, reportes, recomendaciones y desmovilización. |
 | **«Otra persona»** | Regla del sistema: quien verifica, libera o co-firma tiene que ser una persona distinta de quien hizo el trabajo. Se comprueba en la base de datos. |
 
+### Cómo leer los estados
+
+Todo avanza por seis preguntas, en orden. Cada registro responde la suya, y que una esté al 100 % no dice nada de la siguiente: un ITR diligenciado no está aprobado, y un sistema sin bloqueos conocidos no está liberado.
+
+| Pregunta | Qué significa | Dónde se ve |
+|---|---|---|
+| **Alcance** | ¿Está identificado lo que hay que hacer? | Registro de requisitos ITR |
+| **Diligenciado** | ¿Se capturó todo lo aplicable? | Ejecución del ITR |
+| **Conforme** | ¿El resultado cumple el criterio? | Ejecución del ITR (una falla crítica = «No conforme») |
+| **Aprobado** | ¿Lo revisó y firmó otra persona con capacidad? | ITR, certificado, PSSR |
+| **Liberado** | ¿El sistema pasó el punto de espera y sigue vigente? | Liberación de sistemas |
+| **Entregado** | ¿Operaciones lo recibió con su paquete? | Operación y traspaso |
+
+Cada color tiene un solo significado, y siempre va con texto e ícono:
+
+| Color | Significa | Ejemplos |
+|---|---|---|
+| Gris | No empezó, o no aplica | Sin iniciar · Punch abierto · Pendiente |
+| Rayado | No se sabe: nunca cuenta como «0 pendientes» | Sin información |
+| Azul | En trabajo: le toca a quien lo tiene | En progreso · Devuelto · En proceso |
+| Violeta | Espera a otra persona: firmar, verificar o aprobar | Diligenciado · por firmar 1/3 · Resuelto · por verificar · Emitido · firmas 2/3 · Listo para aprobar |
+| Verde | Aceptado y vigente | Aprobado · Cerrado · Emitido |
+| Verde sólido | Solo Liberado y Entregado a Operaciones (nivel sistema) | Liberado · Entregado a Operaciones |
+| Ámbar | Aceptado con condiciones, o desactualizado | Liberado con condiciones · Por revisar · Paquete parcial |
+| Rojo | Bloquea o falló | No conforme · Cat A · Bloqueado · En regresión · Revocado |
+
+Un ITR **devuelto** por el supervisor o el cliente muestra el motivo en la lista y en la ejecución, hasta que el ejecutor corrige y vuelve a firmar. En el punch, el estado no usa rojo: la gravedad la dice la categoría (Cat A en rojo porque bloquea).
+
 ---
 
 ## 2. Primeros pasos

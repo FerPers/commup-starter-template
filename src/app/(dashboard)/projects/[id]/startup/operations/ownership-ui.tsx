@@ -2,13 +2,12 @@
 
 import { useTranslations } from 'next-intl'
 import type { OwnershipStage } from '@/lib/startup/catalog'
-import { Chip, small } from '../../daily/daily-ui'
+import { small } from '../../daily/daily-ui'
+import { StateChip } from '@/components/ui'
+import { transferStageState } from '@/lib/states'
 
 // Piezas compartidas de la readiness de operaciones: chip de etapa y checklist del traspaso.
 
-export const STAGE_TONE: Record<OwnershipStage, 'muted' | 'blue' | 'violet' | 'green'> = {
-  commissioning: 'muted', shadowing: 'blue', joint_operation: 'violet', operations: 'green',
-}
 export const LEVEL_COLOR: Record<number, { bg: string; fg: string }> = {
   0: { bg: 'var(--gray-50)', fg: 'var(--text-muted)' },
   1: { bg: 'var(--primary-50)', fg: 'var(--primary-700)' },
@@ -17,9 +16,9 @@ export const LEVEL_COLOR: Record<number, { bg: string; fg: string }> = {
   4: { bg: 'var(--success-50)', fg: 'var(--success-700)' },
 }
 
+/** A08: etapa del traspaso con su tono (Entregado a Operaciones = relleno sólido, como Liberado). */
 export function StageChip({ stage }: { stage: OwnershipStage }) {
-  const t = useTranslations('Startup')
-  return <Chip tone={STAGE_TONE[stage]}>{t(`ops.stage.${stage}`)}</Chip>
+  return <StateChip state={transferStageState(stage)} />
 }
 
 export type CheckItem = { key: string; ok: boolean; detail: Record<string, unknown> }

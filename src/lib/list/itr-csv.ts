@@ -3,9 +3,9 @@ import type { ItrListRow } from './itr-types'
 
 /**
  * CSV de la lista de ITR (N2c: el mismo en «Este proyecto» y en «Todos los proyectos»). `label` traduce las claves
- * `ItrList.exportHeaders.*`. Con guarda contra inyección de fórmulas (toSafeCsv) y BOM para Excel.
+ * `ItrList.exportHeaders.*`; `status` da la etiqueta del estado del contrato A08 (`itrRowState`), no el código. Con guarda contra inyección de fórmulas (toSafeCsv) y BOM para Excel.
  */
-export function buildItrCsv(rows: readonly ItrListRow[], label: (key: string) => string): string {
+export function buildItrCsv(rows: readonly ItrListRow[], label: (key: string) => string, status: (row: ItrListRow) => string): string {
   const headers = ['project', 'itr', 'tag', 'tagDesc', 'template', 'phase', 'discipline', 'inspector', 'scheduledDate', 'progress', 'status', 'signE', 'signS', 'signC']
     .map(k => label(`exportHeaders.${k}`))
   const body = rows.map(itr => {
@@ -13,7 +13,7 @@ export function buildItrCsv(rows: readonly ItrListRow[], label: (key: string) =>
     return [
       itr.project_code ?? '', itr.itr_number, itr.tag_number ?? '', itr.tag_description ?? '', itr.template_title ?? '',
       itr.phase_code ?? '', itr.discipline_code ?? '', executor?.full_name ?? '', itr.scheduled_date ?? '',
-      String(itr.progress_pct), itr.status,
+      String(itr.progress_pct), status(itr),
       itr.signatures.some(s => s.role === 'executor') ? 'S' : 'N',
       itr.signatures.some(s => s.role === 'supervisor') ? 'S' : 'N',
       itr.signatures.some(s => s.role === 'client') ? 'S' : 'N',

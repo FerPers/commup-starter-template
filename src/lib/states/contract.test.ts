@@ -117,7 +117,7 @@ describe('contrato de estados (A08)', () => {
   it('violeta = espera a otra persona: firmar, verificar o aprobar', () => {
     const wait = new Set(states.filter(s => s.tone === 'wait').map(s => `${s.family}.${s.key}`))
     expect([...wait].sort()).toEqual([
-      'certificate.signing', 'certificate.signingCount',
+      'certificate.issuedSigning', 'certificate.signing', 'certificate.signingCount',
       'gate.pendingSignatures', 'gate.pendingSignaturesCount', 'gate.ready', 'gate.readyWithConditions',
       'itr.awaitingSignatures', 'itr.filledIn',
       'pssr.toApprove',

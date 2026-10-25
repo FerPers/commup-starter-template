@@ -73,14 +73,15 @@ const CERT_STATUS: Record<CompletionDossierData['certificateStatus'], { label: s
   rejected:  { label: 'RECHAZADO / REJECTED', color: COLOR.red, bg: COLOR.redBg },
 }
 
+// A08: diligenciado = espera firmas (violeta), nunca verde; solo aprobado es verde.
 const ITR_STATUS_COLOR: Record<string, Color> = {
-  not_started: COLOR.muted, in_progress: COLOR.blue, completed: COLOR.amber,
+  not_started: COLOR.muted, in_progress: COLOR.blue, completed: COLOR.purple,
   approved: COLOR.greenStrong, rejected: COLOR.red,
 }
 
 const ITR_STATUS_LABEL: Record<string, string> = {
-  not_started: 'No iniciado / Not started', in_progress: 'En progreso / In progress', completed: 'Completado / Completed',
-  approved: 'Aprobado / Approved', rejected: 'Rechazado / Rejected',
+  not_started: 'Sin iniciar / Not started', in_progress: 'En progreso / In progress', completed: 'Por firmar / Awaiting signatures',
+  approved: 'Aprobado / Approved', rejected: 'No conforme / Nonconforming',
 }
 
 const PUNCH_STATUS_LABEL: Record<string, string> = {

@@ -9,7 +9,8 @@ import { loadMyCapacitiesByProject } from '@/lib/capacities/server'
 import { fallbackCapacities } from '@/lib/constants/capacities'
 import { canSignCertificate, isPerformanceLead, type CertSigners } from '@/lib/performance/catalog'
 import { getActiveMembership, getMyWorkCounts } from '@/lib/supabase/membership'
-import { CATEGORY_CFG, ITR_STYLE, PUNCH_STYLE } from '@/components/dashboard/widgets/_shared'
+import { StateChip } from '@/components/ui'
+import { TONE_STYLE, itrRowState, itrState, punchCategoryState, punchState, type ItrStatus } from '@/lib/states'
 import {
   badgeTotal, canSignCertificates, chipGroups, daysOverdue, dueState, parseCounts, seesPreservation, sortPunches, splitAssignments,
   type AssignmentRow, type DueState, type MyWorkCounts, type ReadinessQueue,
@@ -93,7 +94,7 @@ export default async function MyWorkPage({ searchParams }: { searchParams: Promi
     // cortadas en 1000 → podían faltar las pendientes mientras el badge SQL contaba bien).
     projectIds.length === 0 ? Promise.resolve({ data: [] }) : fetchAllRowsFlagged(() => supabase
       .from('itr_assignments')
-      .select('role, itrs!inner(id, itr_number, status, progress_pct, scheduled_date, completed_date, project_id, required_signatures, tags(id, tag_number, description), projects(code), project_phases(code, color), itr_signatures(role, user_id))')
+      .select('role, itrs!inner(id, itr_number, status, progress_pct, scheduled_date, completed_date, project_id, required_signatures, returned_at, return_reason, tags(id, tag_number, description), projects(code), project_phases(code, color), itr_signatures(role, user_id))')
       .eq('user_id', userId)
       .neq('itrs.status', 'approved')
       .in('itrs.project_id', projectIds), { maxRows: 10_000 }).then(r => ({ data: r.rows })),
@@ -326,12 +327,11 @@ export default async function MyWorkPage({ searchParams }: { searchParams: Promi
     return <Pill tone="neutral">{t('due.scheduled', { date: fmt(date) })}</Pill>
   }
 
-  const catTag = (c: PunchRow['category']) => {
-    const cat = CATEGORY_CFG[c]
-    return <span style={{ fontSize: 12, fontWeight: 700, padding: '1px 6px', borderRadius: 'var(--radius-sm)', background: cat.bg, color: ink(cat.color), border: `1px solid ${cat.border}` }}>{cat.label}</span>
-  }
+  // A08: categoría del punch con su tono (Cat A rojo porque bloquea); la franja lateral toma el mismo color.
+  const catTag = (c: PunchRow['category']) => <StateChip state={punchCategoryState(c)} />
+  const catStripe = (c: PunchRow['category']) => TONE_STYLE[punchCategoryState(c).tone].fg
   const itrHref = (itr: NonNullable<AssignmentRow['itrs']>) => `/projects/${itr.project_id}/tags/${itr.tags?.id}/itrs/${itr.id}`
-  const verifyPill = <Pill tone="info" style={{ background: 'var(--violet-50)', color: 'var(--violet-700)' }}>{t('due.verify')}</Pill>
+  const verifyPill = <Pill tone="wait">{t('due.verify')}</Pill>
   const readinessQueue = (sec: typeof READINESS_SECTIONS[number]) => {
     const rows = readinessOf(sec.queue)
     return {
@@ -350,44 +350,41 @@ export default async function MyWorkPage({ searchParams }: { searchParams: Promi
   const QUEUES: Record<keyof MyWorkCounts, { rows: React.ReactNode[]; more: string }> = {
     itrs_execute: { more: '/itrs?assignee=me', rows: queues.execute.map(a => {
       const itr = a.itrs!
-      const style = ITR_STYLE[itr.status] ?? ITR_STYLE.not_started
+      // A08: el estado del ITR (devuelto, por firmar, no conforme, en progreso) con su tono; sin estado, la fecha.
+      const state = itrRowState({ ...itr, signatures: itr.itr_signatures })
       return (
-        <Row key={itr.id} href={itrHref(itr)} stripe={style.color} tag={<OfflineReadyChip url={itrHref(itr)} />}
+        <Row key={itr.id} href={itrHref(itr)} stripe={TONE_STYLE[state.tone].fg} tag={<OfflineReadyChip url={itrHref(itr)} />}
           code={itr.itr_number} phase={itr.project_phases}
-          what={itr.tags ? `${itr.tags.tag_number} — ${itr.tags.description}` : itr.itr_number}
+          what={`${itr.tags ? `${itr.tags.tag_number} — ${itr.tags.description}` : itr.itr_number}${state.key === 'returned' && itr.return_reason ? ` · ${itr.return_reason}` : ''}`}
           project={itr.projects?.code}
-          right={itr.status === 'completed' ? <Pill tone="success">{t('due.signPending')}</Pill>
-            : itr.status === 'rejected' ? <Pill tone="danger">{t('due.rejected')}</Pill>
-            : itr.status === 'in_progress' ? <Pill tone="info">{t('due.inProgress', { pct: Math.round(itr.progress_pct) })}</Pill>
-            : duePill(itr.scheduled_date, itr.project_id)} />
+          right={itr.status === 'not_started' && !itr.returned_at ? duePill(itr.scheduled_date, itr.project_id) : <StateChip state={state} />} />
       )
     }) },
     itrs_review: { more: '/itrs?status=completed', rows: queues.review.map(a => {
       const itr = a.itrs!
       return (
-        <Row key={itr.id} href={itrHref(itr)} stripe={ITR_STYLE.completed.color} tag={<OfflineReadyChip url={itrHref(itr)} />}
+        <Row key={itr.id} href={itrHref(itr)} stripe={TONE_STYLE[itrState({ status: itr.status as ItrStatus }).tone].fg} tag={<OfflineReadyChip url={itrHref(itr)} />}
           code={itr.itr_number} phase={itr.project_phases}
           what={`${itr.tags ? `${itr.tags.tag_number} — ${itr.tags.description}` : ''}${itr.completed_date ? ` · ${t('completedOn', { date: fmt(itr.completed_date) })}` : ''}`}
           project={itr.projects?.code}
-          right={<Pill tone="success">{a.role === 'client' ? t('due.sign') : t('due.readyToApprove')}</Pill>} />
+          right={<Pill tone="wait">{a.role === 'client' ? t('due.sign') : t('due.readyToApprove')}</Pill>} />
       )
     }) },
     punches: { more: '/punch-list?assigned=me', rows: myPunches.map(p => {
-      const pStyle = PUNCH_STYLE[p.status] ?? PUNCH_STYLE.open
       return (
-        <Row key={p.id} href={`/projects/${p.project_id}/punches/${p.id}`} stripe={CATEGORY_CFG[p.category].color}
+        <Row key={p.id} href={`/projects/${p.project_id}/punches/${p.id}`} stripe={catStripe(p.category)}
           code={p.punch_number} tag={catTag(p.category)}
           what={`${p.description}${p.tags?.tag_number ? ` · ${p.tags.tag_number}` : ''}`} project={p.projects?.code}
-          right={p.target_date ? duePill(p.target_date, p.project_id) : <Pill tone={p.status === 'in_progress' ? 'info' : 'neutral'} style={{ background: pStyle.bg, color: ink(pStyle.color) }}>{t(`punchStatus.${p.status}`)}</Pill>} />
+          right={p.target_date ? duePill(p.target_date, p.project_id) : <StateChip state={punchState({ status: p.status as 'open' })} />} />
       )
     }) },
     punches_verify: { more: '/punch-list?status=in_progress', rows: verifyRows.map(p => (
-      <Row key={p.id} href={`/projects/${p.project_id}/punches/${p.id}`} stripe="var(--violet-600)"
+      <Row key={p.id} href={`/projects/${p.project_id}/punches/${p.id}`} stripe={TONE_STYLE.wait.fg}
         code={p.punch_number} tag={catTag(p.category)}
         what={`${p.description}${p.tags?.tag_number ? ` · ${p.tags.tag_number}` : ''}`} project={p.projects?.code} right={verifyPill} />
     )) },
     punches_review: { more: '/punch-list', rows: reviewRows.map(p => (
-      <Row key={p.id} href={`/projects/${p.project_id}/punches/${p.id}`} stripe={CATEGORY_CFG[p.category].color}
+      <Row key={p.id} href={`/projects/${p.project_id}/punches/${p.id}`} stripe={catStripe(p.category)}
         code={p.punch_number} tag={catTag(p.category)}
         what={`${p.description}${p.tags?.tag_number ? ` · ${p.tags.tag_number}` : ''}`} project={p.projects?.code}
         right={<Pill tone="warning">{p.impact ? tGuide(`impact.${p.impact}`) : tGuide('noImpact')}</Pill>} />
@@ -504,8 +501,10 @@ export default async function MyWorkPage({ searchParams }: { searchParams: Promi
 
 /* ── Piezas de presentación (mismo lenguaje visual que los widgets del Dashboard) ── */
 
-type Tone = 'danger' | 'warning' | 'info' | 'success' | 'neutral'
+type Tone = 'danger' | 'warning' | 'info' | 'success' | 'neutral' | 'wait'
+// A08: «wait» = espera la firma o la verificación de otra persona (violeta del contrato de estados).
 const TONE: Record<Tone, { bg: string; fg: string }> = {
+  wait:    { bg: TONE_STYLE.wait.bg, fg: TONE_STYLE.wait.fg },
   danger:  { bg: 'var(--danger-50)',  fg: 'var(--danger-700)' },
   warning: { bg: 'var(--warning-50)', fg: 'var(--warning-700)' },
   info:    { bg: 'var(--primary-50)', fg: 'var(--primary-700)' },

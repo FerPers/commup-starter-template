@@ -32,6 +32,9 @@ export type TagItr = {
   itr_signatures: Array<{ id: string; role: string; signed_at: string }>
   /** S04 (D4): firmas que exige el ITR. */
   required_signatures: string[]
+  /** A08 (E2): devuelto al ejecutor, hasta la siguiente firma. */
+  returned_at: string | null
+  return_reason: string | null
 }
 
 export type ItrTemplate = {

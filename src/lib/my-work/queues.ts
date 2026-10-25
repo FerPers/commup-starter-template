@@ -187,6 +187,9 @@ export type AssignmentRow = {
     projects: { code: string } | null
     project_phases: { code: string; color: string } | null
     itr_signatures: { role: string; user_id?: string }[]
+    /** A08 (E2): devuelto al ejecutor, hasta la siguiente firma. */
+    returned_at?: string | null
+    return_reason?: string | null
     /** S04 (D4): firmas que exige el ITR; ausente = ejecutor + supervisor. */
     required_signatures?: string[] | null
   } | null

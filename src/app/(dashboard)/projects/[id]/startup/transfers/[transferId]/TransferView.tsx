@@ -23,7 +23,8 @@ type Transfer = {
 }
 type Pkg = { id: string; version: string; status: string; generated_at: string | null; signature_hash: string | null; zip_path: string | null; omitted_count: number } | null
 
-const TONE: Record<string, 'amber' | 'green' | 'struck'> = { pending_signatures: 'amber', completed: 'green', cancelled: 'struck' }
+// A08: por firmar = espera a otra persona (violeta).
+const TONE: Record<string, 'violet' | 'green' | 'struck'> = { pending_signatures: 'violet', completed: 'green', cancelled: 'struck' }
 
 export default function TransferView({ project, transfer: tr, pkg, names, canSign, canEdit }: {
   project: { id: string; code: string; name: string }

@@ -1,6 +1,6 @@
 'use client'
 
-import { PersonName, useAskDialog, useToast } from '@/components/ui'
+import { PersonName, StateChip, useAskDialog, useToast } from '@/components/ui'
 import { ownershipOf } from '@/lib/sync/ownership'
 import { isInactiveMember } from '@/lib/people/inactive'
 // Pantalla de ejecución de ITR — orquestador (Q2). El estado de autosave vive
@@ -33,7 +33,7 @@ import { availableSigningRoles, type Attachment, type ItrData, type Signature } 
 import { allRequiredSigned, itrSignErrorKey, normalizeRequired, type SigningRole } from '@/lib/itr/signatures'
 import ReturnToExecutor from './ReturnToExecutor'
 import AssignmentsPanel, { type AssignableMember } from './AssignmentsPanel'
-import { ITR_STATUS_COLORS } from '@/lib/constants/status-colors'
+import { itrState, type ItrStatus } from '@/lib/states'
 import { ROLE_TIERS } from '@/lib/constants/roles'
 import { applyTheme, currentTheme, THEME_EVENT } from '@/lib/theme/client'
 import type { Theme } from '@/types/theme'
@@ -224,16 +224,6 @@ export default function ItrExecution({
   const tagView = resolveTagData(itr.tags, itr.tag_snapshot, itr.itr_signatures.length > 0)
   const tag = tagView.data
   const phase = itr.project_phases
-  const st = ITR_STATUS_COLORS[itrStatus] ?? ITR_STATUS_COLORS.not_started
-
-  // Status + role labels (i18n)
-  const STATUS_LABELS: Record<string, string> = {
-    not_started: t('status.not_started'),
-    in_progress:  t('status.in_progress'),
-    completed:    t('status.completed'),
-    approved:     t('status.approved'),
-    rejected:     t('status.rejected'),
-  }
 
   // Sorted sections + items
   const sections = template?.itr_template_sections
@@ -272,6 +262,13 @@ export default function ItrExecution({
   const effectiveProgress = itr.status === 'approved' ? itr.progress_pct : localEvaluation.pct
   const effectiveStatus = itr.status === 'approved' ? 'approved' : localStatus
   const requiredRoles = normalizeRequired(itr.required_signatures)
+  // A08: estado del contrato con el estado local (autosave) y las firmas, también las pendientes de la bandeja.
+  const headerState = itrState({
+    status: itrStatus as ItrStatus,
+    signaturesDone: effectiveSignatures.filter(s => (requiredRoles as string[]).includes(s.role)).length,
+    signaturesRequired: requiredRoles.length,
+    returnedAt: itr.returned_at,
+  })
   const allowedSignRoles = availableSigningRoles(requiredRoles, itr.itr_assignments, effectiveSignatures, currentUserId)
   const canCapture = canEdit && effectiveSignatures.length === 0 && itr.status !== 'approved'
   const signingReady = effectiveStatus === 'completed' && allowedSignRoles.length > 0 && !isPending && !saveError && !generalUploading
@@ -357,6 +354,14 @@ export default function ItrExecution({
         </Link>
       </div>
 
+      {/* A08 (E2): devuelto por el supervisor o el cliente: qué corregir, antes de volver a firmar */}
+      {headerState.key === 'returned' && itr.return_reason && (
+        <div role="status" style={{ margin: '12px 16px 0', padding: '12px 14px', borderRadius: 12, background: 'var(--primary-50)', border: '1px solid var(--primary-200)', color: 'var(--primary-700)', fontSize: 14, lineHeight: 1.45 }}>
+          <strong>{t('returned.title', { date: formatInZone(itr.returned_at!, timezone, locale) })}</strong> {itr.return_reason}
+          <div style={{ fontSize: 13, marginTop: 4 }}>{t('returned.next')}</div>
+        </div>
+      )}
+
       {/* Header card */}
       <div style={{ margin: '12px 16px 0', background: 'var(--card-bg)', borderRadius: '14px', border: '1px solid var(--border)', padding: '16px 18px' }}>
         {/* flexWrap: en el teléfono idioma y estado bajan a su propia línea en vez de apretar el título (S1). */}
@@ -419,9 +424,7 @@ export default function ItrExecution({
                 </button>
               ))}
             </div>
-            <span style={{ padding: '4px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, background: st.bg, color: ink(st.color), whiteSpace: 'nowrap' }}>
-              {STATUS_LABELS[itrStatus] ?? itrStatus}
-            </span>
+            <StateChip state={headerState} size="md" />
           </div>
         </div>
 

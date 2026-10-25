@@ -99,6 +99,9 @@ export type ItrData = {
   /** A44: datos del tag congelados en la primera firma (null = sin firmar o firmado antes de A44). */
   tag_snapshot?: unknown
   tag_snapshot_at?: string | null
+  /** A08 (E2): devuelto al ejecutor, hasta la siguiente firma. */
+  returned_at?: string | null
+  return_reason?: string | null
   itr_assignments: Array<{ id: string; user_id: string; role: string; profiles: { full_name: string } | null }>
   itr_responses: Response[]
   itr_signatures: Signature[]

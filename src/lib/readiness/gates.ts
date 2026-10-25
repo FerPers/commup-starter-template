@@ -6,6 +6,8 @@
  */
 
 import { isCapacity, type MyCapacities } from '@/lib/constants/capacities'
+import { gateState } from '@/lib/states/gate'
+import { TONE_STYLE } from '@/lib/states/tones'
 
 export type GateStatus =
   | 'pending_signatures'
@@ -124,16 +126,21 @@ export type MatrixGate = {
   blocker?: GateBlocker | null
 }
 
-export const GATE_STATUS_STYLE: Record<GateStatus, { bg: string; fg: string; border: string; icon: string }> = {
-  pending_signatures:       { bg: 'var(--primary-50)',  fg: 'var(--primary-700)', border: 'var(--primary-300)', icon: '✎' },
-  approved:                 { bg: 'var(--success-600)', fg: '#ffffff',            border: 'var(--success-600)', icon: '✓' },
-  approved_with_conditions: { bg: 'var(--success-600)', fg: '#ffffff',            border: 'var(--warning-500)', icon: '✓!' },
-  approved_needs_review:    { bg: 'var(--success-600)', fg: '#ffffff',            border: 'var(--warning-500)', icon: '✓?' },
-  regressed:                { bg: 'var(--danger-50)',   fg: 'var(--danger-700)',  border: 'var(--danger-500)',  icon: '↺' },
-  ready:                    { bg: 'var(--success-50)',  fg: 'var(--success-700)', border: 'var(--success-200)', icon: '●' },
-  ready_with_conditions:    { bg: 'var(--warning-50)',  fg: 'var(--warning-700)', border: 'var(--warning-200)', icon: '◐' },
-  not_ready:                { bg: 'var(--danger-50)',   fg: 'var(--danger-700)',  border: 'var(--danger-200)',  icon: '○' },
+/**
+ * A08: colores de cada estado de liberación = tono del contrato (`gateState` en `@/lib/states`): listo y pendiente de
+ * firmas en violeta (esperan a otra persona), Liberado en verde sólido (con borde ámbar si tiene condiciones), por
+ * revisar en ámbar, regresión y no listo en rojo (E4 parte «no listo» en sin información · en ejecución · bloqueado).
+ * El ícono es texto para las celdas compactas de la matriz.
+ */
+const GATE_ICON: Record<GateStatus, string> = {
+  pending_signatures: '✎', approved: '✓', approved_with_conditions: '✓!', approved_needs_review: '✓?',
+  regressed: '↺', ready: '●', ready_with_conditions: '◐', not_ready: '○',
 }
+export const GATE_STATUS_STYLE = Object.fromEntries((Object.keys(GATE_ICON) as GateStatus[]).map(status => {
+  const st = gateState({ status })
+  const tone = TONE_STYLE[st.tone]
+  return [status, { bg: tone.bg, fg: tone.fg, border: st.accent ? TONE_STYLE[st.accent].fg : tone.border, icon: GATE_ICON[status] }]
+})) as Record<GateStatus, { bg: string; fg: string; border: string; icon: string }>
 
 export const isApproved = (s: GateStatus) =>
   s === 'approved' || s === 'approved_with_conditions' || s === 'approved_needs_review' || s === 'regressed'

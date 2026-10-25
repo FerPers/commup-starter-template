@@ -1,8 +1,7 @@
 import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
-import { CATEGORY_CFG } from '@/components/dashboard/widgets/_shared'
+import { TONE_STYLE, punchCategoryState } from '@/lib/states'
 import type { PunchSummary } from '@/lib/list/punch-query'
-import { ink } from '@/lib/theme'
 
 /**
  * N1 (decisión de Luis 2026-10-21): el cliente entra al punch list por un resumen por categoría
@@ -23,11 +22,13 @@ export default async function ClientPunchSummary({ projectId, projectName, summa
       <p style={{ margin: '0 0 20px', color: 'var(--text-muted)', fontSize: 'var(--text-sm)' }}>{t('clientSummary.intro')}</p>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
         {cards.map(({ cat, n }) => {
-          const cfg = CATEGORY_CFG[cat]
+          // A08: el tono de la categoría (Cat A rojo porque bloquea).
+          const tone = TONE_STYLE[punchCategoryState(cat).tone]
+          const cfg = { color: tone.fg, border: tone.border }
           return (
             <Link key={cat} href={`${base}?cat=${cat}`} style={{ textDecoration: 'none' }}>
               <div style={{ background: 'var(--card-bg)', border: `1px solid ${cfg.border}`, borderTop: `4px solid ${cfg.color}`, borderRadius: 'var(--radius-lg)', padding: '18px 20px' }}>
-                <div style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: ink(cfg.color) }}>{t(`catLabels.${cat}`)}</div>
+                <div style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: cfg.color }}>{t(`catLabels.${cat}`)}</div>
                 <div style={{ fontSize: 40, fontWeight: 800, color: n > 0 ? 'var(--text-strong)' : 'var(--text-muted)', fontVariantNumeric: 'tabular-nums', margin: '6px 0 2px' }}>{n}</div>
                 <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>{t('clientSummary.open')}</div>
                 <div style={{ marginTop: 10, fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--primary-700)' }}>{t('clientSummary.seeDetail')}</div>

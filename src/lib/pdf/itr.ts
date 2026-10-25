@@ -140,10 +140,11 @@ function evidenceSummary(attachments: ItrAttachmentRef[]): string | null {
 
 function statusVisual(status: string): { fg: Color; bg: Color; label: string } {
   const s = status.toLowerCase()
-  if (s === 'approved')    return { fg: COLOR.purple,      bg: COLOR.purpleBg,    label: 'APPROVED' }
-  if (s === 'completed')   return { fg: COLOR.greenStrong, bg: COLOR.greenBg,     label: 'COMPLETED' }
+  // A08: solo aprobado es verde; diligenciado espera firmas (violeta) y una falla crítica es «no conforme».
+  if (s === 'approved')    return { fg: COLOR.greenStrong, bg: COLOR.greenBg,     label: 'APPROVED' }
+  if (s === 'completed')   return { fg: COLOR.purple,      bg: COLOR.purpleBg,    label: 'AWAITING SIGNATURES' }
   if (s === 'in_progress') return { fg: COLOR.blue,        bg: COLOR.blueBg,      label: 'IN PROGRESS' }
-  if (s === 'rejected')    return { fg: COLOR.red,         bg: COLOR.redBg,       label: 'REJECTED' }
+  if (s === 'rejected')    return { fg: COLOR.red,         bg: COLOR.redBg,       label: 'NONCONFORMING' }
   if (s === 'not_started') return { fg: COLOR.muted,       bg: COLOR.borderLight, label: 'NOT STARTED' }
   return { fg: COLOR.muted, bg: COLOR.borderLight, label: status.toUpperCase() }
 }

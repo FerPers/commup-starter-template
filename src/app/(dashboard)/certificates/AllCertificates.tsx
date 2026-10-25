@@ -27,7 +27,7 @@ export default async function AllCertificates() {
       : fetchAllRowsFlagged(() => supabase
           .from('certificates')
           .select(`
-            id, certificate_number, title, status, issued_date, project_id,
+            id, certificate_number, title, status, issued_date, project_id, is_blocked, certificate_signatures(role),
             projects(id, name, code),
             project_phases(id, code, name, color, certificate_name),
             subsystems(id, code, name, systems(code, name))

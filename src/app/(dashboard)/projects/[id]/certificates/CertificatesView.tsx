@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import { issueCertificate } from '@/app/actions/certificates'
 import { DialogSurface } from '@/components/ui/dialog-a11y'
+import { StateChip } from '@/components/ui'
+import { CERTIFICATE_SIGNATURES_REQUIRED, TONE_STYLE, certificateState, type CertificateStatus } from '@/lib/states'
 import { ink, fill } from '@/lib/theme'
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -26,6 +28,7 @@ type CertRow = {
   issued_date: string | null
   /** S17: emitido pero la base cambió (no se firma hasta que vuelva a cumplir). */
   is_blocked: boolean
+  signatures_done: number
 }
 
 type PhaseEligibility = {
@@ -54,13 +57,6 @@ const SEMAPHORE_COLORS = {
   green:  { color: 'var(--success-700)', bg: 'var(--success-50)', border: 'var(--success-200)' },
   yellow: { color: 'var(--warning-700)', bg: 'var(--warning-50)', border: 'var(--warning-200)' },
   red:    { color: 'var(--danger-700)',  bg: 'var(--danger-100)', border: 'var(--danger-200)' },
-} as const
-
-const CERT_STATUS_COLORS = {
-  pending:   { color: 'var(--text-muted)',  bg: 'var(--gray-100)' },
-  in_review: { color: 'var(--primary-700)', bg: 'var(--primary-50)' },
-  issued:    { color: 'var(--success-700)', bg: 'var(--success-50)' },
-  rejected:  { color: 'var(--danger-700)',  bg: 'var(--danger-100)' },
 } as const
 
 // ── Main component ─────────────────────────────────────────────────────────
@@ -97,13 +93,6 @@ export default function CertificatesView({
   const [issueError, setIssueError] = useState('')
 
   const selectedPhase = phases.find(p => p.id === selectedPhaseId) ?? phases[0]
-
-  const certStatusLabels: Record<string, string> = {
-    pending:   t('status.pending'),
-    in_review: t('status.in_review'),
-    issued:    t('status.issued'),
-    rejected:  t('status.rejected'),
-  }
 
   const semLabels: Record<string, string> = {
     green:  t('view.semaphore.green'),
@@ -210,7 +199,7 @@ export default function CertificatesView({
             { labelKey: 'view.summary.greenLabel',  value: greenCount,  color: 'var(--success-700)', bg: 'var(--success-50)' },
             { labelKey: 'view.summary.yellowLabel', value: yellowCount, color: 'var(--warning-700)', bg: 'var(--warning-50)' },
             { labelKey: 'view.summary.redLabel',    value: redCount,    color: 'var(--danger-700)', bg: 'var(--danger-50)' },
-            { labelKey: 'view.summary.issuedLabel', value: issuedCount, color: 'var(--violet-700)', bg: 'var(--violet-50)' },
+            { labelKey: 'view.summary.issuedLabel', value: issuedCount, color: TONE_STYLE.ok.fg, bg: TONE_STYLE.ok.bg },
           ].map(s => (
             <div key={s.labelKey} style={{
               background: s.bg, borderRadius: '10px', padding: '12px 18px',
@@ -264,10 +253,9 @@ export default function CertificatesView({
                   : pd.eligible === 'red' && pd.catBOverLimit && pd.openCatA === 0 && pd.approvedItrs === pd.totalItrs
                     ? t('view.semaphore.catBOverLimit', { limit: pd.catBLimit ?? 0 })
                     : semLabels[pd.eligible]
-                const certColors = pd.certificate
-                  ? (CERT_STATUS_COLORS[pd.certificate.status as keyof typeof CERT_STATUS_COLORS] ?? CERT_STATUS_COLORS.pending)
+                const certState = pd.certificate
+                  ? certificateState({ status: pd.certificate.status as CertificateStatus, isBlocked: pd.certificate.is_blocked, signaturesDone: pd.certificate.signatures_done, signaturesRequired: CERTIFICATE_SIGNATURES_REQUIRED })
                   : null
-                const certLabel = pd.certificate ? (certStatusLabels[pd.certificate.status] ?? pd.certificate.status) : null
                 const canIssue  = canEdit && !pd.certificate && (pd.eligible === 'green' || pd.eligible === 'yellow')
 
                 return (
@@ -321,23 +309,13 @@ export default function CertificatesView({
                       </span>
                     </td>
                     <td style={{ padding: '12px 16px' }}>
-                      {pd.certificate && certColors && certLabel ? (
+                      {pd.certificate && certState ? (
                         <Link href={`/projects/${projectId}/certificates/${pd.certificate.id}`} style={{ textDecoration: 'none' }}>
                           <div style={{ fontWeight: 500, color: 'var(--primary-700)', fontSize: '12px' }}>
                             {pd.certificate.certificate_number}
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '2px' }}>
-                            <span style={{
-                              padding: '1px 7px', borderRadius: '999px', fontSize: '12px', fontWeight: 600,
-                              background: certColors.bg, color: ink(certColors.color),
-                            }}>
-                              {certLabel}
-                            </span>
-                            {pd.certificate.status === 'issued' && pd.certificate.is_blocked && (
-                              <span style={{ padding: '1px 7px', borderRadius: '999px', fontSize: '12px', fontWeight: 600, background: 'var(--danger-100)', color: 'var(--danger-700)' }}>
-                                {t('blocked')}
-                              </span>
-                            )}
+                            <StateChip state={certState} />
                             {pd.certificate.issued_date && (
                               <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                                 {new Date(pd.certificate.issued_date).toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' })}

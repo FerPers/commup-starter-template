@@ -9,7 +9,7 @@ type Client = SupabaseClient<Database>
 const VIEW_COLS =
   'id, itr_number, status, progress_pct, scheduled_date, created_at, project_id, project_name, project_code, ' +
   'tag_id, tag_number, tag_description, template_code, template_title, ' +
-  'discipline_code, discipline_name, discipline_color, phase_code, phase_name, phase_color'
+  'discipline_code, discipline_name, discipline_color, phase_code, phase_name, phase_color, returned_at, return_reason'
 
 const ITR_STATUSES = ['not_started', 'in_progress', 'completed', 'approved', 'rejected']
 

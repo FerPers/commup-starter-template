@@ -31,7 +31,8 @@ const th: React.CSSProperties = {
   textTransform: 'uppercase', letterSpacing: '.03em', borderBottom: '1px solid var(--border)', background: 'var(--gray-50)', whiteSpace: 'nowrap',
 }
 const td: React.CSSProperties = { padding: '8px 10px', borderBottom: '1px solid var(--border)', fontSize: 'var(--text-sm)', verticalAlign: 'top' }
-const TRANSFER_TONE: Record<string, 'amber' | 'green' | 'struck'> = { pending_signatures: 'amber', completed: 'green', cancelled: 'struck' }
+// A08: por firmar = espera a otra persona (violeta).
+const TRANSFER_TONE: Record<string, 'violet' | 'green' | 'struck'> = { pending_signatures: 'violet', completed: 'green', cancelled: 'struck' }
 const SPARE_TONE: Record<SpareStatus, 'green' | 'amber' | 'red'> = { available: 'green', ordered: 'amber', not_available: 'red' }
 
 const emptyPerson = { personId: '', fullName: '', company: '', position: '', shift: '', userId: '', active: true }

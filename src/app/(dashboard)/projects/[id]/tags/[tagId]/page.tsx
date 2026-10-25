@@ -72,7 +72,7 @@ export default async function TagDetailPage({
     supabase
       .from('itrs')
       .select(`
-        id, itr_number, status, progress_pct, scheduled_date, created_at, required_signatures,
+        id, itr_number, status, progress_pct, scheduled_date, created_at, required_signatures, returned_at, return_reason,
         itr_templates(code, title, disciplines(code, name, color)),
         project_phases(code, name, color),
         itr_assignments(user_id, role, profiles(full_name)),

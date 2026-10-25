@@ -1,6 +1,6 @@
 'use client'
 
-import { PersonName } from '@/components/ui'
+import { PersonName, StateChip } from '@/components/ui'
 import { isInactiveMember, memberIdSet } from '@/lib/people/inactive'
 import { useEffect, useMemo, useState, useTransition } from 'react'
 import Link from 'next/link'
@@ -13,7 +13,7 @@ import { buildItrCsv, downloadCsv } from '@/lib/list/itr-csv'
 import { browserToday } from '@/lib/time/zone'
 import { normalizeRequired } from '@/lib/itr/signatures'
 import AddToWorkPlanModal, { type ModalItr } from '@/components/AddToWorkPlanModal'
-import { ITR_STATUS_COLORS } from '@/lib/constants/status-colors'
+import { ITR_STATUSES, TONE_STYLE, itrRowState, itrState, type DisplayState } from '@/lib/states'
 import { Modal, Pagination } from '@/components/ui'
 import { useUrlFilters } from '@/lib/list/useUrlFilters'
 import type { ItrListRow, ItrSortKey, ItrStatusCounts } from '@/lib/list/itr-types'
@@ -30,7 +30,6 @@ type OrgUser    = { user_id: string; full_name: string }
 
 const SIGN_LABELS: Record<string, string> = { executor: 'E', supervisor: 'S', client: 'C' }
 const EDITOR_ROLES = ROLE_TIERS.editor
-const ITR_STATUS_KEYS = ['not_started', 'in_progress', 'completed', 'approved', 'rejected'] as const
 
 // ── Component ─────────────────────────────────────────────────────────
 // Sprint E: la página, los filtros y el orden viven en la URL; el servidor
@@ -80,6 +79,10 @@ export default function ItrListView({
 }) {
   const t = useTranslations('ItrList')
   const tc = useTranslations('Common')
+  // A08: estados del contrato (`States.*`); «completed» = Diligenciado · por firmar, nunca verde.
+  const ts = useTranslations('States')
+  const stateLabel = (d: DisplayState) => ts(`${d.family}.${d.key}`, d.params)
+  const statusLabel = (status: string) => stateLabel(itrState({ status: status as (typeof ITR_STATUSES)[number] }))
   const allScope = projects !== undefined
   const canEdit = EDITOR_ROLES.includes(userRole)
   const memberIds = useMemo(() => memberIdSet(users), [users])
@@ -109,7 +112,7 @@ export default function ItrListView({
         ? await exportItrList({ filters: { status: filters.status, phase: filters.phase, disc: filters.disc, q: filters.q, project: filters.project, assignee: filters.assignee } })
         : await exportItrList({ projectId, filters: { ...filters, project: projectId } })
       if (res.error || !res.rows) { setBulkError(res.error ?? 'Export error'); return }
-      downloadCsv(buildItrCsv(res.rows, k => t(k as Parameters<typeof t>[0])), `itrs_${browserToday()}.csv`)
+      downloadCsv(buildItrCsv(res.rows, k => t(k as Parameters<typeof t>[0]), row => stateLabel(itrRowState(row))), `itrs_${browserToday()}.csv`)
     })
   }
 
@@ -125,8 +128,9 @@ export default function ItrListView({
 
   const totalAll = useMemo(() => Object.values(counts).reduce((a, b) => a + b, 0), [counts])
   const hasFilters = !!(filters.status || filters.phase || filters.disc || filters.q || filters.system || filters.subsystem || filters.area || filters.assignee || filters.project)
-  const cols = allScope ? '36px 90px 1fr 1fr 140px 90px 80px 90px 60px' : '36px 1fr 1fr 140px 90px 80px 90px 60px'
-  const minW = allScope ? '850px' : '760px'
+  // A08: la columna de estado cabe «Diligenciado · por firmar 1/2» sin montarse sobre las firmas.
+  const cols = allScope ? '36px 90px 1fr 1fr 140px 90px 80px 210px 60px' : '36px 1fr 1fr 140px 90px 80px 210px 60px'
+  const minW = allScope ? '970px' : '880px'
   const visibleSystems = filters.area ? scopes.systems.filter(s => s.area_id === filters.area) : scopes.systems
   const visibleSubsystems = filters.system ? scopes.subsystems.filter(s => s.system_id === filters.system) : scopes.subsystems
 
@@ -299,8 +303,9 @@ export default function ItrListView({
       {/* Summary cards (conteos en SQL) */}
       {/* C-29: en el teléfono las tarjetas bajan de línea en vez de aplastarse */}
       <div className="desk-only" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px', marginBottom: '24px' }}>
-        {ITR_STATUS_KEYS.map(key => {
-          const cfg = ITR_STATUS_COLORS[key]
+        {ITR_STATUSES.map(key => {
+          const tone = TONE_STYLE[itrState({ status: key }).tone]
+          const cfg = { color: tone.fg, bg: tone.bg }
           const active = filters.status === key
           return (
             <button
@@ -314,8 +319,8 @@ export default function ItrListView({
                 transition: 'all 0.15s',
               }}
             >
-              <div style={{ fontSize: '22px', fontWeight: 700, color: ink(cfg.color) }}>{counts[key] ?? 0}</div>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>{t(`itrStatus.${key}`)}</div>
+              <div style={{ fontSize: '22px', fontWeight: 700, color: cfg.color }}>{counts[key] ?? 0}</div>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>{statusLabel(key)}</div>
             </button>
           )
         })}
@@ -436,11 +441,11 @@ export default function ItrListView({
             style={chip(filters.assignee === 'me')}>
             {t('mobile.mine')}
           </button>
-          {ITR_STATUS_KEYS.filter(key => (counts[key] ?? 0) > 0 || filters.status === key).map(key => {
+          {ITR_STATUSES.filter(key => (counts[key] ?? 0) > 0 || filters.status === key).map(key => {
             const active = filters.status === key
             return (
               <button key={key} type="button" onClick={() => url.set({ status: active ? null : key })} aria-pressed={active} style={chip(active)}>
-                {t(`itrStatus.${key}`)} {counts[key] ?? 0}
+                {statusLabel(key)} {counts[key] ?? 0}
               </button>
             )
           })}
@@ -504,7 +509,7 @@ export default function ItrListView({
       ) : (
         <>
         <ul className="phone-only" style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 8, opacity: busy ? 0.6 : 1 }}>
-          {rows.map(itr => <ItrCard key={itr.id} itr={itr} allScope={allScope} memberIds={memberIds} statusLabel={t(`itrStatus.${itr.status}` as Parameters<typeof t>[0])} />)}
+          {rows.map(itr => <ItrCard key={itr.id} itr={itr} allScope={allScope} memberIds={memberIds} returnedLabel={t('returnReason')} />)}
         </ul>
         <div className="desk-only" style={{ background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)', overflowX: 'auto', opacity: busy ? 0.6 : 1, transition: 'opacity 0.15s' }}>
           {/* Header */}
@@ -528,7 +533,7 @@ export default function ItrListView({
 
           {/* Rows */}
           {rows.map(itr => {
-            const st = ITR_STATUS_COLORS[itr.status] ?? ITR_STATUS_COLORS.not_started
+            const state = itrRowState(itr)
             const executor = itr.assignments.find(a => a.role === 'executor')
             const isChecked = selected.has(itr.id)
 
@@ -610,10 +615,13 @@ export default function ItrListView({
                   </div>
                 </div>
 
-                {/* Status */}
-                <span style={{ padding: '3px 8px', borderRadius: '5px', fontSize: '12px', fontWeight: 600, background: st.bg, color: ink(st.color), whiteSpace: 'nowrap', textAlign: 'center' }}>
-                  {t(`itrStatus.${itr.status}` as Parameters<typeof t>[0])}
-                </span>
+                {/* Status (A08): un ITR devuelto dice por qué */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+                  <StateChip state={state} style={{ alignSelf: 'flex-start' }} />
+                  {state.key === 'returned' && itr.return_reason && (
+                    <span title={itr.return_reason} style={{ fontSize: 12, color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{itr.return_reason}</span>
+                  )}
+                </div>
 
                 {/* Signatures */}
                 <div style={{ display: 'flex', gap: '2px' }}>
@@ -641,8 +649,8 @@ export default function ItrListView({
 // ── Sub-components ─────────────────────────────────────────────────────
 
 /** Teléfono: un ITR por tarjeta (fase, número, estado, tag, plantilla y responsable, avance). */
-function ItrCard({ itr, allScope, memberIds, statusLabel }: { itr: ItrListRow; allScope: boolean; memberIds: Set<string>; statusLabel: string }) {
-  const st = ITR_STATUS_COLORS[itr.status] ?? ITR_STATUS_COLORS.not_started
+function ItrCard({ itr, allScope, memberIds, returnedLabel }: { itr: ItrListRow; allScope: boolean; memberIds: Set<string>; returnedLabel: string }) {
+  const state = itrRowState(itr)
   const executor = itr.assignments.find(a => a.role === 'executor')
   const body = (
     <>
@@ -651,8 +659,11 @@ function ItrCard({ itr, allScope, memberIds, statusLabel }: { itr: ItrListRow; a
           {itr.phase_code && <span style={{ padding: '1px 6px', borderRadius: 5, fontSize: 12, fontWeight: 700, background: alpha(itr.phase_color ?? 'var(--gray-500)', 9), color: ink(itr.phase_color ?? 'var(--text-muted)') }}>{itr.phase_code}</span>}
           <span style={{ fontFamily: 'ui-monospace, monospace', fontWeight: 700, fontSize: 15, color: 'var(--text-strong)' }}>{itr.itr_number}</span>
           {allScope && <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--primary-700)' }}>{itr.project_code}</span>}
-          <span style={{ marginLeft: 'auto', padding: '2px 8px', borderRadius: 999, fontSize: 12, fontWeight: 600, background: st.bg, color: ink(st.color), border: `1px solid ${alpha(st.color, 25)}`, whiteSpace: 'nowrap' }}>{statusLabel}</span>
+          <StateChip state={state} style={{ marginLeft: 'auto' }} />
         </div>
+        {state.key === 'returned' && itr.return_reason && (
+          <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{returnedLabel}: {itr.return_reason}</div>
+        )}
         {itr.tag_number && <div style={{ fontSize: 14, color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{itr.tag_number} · {itr.tag_description}</div>}
         <div style={{ fontSize: 12, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {itr.discipline_code ? `${itr.discipline_code} · ` : ''}{itr.template_title ?? '—'}

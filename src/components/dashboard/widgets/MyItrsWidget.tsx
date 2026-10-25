@@ -1,7 +1,9 @@
 import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
-import { ITR_STYLE, TaskSection } from './_shared'
+import { TaskSection } from './_shared'
+import { StateChip } from '@/components/ui'
+import { TONE_STYLE, itrState, type ItrStatus } from '@/lib/states'
 import { fetchAllRowsFlagged } from '@/lib/list/fetch-all'
 import { todayIn } from '@/lib/time/zone'
 import { alpha, ink } from '@/lib/theme'
@@ -17,13 +19,6 @@ export default async function MyItrsWidget({ userId }: { userId: string }) {
     .eq('user_id', userId)
     .not('itrs.status', 'in', '(approved,rejected)'), { maxRows: 10_000 })
 
-  const itrLabels: Record<string, string> = {
-    not_started: t('itrStatus.not_started'),
-    in_progress: t('itrStatus.in_progress'),
-    completed: t('itrStatus.completed'),
-    approved: t('itrStatus.approved'),
-    rejected: t('itrStatus.rejected'),
-  }
 
   const seen = new Set<string>()
   const activeItrs = (myAssignments ?? [])
@@ -45,13 +40,13 @@ export default async function MyItrsWidget({ userId }: { userId: string }) {
       {activeItrs.map(a => {
         const itr = a.itrs
         if (!itr) return null
-        const style = ITR_STYLE[itr.status] ?? ITR_STYLE.not_started
+        const state = itrState({ status: itr.status as ItrStatus })
         const phase = itr.project_phases
         // S10 (G-13): vencido según el día del proyecto, no el de UTC
         const overdue = itr.scheduled_date && itr.scheduled_date < todayIn((itr.projects as { timezone?: string } | null)?.timezone) && itr.status === 'not_started'
         return (
           <Link key={itr.id} href={`/projects/${itr.project_id}/tags/${itr.tags?.id}/itrs/${itr.id}`} style={{ display: 'block', textDecoration: 'none' }}>
-            <div style={{ padding: '14px 16px', background: 'var(--card-bg)', border: `1px solid ${overdue ? 'var(--danger-200)' : 'var(--border)'}`, borderLeft: `3px solid ${overdue ? 'var(--danger-500)' : style.color}`, borderRadius: 'var(--radius-md)', display: 'grid', gridTemplateColumns: '1fr auto', gap: 12, alignItems: 'center' }}>
+            <div style={{ padding: '14px 16px', background: 'var(--card-bg)', border: `1px solid ${overdue ? 'var(--danger-200)' : 'var(--border)'}`, borderLeft: `3px solid ${overdue ? 'var(--danger-500)' : TONE_STYLE[state.tone].fg}`, borderRadius: 'var(--radius-md)', display: 'grid', gridTemplateColumns: '1fr auto', gap: 12, alignItems: 'center' }}>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                   {phase && <span style={{ fontSize: 12, fontWeight: 700, padding: '1px 6px', borderRadius: 'var(--radius-sm)', background: alpha(phase.color, 9), color: ink(phase.color) }}>{phase.code}</span>}
@@ -71,7 +66,7 @@ export default async function MyItrsWidget({ userId }: { userId: string }) {
                 </div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
-                <span style={{ fontSize: 'var(--text-xs)', fontWeight: 600, padding: '3px 10px', borderRadius: 'var(--radius-pill)', background: style.bg, color: ink(style.color), whiteSpace: 'nowrap' }}>{itrLabels[itr.status] ?? itr.status}</span>
+                <StateChip state={state} />
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <div style={{ width: 60, height: 4, background: 'var(--gray-100)', borderRadius: 2, overflow: 'hidden' }}>
                     <div style={{ height: '100%', width: `${itr.progress_pct}%`, background: itr.progress_pct >= 100 ? 'var(--success-500)' : 'var(--primary-500)', borderRadius: 2 }} />

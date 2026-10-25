@@ -10,6 +10,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useMemo, useState, useTransition } from 'react'
 import { useTranslations } from 'next-intl'
+import { itrState, type ItrStatus } from '@/lib/states'
 import { useAskDialog } from '@/components/ui/AskDialog'
 import { deleteCeMatrix, deleteCeRow, saveCeCause, saveCeEffect, setCeLink } from '@/app/actions/ce-matrix'
 import GenerateSourceItrsModal, { type GenerationMember, type GenerationTemplate } from '@/components/itr/GenerateSourceItrsModal'
@@ -29,7 +30,7 @@ const field = { width: '100%', padding: '7px 9px', border: '1px solid var(--bord
 const primary = { padding: '8px 12px', borderRadius: '7px', border: 0, background: 'var(--primary-600)', color: '#fff', fontSize: '12px', fontWeight: 600, cursor: 'pointer' } as const
 const secondary = { padding: '8px 12px', borderRadius: '7px', border: '1px solid var(--border)', background: 'var(--card-bg)', color: 'var(--text-strong)', fontSize: '12px', cursor: 'pointer' } as const
 const danger = { ...secondary, color: 'var(--danger-700)', borderColor: 'var(--danger-200)' } as const
-const ITR_STATUSES = ['not_started', 'in_progress', 'completed', 'approved', 'rejected', 'on_hold']
+const ITR_STATUSES = ['not_started', 'in_progress', 'completed', 'approved', 'rejected']
 
 export default function CeMatrixEditor({ projectId, projectName, matrix, causes, effects, links, tagNumbers, canEdit, causeItrs = {}, templates = [], members = [] }: {
   projectId: string
@@ -303,12 +304,14 @@ function FormButtons({ row, pending, onDelete, onClose }: { row: boolean; pendin
 /** Estado del ITR de prueba de una causa: número (enlace), estado y aviso si la matriz cambió después. */
 function CauseItrCell({ info, projectId }: { info: SourceItrInfo | undefined; projectId: string }) {
   const tc = useTranslations('CeMatrix')
+  const ts = useTranslations('States')
   if (!info) return <span style={{ color: 'var(--text-muted)' }}>{tc('noItr')}</span>
+  const st = ITR_STATUSES.includes(info.status) ? itrState({ status: info.status as ItrStatus }) : null
   const color = info.status === 'approved' ? 'var(--success-700)' : Object.values(info.rows).includes('fail') ? 'var(--danger-700)' : 'var(--text-strong)'
   return (
     <span style={{ display: 'inline-flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
       <a href={info.tagId ? `/projects/${projectId}/tags/${info.tagId}/itrs/${info.id}` : '#'} style={{ fontFamily: 'monospace', fontWeight: 600, color }}>{info.itrNumber}</a>
-      <span style={{ color: 'var(--text-muted)' }}>{ITR_STATUSES.includes(info.status) ? tc(`itrStatus.${info.status as 'approved'}`) : info.status}</span>
+      <span style={{ color: 'var(--text-muted)' }}>{st ? ts(`${st.family}.${st.key}`, st.params) : info.status}</span>
       {info.outdated && <span title={tc('outdatedHint')} style={{ color: 'var(--warning-700)', fontWeight: 600 }}>{tc('outdated')}</span>}
     </span>
   )

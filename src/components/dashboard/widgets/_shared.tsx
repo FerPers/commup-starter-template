@@ -3,27 +3,6 @@ import { useTranslations } from 'next-intl'
 import { alpha, ink } from '@/lib/theme'
 import { Card } from '@/components/ui'
 
-export const ITR_STYLE: Record<string, { color: string; bg: string }> = {
-  not_started: { color: 'var(--text-muted)', bg: 'var(--gray-100)' },
-  in_progress: { color: 'var(--primary-700)', bg: 'var(--primary-50)' },
-  completed: { color: 'var(--success-700)', bg: 'var(--success-50)' },
-  approved: { color: 'var(--violet-700)', bg: 'var(--violet-50)' },
-  rejected: { color: 'var(--danger-700)', bg: 'var(--danger-50)' },
-}
-
-export const PUNCH_STYLE: Record<string, { color: string; bg: string }> = {
-  open: { color: 'var(--danger-700)', bg: 'var(--danger-50)' },
-  in_progress: { color: 'var(--primary-700)', bg: 'var(--primary-50)' },
-  closed: { color: 'var(--success-700)', bg: 'var(--success-50)' },
-  cancelled: { color: 'var(--text-muted)', bg: 'var(--gray-100)' },
-}
-
-export const CATEGORY_CFG = {
-  A: { label: 'Cat A', color: 'var(--danger-700)', bg: 'var(--danger-50)', border: 'var(--danger-200)' },
-  B: { label: 'Cat B', color: 'var(--warning-700)', bg: 'var(--warning-50)', border: 'var(--warning-200)' },
-  C: { label: 'Cat C', color: 'var(--text-muted)', bg: 'var(--gray-50)', border: 'var(--border)' },
-}
-
 export function SummaryPill({ count, label, color }: { count: number; label: string; color: string }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px', background: 'var(--card-bg)', borderRadius: 'var(--radius-pill)', border: `1px solid ${alpha(color, 19)}`, boxShadow: 'var(--shadow-sm)' }}>

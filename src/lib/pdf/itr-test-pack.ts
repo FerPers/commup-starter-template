@@ -39,20 +39,21 @@ export type ItrTestPackData = {
   timezone?: string | null
 }
 
+// A08: diligenciado = espera firmas (violeta), nunca verde; solo aprobado es verde.
 const STATUS_COLOR: Record<string, Color> = {
   not_started: COLOR.muted,
   in_progress: COLOR.blue,
-  completed: COLOR.amber,
+  completed: COLOR.purple,
   approved: COLOR.greenStrong,
   rejected: COLOR.red,
 }
 
 const STATUS_LABEL: Record<string, string> = {
-  not_started: 'No iniciado / Not started',
+  not_started: 'Sin iniciar / Not started',
   in_progress: 'En progreso / In progress',
-  completed: 'Completado / Completed',
+  completed: 'Por firmar / Awaiting signatures',
   approved: 'Aprobado / Approved',
-  rejected: 'Rechazado / Rejected',
+  rejected: 'No conforme / Nonconforming',
 }
 
 const COLS: TableCol[] = [
@@ -62,7 +63,7 @@ const COLS: TableCol[] = [
   { w: 150, label: 'Título', labelEn: 'Title' },
   { w: 106, label: 'Estado', labelEn: 'Status', align: 'center' },
   { w: 38, label: 'Avance', labelEn: 'Progress', align: 'right' },
-  { w: 57, label: 'Completado', labelEn: 'Completed', align: 'center' },
+  { w: 57, label: 'Diligenciado', labelEn: 'Filled in', align: 'center' },
 ]
 
 function pct(part: number, total: number): number {

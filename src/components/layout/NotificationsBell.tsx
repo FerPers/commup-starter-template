@@ -178,8 +178,9 @@ export default function NotificationsBell({
             minWidth: 18,
             height: 18,
             padding: '0 5px',
-            background: 'var(--danger-600)',
-            color: '#fff',
+            // A25: avisos sin leer = naranja de marca, no rojo de alarma.
+            background: 'var(--brand-orange)',
+            color: 'var(--brand-navy-dark)',
             borderRadius: 999,
             fontSize: 12,
             fontWeight: 700,

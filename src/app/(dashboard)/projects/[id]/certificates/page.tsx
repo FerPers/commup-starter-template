@@ -69,7 +69,7 @@ export default async function CertificatesPage({
       .order('punch_number')),
     fetchAllRows(() => supabase
       .from('certificates')
-      .select('id, subsystem_id, phase_id, certificate_number, title, status, issued_date, issued_by, is_blocked')
+      .select('id, subsystem_id, phase_id, certificate_number, title, status, issued_date, issued_by, is_blocked, certificate_signatures(role)')
       .eq('project_id', projectId)
       .neq('status', 'rejected')
       .order('created_at', { ascending: false })),
@@ -91,6 +91,8 @@ export default async function CertificatesPage({
     status: string
     issued_date: string | null
     is_blocked: boolean
+    /** A08: firmas hechas (Emitido · firmas n/3). */
+    signatures_done: number
   }
 
   type PhaseEligibility = {
@@ -127,7 +129,7 @@ export default async function CertificatesPage({
   for (const c of certificates) {
     if (!c.subsystem_id || !c.phase_id) continue
     const k = countKey(c.subsystem_id, c.phase_id)
-    if (!certByKey.has(k)) certByKey.set(k, c)
+    if (!certByKey.has(k)) certByKey.set(k, { ...c, signatures_done: c.certificate_signatures?.length ?? 0 })
   }
 
   const subsystemRows: SubsystemRow[] = subsystems.map(ss => {

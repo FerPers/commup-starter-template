@@ -3,7 +3,8 @@
 import { useState, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 import { Search } from 'lucide-react'
-import { Button, Input, Select, EmptyState } from '@/components/ui'
+import { Button, Input, Select, EmptyState, StateChip } from '@/components/ui'
+import { CERTIFICATE_SIGNATURES_REQUIRED, TONE_STYLE, certificateState } from '@/lib/states'
 import { alpha, ink } from '@/lib/theme'
 
 const PAGE_SIZE = 50
@@ -18,17 +19,12 @@ type Certificate = {
   status: 'pending' | 'in_review' | 'issued' | 'rejected'
   issued_date: string | null
   project_id: string
+  is_blocked: boolean
+  certificate_signatures: Array<{ role: string }> | null
   projects: { id: string; name: string; code: string } | null
   project_phases: { id: string; code: string; name: string; color: string; certificate_name: string | null } | null
   subsystems: { id: string; code: string; name: string; systems: { code: string; name: string } } | null
 }
-
-const STATUS_STYLE = {
-  pending:   { color: 'var(--text-muted)',  bg: 'var(--gray-100)' },
-  in_review: { color: 'var(--primary-700)', bg: 'var(--primary-50)' },
-  issued:    { color: 'var(--success-700)', bg: 'var(--success-50)' },
-  rejected:  { color: 'var(--danger-700)',  bg: 'var(--danger-50)' },
-} as const
 
 const GRID = '100px 130px 1fr 1fr 80px 100px 90px'
 
@@ -83,13 +79,6 @@ export default function CertificatesGlobal({
     { key: 'rejected',  count: rejectedCnt },
   ]
 
-  const statusLabels: Record<string, string> = {
-    pending:   t('status.pending'),
-    in_review: t('status.in_review'),
-    issued:    t('status.issued'),
-    rejected:  t('status.rejected'),
-  }
-
   const summaryLabels: Record<string, string> = {
     issued:    t('summary.issued'),
     in_review: t('summary.in_review'),
@@ -107,7 +96,9 @@ export default function CertificatesGlobal({
       {/* Summary cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 24 }}>
         {summaryCards.map(({ key, count }) => {
-          const style = STATUS_STYLE[key]
+          // A08: el color de la tarjeta es el tono del estado (emitido = verde, revocado = rojo).
+          const tone = TONE_STYLE[certificateState({ status: key }).tone]
+          const style = { color: tone.fg, bg: tone.bg }
           const active = filterStatus === key
           return (
             <button
@@ -181,7 +172,6 @@ export default function CertificatesGlobal({
           </div>
 
           {paginated.map(cert => {
-            const st    = STATUS_STYLE[cert.status]
             const proj  = cert.projects
             const phase = cert.project_phases
             const ss    = cert.subsystems
@@ -239,9 +229,7 @@ export default function CertificatesGlobal({
                 </div>
 
                 {/* Estado */}
-                <span style={{ padding: '3px 8px', borderRadius: 'var(--radius-sm)', fontSize: 12, fontWeight: 600, background: st.bg, color: ink(st.color), whiteSpace: 'nowrap' }}>
-                  {statusLabels[cert.status]}
-                </span>
+                <StateChip state={certificateState({ status: cert.status, isBlocked: cert.is_blocked, signaturesDone: cert.certificate_signatures?.length ?? 0, signaturesRequired: CERTIFICATE_SIGNATURES_REQUIRED })} />
               </div>
             )
           })}

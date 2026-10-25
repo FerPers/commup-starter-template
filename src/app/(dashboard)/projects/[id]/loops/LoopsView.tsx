@@ -2,15 +2,17 @@
 
 import { useState, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
+import { TONE_STYLE, itrState, type ItrStatus } from '@/lib/states'
 import GenerateSourceItrsModal, { type GenerationMember, type GenerationTemplate } from '@/components/itr/GenerateSourceItrsModal'
 import type { SourceItrInfo } from '@/lib/itr/source-itrs-server'
 import { alpha, ink } from '@/lib/theme'
 
+// A08: estado del lazo con los tonos del contrato (completado = espera aprobación, en violeta; solo aprobado es verde).
 const STATUS_COLORS: Record<string, string> = {
-  not_started: 'var(--gray-400)',
-  in_progress:  'var(--primary-500)',
-  completed:    'var(--success-500)',
-  approved:     'var(--violet-600)',
+  not_started: TONE_STYLE.none.fg,
+  in_progress:  TONE_STYLE.work.fg,
+  completed:    TONE_STYLE.wait.fg,
+  approved:     TONE_STYLE.ok.fg,
 }
 
 type LoopTag = {
@@ -38,7 +40,7 @@ type LoopSignal = {
 const CHAIN: { key: 'junction_box' | 'marshalling' | 'io_card' | 'io_channel' | 'dcs_tag' | 'hmi_display' }[] = [
   { key: 'junction_box' }, { key: 'marshalling' }, { key: 'io_card' }, { key: 'io_channel' }, { key: 'dcs_tag' }, { key: 'hmi_display' },
 ]
-const ITR_STATUSES = ['not_started', 'in_progress', 'completed', 'approved', 'rejected', 'on_hold']
+const ITR_STATUSES = ['not_started', 'in_progress', 'completed', 'approved', 'rejected']
 
 type LoopRow = {
   id: string
@@ -310,7 +312,9 @@ export default function LoopsView({
 /** Estado del ITR de loop check de un lazo: número (enlace), estado y aviso si la foto quedó desactualizada. */
 function LoopItrCell({ info, projectId }: { info: SourceItrInfo | undefined; projectId: string }) {
   const t = useTranslations('Signals')
+  const ts = useTranslations('States')
   if (!info) return <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>{t('loops.noItr')}</span>
+  const st = ITR_STATUSES.includes(info.status) ? itrState({ status: info.status as ItrStatus }) : null
   const results = Object.values(info.rows)
   const failed = results.filter(r => r === 'fail').length
   const passed = results.filter(r => r === 'pass').length
@@ -318,7 +322,7 @@ function LoopItrCell({ info, projectId }: { info: SourceItrInfo | undefined; pro
   return (
     <span style={{ fontSize: '12px', display: 'inline-flex', gap: '6px', alignItems: 'center' }}>
       <a href={info.tagId ? `/projects/${projectId}/tags/${info.tagId}/itrs/${info.id}` : '#'} style={{ fontFamily: 'monospace', fontWeight: 600, color }}>{info.itrNumber}</a>
-      <span style={{ color: 'var(--text-muted)' }}>{ITR_STATUSES.includes(info.status) ? t(`loops.itrStatus.${info.status as 'approved'}`) : info.status} · {passed}/{results.length}{failed ? ` · ${failed} ✗` : ''}</span>
+      <span style={{ color: 'var(--text-muted)' }}>{st ? ts(`${st.family}.${st.key}`, st.params) : info.status} · {passed}/{results.length}{failed ? ` · ${failed} ✗` : ''}</span>
       {info.outdated && <span title={t('loops.outdatedHint')} style={{ color: 'var(--warning-700)', fontWeight: 600 }}>{t('loops.outdated')}</span>}
     </span>
   )

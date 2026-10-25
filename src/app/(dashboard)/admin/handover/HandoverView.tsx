@@ -3,7 +3,8 @@
 import { useMemo, useState, useTransition } from 'react'
 import { useTranslations } from 'next-intl'
 import { Download } from 'lucide-react'
-import { Button, Card, Select, EmptyState } from '@/components/ui'
+import { Button, Card, Select, EmptyState, StateChip } from '@/components/ui'
+import { handoverState } from '@/lib/states'
 import {
   generateHandoverPackageAction,
   getSignedHandoverUrlsAction,
@@ -38,15 +39,6 @@ const labelStyle: React.CSSProperties = {
 function fmtDate(s: string | null | undefined): string {
   if (!s) return '—'
   return new Date(s).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' })
-}
-
-function statusStyle(s: string): React.CSSProperties {
-  const base = { padding: '2px 8px', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-xs)', fontWeight: 600 }
-  if (s === 'ISSUED')     return { ...base, background: 'var(--success-50)', color: 'var(--success-700)' }
-  if (s === 'PARTIAL')    return { ...base, background: 'var(--warning-50)', color: 'var(--warning-700)', border: '1px solid var(--warning-200)' }
-  if (s === 'FAILED')     return { ...base, background: 'var(--danger-50)',  color: 'var(--danger-700)' }
-  if (s === 'GENERATING') return { ...base, background: 'var(--primary-50)', color: 'var(--primary-700)' }
-  return { ...base, background: 'var(--gray-100)', color: 'var(--text-secondary)' }
 }
 
 export default function HandoverView({
@@ -282,7 +274,7 @@ export default function HandoverView({
                       </td>
                       <td style={{ padding: 8, color: 'var(--text-secondary)' }}>{fmtDate(pkg.generated_at)}</td>
                       <td style={{ padding: 8 }}>
-                        <span style={statusStyle(pkg.status)}>{pkg.status === 'PARTIAL' ? t('status.partial') : pkg.status}</span>
+                        <StateChip state={handoverState(pkg.status)} />
                         {pkg.status === 'PARTIAL' && (
                           <div style={{ color: 'var(--warning-700)', fontSize: 'var(--text-xs)', marginTop: 4 }}>{t('history.omitted', { n: pkg.omitted_count })}</div>
                         )}

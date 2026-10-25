@@ -1,5 +1,6 @@
 // Tipos y constantes compartidos por la pantalla de review PSSR.
 // Extraído de PssrReviewForm.tsx (Q4) — sin cambios de comportamiento.
+import { TONE_STYLE, pssrState } from '@/lib/states'
 
 export type ItemStatus = 'pending' | 'si' | 'no' | 'na'
 export type ReviewStatus = 'draft' | 'in_progress' | 'pending_approval' | 'approved' | 'rejected'
@@ -41,12 +42,14 @@ export const STATUS_KEY_MAP: Record<ReviewStatus, StatusKey> = {
   rejected: 'rejected',
 }
 
+// A08: tonos del contrato (`pssrState`): enviado = espera la aprobación de otra persona, en violeta.
+const pssrTone = (status: string) => { const t = TONE_STYLE[pssrState(status).tone]; return { color: t.fg, bg: t.bg } }
 export const STATUS_STYLES: Record<StatusKey, { color: string; bg: string }> = {
-  draft:           { color: 'var(--text-muted)',  bg: 'var(--gray-100)' },
-  inProgress:      { color: 'var(--primary-700)', bg: 'var(--primary-50)' },
-  pendingApproval: { color: 'var(--warning-700)', bg: 'var(--warning-50)' },
-  approvedDone:    { color: 'var(--success-700)', bg: 'var(--success-50)' },
-  rejected:        { color: 'var(--danger-700)',  bg: 'var(--danger-100)' },
+  draft:           pssrTone('draft'),
+  inProgress:      pssrTone('in_progress'),
+  pendingApproval: pssrTone('pending_approval'),
+  approvedDone:    pssrTone('approved'),
+  rejected:        pssrTone('rejected'),
 }
 
 const CAT_COLORS: Record<string, string> = {

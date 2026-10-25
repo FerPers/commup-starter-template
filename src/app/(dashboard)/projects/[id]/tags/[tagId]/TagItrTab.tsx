@@ -7,15 +7,13 @@ import { createItrAssignment, deleteItr } from '@/app/actions/itr-instances'
 import { detectTagType, sortTemplatesByRelevance } from '@/lib/tag-types'
 import AddToWorkPlanModal, { type ModalItr } from '@/components/AddToWorkPlanModal'
 import type { TagItr, ItrTemplate, OrgMember } from './TagDetail'
-import { ITR_STATUS_COLORS } from '@/lib/constants/status-colors'
+import { itrRowState } from '@/lib/states'
 import { assignmentIssue, normalizeRequired, requiredForTemplate } from '@/lib/itr/signatures'
 import { ink, alpha } from '@/lib/theme'
-import { DialogSurface, useAskDialog, useToast } from '@/components/ui'
+import { DialogSurface, StateChip, useAskDialog, useToast } from '@/components/ui'
 
 // ── Status config ────────────────────────────────────────────────────
 
-const ITR_STATUSES = ['not_started', 'in_progress', 'completed', 'approved', 'rejected'] as const
-type ItrStatusKey = (typeof ITR_STATUSES)[number]
 const SIGN_ROLES = ['executor', 'supervisor', 'client'] as const
 type SignRoleKey = (typeof SIGN_ROLES)[number]
 
@@ -168,8 +166,7 @@ export default function TagItrTab({
       {tagItrs.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {tagItrs.map(itr => {
-            const st = ITR_STATUS_COLORS[itr.status] ?? ITR_STATUS_COLORS.not_started
-            const stLabel = t(`status.${(ITR_STATUSES as readonly string[]).includes(itr.status) ? itr.status as ItrStatusKey : 'not_started'}`)
+            const state = itrRowState({ ...itr, signatures: itr.itr_signatures })
             const executor = itr.itr_assignments.find(a => a.role === 'executor')
             const tmpl = itr.itr_templates
             const phase = itr.project_phases
@@ -206,10 +203,8 @@ export default function TagItrTab({
                   </div>
                 </div>
 
-                {/* Status pill */}
-                <span style={{ padding: '3px 9px', borderRadius: '6px', fontSize: '12px', fontWeight: 600, background: st.bg, color: ink(st.color), whiteSpace: 'nowrap' }}>
-                  {stLabel}
-                </span>
+                {/* Status (A08): un ITR devuelto muestra el motivo al pasar el cursor */}
+                <StateChip state={state} title={state.key === 'returned' ? itr.return_reason ?? undefined : undefined} />
 
                 {/* Signatures */}
                 <div style={{ display: 'flex', gap: '4px' }}>

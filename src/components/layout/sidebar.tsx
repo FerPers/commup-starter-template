@@ -360,8 +360,9 @@ function SidebarLink({ href, label, Icon, active, badge, softBadge, accent, comp
         <span
           aria-label={t('a11y.pending', { count: badge })}
           style={{
-            background: softBadge ? 'rgba(255,255,255,0.12)' : 'var(--danger-500)',
-            color: softBadge ? 'var(--sidebar-text-dim)' : '#fff',
+            // A25: un contador de obligaciones normales no es una alarma: naranja de marca, no rojo.
+            background: softBadge ? 'rgba(255,255,255,0.12)' : 'var(--brand-orange)',
+            color: softBadge ? 'var(--sidebar-text-dim)' : 'var(--brand-navy-dark)',
             fontSize: 'var(--text-xs)', fontWeight: 700,
             padding: '1px 6px', borderRadius: 'var(--radius-pill)',
             minWidth: 20, textAlign: 'center', lineHeight: '18px',

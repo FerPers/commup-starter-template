@@ -24,6 +24,9 @@ export type ItrListRow = {
   signatures: Array<{ role: string; signed_at: string }>
   /** S04 (D4): firmas que exige el ITR. */
   required_signatures: string[]
+  /** A08 (E2): devuelto al ejecutor, hasta la siguiente firma. */
+  returned_at: string | null
+  return_reason: string | null
 }
 
 export const ITR_SORT_KEYS = ['created_at', 'itr_number', 'tag_number', 'template_title', 'scheduled_date', 'progress_pct', 'status'] as const
