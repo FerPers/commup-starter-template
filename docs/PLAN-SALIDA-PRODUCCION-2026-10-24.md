@@ -116,6 +116,19 @@ En términos concretos, salir significa cuatro cosas:
 - **A15 mínimo (24-oct):** hecho (migración `20261229120000`). Decisiones de Luis: alerta como aviso en la app + push a los operadores, y página de salud solo para ellos. Los 5 crons HTTP dejan su latido en `cron_heartbeats`; `platform_health_checks()` revisa además los jobs de pg_cron, las colas (eventos sin despachar, push en cola, webhooks atascados), webhooks abandonados, paquetes de handover fallidos o colgados y conflictos de sincronización. pg_cron `platform-health` (cada 5 min, dentro de la BD: avisa aunque el Worker o GitHub Actions estén caídos) avisa al pasar a rojo y al resolverse. Página `/admin/health`. Pendiente del A15 completo: objetivos de servicio y quién responde, y alerta externa por si la BD misma se cae.
 - **A37 (decisión 24-oct):** la tolerancia la define el inspector en el ITR al calificar; no se parametriza ni se calcula en el formato. El formato solo avisa (sin bloquear) cuando el error escrito no cuadra con las lecturas o una fila «conforme» supera la tolerancia del propio inspector. Hecho en I10A v3 (migración `20261228120000`): 2.07 «Tolerancia ±» (número) y 2.08 «Base del error» (selección) los llena el inspector; fuente y puntos pasan a 2.09 y 2.10. 4.01 = as found (un «no conforme» queda como evidencia con observación obligatoria y no rechaza, H7), 6.03 = as left (rechaza). Avisos en ámbar en la tabla, en el pie del ITR y en el PDF (`src/lib/itr/calibration-advisory.ts`), nunca bloquean. Las sondas H2 pasan a probar «no rechaza, avisa».
 
+- **Decisiones de Luis (25-oct):**
+  - **A15:** las alertas de salud las recibe el **arquitecto**, que es quien administrará CommUp. Se registra en `platform_operators` con su cuenta y su organización.
+  - **38-4 y validación:** en vez de cargar Geopark sobre lo que hay, se crea una **organización nueva** y se carga toda la ingeniería:
+    - listado de líneas;
+    - instrumentos;
+    - señales;
+    - cables de instrumentación;
+    - cables eléctricos;
+    - equipos eléctricos;
+    - equipos mecánicos.
+  - Sobre esa base se construyen desde cero los planes de precomisionamiento y comisionamiento. CommUp debe poder leer e incorporar esos listados. El alcance de la continuidad (38-4) saldrá del listado de cables.
+  - **Orden:** antes de empezar con la organización nueva se cierra todo lo pendiente.
+
 ### Ola 3 — Orientación y lectura (en paralelo, no bloquea la salida)
 
 | Acción | Brecha concreta |
