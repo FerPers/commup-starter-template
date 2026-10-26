@@ -31,11 +31,37 @@ describe('parseTagRows (lista de instrumentos de ingeniería)', () => {
     expect(rows.map(r => r.tag_number)).toEqual(['PIT-7621001', 'TW-7621001'])
   })
   it('sin columnas de sistema: sistema › subsistema desde los títulos', () => {
-    expect(rows[0]).toMatchObject({ system_code: 'SISTEMA-CRUDO', system_name: 'SISTEMA DE CRUDO', subsystem_code: 'MULTIPLES-RECIBO-762101A-B', subsystem_name: 'MULTIPLES DE RECIBO 762101A/B' })
+    expect(rows[0]).toMatchObject({ system_code: 'SISTEMA-CRUDO', system_name: 'SISTEMA DE CRUDO', subsystem_code: 'CRUDO-MULTIPLES-RECIBO-762101A-B', subsystem_name: 'MULTIPLES DE RECIBO 762101A/B' })
   })
   it('«N/A» y «BY VENDOR LIST» se leen vacíos (no pisan nada al reimportar)', () => {
     expect(rows[0].manufacturer).toBeUndefined()
     expect(rows[1]).toMatchObject({ pid_drawing: undefined, eng_unit: undefined, range_min: undefined })
     expect(rows[0]).toMatchObject({ pid_drawing: 'ECP-…-PRO-PID-120', datasheet_number: 'ECP-…-INS-HD-007' })
+  })
+})
+
+describe('valores para todo el archivo (lista F&G por zonas)', () => {
+  const FG: unknown[][] = [
+    ['TAG', 'DESCRIPCIÓN', 'TIPO SEÑAL'],
+    ['CUARTO DE CONTROL'],
+    ['SD-762609', 'Detector de humo', 'Digital Input'],
+    ['OFICINAS'],
+    ['SD-762620', 'Detector de humo', 'Digital Input'],
+  ]
+  const { headerRowIdx, colIndex } = detectHeaderRow(FG, TAG_COLUMNS)
+  const rows = parseTagRows(FG, colIndex, headerRowIdx + 1, 'INST', { system: 'SISTEMA F&G', criticality: 'safety' })
+
+  it('las zonas quedan como subsistemas del sistema del archivo', () => {
+    expect(rows.map(r => [r.system_name, r.subsystem_name])).toEqual([['SISTEMA F&G', 'CUARTO DE CONTROL'], ['SISTEMA F&G', 'OFICINAS']])
+    expect(rows[0].system_code).toBe('SISTEMA-F-G')
+  })
+  it('criticidad del archivo para las filas sin ella', () => {
+    expect(rows.every(r => r.criticality === 'safety')).toBe(true)
+  })
+  it('sin títulos, el sistema del archivo es también el subsistema', () => {
+    const plain: unknown[][] = [['TAG', 'DESCRIPCIÓN'], ['GD-762501', 'Detector de gas']]
+    const h = detectHeaderRow(plain, TAG_COLUMNS)
+    expect(parseTagRows(plain, h.colIndex, h.headerRowIdx + 1, 'INST', { system: 'SISTEMA F&G' })[0])
+      .toMatchObject({ system_code: 'SISTEMA-F-G', subsystem_code: 'SISTEMA-F-G', subsystem_name: 'SISTEMA F&G' })
   })
 })

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { looksLikeTag } from './tag-shape'
-import { sectionCode, sectionsByRow } from './sections'
+import { sectionCode, sectionsByRow, subsystemCode } from './sections'
 
 // Secuencia real de títulos de la lista de instrumentos de Akacías A2.2 (INS-LI-006) y de la de F&G (LI-002).
 const H = (t: string) => ['', '', t]
@@ -50,5 +50,21 @@ describe('sectionCode', () => {
     expect(sectionCode('SEPARADORES GENERALES 762101A/B')).toBe('SEPARADORES-GENERALES-762101A-B')
     expect(sectionCode('TANQUES DE ALMACENAMIENTO FUERA DE ESPECIFICACIÓN').length).toBeLessThanOrEqual(40)
     expect(sectionCode('ÁREA PERSONAL EN CONTINGENCIA')).toBe('AREA-PERSONAL-CONTINGENCIA')
+  })
+})
+
+describe('códigos sin choques', () => {
+  it('dos títulos que se cortan igual tienen códigos distintos', () => {
+    const a = sectionCode('TANQUES DE ALMACENAMIENTO DE CRUDO EN ESPECIFICACIÓN TK-762002A/B')
+    const b = sectionCode('TANQUES DE ALMACENAMIENTO DE CRUDO EN ESPECIFICACIÓN TK-762002A/B Y TANQUE DE ALMACENAMIENTO DE CRUDO FUERA DE ESPECIFICACIÓN TK-762003')
+    expect(a).not.toBe(b)
+    expect(a.length).toBeLessThanOrEqual(40)
+    expect(b.length).toBeLessThanOrEqual(40)
+  })
+  it('el mismo subsistema en dos sistemas no choca; el código lleva el sistema', () => {
+    expect(subsystemCode('TANQUES DE LAVADO TK-762501/02', 'SISTEMA DE CRUDO')).toBe('CRUDO-TANQUES-LAVADO-TK-762501-02')
+    expect(subsystemCode('TANQUES DE LAVADO TK-762501/02', 'SISTEMA F&G')).toBe('F-G-TANQUES-LAVADO-TK-762501-02')
+    expect(subsystemCode('SISTEMA DE TEA', 'SISTEMA DE TEA')).toBe('SISTEMA-TEA')
+    expect(subsystemCode('CUARTO DE CONTROL', null)).toBe('CUARTO-CONTROL')
   })
 })

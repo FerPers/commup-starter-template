@@ -7694,7 +7694,15 @@
       "sheet": "Errors",
       "file": "errors"
     },
-    "fromSections": "System and subsystem taken from the list's section titles: {systems} systems and {subsystems} subsystems. Check them in the «Area / System / Subsystem» column."
+    "fromSections": "System and subsystem taken from the list's section titles: {systems} systems and {subsystems} subsystems. Check them in the «Area / System / Subsystem» column.",
+    "fileDefaults": {
+      "title": "Values for the whole file (optional)",
+      "system": "System",
+      "systemPh": "e.g. F&G SYSTEM",
+      "criticality": "Criticality",
+      "fromFile": "— from the file",
+      "hint": "System: for rows without a «SYSTEM …» title; the list's titles (zones) become subsystems. Criticality: for rows without one. «Safety» makes the system release wait for its approved ITRs and no A/B punches. Choose before uploading the file."
+    }
   },
   "SignalImport": {
     "title": "Import Signal List",
@@ -7761,7 +7769,17 @@
       "missingColumns": "Required columns not found. Expected: SIGNAL TAG, SIGNAL TYPE, DISCIPLINE (or their Spanish equivalents). The header can be in any of the first 15 rows.",
       "badType": "Row {row}: invalid SIGNAL_TYPE \"{value}\" (valid: {valid}) — tag: {tag}",
       "badDiscipline": "Row {row}: DISCIPLINE \"{value}\" does not exist — tag: {tag}"
-    }
+    },
+    "fileSystem": {
+      "label": "System for the whole file (optional)",
+      "placeholder": "e.g. F&G SYSTEM",
+      "hint": "For rows without a «SYSTEM …» title. It only places new instruments; existing ones are not moved. Type it before uploading the file."
+    },
+    "safetySheets": {
+      "label": "Sheets of a safety system:",
+      "hint": "Their instruments get «Safety» criticality (a criticality is never lowered)."
+    },
+    "markedSafety": "Instruments marked as safety"
   },
   "KpiReport": {
     "blocked": "BLOCK",
@@ -8874,7 +8892,8 @@
       "instrumentTagError": "Instrument tag «{tag}»: {error}",
       "instrumentTagNotCreated": "Instrument tag «{tag}» could not be created",
       "subsystemNotCreated": "Subsystem «{code}» could not be created",
-      "loopTagsError": "Loops ↔ instruments: {error}"
+      "loopTagsError": "Loops ↔ instruments: {error}",
+      "safetyError": "Safety criticality could not be set: {error}"
     },
     "pidRedlines": {
       "descriptionRequired": "Describe what changed in the field (at least 3 characters).",

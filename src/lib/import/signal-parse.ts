@@ -3,7 +3,7 @@ import type { SignalRow } from '@/app/actions/import-signals'
 import { cellText, detectHeaderRow, sheetToRows } from '@/lib/excel/detect-header'
 import { SIGNAL_COLS } from '@/lib/excel/signal-columns'
 import { looksLikeTag } from '@/lib/import/tag-shape'
-import { sectionCode, sectionsByRow } from '@/lib/import/sections'
+import { sectionCode, sectionsByRow, subsystemCode } from '@/lib/import/sections'
 import { normalizeSignalType } from '@/lib/signals/types'
 
 // Lectura de la lista de señales (asistente /projects/[id]/import-signals). Pura: la prueba signal-parse.test.ts.
@@ -32,7 +32,19 @@ function parseNum(val: string): number | null {
  * 76 señales ESD y se perdían las 686 del DCS). Los títulos de sección y las notas al pie de la columna del tag se
  * saltan en silencio; el tipo se normaliza («AI+ HART» → AI, «Digital Output» → DO, «COMM» → COMM).
  */
-export function parseSignalWorkbook(wb: XLSX.WorkBook, disciplineCodes: Set<string>): ParsedSignalWorkbook {
+/** Hoja de un sistema de seguridad (ESD, SIS, F&G): sus instrumentos se proponen con criticidad «safety». */
+export function isSafetySheetName(name: string): boolean {
+  return /\b(?:ESD|SIS|SHUTDOWN|F\s*&\s*G|F\s*Y\s*G|FUEGO|FIRE|SEGURIDAD|SAFETY)\b/i.test(name)
+}
+
+export function parseSignalWorkbook(
+  wb: XLSX.WorkBook,
+  disciplineCodes: Set<string>,
+  /** Sistema de las filas sin título «SISTEMA …» (p. ej. la lista F&G por zonas). */
+  opts: { system?: string } = {},
+): ParsedSignalWorkbook {
+  const trimmedSystem = opts.system?.trim()
+  const fileSystem = trimmedSystem === '' ? undefined : trimmedSystem
   const out: ParsedSignalWorkbook = { rows: [], issues: [], columns: [], sheets: [] }
   const columns = new Set<string>()
 
@@ -66,8 +78,10 @@ export function parseSignalWorkbook(wb: XLSX.WorkBook, disciplineCodes: Set<stri
       if (!disciplineCodes.has(discipline)) out.issues.push({ kind: 'badDiscipline', sheet, row: rowNum, value: discipline, tag: signalTag })
 
       const areaCode = get('area_code') || 'GENERAL'
-      const sysCode = get('system_code') || (section?.system ? sectionCode(section.system) : 'GEN-SYS')
-      const subCode = get('subsystem_code') || (section ? sectionCode(section.subsystem) : 'GEN-SUB')
+      const systemTitle = section?.system ?? fileSystem
+      const subsystemTitle = section?.subsystem ?? fileSystem
+      const sysCode = get('system_code') || (systemTitle ? sectionCode(systemTitle) : 'GEN-SYS')
+      const subCode = get('subsystem_code') || (subsystemTitle ? subsystemCode(subsystemTitle, systemTitle) : 'GEN-SUB')
       out.rows.push({
         signal_tag:      signalTag,
         instrument_tag:  instrTag,
@@ -96,9 +110,10 @@ export function parseSignalWorkbook(wb: XLSX.WorkBook, disciplineCodes: Set<stri
         area_code:       areaCode,
         area_name:       get('area_name') || areaCode,
         system_code:     sysCode,
-        system_name:     get('system_name') || (section?.system ?? sysCode),
+        system_name:     get('system_name') || (systemTitle ?? sysCode),
         subsystem_code:  subCode,
-        subsystem_name:  get('subsystem_name') || (section?.subsystem ?? subCode),
+        subsystem_name:  get('subsystem_name') || (subsystemTitle ?? subCode),
+        sheet,
       })
       count++
     })

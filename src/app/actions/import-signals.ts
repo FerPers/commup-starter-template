@@ -44,6 +44,10 @@ export interface SignalRow {
   system_name: string
   subsystem_code: string
   subsystem_name: string
+  /** Hoja de origen (lista con DCS/ESD/F&G en hojas separadas). */
+  sheet?: string
+  /** El instrumento pertenece a un sistema de seguridad (hoja ESD / F&G marcada): su criticidad sube a «safety». */
+  safety_critical?: boolean
 }
 
 export interface SignalImportResult {
@@ -51,6 +55,7 @@ export interface SignalImportResult {
   updated: number       // señales que ya existían
   tagsCreated: number   // tags instrumento creados porque no existían
   loopsCreated: number  // lazos creados desde la columna LAZO
+  markedSafety: number  // tags instrumento que pasaron a criticidad «safety» (hojas de seguridad)
   skipped: number
   errors: { row: number; tag: string; reason: string }[]
   warnings: string[]
@@ -76,7 +81,7 @@ export const importSignals = withAuthOnly(
 
     // S21 (B-03): sin un evento por fila; un resumen al final.
     const admin = createAdminClient({ bulk: 'signals' })
-    const result: SignalImportResult = { imported: 0, updated: 0, tagsCreated: 0, loopsCreated: 0, skipped: 0, errors: [], warnings: [] }
+    const result: SignalImportResult = { imported: 0, updated: 0, tagsCreated: 0, loopsCreated: 0, markedSafety: 0, skipped: 0, errors: [], warnings: [] }
 
     const { data: disciplinesData, error: discErr } = await admin
       .from('disciplines')
@@ -226,6 +231,16 @@ export const importSignals = withAuthOnly(
         }
       }
 
+      // 1b. Instrumentos de un sistema de seguridad (hoja ESD / F&G marcada): criticidad «safety». Solo sube,
+      //     nunca baja: un tag ya «safety» no se toca y uno «process» o «normal» pasa a «safety».
+      const safetyIds = [...new Set(chunk.filter(c => c.row.safety_critical).map(c => tagIdMap.get(c.instrTag)).filter((v): v is string => !!v))]
+      if (safetyIds.length > 0) {
+        const { data: marked, error: critErr } = await admin.from('tags').update({ criticality: 'safety' })
+          .eq('project_id', projectId).in('id', safetyIds).or('criticality.is.null,criticality.neq.safety').select('id')
+        if (critErr) result.warnings.push(t('importSignals.safetyError', { error: critErr.message }))
+        else result.markedSafety += marked?.length ?? 0
+      }
+
       // 2. Señales — S07 (F-06): claves uniformes; las existentes conservan lo que el archivo no trae.
       const sigColumns = signalPayloadColumns(present)
       const tagIds = [...new Set(chunk.map(c => tagIdMap.get(c.instrTag)).filter((v): v is string => !!v))]
@@ -291,7 +306,7 @@ export const importSignals = withAuthOnly(
       await emitImportSummary(admin, {
         orgId: ctx.orgId, projectId, actorId: ctx.userId, kind: 'signals',
         counts: { imported: result.imported, updated: result.updated, tags_created: result.tagsCreated,
-                  loops_created: result.loopsCreated, skipped: result.skipped },
+                  loops_created: result.loopsCreated, marked_safety: result.markedSafety, skipped: result.skipped },
       })
     }
     return { result }

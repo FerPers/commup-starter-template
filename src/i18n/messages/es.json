@@ -7694,7 +7694,15 @@
       "sheet": "Errores",
       "file": "errores"
     },
-    "fromSections": "Sistema y subsistema tomados de los títulos de sección de la lista: {systems} sistemas y {subsystems} subsistemas. Revísalos en la columna «Área / Sistema / Subsistema»."
+    "fromSections": "Sistema y subsistema tomados de los títulos de sección de la lista: {systems} sistemas y {subsystems} subsistemas. Revísalos en la columna «Área / Sistema / Subsistema».",
+    "fileDefaults": {
+      "title": "Valores para todo el archivo (opcional)",
+      "system": "Sistema",
+      "systemPh": "Ej: SISTEMA F&G",
+      "criticality": "Criticidad",
+      "fromFile": "— la del archivo",
+      "hint": "Sistema: para las filas sin título «SISTEMA …»; los títulos de la lista (zonas) quedan como subsistemas. Criticidad: para las filas sin ella. «Seguridad» hace que la liberación del sistema espere sus ITR aprobados y sin punch A/B. Elige antes de subir el archivo."
+    }
   },
   "SignalImport": {
     "title": "Importar Lista de Señales",
@@ -7761,7 +7769,17 @@
       "missingColumns": "Columnas requeridas no encontradas. Se esperan: TAG DE SEÑAL, TIPO DE SEÑAL, DISCIPLINA (o sus equivalentes en inglés). El encabezado puede estar en cualquiera de las primeras 15 filas.",
       "badType": "Fila {row}: TIPO_DE_SEÑAL \"{value}\" inválido (válidos: {valid}) — tag: {tag}",
       "badDiscipline": "Fila {row}: DISCIPLINA \"{value}\" no existe — tag: {tag}"
-    }
+    },
+    "fileSystem": {
+      "label": "Sistema para todo el archivo (opcional)",
+      "placeholder": "Ej: SISTEMA F&G",
+      "hint": "Para las filas sin título «SISTEMA …». Solo ubica los instrumentos nuevos; los que ya existen no se mueven. Escríbelo antes de subir el archivo."
+    },
+    "safetySheets": {
+      "label": "Hojas de un sistema de seguridad:",
+      "hint": "Sus instrumentos quedan con criticidad «Seguridad» (nunca se baja una criticidad)."
+    },
+    "markedSafety": "Instrumentos marcados como seguridad"
   },
   "KpiReport": {
     "blocked": "BLOQ",
@@ -8874,7 +8892,8 @@
       "instrumentTagError": "Tag instrumento «{tag}»: {error}",
       "instrumentTagNotCreated": "El tag instrumento «{tag}» no pudo crearse",
       "subsystemNotCreated": "El subsistema «{code}» no pudo crearse",
-      "loopTagsError": "Lazos ↔ instrumentos: {error}"
+      "loopTagsError": "Lazos ↔ instrumentos: {error}",
+      "safetyError": "No se pudo marcar la criticidad de seguridad: {error}"
     },
     "pidRedlines": {
       "descriptionRequired": "Describe qué cambió en campo (al menos 3 caracteres).",

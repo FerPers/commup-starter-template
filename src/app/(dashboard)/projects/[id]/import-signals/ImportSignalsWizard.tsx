@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import * as XLSX from 'xlsx'
 import { importSignals, type SignalRow, type SignalImportResult } from '@/app/actions/import-signals'
-import { parseSignalWorkbook } from '@/lib/import/signal-parse'
+import { isSafetySheetName, parseSignalWorkbook } from '@/lib/import/signal-parse'
 import { SIGNAL_TYPES, SIGNAL_TYPE_LABELS } from '@/lib/signals/types'
 import { dedupeLast, mergeCounts, runBatches } from '@/lib/import/batches'
 import { alpha } from '@/lib/theme'
@@ -44,6 +44,10 @@ export default function ImportSignalsWizard({
   const [columns, setColumns]             = useState<string[]>([])
   const [progress, setProgress]           = useState<{ done: number; total: number } | null>(null)
   const [sheets, setSheets]               = useState<{ name: string; signals: number }[]>([])
+  // Sistema para las filas sin título «SISTEMA …» y hojas de un sistema de seguridad (ESD, F&G): sus instrumentos
+  // pasan a criticidad «safety» (la liberación del sistema espera sus ITR aprobados).
+  const [fileSystem, setFileSystem]       = useState('')
+  const [safetySheets, setSafetySheets]   = useState<Set<string>>(new Set())
 
   const disciplineCodes = new Set(disciplines.map(d => d.code.toUpperCase()))
 
@@ -57,7 +61,7 @@ export default function ImportSignalsWizard({
       try {
         const data = new Uint8Array(e.target?.result as ArrayBuffer)
         const wb = XLSX.read(data, { type: 'array' })
-        const parsedWb = parseSignalWorkbook(wb, disciplineCodes)
+        const parsedWb = parseSignalWorkbook(wb, disciplineCodes, { system: fileSystem })
 
         if (parsedWb.sheets.length === 0) {
           setValidationErrors([ts('warn.missingColumns')])
@@ -75,6 +79,7 @@ export default function ImportSignalsWizard({
 
         setValidationErrors(errors)
         setSheets(parsedWb.sheets)
+        setSafetySheets(new Set(parsedWb.sheets.filter(sh => isSafetySheetName(sh.name)).map(sh => sh.name)))
         setColumns(parsedWb.columns)
         setRows(parsedWb.rows)
         setFileName(file.name)
@@ -102,7 +107,8 @@ export default function ImportSignalsWizard({
     setLoading(true)
     setImportError(null)
     // S07 (F-23): lotes de 1000 filas con progreso en vez del índice entero en una sola action.
-    const unique = dedupeLast(rows, r => `${(r.instrument_tag || r.signal_tag).trim().toUpperCase()}|${r.signal_tag.trim().toUpperCase()}`)
+    const marked = rows.map(r => ({ ...r, safety_critical: !!r.sheet && safetySheets.has(r.sheet) }))
+    const unique = dedupeLast(marked, r => `${(r.instrument_tag || r.signal_tag).trim().toUpperCase()}|${r.signal_tag.trim().toUpperCase()}`)
     setProgress({ done: 0, total: unique.length })
     const res = await runBatches<SignalImportResult>(unique,
       batch => importSignals(projectId, batch as SignalRow[], columns), mergeCounts, (done, total) => setProgress({ done, total }))
@@ -221,6 +227,13 @@ export default function ImportSignalsWizard({
       {/* ── Step 1: Upload ── */}
       {step === 'upload' && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '20px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <label style={{ background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)', padding: '14px 20px', display: 'flex', flexDirection: 'column', gap: 4, fontSize: '12px', color: 'var(--text-secondary)' }}>
+            {ts('fileSystem.label')}
+            <input value={fileSystem} onChange={e => setFileSystem(e.target.value)} placeholder={ts('fileSystem.placeholder')} maxLength={120}
+              style={{ padding: '7px 10px', border: '1px solid var(--border)', borderRadius: 8, fontSize: 13, background: 'var(--card-bg)', color: 'var(--text-strong)' }} />
+            <span style={{ color: 'var(--text-muted)' }}>{ts('fileSystem.hint')}</span>
+          </label>
           <div
             onDragOver={e => { e.preventDefault(); setDragging(true) }}
             onDragLeave={() => setDragging(false)}
@@ -240,6 +253,8 @@ export default function ImportSignalsWizard({
             <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '8px' }}>{ts('orClick')}</p>
             <p style={{ color: 'var(--text-muted)', fontSize: '12px' }}>.xlsx · .xls</p>
             <input id="sig-file-input" type="file" accept=".xlsx,.xls" onChange={handleFileInput} style={{ display: 'none' }} />
+          </div>
+
           </div>
 
           {/* Column reference */}
@@ -281,6 +296,17 @@ export default function ImportSignalsWizard({
             <div>
               <span style={{ fontWeight: 600, color: 'var(--text-strong)' }}>{fileName}</span>
               <span style={{ color: 'var(--text-muted)', fontSize: '14px', marginLeft: '12px' }}>{ts('detected', { n: rows.length })}{sheets.length > 1 && ` (${sheets.map(sh => `${sh.name}: ${sh.signals}`).join(' · ')})`}</span>
+              <fieldset style={{ border: 'none', padding: 0, margin: '8px 0 0', display: 'flex', flexWrap: 'wrap', gap: '6px 14px', alignItems: 'center' }}>
+                <legend style={{ float: 'left', fontSize: '12px', color: 'var(--text-secondary)', marginRight: 6 }}>{ts('safetySheets.label')}</legend>
+                {sheets.map(sh => (
+                  <label key={sh.name} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: '13px', color: 'var(--text-strong)' }}>
+                    <input type="checkbox" checked={safetySheets.has(sh.name)}
+                      onChange={e => setSafetySheets(prev => { const next = new Set(prev); if (e.target.checked) next.add(sh.name); else next.delete(sh.name); return next })} />
+                    {sh.name}
+                  </label>
+                ))}
+                <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{ts('safetySheets.hint')}</span>
+              </fieldset>
             </div>
             <button onClick={() => { setStep('upload'); setRows([]); setValidationErrors([]) }}
               style={{ fontSize: '13px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>
@@ -407,6 +433,12 @@ export default function ImportSignalsWizard({
               <div style={{ padding: '16px 28px', background: 'var(--violet-50)', borderRadius: '12px', border: '1px solid var(--violet-200)' }}>
                 <div style={{ fontSize: '32px', fontWeight: 700, color: 'var(--violet-700)' }}>{result.tagsCreated}</div>
                 <div style={{ fontSize: '13px', color: 'var(--violet-800)' }}>{ts('tagsCreated')}</div>
+              </div>
+            )}
+            {result.markedSafety > 0 && (
+              <div style={{ padding: '16px 28px', background: 'var(--danger-50)', borderRadius: '12px', border: '1px solid var(--danger-200)' }}>
+                <div style={{ fontSize: '32px', fontWeight: 700, color: 'var(--danger-700)' }}>{result.markedSafety}</div>
+                <div style={{ fontSize: '13px', color: 'var(--danger-800)' }}>{ts('markedSafety')}</div>
               </div>
             )}
             {result.loopsCreated > 0 && (

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import * as XLSX from 'xlsx'
-import { parseSignalWorkbook } from './signal-parse'
+import { isSafetySheetName, parseSignalWorkbook } from './signal-parse'
 
 const HEAD = ['', 'TAG DE SEÑAL', 'TAG INSTRUMENTO', 'DESCRIPCION', 'TIPO DE SEÑAL', 'SERVICIO', 'RANGO', '', '', 'P&ID']
 const HEAD2 = ['', '', '', '', '', '', 'Inf.', 'Sup.', 'Unidad', '']
@@ -41,5 +41,17 @@ describe('parseSignalWorkbook (LI-001 de Akacías: DCS + ESD en hojas separadas)
   it('rango e instrumento; «N/A» vacío', () => {
     expect(r.rows[0]).toMatchObject({ instrument_tag: 'PIT-7621002', range_min: -14.7, range_max: 800, eng_unit: 'psig' })
     expect(r.rows[1]).toMatchObject({ range_min: null, eng_unit: '', pid_drawing: '' })
+  })
+})
+
+describe('hojas de seguridad y sistema del archivo', () => {
+  it('reconoce hojas ESD / SIS / F&G', () => {
+    for (const n of ['LISTADO-ESD', 'SIS', 'Señales F&G', 'F y G', 'Fire & Gas']) expect(isSafetySheetName(n)).toBe(true)
+    for (const n of ['LISTADO-DCS', 'LISTADO', 'COVER_CARTA_V', 'DESCARGAS']) expect(isSafetySheetName(n)).toBe(false)
+  })
+  it('cada señal sabe su hoja y toma el sistema del archivo si no hay título «SISTEMA»', () => {
+    const wb = book({ LISTADO: [HEAD, HEAD2, ['', 'CUARTO DE CONTROL'], ['1', 'SD-762609', 'SD-762609', 'Detector', 'DI', 'Humo', '', '', '', '']] })
+    const r = parseSignalWorkbook(wb, new Set(['INST']), { system: 'SISTEMA F&G' })
+    expect(r.rows[0]).toMatchObject({ sheet: 'LISTADO', system_name: 'SISTEMA F&G', subsystem_name: 'CUARTO DE CONTROL' })
   })
 })

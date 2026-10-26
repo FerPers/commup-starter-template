@@ -9,7 +9,8 @@ import { dedupeLast, mergeCounts, runBatches, IMPORT_BATCH } from '@/lib/import/
 import { detectTagType } from '@/lib/tag-types'
 import { detectEquipmentTypeCode } from '@/lib/equipment-types'
 import { pickBestSheet, detectHeaderRow } from '@/lib/excel/detect-header'
-import { TAG_COLUMNS, parseTagRows, usesSectionTitles } from '@/lib/import/tag-parse'
+import { TAG_COLUMNS, parseTagRows, usesSectionTitles, type TagFileDefaults } from '@/lib/import/tag-parse'
+import { CRITICALITY_LEVELS, type Criticality } from '@/lib/tags/criticality'
 import { alpha, ink } from '@/lib/theme'
 import { pressable } from '@/lib/a11y/pressable'
 
@@ -49,8 +50,12 @@ export default function ImportWizard({
   disciplinePrefill?: { code: string; name: string; color: string }
 }) {
   const ti = useTranslations('TagImport')
+  const tTags = useTranslations('Tags')
   const [step, setStep]               = useState<Step>('upload')
   const [sectionNote, setSectionNote] = useState<{ systems: number; subsystems: number } | null>(null)
+  // Valores para todo el archivo: sistema (filas sin título «SISTEMA …») y criticidad (filas sin ella).
+  const [fileSystem, setFileSystem]   = useState('')
+  const [fileCriticality, setFileCriticality] = useState<Criticality | ''>('')
   const [dragging, setDragging]       = useState(false)
   const [fileName, setFileName]       = useState<string | null>(null)
   const [rows, setRows]               = useState<TagRow[]>([])
@@ -96,7 +101,12 @@ export default function ImportWizard({
 
   // ── File parsing ──────────────────────────────────────────────
 
-  const parseFile = useCallback((file: File, disciplineCode: string) => {
+  const fileDefaults = useMemo<TagFileDefaults>(
+    () => ({ system: fileSystem.trim() ? fileSystem.trim() : undefined, criticality: fileCriticality ? fileCriticality : undefined }),
+    [fileSystem, fileCriticality],
+  )
+
+  const parseFile = useCallback((file: File, disciplineCode: string, defaults: TagFileDefaults) => {
     const reader = new FileReader()
     reader.onload = (e) => {
       try {
@@ -117,7 +127,7 @@ export default function ImportWizard({
           warnings.push(ti('warn.noTagColumn'))
         }
 
-        const parsed = parseTagRows(rawRows, colIndex, headerRowIdx + 1, disciplineCode)
+        const parsed = parseTagRows(rawRows, colIndex, headerRowIdx + 1, disciplineCode, defaults)
 
         if (parsed.length === 0) {
           setParseWarnings([...warnings, ti('warn.noRows')]); return
@@ -135,10 +145,11 @@ export default function ImportWizard({
         // Sistema › subsistema desde los títulos de sección: cuentan como columnas presentes (un reimport mueve
         // los tags sin ITR ni punch, como con columnas explícitas).
         const fromSections = usesSectionTitles(colIndex) && parsed.some(r => r.subsystem_code !== 'GEN-SUB')
+        const hierarchyFromFile = fromSections || (usesSectionTitles(colIndex) && !!defaults.system?.trim())
         setSectionNote(fromSections
           ? { systems: new Set(parsed.map(r => r.system_code)).size, subsystems: new Set(parsed.map(r => r.subsystem_code)).size }
           : null)
-        setColumns([...Object.keys(colIndex).filter(k => colIndex[k] !== undefined), ...(fromSections ? ['system_code', 'subsystem_code'] : [])])
+        setColumns([...Object.keys(colIndex).filter(k => colIndex[k] !== undefined), ...(hierarchyFromFile ? ['system_code', 'subsystem_code'] : []), ...(defaults.criticality ? ['criticality'] : [])])
         setRows(parsed)
         setStep('preview')
       } catch {
@@ -151,12 +162,12 @@ export default function ImportWizard({
   const onDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault(); setDragging(false)
     const file = e.dataTransfer.files[0]
-    if (file) parseFile(file, effectivePrefill)
-  }, [parseFile, effectivePrefill])
+    if (file) parseFile(file, effectivePrefill, fileDefaults)
+  }, [parseFile, effectivePrefill, fileDefaults])
 
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) parseFile(file, effectivePrefill)
+    if (file) parseFile(file, effectivePrefill, fileDefaults)
   }
 
   async function handleImport() {
@@ -267,6 +278,24 @@ export default function ImportWizard({
               )}
             </div>
           )}
+
+          <fieldset style={{ background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border)', padding: '14px 20px', margin: 0, display: 'grid', gridTemplateColumns: '1fr 200px', gap: '12px 16px' }}>
+            <legend style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500, padding: '0 4px' }}>{ti('fileDefaults.title')}</legend>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: '12px', color: 'var(--text-secondary)' }}>
+              {ti('fileDefaults.system')}
+              <input value={fileSystem} onChange={e => setFileSystem(e.target.value)} placeholder={ti('fileDefaults.systemPh')} maxLength={120}
+                style={{ padding: '7px 10px', border: '1px solid var(--border)', borderRadius: 8, fontSize: 13, background: 'var(--card-bg)', color: 'var(--text-strong)' }} />
+            </label>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: '12px', color: 'var(--text-secondary)' }}>
+              {ti('fileDefaults.criticality')}
+              <select value={fileCriticality} onChange={e => setFileCriticality(e.target.value as Criticality | '')}
+                style={{ padding: '7px 10px', border: '1px solid var(--border)', borderRadius: 8, fontSize: 13, background: 'var(--card-bg)', color: 'var(--text-strong)' }}>
+                <option value="">{ti('fileDefaults.fromFile')}</option>
+                {CRITICALITY_LEVELS.map(c => <option key={c} value={c}>{tTags(`criticality.${c}`)}</option>)}
+              </select>
+            </label>
+            <p style={{ gridColumn: '1 / -1', margin: 0, fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.45 }}>{ti('fileDefaults.hint')}</p>
+          </fieldset>
 
           <div
             onDragOver={e => { e.preventDefault(); setDragging(true) }}

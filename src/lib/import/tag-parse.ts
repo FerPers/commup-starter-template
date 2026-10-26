@@ -1,8 +1,8 @@
 import type { TagRow } from '@/app/actions/import'
 import { cellText, type ColumnKeywords } from '@/lib/excel/detect-header'
 import { looksLikeTag } from '@/lib/import/tag-shape'
-import { sectionCode, sectionsByRow } from '@/lib/import/sections'
-import { parseCriticality, parseSilLevel } from '@/lib/tags/criticality'
+import { sectionCode, sectionsByRow, subsystemCode } from '@/lib/import/sections'
+import { parseCriticality, parseSilLevel, type Criticality } from '@/lib/tags/criticality'
 
 // Lectura del índice de tags / instrumentos (asistente /projects/[id]/import). Pura: la prueban
 // tag-parse.test.ts y las listas reales (Akacías A2.2, 2026-10-26).
@@ -46,12 +46,22 @@ function numberOrUndefined(val: string): number | undefined {
   return Number.isFinite(n) ? n : undefined
 }
 
+/**
+ * Valores para todo el archivo (asistente): `system` = sistema de las filas que no traen uno (ni columna ni título
+ * «SISTEMA …»; p. ej. la lista F&G por zonas → «SISTEMA F&G» con las zonas como subsistemas); `criticality` = la de
+ * las filas sin columna o celda de criticidad.
+ */
+export type TagFileDefaults = { system?: string; criticality?: Criticality }
+
 export function parseTagRows(
   rawRows: unknown[][],
   colIndex: Record<string, number>,
   dataStart: number,
   disciplinePrefill: string,
+  defaults: TagFileDefaults = {},
 ): TagRow[] {
+  const trimmedSystem = defaults.system?.trim()
+  const fileSystem = trimmedSystem === '' ? undefined : trimmedSystem
   const result: TagRow[] = []
   // Sin columnas de sistema ni subsistema: salen de los títulos de sección de la lista (src/lib/import/sections.ts).
   const sections = usesSectionTitles(colIndex)
@@ -64,16 +74,18 @@ export function parseTagRows(
     if (!tagNumber || !looksLikeTag(tagNumber)) continue
     const disciplineCode = (disciplinePrefill || get('discipline')).toUpperCase()
     const section = sections?.get(i)
+    const systemTitle = section?.system ?? fileSystem
     result.push({
       tag_number:           tagNumber,
       description:          get('description'),
       discipline_code:      disciplineCode,
       area_code:            get('area_code')      || 'GENERAL',
       area_name:            get('area_name')      || 'General',
-      system_code:          get('system_code')    || (section?.system ? sectionCode(section.system) : 'GEN-SYS'),
-      system_name:          get('system_code')    || (section?.system ?? 'General System'),
-      subsystem_code:       get('subsystem_code') || (section ? sectionCode(section.subsystem) : 'GEN-SUB'),
-      subsystem_name:       get('subsystem_code') || (section?.subsystem ?? 'General Subsystem'),
+      system_code:          get('system_code')    || (systemTitle ? sectionCode(systemTitle) : 'GEN-SYS'),
+      system_name:          get('system_code')    || (systemTitle ?? 'General System'),
+      // Sin títulos de sección, el sistema del archivo es también su único subsistema.
+      subsystem_code:       get('subsystem_code') || (section ? subsystemCode(section.subsystem, systemTitle) : fileSystem ? sectionCode(fileSystem) : 'GEN-SUB'),
+      subsystem_name:       get('subsystem_code') || (section?.subsystem ?? fileSystem ?? 'General Subsystem'),
       manufacturer:         get('manufacturer')       || undefined,
       model:                get('model')              || undefined,
       serial_number:        get('serial')             || undefined,
@@ -88,7 +100,7 @@ export function parseTagRows(
       fluid_type:           get('fluid_type')         || undefined,
       mounting_typical:     get('mounting_typical')   || undefined,
       equipment_type_code:  get('equipment_type')     || undefined,
-      criticality:          parseCriticality(get('criticality')),
+      criticality:          parseCriticality(get('criticality')) ?? defaults.criticality,
       sil_level:            parseSilLevel(get('sil')),
     })
   }

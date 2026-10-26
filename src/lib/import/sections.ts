@@ -58,15 +58,48 @@ export function sectionsByRow(rawRows: unknown[][], dataStart: number, isData: (
 
 const STOPWORDS = new Set(['DE', 'DEL', 'LA', 'LAS', 'LOS', 'EL', 'Y', 'E', 'A', 'EN', 'PARA', 'CON', 'OF', 'THE', 'AND'])
 
-/** Código estable de un título: «SISTEMA DE CRUDO» → «SISTEMA-CRUDO»; máx. 40 caracteres, corta en palabra. */
-export function sectionCode(title: string): string {
-  const words = title.normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase()
+function words(title: string): string[] {
+  return title.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase()
     .split(/[^A-Z0-9]+/).filter(w => w && !STOPWORDS.has(w))
+}
+
+/** Huella corta y estable (FNV-1a, 4 caracteres base 36) para distinguir títulos que se cortan igual. */
+function fingerprint(text: string): string {
+  let h = 0x811c9dc5
+  for (let i = 0; i < text.length; i++) { h ^= text.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0 }
+  return h.toString(36).toUpperCase().padStart(4, '0').slice(-4)
+}
+
+const MAX_CODE = 40
+
+/** Une palabras hasta 40 caracteres; si no caben, corta y agrega la huella del texto completo (sin choques). */
+function joinCode(parts: string[], full: string): string {
+  const all = parts.join('-')
+  if (all.length <= MAX_CODE) return all
   let code = ''
-  for (const w of words) {
+  for (const w of parts) {
     const next = code ? `${code}-${w}` : w
-    if (next.length > 40) break
+    if (next.length > MAX_CODE - 5) break
     code = next
   }
-  return code || title.slice(0, 40).toUpperCase()
+  return `${code || all.slice(0, MAX_CODE - 5)}-${fingerprint(full)}`
+}
+
+/** Código estable de un título: «SISTEMA DE CRUDO» → «SISTEMA-CRUDO»; máx. 40 caracteres. */
+export function sectionCode(title: string): string {
+  const parts = words(title)
+  return parts.length ? joinCode(parts, title.trim().toUpperCase()) : title.slice(0, MAX_CODE).toUpperCase()
+}
+
+/**
+ * Código del subsistema: los códigos son únicos POR PROYECTO, y la lista F&G (por zonas) repite títulos de la de
+ * procesos («TANQUES DE LAVADO TK-762501/02»); por eso el código lleva su sistema sin «SISTEMA»: «CRUDO-…», «F-G-…».
+ * Un título que es a la vez sistema y subsistema («SISTEMA DE TEA») toma el código del sistema.
+ */
+export function subsystemCode(subsystem: string, system: string | null | undefined): string {
+  if (!system) return sectionCode(subsystem)
+  if (subsystem.trim().toUpperCase() === system.trim().toUpperCase()) return sectionCode(system)
+  const key = words(system).filter(w => w !== 'SISTEMA' && w !== 'SISTEMAS' && w !== 'SYSTEM' && w !== 'SYSTEMS').join('-').slice(0, 12)
+  const parts = [...(key ? [key] : []), ...words(subsystem)]
+  return parts.length ? joinCode(parts, `${system}|${subsystem}`.toUpperCase()) : sectionCode(subsystem)
 }
