@@ -9,6 +9,8 @@ import { createAdminClient, emitImportSummary } from '@/lib/supabase/admin'
 import { upsertHierarchy, DEFAULT_SUBSYSTEM } from '@/lib/import/hierarchy'
 import { normalizeCode, normalizePidRef, textOr } from '@/lib/excel/normalize'
 import { planSignal, signalPayloadColumns } from '@/lib/import/signal-merge'
+import { SIGNAL_TYPES, normalizeSignalType } from '@/lib/signals/types'
+import { detectEquipmentTypeCode, normalizeTypeKey } from '@/lib/equipment-types'
 import type { Enums, TablesInsert } from '@/types/supabase.generated'
 
 export interface SignalRow {
@@ -54,8 +56,9 @@ export interface SignalImportResult {
   warnings: string[]
 }
 
-const VALID_SIGNAL_TYPES: Enums<'signal_type'>[] = ['AI', 'AO', 'DI', 'DO', 'PI', 'PO']
-const CHUNK = 300
+// Lotes de 100: con 300 el GET de señales existentes (`tag_id IN (…)` + `signal_tag IN (…)`) pasaba el largo
+// máximo de URL y la lista F&G de Akacías (322 señales) fallaba entera con «URI too long».
+const CHUNK = 100
 
 export const importSignals = withAuthOnly(
   { role: PRIVILEGED_ROLES },
@@ -82,6 +85,14 @@ export const importSignals = withAuthOnly(
     if (discErr) return { error: discErr.message }
     const disciplineMap = new Map((disciplinesData ?? []).map(d => [d.code.toUpperCase(), d.id]))
 
+    // Tags instrumento nuevos: tipo de equipo por el prefijo ISA (como el importador de tags), si la org lo tiene.
+    const { data: eqtData } = await admin.from('equipment_types').select('id, code').eq('org_id', ctx.orgId)
+    const eqtByCode = new Map((eqtData ?? []).map(e => [normalizeTypeKey(e.code), e.id]))
+    const typeFor = (tagNumber: string) => {
+      const code = detectEquipmentTypeCode(tagNumber)
+      return code ? eqtByCode.get(normalizeTypeKey(code)) ?? null : null
+    }
+
     // ── Validación + deduplicación por (instrumento, señal) ─────
     type Pending = {
       index: number
@@ -97,7 +108,7 @@ export const importSignals = withAuthOnly(
     rows.forEach((row, index) => {
       const signalTag = row.signal_tag.trim()
       const instrTag = (row.instrument_tag || row.signal_tag).trim()
-      const signalType = row.signal_type.trim().toUpperCase() as Enums<'signal_type'>
+      const signalType = normalizeSignalType(row.signal_type)
       const discId = disciplineMap.get(row.discipline_code.trim().toUpperCase())
 
       if (!signalTag) return
@@ -106,8 +117,8 @@ export const importSignals = withAuthOnly(
         result.skipped++
         return
       }
-      if (!VALID_SIGNAL_TYPES.includes(signalType)) {
-        result.errors.push({ row: index + 2, tag: signalTag, reason: t('importSignals.signalTypeInvalid', { type: row.signal_type, valid: VALID_SIGNAL_TYPES.join(', ') }) })
+      if (!signalType) {
+        result.errors.push({ row: index + 2, tag: signalTag, reason: t('importSignals.signalTypeInvalid', { type: row.signal_type, valid: SIGNAL_TYPES.join(', ') }) })
         result.skipped++
         return
       }
@@ -182,6 +193,7 @@ export const importSignals = withAuthOnly(
           subsystem_id: subsystemId,
           discipline_id: c.discId,
           tag_number: c.instrTag,
+          equipment_type_id: typeFor(c.instrTag),
           description: textOr(c.row.description, c.instrTag),
           pid_drawing: normalizePidRef(c.row.pid_drawing),
         })

@@ -5,13 +5,11 @@ import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import * as XLSX from 'xlsx'
 import { importSignals, type SignalRow, type SignalImportResult } from '@/app/actions/import-signals'
-import { pickBestSheet, detectHeaderRow, cellText } from '@/lib/excel/detect-header'
-import { SIGNAL_COLS } from '@/lib/excel/signal-columns'
+import { parseSignalWorkbook } from '@/lib/import/signal-parse'
+import { SIGNAL_TYPES, SIGNAL_TYPE_LABELS } from '@/lib/signals/types'
 import { dedupeLast, mergeCounts, runBatches } from '@/lib/import/batches'
 import { alpha } from '@/lib/theme'
 import { pressable } from '@/lib/a11y/pressable'
-
-const SIGNAL_TYPES = ['AI', 'AO', 'DI', 'DO', 'PI', 'PO']
 
 type Step = 'upload' | 'preview' | 'result'
 
@@ -45,16 +43,12 @@ export default function ImportSignalsWizard({
   // S07 (D9): columnas que trae el archivo — lo que no viene no se toca al reimportar.
   const [columns, setColumns]             = useState<string[]>([])
   const [progress, setProgress]           = useState<{ done: number; total: number } | null>(null)
+  const [sheets, setSheets]               = useState<{ name: string; signals: number }[]>([])
 
   const disciplineCodes = new Set(disciplines.map(d => d.code.toUpperCase()))
 
   const signalTypeColors: Record<string, string> = {
-    AI: 'var(--primary-500)', AO: 'var(--warning-500)', DI: 'var(--success-500)', DO: 'var(--danger-500)', PI: 'var(--violet-500)', PO: 'var(--cyan-500)',
-  }
-
-  function parseNum(val: string): number | null {
-    const n = parseFloat(val?.toString().replace(',', '.'))
-    return isNaN(n) ? null : n
+    AI: 'var(--primary-500)', AO: 'var(--warning-500)', DI: 'var(--success-500)', DO: 'var(--danger-500)', PI: 'var(--violet-500)', PO: 'var(--cyan-500)', COMM: 'var(--indigo-500)',
   }
 
   function parseFile(file: File) {
@@ -63,96 +57,26 @@ export default function ImportSignalsWizard({
       try {
         const data = new Uint8Array(e.target?.result as ArrayBuffer)
         const wb = XLSX.read(data, { type: 'array' })
-        const { rows: rawRows } = pickBestSheet(wb, SIGNAL_COLS)
+        const parsedWb = parseSignalWorkbook(wb, disciplineCodes)
 
-        if (rawRows.length === 0) {
-          setValidationErrors([ti('warn.empty')])
-          return
-        }
-
-        const { headerRowIdx, colIndex } = detectHeaderRow(rawRows, SIGNAL_COLS)
-
-        if (colIndex.signal_tag === undefined || colIndex.signal_type === undefined) {
+        if (parsedWb.sheets.length === 0) {
           setValidationErrors([ts('warn.missingColumns')])
           return
         }
 
-        const errors: string[] = []
-        const parsed: SignalRow[] = []
-
-        rawRows.slice(headerRowIdx + 1).forEach((row, i) => {
-          const rowNum = headerRowIdx + i + 2
-          const get = (field: string) => cellText(row, colIndex[field])
-
-          const signalTag    = get('signal_tag')
-          const instrTag     = get('instrument_tag') || signalTag
-          const description  = get('description')
-          const signalType   = get('signal_type').toUpperCase()
-          const discipline   = (get('discipline') || 'INST').toUpperCase()
-          const service      = get('service')
-          const rangeInf     = get('range_min')
-          const rangeSup     = get('range_max')
-          const unit         = get('eng_unit')
-          const alarms       = get('alarms')
-          const origin       = get('origin')
-          const destination  = get('destination')
-          const pid          = get('pid')
-          const loopDiag     = get('loop_diagram')
-          const wiringDiag   = get('wiring_diagram')
-          const loopNumber   = get('loop_number')
-          const notes        = get('notes')
-          const areaCode     = get('area_code') || 'GENERAL'
-          const areaName     = get('area_name') || areaCode
-          const sysCode      = get('system_code') || 'GEN-SYS'
-          const sysName      = get('system_name') || sysCode
-          const subCode      = get('subsystem_code') || 'GEN-SUB'
-          const subName      = get('subsystem_name') || subCode
-
-          // Filas vacías o de totales/notas al pie: sin tag, se ignoran en silencio
-          if (!signalTag) return
-          if (!SIGNAL_TYPES.includes(signalType)) {
-            errors.push(ts('warn.badType', { row: rowNum, value: signalType, valid: SIGNAL_TYPES.join(', '), tag: signalTag }))
-          }
-          if (!disciplineCodes.has(discipline)) {
-            errors.push(ts('warn.badDiscipline', { row: rowNum, value: discipline, tag: signalTag }))
-          }
-
-          parsed.push({
-            signal_tag:      signalTag,
-            instrument_tag:  instrTag,
-            description,
-            signal_type:     signalType || 'AI',
-            service,
-            range_min:       parseNum(rangeInf),
-            range_max:       parseNum(rangeSup),
-            eng_unit:        unit,
-            alarm_setpoints: alarms,
-            origin,
-            destination,
-            pid_drawing:     pid,
-            loop_diagram:    loopDiag,
-            wiring_diagram:  wiringDiag,
-            loop_number:     loopNumber,
-            junction_box:    get('junction_box'),
-            marshalling:     get('marshalling'),
-            io_card:         get('io_card'),
-            io_channel:      get('io_channel'),
-            dcs_tag:         get('dcs_tag'),
-            hmi_display:     get('hmi_display'),
-            notes,
-            discipline_code: discipline,
-            area_code:       areaCode,
-            area_name:       areaName,
-            system_code:     sysCode,
-            system_name:     sysName,
-            subsystem_code:  subCode,
-            subsystem_name:  subName,
-          })
+        // Varias hojas (DCS, ESD, F&G): la fila se rotula con su hoja.
+        const multi = parsedWb.sheets.length > 1
+        const errors = parsedWb.issues.map(issue => {
+          const row = multi ? `${issue.sheet} · ${issue.row}` : issue.row
+          return issue.kind === 'badType'
+            ? ts('warn.badType', { row, value: issue.value, valid: SIGNAL_TYPES.join(', '), tag: issue.tag })
+            : ts('warn.badDiscipline', { row, value: issue.value, tag: issue.tag })
         })
 
         setValidationErrors(errors)
-        setColumns(Object.keys(colIndex).filter(k => colIndex[k] !== undefined))
-        setRows(parsed)
+        setSheets(parsedWb.sheets)
+        setColumns(parsedWb.columns)
+        setRows(parsedWb.rows)
         setFileName(file.name)
         setStep('preview')
       } catch {
@@ -266,7 +190,7 @@ export default function ImportSignalsWizard({
             background: alpha(signalTypeColors[t], 9), color: signalTypeColors[t],
             border: `1px solid ${alpha(signalTypeColors[t], 19)}`,
           }}>
-            {t} — {t === 'AI' ? 'Analog In' : t === 'AO' ? 'Analog Out' : t === 'DI' ? 'Digital In' : t === 'DO' ? 'Digital Out' : t === 'PI' ? 'Pulse In' : 'Pulse Out'}
+            {t} — {SIGNAL_TYPE_LABELS[t]}
           </span>
         ))}
       </div>
@@ -356,7 +280,7 @@ export default function ImportSignalsWizard({
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <div>
               <span style={{ fontWeight: 600, color: 'var(--text-strong)' }}>{fileName}</span>
-              <span style={{ color: 'var(--text-muted)', fontSize: '14px', marginLeft: '12px' }}>{ts('detected', { n: rows.length })}</span>
+              <span style={{ color: 'var(--text-muted)', fontSize: '14px', marginLeft: '12px' }}>{ts('detected', { n: rows.length })}{sheets.length > 1 && ` (${sheets.map(sh => `${sh.name}: ${sh.signals}`).join(' · ')})`}</span>
             </div>
             <button onClick={() => { setStep('upload'); setRows([]); setValidationErrors([]) }}
               style={{ fontSize: '13px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>
@@ -398,7 +322,7 @@ export default function ImportSignalsWizard({
                 </thead>
                 <tbody>
                   {rows.slice(0, 25).map((row, i) => {
-                    const badType = !SIGNAL_TYPES.includes(row.signal_type.toUpperCase())
+                    const badType = !(SIGNAL_TYPES as readonly string[]).includes(row.signal_type.toUpperCase())
                     const badDisc = !disciplineCodes.has(row.discipline_code.toUpperCase())
                     const hasErr  = badType || badDisc
                     return (

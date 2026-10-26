@@ -5,9 +5,9 @@ import Link from 'next/link'
 import SignalChainEditor from './SignalChainEditor'
 import { useTranslations } from 'next-intl'
 import { alpha, ink } from '@/lib/theme'
+import { SIGNAL_TYPES, SIGNAL_TYPE_LABELS, type SignalTypeCode } from '@/lib/signals/types'
 
-const SIGNAL_TYPES = ['AI', 'AO', 'DI', 'DO', 'PI', 'PO'] as const
-type SignalType = typeof SIGNAL_TYPES[number]
+type SignalType = SignalTypeCode
 
 const TYPE_COLORS: Record<SignalType, string> = {
   AI: 'var(--primary-500)',
@@ -16,16 +16,10 @@ const TYPE_COLORS: Record<SignalType, string> = {
   DO: 'var(--danger-500)',
   PI: 'var(--violet-500)',
   PO: 'var(--cyan-500)',
+  COMM: 'var(--indigo-500)',
 }
 
-const TYPE_LABELS: Record<SignalType, string> = {
-  AI: 'Analog In',
-  AO: 'Analog Out',
-  DI: 'Digital In',
-  DO: 'Digital Out',
-  PI: 'Pulse In',
-  PO: 'Pulse Out',
-}
+const TYPE_LABELS = SIGNAL_TYPE_LABELS
 
 type SignalRow = {
   id: string

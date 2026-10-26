@@ -83,9 +83,29 @@ const DEFAULT_CODES = new Set(EQUIPMENT_TYPE_DEFAULTS.map(t => t.code))
 export function detectEquipmentTypeCode(tagNumber: string): string | null {
   const prefix = extractTagPrefix(tagNumber)
   if (!prefix) return null
-  // Prefijo más largo primero (ESDV antes que E)
-  const candidates = [...DEFAULT_CODES].filter(c => prefix === c).sort((a, b) => b.length - a.length)
-  return candidates[0] ?? null
+  if (DEFAULT_CODES.has(prefix)) return prefix
+  return isaVariant(prefix)
+}
+
+/**
+ * Variantes ISA del mismo instrumento que el catálogo estándar no trae como código propio. Las listas de
+ * instrumentos (Akacías A2.2: 904 de 1137 tags sin tipo) usan transmisores «indicadores» y medidores locales:
+ *   PIT/LIT/TIT/FIT/AIT → PT/LT/TT/FT/AT (transmisor; la «I» es la indicación local)
+ *   PDIT/PDT → PT (presión diferencial) · DIT (densidad) → AT
+ *   PG/TG/LG → PI/TI/LI (manómetro, termómetro y visor de nivel = indicador local)
+ *   PVV/PVSV (presión-vacío) → PSV
+ * Solo devuelve códigos del catálogo estándar; lo que no se reconoce queda sin tipo (R3 lo propone por firma).
+ */
+function isaVariant(prefix: string): string | null {
+  const pick = (code: string) => (DEFAULT_CODES.has(code) ? code : null)
+  if (prefix === 'PDIT' || prefix === 'PDT') return pick('PT')
+  if (prefix === 'DIT' || prefix === 'DT') return pick('AT')
+  if (prefix === 'PVV' || prefix === 'PVSV') return pick('PSV')
+  const indicating = prefix.match(/^([A-Z])IT$/)
+  if (indicating) return pick(`${indicating[1]}T`)
+  const gauge = prefix.match(/^([PTL])G$/)
+  if (gauge) return pick(`${gauge[1]}I`)
+  return null
 }
 
 /** Normaliza texto de tipo (código o nombre) para comparar sin acentos ni mayúsculas. */

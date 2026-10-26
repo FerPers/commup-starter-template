@@ -15564,7 +15564,7 @@ export type Database = {
       punch_category: "A" | "B" | "C"
       punch_priority: "critical" | "major" | "minor"
       punch_status: "open" | "in_progress" | "closed" | "cancelled"
-      signal_type: "AI" | "AO" | "DI" | "DO" | "PI" | "PO"
+      signal_type: "AI" | "AO" | "DI" | "DO" | "PI" | "PO" | "COMM"
       signature_role: "executor" | "supervisor" | "client"
       tag_status: "not_started" | "in_progress" | "completed" | "on_hold"
       work_plan_status: "draft" | "published" | "in_progress" | "completed"
@@ -15752,7 +15752,7 @@ export const Constants = {
       punch_category: ["A", "B", "C"],
       punch_priority: ["critical", "major", "minor"],
       punch_status: ["open", "in_progress", "closed", "cancelled"],
-      signal_type: ["AI", "AO", "DI", "DO", "PI", "PO"],
+      signal_type: ["AI", "AO", "DI", "DO", "PI", "PO", "COMM"],
       signature_role: ["executor", "supervisor", "client"],
       tag_status: ["not_started", "in_progress", "completed", "on_hold"],
       work_plan_status: ["draft", "published", "in_progress", "completed"],

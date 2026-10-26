@@ -5,6 +5,8 @@ import * as XLSX from 'xlsx'
 // instrumentos, listas eléctricas y signal lists rara vez traen el encabezado
 // en la fila 1: suelen tener carátula, logos, o encabezados de dos filas.
 
+/** Palabras clave por campo. Una clave que empieza con `=` solo vale por coincidencia EXACTA (nunca parcial):
+ *  «=TIPO» reconoce la columna «TIPO» pero no «TIPO SEÑAL» ni «TIPO DE FLUIDO». */
 export type ColumnKeywords = Record<string, readonly string[]>
 
 const SCAN_ROWS = 15
@@ -23,12 +25,18 @@ export function sheetToRows(ws: XLSX.WorkSheet): unknown[][] {
   return XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' })
 }
 
-function allKeywords(colKeywords: ColumnKeywords): string[] {
-  return Object.values(colKeywords).flat().map(normalizeHeader)
+type Keyword = { kw: string; exactOnly: boolean }
+
+function toKeyword(raw: string): Keyword {
+  return raw.startsWith('=') ? { kw: normalizeHeader(raw.slice(1)), exactOnly: true } : { kw: normalizeHeader(raw), exactOnly: false }
 }
 
-function rowScore(cells: string[], keywords: string[]): number {
-  return keywords.filter(kw => cells.some(c => c === kw || c.includes(kw))).length
+function allKeywords(colKeywords: ColumnKeywords): Keyword[] {
+  return Object.values(colKeywords).flat().map(toKeyword)
+}
+
+function rowScore(cells: string[], keywords: Keyword[]): number {
+  return keywords.filter(({ kw, exactOnly }) => cells.some(c => c === kw || (!exactOnly && c.includes(kw)))).length
 }
 
 /** Elige la hoja con más encabezados reconocibles (evita carátulas e índices). */
@@ -85,20 +93,33 @@ export function detectHeaderRow(
   // S07: dos pasadas GLOBALES. Antes era «exacta y luego parcial» campo por campo, en orden, y la parcial
   // de un campo anterior se robaba la exacta de otro: «SUBSYSTEM_CODE» / «SUBSISTEMA» caían en el sistema
   // (contienen «SYSTEM» / «SISTEMA») y un reimport movía tags de subsistema sin querer.
-  const fields = Object.entries(colKeywords).map(([field, keywords]) => [field, keywords.map(normalizeHeader)] as const)
+  const fields = Object.entries(colKeywords).map(([field, keywords]) => [field, keywords.map(toKeyword)] as const)
   for (const [field, normKws] of fields) {
-    const col = findColumn(width, used, c => normKws.some(kw => h1[c] === kw || h2[c] === kw))
+    const col = findColumn(width, used, c => normKws.some(({ kw }) => h1[c] === kw || h2[c] === kw))
     if (col >= 0) { colIndex[field] = col; used.add(col) }
   }
   for (const [field, normKws] of fields) {
     if (colIndex[field] !== undefined) continue
-    const col = findColumn(width, used, c => normKws.some(kw => (h1[c] ?? '').includes(kw) || (h2[c] ?? '').includes(kw)))
+    const col = findColumn(width, used, c => normKws.some(({ kw, exactOnly }) => !exactOnly && ((h1[c] ?? '').includes(kw) || (h2[c] ?? '').includes(kw))))
     if (col >= 0) { colIndex[field] = col; used.add(col) }
   }
   return { headerRowIdx: bestRow, colIndex, headers: h1 }
 }
 
-/** Lee una celda como texto recortado; '' si la columna no existe. */
+/**
+ * Marcadores de «sin dato» de las listas de ingeniería: N/A, «-», «—», TBD, «BY VENDOR», «POR FABRICANTE»…
+ * Se leen como celda vacía (vacío = no se toca el valor existente al reimportar). Antes se guardaban tal cual:
+ * 222 tags con P&ID «N/A» y 1065 con fabricante «BY VENDOR LIST ECP» en la lista de instrumentos de Akacías.
+ */
+const PLACEHOLDER = /^(?:N\.?\s*\/?\s*A\.?|NA|N\/D|ND|-+|—|–|\?+|TBD|TBC|POR DEFINIR|A DEFINIR|(?:BY|POR|SEGUN|SEGÚN)\s+(?:VENDOR|VENDEDOR|MFR|MANUFACTURER|FABRICANTE|PROVEEDOR)\b.*)$/i
+
+export function isPlaceholderValue(value: string): boolean {
+  return PLACEHOLDER.test(value.trim())
+}
+
+/** Lee una celda como texto recortado; '' si la columna no existe o trae un marcador de «sin dato». */
 export function cellText(row: unknown[], col: number | undefined): string {
-  return col === undefined ? '' : String(row[col] ?? '').trim()
+  if (col === undefined) return ''
+  const text = String(row[col] ?? '').trim()
+  return isPlaceholderValue(text) ? '' : text
 }

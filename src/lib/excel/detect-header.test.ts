@@ -87,3 +87,15 @@ describe('sheetToRows / cellText', () => {
     expect(detectHeaderRow([['SUBSISTEMA', 'SISTEMA']], kws).colIndex).toEqual({ subsystem_code: 0, system_code: 1 })
   })
 })
+
+describe('palabras clave solo exactas (=) y marcadores de «sin dato»', () => {
+  it('«=TIPO» reconoce «TIPO» pero no «TIPO SEÑAL»', () => {
+    const kw = { equipment_type: ['=TIPO'] }
+    expect(detectHeaderRow([['TAG', 'TIPO SEÑAL']], kw).colIndex.equipment_type).toBeUndefined()
+    expect(detectHeaderRow([['TAG', 'TIPO SEÑAL', 'Tipo']], kw).colIndex.equipment_type).toBe(2)
+  })
+  it('cellText lee N/A, guiones y «BY VENDOR» como vacío', () => {
+    for (const v of ['N/A', 'n/a', 'NA', '-', '—', 'TBD', 'BY VENDOR LIST ECP', 'By Mfr.', 'Por fabricante']) expect(cellText([v], 0)).toBe('')
+    for (const v of ['-14.7', 'NAFTA', 'BYPASS-1', 'psig']) expect(cellText([v], 0)).toBe(v)
+  })
+})

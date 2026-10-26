@@ -7,97 +7,11 @@ import * as XLSX from 'xlsx'
 import { importTags, findExistingTags, previewTagImport, type TagRow, type ImportResult, type TagImportPreview } from '@/app/actions/import'
 import { dedupeLast, mergeCounts, runBatches, IMPORT_BATCH } from '@/lib/import/batches'
 import { detectTagType } from '@/lib/tag-types'
-import { parseCriticality, parseSilLevel } from '@/lib/tags/criticality'
 import { detectEquipmentTypeCode } from '@/lib/equipment-types'
-import { pickBestSheet, detectHeaderRow, cellText, type ColumnKeywords } from '@/lib/excel/detect-header'
+import { pickBestSheet, detectHeaderRow } from '@/lib/excel/detect-header'
+import { TAG_COLUMNS, parseTagRows } from '@/lib/import/tag-parse'
 import { alpha, ink } from '@/lib/theme'
 import { pressable } from '@/lib/a11y/pressable'
-
-// ── Column keyword mapping ──────────────────────────────────────
-// Orden importante: cada columna se asigna una sola vez (exacta primero,
-// parcial después), así "AREA_CODE" no se la queda "AREA_NAME" y viceversa.
-const COL_KEYWORDS: ColumnKeywords = {
-  tag:              ['TAG', 'ETIQUETA', 'TAG NUMBER', 'TAGNO', 'INSTRUMENT TAG'],
-  description:      ['DESCRIPCION', 'DESCRIPCIÓN', 'DESCRIPTION', 'EQUIPO', 'NOMBRE', 'EQUIPMENT'],
-  discipline:       ['DISCIPLINE', 'DISCIPLINA'],
-  area_code:        ['AREA_CODE', 'AREA', 'ÁREA', 'SE / SITIO', 'SITIO', 'UBICACION', 'LOCATION'],
-  area_name:        ['AREA_NAME', 'NOMBRE ÁREA', 'NOMBRE AREA'],
-  system_code:      ['SYSTEM_CODE', 'SISTEMA', 'SYSTEM', 'SYS'],
-  subsystem_code:   ['SUBSYSTEM_CODE', 'SUBSISTEMA', 'SUBSYSTEM'],
-  manufacturer:     ['MANUFACTURER', 'FABRICANTE', 'MARCA', 'MARCA / MODELO', 'VENDOR'],
-  model:            ['MODEL', 'MODELO'],
-  serial:           ['SERIAL', 'SERIE', 'S/N', 'SERIAL_NUMBER'],
-  preservation:     ['PRESERVATION', 'PRESERVACION', 'PRESERVACIÓN'],
-  pid_drawing:      ['P&ID', 'PID', 'P_ID', 'PLANO P&ID', 'P&ID REF', 'P&ID DRAWING'],
-  datasheet:        ['DATASHEET', 'DATA SHEET', 'DS NUMBER', 'DATASHEET NUMBER', 'NUMERO DATASHEET'],
-  // Datos maestros que autollenan los ITR (fabricante/modelo/serie arriba): revisión de hoja de datos, rango y unidad, caja de conexiones.
-  datasheet_rev:    ['DATASHEET REV', 'DS REV', 'REV DATASHEET', 'REVISION', 'REVISIÓN', 'REV'],
-  range_min:        ['RANGE MIN', 'RANGO MIN', 'RANGO INFERIOR', 'LRV', 'MIN RANGE', 'RANGO_MIN'],
-  range_max:        ['RANGE MAX', 'RANGO MAX', 'RANGO SUPERIOR', 'URV', 'MAX RANGE', 'RANGO_MAX'],
-  eng_unit:         ['ENG UNIT', 'UNIDAD ING', 'UNIDAD', 'UNIT', 'UNITS', 'ENG_UNIT'],
-  junction_box:     ['JUNCTION BOX', 'CAJA DE CONEXIONES', 'CAJA CONEXIONES', 'JB'],
-  fluid_type:       ['FLUID TYPE', 'TIPO DE FLUIDO', 'TIPO FLUIDO', 'FLUIDO', 'FLUID'],
-  mounting_typical: ['MOUNTING TYPICAL', 'TYPICAL', 'TIPICO DE MONTAJE', 'TIPICO MONTAJE', 'TÍPICO', 'TIPICO'],
-  criticality:      ['CRITICALITY', 'CRITICIDAD', 'CRITICO', 'CRÍTICO'],
-  sil:              ['SIL', 'SIL LEVEL', 'NIVEL SIL', 'SIL_LEVEL'],
-  // Va después de fluid_type/mounting_typical para que 'TIPO' (parcial) no se robe 'TIPO DE FLUIDO'
-  equipment_type:   ['EQUIPMENT TYPE', 'TIPO DE EQUIPO', 'TIPO EQUIPO', 'EQUIPMENT_TYPE', 'TIPO'],
-}
-// A valid tag must contain at least one letter and one digit (e.g. FT-101, ESDV-7621001)
-function isValidTag(val: string): boolean {
-  return /[A-Za-z]/.test(val) && /\d/.test(val)
-}
-
-/** «0», «100», «-20,5» → número; vacío o no numérico → undefined (no se toca el valor existente). */
-function numberOrUndefined(val: string): number | undefined {
-  if (!val.trim()) return undefined
-  const n = Number(val.replace(',', '.'))
-  return Number.isFinite(n) ? n : undefined
-}
-
-function parseRows(
-  rawRows: unknown[][],
-  colIndex: Record<string, number>,
-  dataStart: number,
-  disciplinePrefill: string,
-): TagRow[] {
-  const result: TagRow[] = []
-  for (let i = dataStart; i < rawRows.length; i++) {
-    const row = rawRows[i]
-    const get = (field: string) => cellText(row, colIndex[field])
-    const tagNumber = get('tag')
-    if (!tagNumber || !isValidTag(tagNumber)) continue
-    const disciplineCode = (disciplinePrefill || get('discipline')).toUpperCase()
-    result.push({
-      tag_number:           tagNumber,
-      description:          get('description'),
-      discipline_code:      disciplineCode,
-      area_code:            get('area_code')      || 'GENERAL',
-      area_name:            get('area_name')      || 'General',
-      system_code:          get('system_code')    || 'GEN-SYS',
-      system_name:          get('system_code')    || 'General System',
-      subsystem_code:       get('subsystem_code') || 'GEN-SUB',
-      subsystem_name:       get('subsystem_code') || 'General Subsystem',
-      manufacturer:         get('manufacturer')       || undefined,
-      model:                get('model')              || undefined,
-      serial_number:        get('serial')             || undefined,
-      preservation_required: ['YES', 'SI', 'SÍ'].includes(get('preservation').toUpperCase()),
-      pid_drawing:          get('pid_drawing')        || undefined,
-      datasheet_number:     get('datasheet')          || undefined,
-      revision:             get('datasheet_rev')      || undefined,
-      range_min:            numberOrUndefined(get('range_min')),
-      range_max:            numberOrUndefined(get('range_max')),
-      eng_unit:             get('eng_unit')           || undefined,
-      junction_box:         get('junction_box')       || undefined,
-      fluid_type:           get('fluid_type')         || undefined,
-      mounting_typical:     get('mounting_typical')   || undefined,
-      equipment_type_code:  get('equipment_type')     || undefined,
-      criticality:          parseCriticality(get('criticality')),
-      sil_level:            parseSilLevel(get('sil')),
-    })
-  }
-  return result
-}
 
 function downloadTemplate(disciplineCode: string) {
   const wb = XLSX.utils.book_new()
@@ -189,20 +103,20 @@ export default function ImportWizard({
         const wb   = XLSX.read(data, { type: 'array' })
 
         // Hoja con más encabezados reconocibles (evita carátulas e índices)
-        const { rows: rawRows } = pickBestSheet(wb, COL_KEYWORDS)
+        const { rows: rawRows } = pickBestSheet(wb, TAG_COLUMNS)
 
         if (rawRows.length === 0) {
           setParseWarnings([ti('warn.empty')]); return
         }
 
-        const { headerRowIdx, colIndex } = detectHeaderRow(rawRows, COL_KEYWORDS)
+        const { headerRowIdx, colIndex } = detectHeaderRow(rawRows, TAG_COLUMNS)
         const warnings: string[] = []
 
         if (colIndex['tag'] === undefined) {
           warnings.push(ti('warn.noTagColumn'))
         }
 
-        const parsed = parseRows(rawRows, colIndex, headerRowIdx + 1, disciplineCode)
+        const parsed = parseTagRows(rawRows, colIndex, headerRowIdx + 1, disciplineCode)
 
         if (parsed.length === 0) {
           setParseWarnings([...warnings, ti('warn.noRows')]); return

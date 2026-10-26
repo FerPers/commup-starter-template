@@ -20,7 +20,7 @@ export type CertificateStatus = 'pending' | 'in_review' | 'issued' | 'rejected'
 export type PreservationFrequency = 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'quarterly'
 export type PreservationStatus = 'active' | 'suspended' | 'completed'
 export type PreservationResult = 'ok' | 'nok' | 'na'
-export type SignalType = 'AI' | 'AO' | 'DI' | 'DO' | 'PI' | 'PO'
+export type SignalType = 'AI' | 'AO' | 'DI' | 'DO' | 'PI' | 'PO' | 'COMM'
 export type WorkPlanStatus = 'draft' | 'published' | 'in_progress' | 'completed'
 
 // ── Module 1: Multi-tenancy ──────────────────────────────────
