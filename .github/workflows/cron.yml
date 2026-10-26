@@ -12,8 +12,9 @@ on:
   schedule:
     # KPI snapshot — daily at 02:00 UTC
     - cron: '0 2 * * *'
-    # Push dispatch — every 5 minutes (route default window is 5 min)
-    - cron: '*/5 * * * *'
+    # Push dispatch — daily at 13:15 UTC (08:15 Colombia). GitHub ran the */5 every 2–3 h; the queue
+    # (claim_push_notifications) never loses notices. Before real users it moves to pg_cron (A15).
+    - cron: '15 13 * * *'
     # Preservation overdue — daily at 07:00 UTC
     - cron: '0 7 * * *'
     # PSSR review overdue — daily at 08:00 UTC
@@ -49,7 +50,7 @@ jobs:
             -H "Content-Type: application/json"
 
       - name: Push dispatch
-        if: github.event.schedule == '*/5 * * * *' || github.event.inputs.target == 'push-dispatch' || github.event.inputs.target == 'all'
+        if: github.event.schedule == '15 13 * * *' || github.event.inputs.target == 'push-dispatch' || github.event.inputs.target == 'all'
         env:
           APP_URL: ${{ secrets.APP_URL }}
           CRON_SECRET: ${{ secrets.CRON_SECRET }}

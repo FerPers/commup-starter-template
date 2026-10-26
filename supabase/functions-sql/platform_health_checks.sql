@@ -8,8 +8,9 @@ CREATE OR REPLACE FUNCTION public.platform_health_checks()
 AS $function$
 DECLARE
   out jsonb := '[]'::jsonb; r record; v_n bigint; v_oldest timestamptz; v_min numeric; v_max integer; v_status text; v_code text;
-  -- Crons HTTP y su ventana máxima sin una corrida correcta (minutos): push cada 5 min; el resto, diarios.
-  http_jobs CONSTANT jsonb := '[{"job": "push-dispatch", "max": 30}, {"job": "snapshot", "max": 1560},
+  -- Crons HTTP y su ventana máxima sin una corrida correcta (minutos): todos diarios (push incluido desde 2026-10-26:
+  -- GitHub corría el */5 cada 2–3 h; antes de usuarios reales el push pasa a pg_cron).
+  http_jobs CONSTANT jsonb := '[{"job": "push-dispatch", "max": 1560}, {"job": "snapshot", "max": 1560},
     {"job": "preservation-overdue", "max": 1560}, {"job": "pssr-review-overdue", "max": 1560}, {"job": "constraints-overdue", "max": 1560}]';
 BEGIN
   -- A15: estado de la plataforma, sin datos de ningún cliente (solo conteos y edades). ok · warn · fail.
@@ -52,7 +53,7 @@ BEGIN
   SELECT count(*), min(queued_at) INTO v_n, v_oldest FROM notification_push_outbox;
   v_min := floor(extract(epoch FROM now() - v_oldest) / 60);
   out := out || jsonb_build_object('key', 'queue:push', 'area', 'queue', 'label', 'notification_push_outbox', 'code', 'queue_age', 'n', v_n, 'minutes', v_min,
-    'status', CASE WHEN v_oldest IS NULL THEN 'ok' WHEN v_min > 30 THEN 'fail' WHEN v_min > 12 THEN 'warn' ELSE 'ok' END);
+    'status', CASE WHEN v_oldest IS NULL THEN 'ok' WHEN v_min > 1560 THEN 'fail' WHEN v_min > 1500 THEN 'warn' ELSE 'ok' END);
 
   SELECT count(*), min(next_retry_at) INTO v_n, v_oldest FROM webhook_deliveries WHERE status = 'pending' AND next_retry_at < now() - interval '15 minutes';
   out := out || jsonb_build_object('key', 'queue:webhooks', 'area', 'queue', 'label', 'webhook_deliveries', 'code', 'overdue', 'n', v_n,
