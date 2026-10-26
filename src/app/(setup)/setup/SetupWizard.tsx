@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { completeSetup, createProject } from '@/app/actions/setup'
 import { alpha } from '@/lib/theme'
+import { ALL_DISCIPLINES, DEFAULT_PHASES, DEFAULT_SELECTED_CODES } from '@/lib/setup/defaults'
 
 // ── Helpers ───────────────────────────────────────────────────
 
@@ -17,32 +18,7 @@ function toSlug(name: string) {
 
 // ── Default data ──────────────────────────────────────────────
 
-const DEFAULT_PHASES = [
-  { code: 'A', name: 'Mechanical Completion', order_index: 1, color: 'var(--primary-500)', certificate_name: 'MC' },
-  { code: 'B', name: 'Pre-Commissioning',     order_index: 2, color: 'var(--warning-500)', certificate_name: 'RFPC' },
-  { code: 'C', name: 'Commissioning',          order_index: 3, color: 'var(--success-500)', certificate_name: 'RFC' },
-  // Start-Up no es una 4ª letra de ITR: son pruebas de desempeño ligadas al RFSU.
-  // La letra D queda reservada para Decomisionamiento (se crea desde Admin → Config cuando toque).
-  { code: 'SU', name: 'Start-Up / Puesta en marcha', order_index: 4, color: 'var(--violet-500)', certificate_name: 'RFSU' },
-]
-
-// All known disciplines from industry reference (ITR catalog)
-const ALL_DISCIPLINES = [
-  { code: 'ARCH',   name: 'Architectural',     color: 'var(--accent-500)', phases: ['A'] },
-  { code: 'DRILL',  name: 'Drilling',           color: 'var(--warning-800)', phases: ['A'] },
-  { code: 'ELEC',   name: 'Electrical',         color: 'var(--warning-500)', phases: ['A','B','C'] },
-  { code: 'HVAC',   name: 'HVAC',               color: 'var(--cyan-500)', phases: ['A','B','C'] },
-  { code: 'INST',   name: 'Instruments',        color: 'var(--success-500)', phases: ['A','B','C'] },
-  { code: 'MECH',   name: 'Mechanical',         color: 'var(--primary-500)', phases: ['A','B','C'] },
-  { code: 'PIPE',   name: 'Piping',             color: 'var(--orange-500)', phases: ['A'] },
-  { code: 'PROC',   name: 'Process',            color: 'var(--teal-500)', phases: ['B','C'] },
-  { code: 'SAFE',   name: 'Safety / Fire',      color: 'var(--danger-500)', phases: ['A','B','C'] },
-  { code: 'STRUCT', name: 'Structural / Civil', color: '#6b7280', phases: ['A'] },
-  { code: 'TELE',   name: 'Telecoms',           color: 'var(--violet-500)', phases: ['A','B','C'] },
-]
-
-// Default selected disciplines (most common for O&G projects)
-const DEFAULT_SELECTED_CODES = ['ELEC', 'INST', 'MECH', 'PIPE', 'SAFE']
+// Datos que se guardan en la BD (project_phases / disciplines): colores hex, nunca tokens (`src/lib/setup/defaults.ts`).
 
 // ── Types ─────────────────────────────────────────────────────
 

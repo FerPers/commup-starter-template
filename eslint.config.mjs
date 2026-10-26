@@ -148,6 +148,7 @@ const eslintConfig = [
 			"src/app/(setup)/**",
 			// Datos (colores de disciplina que se guardan en la BD o salen por la API), no estilos.
 			"src/lib/constants/templates-backup.ts",
+			"src/lib/setup/defaults.ts",
 			"src/app/actions/**",
 			"src/**/*.test.{ts,tsx}",
 			// Documentos para imprimir: papel blanco en cualquier tema.

@@ -11,6 +11,7 @@ import {
 import { DEFAULT_ITR_GLOSSARY } from '@/lib/constants/itr-glossary'
 import { EQUIPMENT_CATEGORIES } from '@/lib/equipment-types'
 import { alpha, ink } from '@/lib/theme'
+import { NEW_DISCIPLINE_COLOR, NEW_PHASE_COLOR } from '@/lib/setup/defaults'
 import { useToast } from '@/components/ui/Toast'
 
 type Org = { id: string; name: string; logo_url: string | null }
@@ -284,10 +285,10 @@ export default function OrgConfigView({
   const [catBValue, setCatBValue] = useState(String(initialCatBLimit ?? 3))
   const [catBMsg, setCatBMsg] = useState<string | null>(null)
 
-  const [newPhase, setNewPhase] = useState({ code: '', name: '', color: 'var(--primary-700)', certName: '' })
+  const [newPhase, setNewPhase] = useState({ code: '', name: '', color: NEW_PHASE_COLOR, certName: '' })
   const [showNewPhase, setShowNewPhase] = useState(false)
 
-  const [newDisc, setNewDisc] = useState({ code: '', name: '', color: 'var(--success-700)' })
+  const [newDisc, setNewDisc] = useState({ code: '', name: '', color: NEW_DISCIPLINE_COLOR })
 
   const [showNewEqt, setShowNewEqt] = useState(false)
 
@@ -567,7 +568,7 @@ export default function OrgConfigView({
                   disabled={isPending || !newPhase.code.trim() || !newPhase.name.trim()}
                   onClick={() => act(async () => {
                     const res = await createPhase({ code: newPhase.code, name: newPhase.name, color: newPhase.color, certificateName: newPhase.certName })
-                    if (!res.error) { setNewPhase({ code: '', name: '', color: 'var(--primary-700)', certName: '' }); setShowNewPhase(false) }
+                    if (!res.error) { setNewPhase({ code: '', name: '', color: NEW_PHASE_COLOR, certName: '' }); setShowNewPhase(false) }
                     return res
                   })}
                   style={btnPrimary}
@@ -626,7 +627,7 @@ export default function OrgConfigView({
                   disabled={isPending || !newDisc.code.trim() || !newDisc.name.trim()}
                   onClick={() => act(async () => {
                     const res = await createDiscipline(newDisc)
-                    if (!res.error) { setNewDisc({ code: '', name: '', color: 'var(--success-700)' }); setShowNewDisc(false) }
+                    if (!res.error) { setNewDisc({ code: '', name: '', color: NEW_DISCIPLINE_COLOR }); setShowNewDisc(false) }
                     return res
                   })}
                   style={btnPrimary}
