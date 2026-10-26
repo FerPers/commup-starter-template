@@ -9,7 +9,7 @@ import MobileMenuButton from '@/components/layout/MobileMenuButton'
 import MobileTabBar from '@/components/layout/MobileTabBar'
 import { FIELD_ROLES } from '@/lib/constants/navigation'
 import { ToastProvider } from '@/components/ui'
-import { getActiveMembership, getMyWorkCounts, listInactiveMemberships, listMemberships } from '@/lib/supabase/membership'
+import { getActiveMembership, getMyWorkCounts, getSessionUser, listInactiveMemberships, listMemberships } from '@/lib/supabase/membership'
 import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
 import type { OrgMemberRole } from '@/types/database'
@@ -25,10 +25,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
     // Try one more lookup to disambiguate, then redirect.
     const memberships = await listMemberships()
     if (memberships.length === 0) {
-      // We don't know if user is unauthenticated; the helper returns null in
-      // both cases. /login is safe — it'll bounce authenticated users to /setup
-      // via (auth) layout if they have no memberships.
-      redirect('/login')
+      // Con sesión y sin ninguna org = alta inicial. Antes iba a /login y el layout (auth) devolvía a /home:
+      // bucle /login ↔ /home para toda cuenta nueva sin org.
+      redirect((await getSessionUser()) ? '/setup' : '/login')
     }
     // Edge case: cookie pointed to a non-membership and no fallback worked.
     // listMemberships found rows but getActiveMembership did not — should not

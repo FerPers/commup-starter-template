@@ -34,6 +34,11 @@ const loadMembershipRows = cache(async (): Promise<{
   return { supabase, user: { id: user.id, email: user.email ?? null }, rows: (data ?? []) as MemberRow[] }
 })
 
+/** Usuario de la sesión (misma verificación memoizada que las membresías); null = sin sesión. */
+export async function getSessionUser(): Promise<{ id: string; email: string | null } | null> {
+  return (await loadMembershipRows()).user
+}
+
 function orgNameOf(rel: MemberRow['organizations']): string {
   return Array.isArray(rel) ? (rel[0]?.name ?? '') : (rel?.name ?? '')
 }
