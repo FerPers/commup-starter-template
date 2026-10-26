@@ -1,6 +1,7 @@
 import type { TagRow } from '@/app/actions/import'
 import { cellText, type ColumnKeywords } from '@/lib/excel/detect-header'
 import { looksLikeTag } from '@/lib/import/tag-shape'
+import { sectionCode, sectionsByRow } from '@/lib/import/sections'
 import { parseCriticality, parseSilLevel } from '@/lib/tags/criticality'
 
 // Lectura del índice de tags / instrumentos (asistente /projects/[id]/import). Pura: la prueban
@@ -52,22 +53,27 @@ export function parseTagRows(
   disciplinePrefill: string,
 ): TagRow[] {
   const result: TagRow[] = []
+  // Sin columnas de sistema ni subsistema: salen de los títulos de sección de la lista (src/lib/import/sections.ts).
+  const sections = usesSectionTitles(colIndex)
+    ? sectionsByRow(rawRows, dataStart, row => looksLikeTag(cellText(row, colIndex.tag)))
+    : null
   for (let i = dataStart; i < rawRows.length; i++) {
     const row = rawRows[i]
     const get = (field: string) => cellText(row, colIndex[field])
     const tagNumber = get('tag')
     if (!tagNumber || !looksLikeTag(tagNumber)) continue
     const disciplineCode = (disciplinePrefill || get('discipline')).toUpperCase()
+    const section = sections?.get(i)
     result.push({
       tag_number:           tagNumber,
       description:          get('description'),
       discipline_code:      disciplineCode,
       area_code:            get('area_code')      || 'GENERAL',
       area_name:            get('area_name')      || 'General',
-      system_code:          get('system_code')    || 'GEN-SYS',
-      system_name:          get('system_code')    || 'General System',
-      subsystem_code:       get('subsystem_code') || 'GEN-SUB',
-      subsystem_name:       get('subsystem_code') || 'General Subsystem',
+      system_code:          get('system_code')    || (section?.system ? sectionCode(section.system) : 'GEN-SYS'),
+      system_name:          get('system_code')    || (section?.system ?? 'General System'),
+      subsystem_code:       get('subsystem_code') || (section ? sectionCode(section.subsystem) : 'GEN-SUB'),
+      subsystem_name:       get('subsystem_code') || (section?.subsystem ?? 'General Subsystem'),
       manufacturer:         get('manufacturer')       || undefined,
       model:                get('model')              || undefined,
       serial_number:        get('serial')             || undefined,
@@ -87,4 +93,9 @@ export function parseTagRows(
     })
   }
   return result
+}
+
+/** El archivo no trae columnas de sistema ni de subsistema: se usan los títulos de sección. */
+export function usesSectionTitles(colIndex: Record<string, number>): boolean {
+  return colIndex.system_code === undefined && colIndex.subsystem_code === undefined
 }

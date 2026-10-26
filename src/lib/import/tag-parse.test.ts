@@ -30,6 +30,9 @@ describe('parseTagRows (lista de instrumentos de ingeniería)', () => {
   it('títulos de sección y notas no son tags', () => {
     expect(rows.map(r => r.tag_number)).toEqual(['PIT-7621001', 'TW-7621001'])
   })
+  it('sin columnas de sistema: sistema › subsistema desde los títulos', () => {
+    expect(rows[0]).toMatchObject({ system_code: 'SISTEMA-CRUDO', system_name: 'SISTEMA DE CRUDO', subsystem_code: 'MULTIPLES-RECIBO-762101A-B', subsystem_name: 'MULTIPLES DE RECIBO 762101A/B' })
+  })
   it('«N/A» y «BY VENDOR LIST» se leen vacíos (no pisan nada al reimportar)', () => {
     expect(rows[0].manufacturer).toBeUndefined()
     expect(rows[1]).toMatchObject({ pid_drawing: undefined, eng_unit: undefined, range_min: undefined })

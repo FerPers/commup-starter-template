@@ -7693,7 +7693,8 @@
       "reason": "Motivo",
       "sheet": "Errores",
       "file": "errores"
-    }
+    },
+    "fromSections": "Sistema y subsistema tomados de los títulos de sección de la lista: {systems} sistemas y {subsystems} subsistemas. Revísalos en la columna «Área / Sistema / Subsistema»."
   },
   "SignalImport": {
     "title": "Importar Lista de Señales",

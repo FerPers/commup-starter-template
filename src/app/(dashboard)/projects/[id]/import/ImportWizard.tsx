@@ -9,7 +9,7 @@ import { dedupeLast, mergeCounts, runBatches, IMPORT_BATCH } from '@/lib/import/
 import { detectTagType } from '@/lib/tag-types'
 import { detectEquipmentTypeCode } from '@/lib/equipment-types'
 import { pickBestSheet, detectHeaderRow } from '@/lib/excel/detect-header'
-import { TAG_COLUMNS, parseTagRows } from '@/lib/import/tag-parse'
+import { TAG_COLUMNS, parseTagRows, usesSectionTitles } from '@/lib/import/tag-parse'
 import { alpha, ink } from '@/lib/theme'
 import { pressable } from '@/lib/a11y/pressable'
 
@@ -50,6 +50,7 @@ export default function ImportWizard({
 }) {
   const ti = useTranslations('TagImport')
   const [step, setStep]               = useState<Step>('upload')
+  const [sectionNote, setSectionNote] = useState<{ systems: number; subsystems: number } | null>(null)
   const [dragging, setDragging]       = useState(false)
   const [fileName, setFileName]       = useState<string | null>(null)
   const [rows, setRows]               = useState<TagRow[]>([])
@@ -131,7 +132,13 @@ export default function ImportWizard({
         setFileName(file.name)
         setExistingTags(null)
         setPreview(null)
-        setColumns(Object.keys(colIndex).filter(k => colIndex[k] !== undefined))
+        // Sistema › subsistema desde los títulos de sección: cuentan como columnas presentes (un reimport mueve
+        // los tags sin ITR ni punch, como con columnas explícitas).
+        const fromSections = usesSectionTitles(colIndex) && parsed.some(r => r.subsystem_code !== 'GEN-SUB')
+        setSectionNote(fromSections
+          ? { systems: new Set(parsed.map(r => r.system_code)).size, subsystems: new Set(parsed.map(r => r.subsystem_code)).size }
+          : null)
+        setColumns([...Object.keys(colIndex).filter(k => colIndex[k] !== undefined), ...(fromSections ? ['system_code', 'subsystem_code'] : [])])
         setRows(parsed)
         setStep('preview')
       } catch {
@@ -355,6 +362,12 @@ export default function ImportWizard({
             <div style={{ padding: '12px 16px', background: 'var(--warning-100)', borderRadius: '10px', marginBottom: '14px', border: '1px solid var(--warning-200)' }}>
               {parseWarnings.map((w, i) => <p key={i} style={{ fontSize: '13px', color: 'var(--warning-800)', margin: '2px 0' }}>⚠ {w}</p>)}
             </div>
+          )}
+
+          {sectionNote && (
+            <p style={{ padding: '10px 16px', background: 'var(--primary-50)', border: '1px solid var(--primary-200)', borderRadius: '10px', marginBottom: '14px', fontSize: '13px', color: 'var(--primary-800)' }}>
+              {ti('fromSections', sectionNote)}
+            </p>
           )}
 
           {/* S07 (D9): qué cambia, campo por campo, antes de aplicar */}

@@ -132,8 +132,20 @@ export const importSignals = withAuthOnly(
     }
     const pending = [...byKey.values()]
 
-    // ── Jerarquía ──────────────────────────────────────────────
-    const hier = await upsertHierarchy(admin, projectId, pending.map(p => p.row))
+    // ── Tags instrumento que ya existen (vienen del índice de instrumentos) ──
+    // Se leen antes de la jerarquía: sistema y subsistema del archivo (columnas o títulos de sección) solo ubican
+    // los tags NUEVOS; uno existente no se mueve, y crear su subsistema dejaría subsistemas vacíos.
+    const existingInstr = new Map<string, { id: string; subsystem_id: string }>()
+    const instrNumbers = [...new Set(pending.map(p => p.instrTag))]
+    for (let i = 0; i < instrNumbers.length; i += CHUNK) {
+      const { data, error: exErr } = await admin.from('tags').select('id, tag_number, subsystem_id')
+        .eq('project_id', projectId).in('tag_number', instrNumbers.slice(i, i + CHUNK))
+      if (exErr) return { error: exErr.message }
+      for (const tg of data ?? []) existingInstr.set(tg.tag_number, { id: tg.id, subsystem_id: tg.subsystem_id })
+    }
+
+    // ── Jerarquía (solo para los tags instrumento que se van a crear) ──
+    const hier = await upsertHierarchy(admin, projectId, pending.filter(p => !existingInstr.has(p.instrTag)).map(p => p.row))
     if ('error' in hier) return { error: hier.error }
     result.warnings.push(...hier.warnings)
 
@@ -155,7 +167,7 @@ export const importSignals = withAuthOnly(
       const newLoops: TablesInsert<'loops'>[] = []
       for (const [loopNumber, p] of loopSeeds) {
         if (loopIdMap.has(loopNumber)) continue
-        const subsystemId = hier.subsystemIdMap.get(normalizeCode(p.row.subsystem_code, DEFAULT_SUBSYSTEM))
+        const subsystemId = existingInstr.get(p.instrTag)?.subsystem_id ?? hier.subsystemIdMap.get(normalizeCode(p.row.subsystem_code, DEFAULT_SUBSYSTEM))
         if (!subsystemId) { result.warnings.push(t('importSignals.loopSubsystemMissing', { loop: loopNumber, code: p.row.subsystem_code })); continue }
         newLoops.push({ project_id: projectId, subsystem_id: subsystemId, loop_number: loopNumber, discipline_id: p.discId, description: textOr(p.row.service, loopNumber) })
       }
@@ -174,14 +186,8 @@ export const importSignals = withAuthOnly(
       // 1. Tags instrumento: solo se CREAN los que faltan. Un tag que ya
       //    existe (viene del índice de instrumentos) conserva su descripción
       //    y su estado; antes el upsert los pisaba con los datos de la señal.
-      const instrTags = [...new Set(chunk.map(c => c.instrTag))]
-      const { data: existingTags, error: exErr } = await admin
-        .from('tags')
-        .select('id, tag_number')
-        .eq('project_id', projectId)
-        .in('tag_number', instrTags)
-      if (exErr) return { error: exErr.message }
-      const tagIdMap = new Map((existingTags ?? []).map(tg => [tg.tag_number, tg.id]))
+      const tagIdMap = new Map([...new Set(chunk.map(c => c.instrTag))]
+        .flatMap(n => { const ex = existingInstr.get(n); return ex ? [[n, ex.id] as const] : [] }))
 
       const newTags = new Map<string, TablesInsert<'tags'>>()
       for (const c of chunk) {
@@ -207,11 +213,15 @@ export const importSignals = withAuthOnly(
           // Fallback fila a fila para aislar la que falla
           for (const payload of newTags.values()) {
             const { data: one, error: oneErr } = await admin.from('tags').insert(payload).select('id, tag_number').single()
-            if (one) { tagIdMap.set(one.tag_number, one.id); result.tagsCreated++ }
+            if (one) { tagIdMap.set(one.tag_number, one.id); existingInstr.set(one.tag_number, { id: one.id, subsystem_id: payload.subsystem_id }); result.tagsCreated++ }
             else result.warnings.push(oneErr ? t('importSignals.instrumentTagError', { tag: payload.tag_number, error: oneErr.message }) : t('importSignals.instrumentTagNotCreated', { tag: payload.tag_number }))
           }
         } else {
-          for (const tg of inserted ?? []) tagIdMap.set(tg.tag_number, tg.id)
+          // Un instrumento repetido en otro lote (DCS y ESD) ya existe: no se vuelve a crear.
+          for (const tg of inserted ?? []) {
+            tagIdMap.set(tg.tag_number, tg.id)
+            existingInstr.set(tg.tag_number, { id: tg.id, subsystem_id: newTags.get(tg.tag_number)!.subsystem_id })
+          }
           result.tagsCreated += inserted?.length ?? 0
         }
       }

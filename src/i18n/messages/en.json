@@ -7693,7 +7693,8 @@
       "reason": "Reason",
       "sheet": "Errors",
       "file": "errors"
-    }
+    },
+    "fromSections": "System and subsystem taken from the list's section titles: {systems} systems and {subsystems} subsystems. Check them in the «Area / System / Subsystem» column."
   },
   "SignalImport": {
     "title": "Import Signal List",

@@ -3,6 +3,7 @@ import type { SignalRow } from '@/app/actions/import-signals'
 import { cellText, detectHeaderRow, sheetToRows } from '@/lib/excel/detect-header'
 import { SIGNAL_COLS } from '@/lib/excel/signal-columns'
 import { looksLikeTag } from '@/lib/import/tag-shape'
+import { sectionCode, sectionsByRow } from '@/lib/import/sections'
 import { normalizeSignalType } from '@/lib/signals/types'
 
 // Lectura de la lista de señales (asistente /projects/[id]/import-signals). Pura: la prueba signal-parse.test.ts.
@@ -42,9 +43,15 @@ export function parseSignalWorkbook(wb: XLSX.WorkBook, disciplineCodes: Set<stri
     if (colIndex.signal_tag === undefined || colIndex.signal_type === undefined) continue
     for (const k of Object.keys(colIndex)) columns.add(k)
 
+    // Sin columnas de sistema ni subsistema: los títulos de sección de la hoja (src/lib/import/sections.ts). El
+    // servidor solo los usa para ubicar los tags instrumento NUEVOS; los que ya existen no se mueven.
+    const sections = colIndex.system_code === undefined && colIndex.subsystem_code === undefined
+      ? sectionsByRow(rawRows, headerRowIdx + 1, row => looksLikeTag(cellText(row, colIndex.signal_tag)))
+      : null
     let count = 0
     rawRows.slice(headerRowIdx + 1).forEach((row, i) => {
       const rowNum = headerRowIdx + i + 2
+      const section = sections?.get(headerRowIdx + 1 + i)
       const get = (field: string) => cellText(row, colIndex[field])
 
       const signalTag = get('signal_tag')
@@ -59,8 +66,8 @@ export function parseSignalWorkbook(wb: XLSX.WorkBook, disciplineCodes: Set<stri
       if (!disciplineCodes.has(discipline)) out.issues.push({ kind: 'badDiscipline', sheet, row: rowNum, value: discipline, tag: signalTag })
 
       const areaCode = get('area_code') || 'GENERAL'
-      const sysCode = get('system_code') || 'GEN-SYS'
-      const subCode = get('subsystem_code') || 'GEN-SUB'
+      const sysCode = get('system_code') || (section?.system ? sectionCode(section.system) : 'GEN-SYS')
+      const subCode = get('subsystem_code') || (section ? sectionCode(section.subsystem) : 'GEN-SUB')
       out.rows.push({
         signal_tag:      signalTag,
         instrument_tag:  instrTag,
@@ -89,9 +96,9 @@ export function parseSignalWorkbook(wb: XLSX.WorkBook, disciplineCodes: Set<stri
         area_code:       areaCode,
         area_name:       get('area_name') || areaCode,
         system_code:     sysCode,
-        system_name:     get('system_name') || sysCode,
+        system_name:     get('system_name') || (section?.system ?? sysCode),
         subsystem_code:  subCode,
-        subsystem_name:  get('subsystem_name') || subCode,
+        subsystem_name:  get('subsystem_name') || (section?.subsystem ?? subCode),
       })
       count++
     })
