@@ -69,7 +69,12 @@ jobs:
         with:
           version: 2.90.0
       - name: Supabase local (migraciones + semilla)
-        run: supabase start -x studio,imgproxy,edge-runtime,logflare,vector,mailpit,postgres-meta,realtime
+        # El registro por defecto (ECR público) a veces responde toomanyrequests: se reintenta desde Docker Hub.
+        run: |
+          supabase start -x studio,imgproxy,edge-runtime,logflare,vector,mailpit,postgres-meta,realtime || {
+            supabase stop --no-backup || true
+            SUPABASE_INTERNAL_IMAGE_REGISTRY=docker.io supabase start -x studio,imgproxy,edge-runtime,logflare,vector,mailpit,postgres-meta,realtime
+          }
       - run: npm run test:db
 
   # S03: las funciones canónicas (supabase/functions-sql) = lo que corre en PROD. Solo lee md5 por RPC; el resto de
@@ -112,7 +117,12 @@ jobs:
         with:
           version: 2.90.0
       - name: Supabase local (migraciones + semilla E2E)
-        run: supabase start -x studio,imgproxy,edge-runtime,logflare,vector,mailpit,postgres-meta
+        # El registro por defecto (ECR público) a veces responde toomanyrequests: se reintenta desde Docker Hub.
+        run: |
+          supabase start -x studio,imgproxy,edge-runtime,logflare,vector,mailpit,postgres-meta || {
+            supabase stop --no-backup || true
+            SUPABASE_INTERNAL_IMAGE_REGISTRY=docker.io supabase start -x studio,imgproxy,edge-runtime,logflare,vector,mailpit,postgres-meta
+          }
       - run: npx playwright install --with-deps chromium
       - run: npm run e2e
       - uses: actions/upload-artifact@v4
