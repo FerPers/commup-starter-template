@@ -1129,6 +1129,14 @@
       "reactivate": "Reactivar",
       "suspendPrompt": "Motivo para suspender a {name} (deja de ver la organización; su historial y firmas se conservan):",
       "saved": "Acceso actualizado"
+    },
+    "menu": {
+      "label": "Acciones para {name}",
+      "noExpiry": "Sin vencimiento",
+      "sendReset": "Enviar enlace para restablecer contraseña",
+      "sendResetConfirm": "Se enviará a {email} el correo para que {name} elija una contraseña nueva. Tú no la verás ni la fijarás.",
+      "sendResetButton": "Enviar enlace",
+      "sendResetDone": "Enlace enviado"
     }
   },
   "Config": {
@@ -8299,7 +8307,12 @@
       "memberFailed": "Usuario invitado, pero no se pudo agregar a la organización: {detail}",
       "memberNotFound": "Miembro no encontrado",
       "invalidStatus": "Estado no válido",
-      "inviteSent": "Invitación enviada"
+      "inviteSent": "Invitación enviada",
+      "resetSelf": "Para tu propia contraseña usa «¿Olvidaste tu contraseña?» en el inicio de sesión",
+      "resetOwner": "Solo un Propietario puede enviar el enlace a otro Propietario",
+      "resetNotActive": "Solo se envía a miembros activos",
+      "resetFailed": "No se pudo enviar el enlace: {detail}",
+      "resetSent": "Enlace para restablecer la contraseña enviado a {email}"
     },
     "pssr": {
       "templateNotFoundOrForbidden": "Plantilla no encontrada o sin permiso",

@@ -3,12 +3,13 @@
 import type { OrgMemberRole } from '@/types/database'
 import { useId, useMemo, useState, useTransition } from 'react'
 import { useTranslations } from 'next-intl'
-import { inviteUser, updateMemberRole, removeMember, setMemberAccess, getMemberRemovalContext, type MemberRemovalContext } from '@/app/actions/users'
+import { inviteUser, updateMemberRole, removeMember, setMemberAccess, sendPasswordReset, getMemberRemovalContext, type MemberRemovalContext } from '@/app/actions/users'
 import { setMemberCompany } from '@/app/actions/documents'
 import { ROLE_TIERS } from '@/lib/constants/roles'
 import { useAskDialog } from '@/components/ui/AskDialog'
 import { DialogSurface } from '@/components/ui/dialog-a11y'
 import { alpha, ink } from '@/lib/theme'
+import { MemberActionsMenu } from './MemberActionsMenu'
 
 type Member = {
   id: string
@@ -106,7 +107,7 @@ export default function UsersView({
   companies?: { id: string; name: string }[]
 }) {
   const t = useTranslations('Users')
-  const { dialog, ask } = useAskDialog() // G-08: diálogo propio
+  const { dialog, ask, confirm } = useAskDialog() // G-08: diálogo propio
   const removeTitleId = useId()
   const uid = useId()
   const [isPending, startTransition] = useTransition()
@@ -192,6 +193,17 @@ export default function UsersView({
       const res = await setMemberAccess({ memberId: m.id, status: next.status, expiresAt: next.expiresAt ?? null, reason })
       if (res.error) { setError(res.error); return }
       notify(t('access.saved'))
+    })
+  }
+
+  // El admin no ve ni fija la contraseña: se envía el correo de restablecimiento a la persona.
+  async function handleSendReset(m: Member) {
+    if (!(await confirm({ title: t('menu.sendReset'), message: t('menu.sendResetConfirm', { name: m.fullName, email: m.email }), confirmLabel: t('menu.sendResetButton') }))) return
+    setError(null)
+    startTransition(async () => {
+      const res = await sendPasswordReset({ memberId: m.id })
+      if (res.error) { setError(res.error); return }
+      notify(res.message ?? t('menu.sendResetDone'))
     })
   }
 
@@ -425,7 +437,7 @@ export default function UsersView({
 
       {/* Members table */}
       {filterStatus !== 'pending' && (
-        <div style={{ background: 'var(--card-bg)', borderRadius: '14px', border: '1px solid var(--border)', overflow: 'hidden' }}>
+        <div style={{ background: 'var(--card-bg)', borderRadius: '14px', border: '1px solid var(--border)', overflowX: 'auto' }}>
           {filteredMembers.length === 0 ? (
             <div style={{ padding: '48px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '14px' }}>
               {members.length === 0 ? t('table.empty') : t('table.emptyFiltered')}
@@ -535,32 +547,20 @@ export default function UsersView({
                       <td style={{ padding: '14px 20px', fontSize: '13px', color: 'var(--text-muted)' }} title={m.lastActive ?? ''}>
                         {formatLastActive(m.lastActive, t)}
                       </td>
-                      <td style={{ padding: '14px 20px', textAlign: 'right' }}>
-                        {isAdmin && !isSelf && (!isOwner || currentRole === 'owner') && m.status !== 'invited' && (
-                          <span style={{ display: 'inline-flex', gap: 6, marginRight: 6, alignItems: 'center' }}>
-                            <input type="date" aria-label={t('access.expiresLabel')} disabled={isPending} defaultValue={m.accessExpiresAt?.slice(0, 10) ?? ''}
-                              title={t('access.expiresLabel')}
-                              onChange={e => handleAccess(m, { status: m.status === 'suspended' ? 'suspended' : 'active', expiresAt: e.target.value ? `${e.target.value}T23:59:59` : null })}
-                              style={{ padding: '4px 6px', border: '1px solid var(--border)', borderRadius: '6px', fontSize: '12px', background: 'var(--card-bg)', color: 'var(--text-strong)' }} />
-                            <button type="button" disabled={isPending}
-                              onClick={() => handleAccess(m, { status: m.status === 'suspended' ? 'active' : 'suspended', expiresAt: m.accessExpiresAt })}
-                              style={{ padding: '6px 10px', background: 'transparent', border: '1px solid var(--border)', borderRadius: '6px', fontSize: '12px', color: 'var(--text-strong)', cursor: 'pointer' }}>
-                              {m.status === 'suspended' ? t('access.reactivate') : t('access.suspend')}
-                            </button>
-                          </span>
-                        )}
+                      <td style={{ padding: '14px 12px', textAlign: 'right' }}>
                         {isAdmin && !isSelf && (!isOwner || currentRole === 'owner') && (
-                          <button
-                            onClick={() => openRemove(m.id, m.fullName)}
+                          <MemberActionsMenu
+                            name={m.fullName}
                             disabled={isPending}
-                            style={{
-                              padding: '6px 12px', background: 'transparent',
-                              border: '1px solid var(--danger-300)', borderRadius: '6px',
-                              fontSize: '12px', color: 'var(--danger-700)', cursor: 'pointer',
-                            }}
-                          >
-                            {t('table.remove')}
-                          </button>
+                            accessExpiresAt={m.accessExpiresAt}
+                            showAccess={m.status !== 'invited'}
+                            suspended={m.status === 'suspended'}
+                            canSendReset={m.status === 'active'}
+                            onExpiresChange={date => handleAccess(m, { status: m.status === 'suspended' ? 'suspended' : 'active', expiresAt: date ? `${date}T23:59:59` : null })}
+                            onToggleSuspend={() => handleAccess(m, { status: m.status === 'suspended' ? 'active' : 'suspended', expiresAt: m.accessExpiresAt })}
+                            onSendReset={() => handleSendReset(m)}
+                            onRemove={() => openRemove(m.id, m.fullName)}
+                          />
                         )}
                       </td>
                     </tr>

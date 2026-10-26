@@ -294,7 +294,7 @@ CommUp no tiene un rol «gerente» ni «planner»: normalmente son **arquitecto*
 
 **Quién eres:** administrador funcional de la plataforma en tu empresa.
 **Tareas**
-1. **Usuarios:** *Administración › Usuarios › Invitar* → correo y rol; asignar **empresa** a cada persona (las firmas muestran «nombre · empresa»). Suspender, dar acceso con vencimiento o quitar personas (el sistema muestra qué deja pendiente).
+1. **Usuarios:** *Administración › Usuarios › Invitar* → correo y rol; asignar **empresa** a cada persona (las firmas muestran «nombre · empresa»). En el menú **⋯** de cada persona: acceso con vencimiento, suspender, **enviar enlace para restablecer la contraseña** (le llega el mismo correo de «¿Olvidaste tu contraseña?»; nadie fija ni ve la contraseña de otro) o quitar (el sistema muestra qué deja pendiente).
 2. **Empresas:** *Administración › Empresas* — operadora/cliente, EPC, vendors, subcontratistas.
 3. **Firmantes designados** por proyecto: *Proyecto › Firmantes* (Comisionamiento, Operaciones, HSE, Representante del cliente).
 4. **Configuración:** fases (con su nombre de certificado: MC, RFPC…), disciplinas, tipos de equipo, logo, glosario de traducción, límite de Cat B abiertos por subsistema.

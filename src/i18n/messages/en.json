@@ -1129,6 +1129,14 @@
       "reactivate": "Reactivate",
       "suspendPrompt": "Reason to suspend {name} (they stop seeing the organization; their history and signatures are kept):",
       "saved": "Access updated"
+    },
+    "menu": {
+      "label": "Actions for {name}",
+      "noExpiry": "No expiry",
+      "sendReset": "Send password reset link",
+      "sendResetConfirm": "An email will be sent to {email} so {name} can choose a new password. You will not see or set it.",
+      "sendResetButton": "Send link",
+      "sendResetDone": "Link sent"
     }
   },
   "Config": {
@@ -8299,7 +8307,12 @@
       "memberFailed": "User invited, but they could not be added to the organization: {detail}",
       "memberNotFound": "Member not found",
       "invalidStatus": "Invalid status",
-      "inviteSent": "Invitation sent"
+      "inviteSent": "Invitation sent",
+      "resetSelf": "For your own password use “Forgot your password?” on the sign-in page",
+      "resetOwner": "Only an Owner can send the link to another Owner",
+      "resetNotActive": "The link is only sent to active members",
+      "resetFailed": "The link could not be sent: {detail}",
+      "resetSent": "Password reset link sent to {email}"
     },
     "pssr": {
       "templateNotFoundOrForbidden": "Template not found or no permission",

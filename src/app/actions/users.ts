@@ -6,6 +6,7 @@ import { withAuth } from '@/lib/auth/withAuth'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { getTranslations } from 'next-intl/server'
+import { logActivity } from '@/lib/log-activity'
 
 // ── inviteUser ─────────────────────────────────────────────────────────────
 
@@ -115,6 +116,44 @@ export const setMemberAccess = withAuth(
   if (error) return { error: error.message }
   revalidatePath('/admin/users')
   return {}
+  },
+)
+
+// ── sendPasswordReset ──────────────────────────────────────────────────────
+
+/**
+ * El administrador nunca fija ni ve la contraseña de otra persona: le envía el mismo correo de «¿Olvidaste tu
+ * contraseña?» (enlace a /auth/set-password). Mismas reglas que el menú de la fila: no a sí mismo, solo un
+ * Propietario a otro Propietario, solo miembros activos. Queda en `activity_log`.
+ */
+export const sendPasswordReset = withAuth(
+  { role: ADMIN_ROLES },
+  async (
+    ctx,
+    input: { memberId: string },
+  ): Promise<{ error?: string; message?: string }> => {
+  const t = await getTranslations('ActionErrors')
+  const { data: member } = await ctx.supabase.from('org_members').select('id, user_id, role, status').eq('id', input.memberId).eq('org_id', ctx.orgId).maybeSingle()
+  if (!member) return { error: t('users.memberNotFound') }
+  if (member.user_id === ctx.userId) return { error: t('users.resetSelf') }
+  if (member.role === 'owner' && ctx.role !== 'owner') return { error: t('users.resetOwner') }
+  if (member.status !== 'active') return { error: t('users.resetNotActive') }
+
+  const admin = createAdminClient()
+  const { data: found, error: userErr } = await admin.auth.admin.getUserById(member.user_id)
+  const email = found?.user?.email
+  if (userErr || !email) return { error: t('users.resetFailed', { detail: userErr?.message ?? t('users.unknownError') }) }
+  const { error } = await admin.auth.resetPasswordForEmail(email, { redirectTo: `${SITE_URL}/auth/set-password` })
+  if (error) return { error: t('users.resetFailed', { detail: error.message }) }
+
+  await logActivity(ctx.supabase, {
+    orgId: ctx.orgId,
+    userId: ctx.userId,
+    entityType: 'user',
+    entityId: member.user_id,
+    action: 'password_reset_sent',
+  })
+  return { message: t('users.resetSent', { email }) }
   },
 )
 
