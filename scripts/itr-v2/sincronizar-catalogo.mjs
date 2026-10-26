@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// ROTO desde A40 (2026-10-23): los helpers de clone.ts pasaron a la RPC clone_itr_template_from_catalog.
+// Para sincronizar usar scripts/ops/sync-catalog-from-demo.sql como modelo (RPC + activate_itr_template_revision).
 // Fase 6 — Biblioteca de formatos: organización catálogo + clonación.
 //
 // Sincroniza plantillas ITR entre organizaciones con la misma huella de
