@@ -118,6 +118,8 @@ En términos concretos, salir significa cuatro cosas:
 
 - **Decisiones de Luis (25-oct):**
   - **A15:** las alertas de salud las recibe el **arquitecto**, que es quien administrará CommUp. Se registra en `platform_operators` con su cuenta y su organización.
+    - 26-oct: mientras no exista su cuenta, operador interino = luis.perdomo@outlook.com en «CommUp Catálogo» (migración `20270103120000`); al crear la cuenta del arquitecto, otra migración lo agrega y saca la interina.
+    - 26-oct: GitHub corría el cron de push (`*/5`) cada 2–3 h y la alerta parpadeaba. **push-dispatch pasa a diario** (13:15 UTC) con ventanas de salud de 26 h (migración `20270104120000`). **Antes de que entre Geopark:** push-dispatch a pg_cron + pg_net cada 2 min (`CRON_SECRET` en el Vault) y volver a las ventanas cortas.
   - **38-4 y validación:** en vez de cargar Geopark sobre lo que hay, se crea una **organización nueva** y se carga toda la ingeniería:
     - listado de líneas;
     - instrumentos;
