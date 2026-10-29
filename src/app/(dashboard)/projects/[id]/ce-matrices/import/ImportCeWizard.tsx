@@ -5,6 +5,8 @@
 // 2) la IA propone causas, efectos y cruces;
 // 3) revisión en pantalla — dudas y tags sin pareja en ámbar, todo editable — y solo al aceptar se crea
 //    la matriz. Si se cierra la página antes, la propuesta se pierde (no se guarda nada).
+// Hoja con zonas (matriz F&G, src/lib/ce/zones.ts): «una matriz por zona» lee cada zona aparte (dos a la vez) y
+// cada una se revisa y se guarda desde la lista de zonas (CeZoneList).
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -15,6 +17,8 @@ import { useAskDialog } from '@/components/ui/AskDialog'
 import { createCeMatrixFromReview, extractCeMatrixWithAi } from '@/app/actions/ce-import'
 import { MAX_PDF_BYTES, MAX_SHEET_CHARS, reviewErrors, type ReviewState } from '@/lib/ce/import'
 import { CE_ACTIONS, CE_VOTINGS, type CeAction, type CeVoting } from '@/lib/ce/matrix'
+import { splitSheetByZones } from '@/lib/ce/zones'
+import CeZoneList, { zoneCode, type ZoneRun } from './CeZoneList'
 
 type Meta = { code: string; title: string; systemId: string; revision: string; sourceDocument: string; fileName: string }
 
@@ -40,9 +44,19 @@ export default function ImportCeWizard({ project, systems, aiReady }: {
   const [meta, setMeta] = useState<Meta | null>(null)
   const [error, setError] = useState('')
   const [reading, startReading] = useTransition()
+  const [byZone, setByZone] = useState(true)
+  const [zoneRuns, setZoneRuns] = useState<ZoneRun[] | null>(null)
+  const [zonePrefix, setZonePrefix] = useState('CE-ZONA')
+  const [zoneSystem, setZoneSystem] = useState('')
+  const [activeZone, setActiveZone] = useState<number | null>(null)
   const [saving, startSaving] = useTransition()
 
   const isPdf = file?.type === 'application/pdf' || file?.name.toLowerCase().endsWith('.pdf')
+  const zones = useMemo(() => {
+    const ws = workbook?.Sheets[sheetName]
+    return ws ? splitSheetByZones(XLSX.utils.sheet_to_json<unknown[]>(ws, { header: 1, defval: '', raw: false })) : []
+  }, [workbook, sheetName])
+  const zoneMode = !isPdf && byZone && zones.length >= 2
 
   async function pick(f: File | null) {
     setError(''); setReview(null); setWorkbook(null); setFile(f)
@@ -53,8 +67,51 @@ export default function ImportCeWizard({ project, systems, aiReady }: {
     } catch { setError(ti('notExcel')) }
   }
 
+  function patchZone(i: number, patch: Partial<ZoneRun>) {
+    setZoneRuns(runs => runs && runs.map((r, j) => j === i ? { ...r, ...patch } : r))
+  }
+
+  async function readZone(i: number) {
+    if (!file) return
+    patchZone(i, { status: 'reading', error: undefined })
+    const form = new FormData()
+    form.set('projectId', project.id)
+    form.set('fileName', file.name)
+    form.set('hint', `Zona «${zones[i].title}». Extrae solo la matriz de esta zona.${hint ? ` ${hint}` : ''}`.slice(0, 300))
+    form.set('sheet', zones[i].csv)
+    const res = await extractCeMatrixWithAi(form)
+    if (res.error || !res.review || !res.meta) patchZone(i, { status: 'error', error: res.error ?? ti('noProposal') })
+    else patchZone(i, { status: 'ready', review: res.review, revision: res.meta.revision, sourceDocument: res.meta.sourceDocument })
+  }
+
+  function readZones() {
+    setError('')
+    setZoneRuns(zones.map(z => ({ title: z.title, status: 'pending' })))
+    startReading(async () => {
+      let next = 0
+      const worker = async () => { while (next < zones.length) await readZone(next++) }
+      await Promise.all([worker(), worker()])
+    })
+  }
+
+  function openZone(i: number) {
+    const run = zoneRuns?.[i]
+    if (!run?.review || !file) return
+    setActiveZone(i)
+    setReview(run.review)
+    setMeta({ code: zoneCode(zonePrefix, i), title: run.title, systemId: zoneSystem, revision: run.revision ?? '', sourceDocument: run.sourceDocument ?? file.name, fileName: file.name })
+  }
+
+  /** Vuelve a la lista de zonas conservando lo editado en la revisión. */
+  function closeZone(patch: Partial<ZoneRun> = {}) {
+    if (activeZone === null) return
+    patchZone(activeZone, { review: review ?? undefined, ...patch })
+    setActiveZone(null); setReview(null); setMeta(null)
+  }
+
   function read() {
     if (!file) return
+    if (zoneMode) { readZones(); return }
     setError('')
     const form = new FormData()
     form.set('projectId', project.id)
@@ -120,6 +177,7 @@ export default function ImportCeWizard({ project, systems, aiReady }: {
     startSaving(async () => {
       const res = await createCeMatrixFromReview({ projectId: project.id, systemId: meta.systemId || null, code: meta.code, title: meta.title, revision: meta.revision, sourceDocument: meta.sourceDocument, fileName: meta.fileName, review })
       if (res.error || !res.id) { setError(res.error ?? ti('createError')); return }
+      if (activeZone !== null) { closeZone({ status: 'saved', matrixId: res.id }); return }
       router.push(`/projects/${project.id}/ce-matrices/${res.id}`)
     })
   }
@@ -134,7 +192,16 @@ export default function ImportCeWizard({ project, systems, aiReady }: {
       </p>
       {!aiReady && <p role="alert" style={{ color: 'var(--warning-700)', fontSize: '13px' }}>{ti('aiOff')}</p>}
 
-      {!review && (
+      {!review && zoneRuns && (
+        <CeZoneList projectId={project.id} runs={zoneRuns} prefix={zonePrefix} systemId={zoneSystem} systems={systems}
+          onPrefix={setZonePrefix} onSystem={setZoneSystem} onOpen={openZone} onRetry={i => startReading(() => readZone(i))}
+          onRestart={async () => {
+            if (zoneRuns.some(r => r.status === 'ready') && !(await confirm({ message: ti('zones.restartConfirm'), confirmLabel: ti('zones.restart'), danger: true }))) return
+            setZoneRuns(null)
+          }} />
+      )}
+
+      {!review && !zoneRuns && (
         <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '12px', padding: '16px', display: 'grid', gap: '12px', maxWidth: '640px' }}>
           <label style={{ fontSize: '12px' }}>{ti('file')}
             <input type="file" accept=".xlsx,.xls,.csv,.pdf,application/pdf" style={field} onChange={e => void pick(e.target.files?.[0] ?? null)} />
@@ -146,11 +213,17 @@ export default function ImportCeWizard({ project, systems, aiReady }: {
               </select>
             </label>
           )}
+          {!isPdf && zones.length >= 2 && (
+            <label style={{ fontSize: '12px', display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+              <input type="checkbox" checked={byZone} onChange={e => setByZone(e.target.checked)} />
+              <span>{ti('zones.toggle', { n: zones.length })}<br /><span style={{ color: 'var(--text-muted)' }}>{ti('zones.toggleHint')}</span></span>
+            </label>
+          )}
           <label style={{ fontSize: '12px' }}>{ti('hint')}
             <input style={field} maxLength={300} value={hint} onChange={e => setHint(e.target.value)} placeholder={ti('hintPlaceholder')} />
           </label>
           <div>
-            <button type="button" style={primary} disabled={!file || reading || !aiReady || (!isPdf && !workbook)} onClick={read}>{reading ? ti('reading') : ti('read')}</button>
+            <button type="button" style={primary} disabled={!file || reading || !aiReady || (!isPdf && !workbook)} onClick={read}>{reading ? ti('reading') : zoneMode ? ti('zones.read', { n: zones.length }) : ti('read')}</button>
           </div>
         </div>
       )}
@@ -252,7 +325,12 @@ export default function ImportCeWizard({ project, systems, aiReady }: {
           {errors.length > 0 && <ul role="alert" style={{ color: 'var(--danger-700)', fontSize: '12px', margin: '12px 0 0' }}>{errors.map(e => <li key={e}>{e}</li>)}</ul>}
           <div style={{ display: 'flex', gap: '8px', marginTop: '14px', flexWrap: 'wrap' }}>
             <button type="button" style={primary} disabled={saving || errors.length > 0 || !meta.code.trim() || !meta.title.trim()} onClick={save}>{saving ? ti('creating') : ti('create')}</button>
-            <button type="button" onClick={async () => { if (await confirm({ message: ti('discardConfirm'), confirmLabel: ti('discard'), danger: true })) { setReview(null); setMeta(null) } }} style={{ padding: '9px 14px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--card-bg)', cursor: 'pointer', fontSize: '13px' }}>{ti('discard')}</button>
+            {activeZone !== null && <button type="button" onClick={() => closeZone()} style={{ padding: '9px 14px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--card-bg)', cursor: 'pointer', fontSize: '13px' }}>{ti('zones.back')}</button>}
+            <button type="button" onClick={async () => {
+              if (!(await confirm({ message: ti('discardConfirm'), confirmLabel: ti('discard'), danger: true }))) return
+              if (activeZone !== null) { closeZone({ status: 'discarded' }); return }
+              setReview(null); setMeta(null)
+            }} style={{ padding: '9px 14px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--card-bg)', cursor: 'pointer', fontSize: '13px' }}>{ti('discard')}</button>
           </div>
         </>
       )}

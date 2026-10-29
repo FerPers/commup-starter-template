@@ -11,7 +11,7 @@ import { checkProjectAccess } from '@/lib/auth/access'
 import { accessError } from '@/lib/i18n/action-errors'
 import { EDITOR_ROLES } from '@/lib/auth/permissions'
 import { withAuth, withAuthOnly } from '@/lib/auth/withAuth'
-import { AiCeOutput, MAX_PDF_BYTES, MAX_SHEET_CHARS, normalizeTag, reviewErrors, toReview, type ReviewState } from '@/lib/ce/import'
+import { AiCeOutput, MAX_PDF_BYTES, MAX_SHEET_CHARS, normalizeTag, reviewErrors, splitGroupedEffects, toReview, type ReviewState } from '@/lib/ce/import'
 import { normalizeCeCode, parseDelay } from '@/lib/ce/matrix'
 
 // Importación de matrices C&E con IA (fase 4 · bloque D, sesión 3; §10.20 y §10.25–10.28). La IA
@@ -93,15 +93,17 @@ export const extractCeMatrixWithAi = withAuthOnly(
 
     const run = await runAi({ orgId: ctx.orgId, userId: ctx.userId, projectId, feature: 'ce_import' }, (client, model) => client.messages.parse({
       model,
-      max_tokens: 16000,
+      // 20k: una hoja de GG-007 de CPF Orotoy (45 causas × 41 efectos) usó 17k; más pide streaming en el SDK.
+      max_tokens: 20000,
       output_config: { effort: 'medium', format: zodOutputFormat(AiCeOutput) },
       system: SYSTEM_RULES,
       messages: [{ role: 'user', content }],
     }))
     if (!run.response) return { error: run.error }
     if (run.response.stop_reason === 'max_tokens') return { error: t('ceImport.tooLargeForOneRead') }
-    const parsed: AiCeOutput | null = run.response.parsed_output
-    if (!parsed) return { error: t('ceImport.aiUnparsable') }
+    const output: AiCeOutput | null = run.response.parsed_output
+    if (!output) return { error: t('ceImport.aiUnparsable') }
+    const parsed = splitGroupedEffects(output)
     if (!parsed.causes.length || !parsed.effects.length) return { error: parsed.warnings.length ? t('ceImport.noMatrixWithWarnings', { warnings: parsed.warnings.join(' · ') }) : t('ceImport.noMatrix') }
 
     const tags = await matchingTags(ctx.supabase, projectId, [...parsed.causes.map(c => c.tag ?? ''), ...parsed.effects.map(e => e.tag ?? '')])

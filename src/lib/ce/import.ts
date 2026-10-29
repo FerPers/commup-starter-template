@@ -4,6 +4,7 @@
 // emparejado de tags con el proyecto y validación antes de guardar.
 
 import { z } from 'zod'
+import { expandTagCell } from '@/lib/import/tag-shape'
 import { CE_ACTIONS, CE_VOTINGS, normalizeCeCode, type CeAction, type CeVoting } from './matrix'
 
 export const AiCeOutput = z.object({
@@ -45,6 +46,29 @@ export type AiCeOutput = z.infer<typeof AiCeOutput>
  * «PT_101» → «PT101»). S13 (F-15): = columna generada SQL `tags.tag_key`, que es por donde se busca en la BD.
  */
 export const normalizeTag = (value: string | null | undefined) => (value ?? '').toUpperCase().replace(/[\s_./-]+/g, '')
+
+/**
+ * Efectos agrupados → un efecto por equipo (decisión de Luis, 2026-10-29): las matrices de CPF Orotoy (GG-007) nombran
+ * un efecto sobre varios equipos («TK-762103/104», «MZ-762101A/B, MZ-762102A/B») y un efecto se enlaza a UN tag. Cada
+ * copia lleva el código con sufijo (E-05 → E-05.1, E-05.2…), su tag y los mismos cruces. Los tags se separan con la
+ * misma regla que la importación de listas (expandTagCell).
+ */
+export function splitGroupedEffects(output: AiCeOutput): AiCeOutput {
+  const warnings = [...output.warnings]
+  const split = new Map<string, string[]>()
+  const effects: AiCeOutput['effects'] = []
+  for (const e of output.effects) {
+    const tags = e.tag ? expandTagCell(e.tag.replace(/[,;]/g, ' ')) : []
+    if (tags.length < 2) { effects.push(e); continue }
+    const codes = tags.map((_, i) => `${e.code.trim()}.${i + 1}`)
+    split.set(normalizeTag(e.code), codes)
+    tags.forEach((tag, i) => effects.push({ ...e, code: codes[i], tag }))
+    warnings.push(`Efecto ${e.code} («${e.tag}») separado en ${tags.length} efectos, uno por equipo`)
+  }
+  if (!split.size) return output
+  const links = output.links.flatMap(l => (split.get(normalizeTag(l.effect_code)) ?? [l.effect_code]).map(effect_code => ({ ...l, effect_code })))
+  return { ...output, effects, links, warnings }
+}
 
 export type ReviewCause = {
   key: string; code: string; description: string; tag: string; tagMatched: boolean; signal: string

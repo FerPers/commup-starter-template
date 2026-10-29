@@ -7526,7 +7526,39 @@
       "create": "Accept and create matrix",
       "discardConfirm": "Discard the AI proposal?",
       "discard": "Discard",
-      "delayTitle": "Delay"
+      "delayTitle": "Delay",
+      "zones": {
+        "toggle": "One matrix per zone ({n} zones found in the sheet)",
+        "toggleHint": "For large matrices (F&G): each zone is read separately and becomes its own matrix, reviewed and saved one by one.",
+        "read": "Read {n} zones with AI",
+        "prefix": "Code prefix",
+        "system": "System for all matrices",
+        "hint": "Each matrix code = prefix + zone number (CE-FG-01, CE-FG-02…). System and code can be changed in each zone's review. If you leave this page, unsaved zones are lost.",
+        "summary": "{saved} of {total} zones saved",
+        "col": {
+          "code": "Code",
+          "zone": "Zone",
+          "content": "Proposal",
+          "status": "Status",
+          "actions": "Actions"
+        },
+        "content": "{causes} causes · {effects} effects · {links} links",
+        "doubts": "{n, plural, one {# doubt} other {# doubts}}",
+        "status": {
+          "pending": "Queued",
+          "reading": "Reading…",
+          "ready": "To review",
+          "error": "Error",
+          "saved": "Saved",
+          "discarded": "Discarded"
+        },
+        "review": "Review",
+        "retry": "Retry",
+        "open": "Open matrix",
+        "back": "← Back to zones",
+        "restart": "Start with another file",
+        "restartConfirm": "Some zones were read but not saved. Discard them and start over?"
+      }
     },
     "list": {
       "createError": "Could not create",

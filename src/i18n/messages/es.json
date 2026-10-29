@@ -7526,7 +7526,39 @@
       "create": "Aceptar y crear matriz",
       "discardConfirm": "¿Descartar la propuesta de la IA?",
       "discard": "Descartar",
-      "delayTitle": "Retardo"
+      "delayTitle": "Retardo",
+      "zones": {
+        "toggle": "Una matriz por zona ({n} zonas detectadas en la hoja)",
+        "toggleHint": "Para matrices grandes (F&G): cada zona se lee aparte y queda como una matriz propia que revisas y guardas una por una.",
+        "read": "Leer {n} zonas con IA",
+        "prefix": "Prefijo del código",
+        "system": "Sistema de todas las matrices",
+        "hint": "Código de cada matriz = prefijo + número de zona (CE-FG-01, CE-FG-02…). El sistema y el código se pueden cambiar en la revisión de cada zona. Si sales de esta página, las zonas sin guardar se pierden.",
+        "summary": "{saved} de {total} zonas guardadas",
+        "col": {
+          "code": "Código",
+          "zone": "Zona",
+          "content": "Propuesta",
+          "status": "Estado",
+          "actions": "Acciones"
+        },
+        "content": "{causes} causas · {effects} efectos · {links} cruces",
+        "doubts": "{n, plural, one {# duda} other {# dudas}}",
+        "status": {
+          "pending": "En cola",
+          "reading": "Leyendo…",
+          "ready": "Por revisar",
+          "error": "Error",
+          "saved": "Guardada",
+          "discarded": "Descartada"
+        },
+        "review": "Revisar",
+        "retry": "Reintentar",
+        "open": "Abrir matriz",
+        "back": "← Volver a las zonas",
+        "restart": "Empezar con otro archivo",
+        "restartConfirm": "Hay zonas leídas sin guardar. ¿Descartarlas y empezar de nuevo?"
+      }
     },
     "list": {
       "createError": "No se pudo crear",
