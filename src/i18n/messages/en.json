@@ -143,7 +143,8 @@
       "phaseItrs": "{phase} ITRs",
       "phasePunches": "{phase} punch",
       "phaseReadiness": "Systems to release",
-      "phaseApproved": "{approved}/{total}"
+      "phaseApproved": "{approved}/{total}",
+      "engineeringLoad": "Engineering load"
     },
     "soon": "SOON",
     "comingSoon": "Coming soon",
@@ -9201,6 +9202,65 @@
       "approved": "Approved",
       "excluded": "Excluded",
       "outside": "Outside requirements"
+    }
+  },
+  "EngineeringLoad": {
+    "title": "Engineering load",
+    "subtitle": "{code} · {total, plural, one {# tag} other {# tags}} loaded. The importers in the recommended order: each step uses what the previous one loaded (systems come from the instruments; equipment is placed by its P&ID; C&E matrices need the equipment).",
+    "import": "Import",
+    "importMore": "Import another list",
+    "done": "Done",
+    "notYet": "Pending",
+    "footer": "Each importer shows a preview before applying and can be repeated with a new revision of the list: it updates without duplicating. The import buttons inside each module open the same wizards.",
+    "status": {
+      "tags": "{n, plural, =0 {No INST tags} one {# INST tag} other {# INST tags}}",
+      "safety": "{n, plural, =0 {No tags with Safety criticality} one {# tag with Safety criticality} other {# tags with Safety criticality}}",
+      "signals": "{n, plural, =0 {No signals} one {# signal} other {# signals}}",
+      "equipment": "{mech} MECH · {elec} ELEC",
+      "vendors": "{n, plural, =0 {No packages} one {# package} other {# packages}}",
+      "ce": "{n, plural, =0 {No matrices} one {# matrix} other {# matrices}}",
+      "pid": "{n, plural, =0 {No P&IDs} one {# P&ID} other {# P&IDs}}",
+      "noImporter": "No importer yet"
+    },
+    "step": {
+      "instruments": {
+        "title": "Instruments",
+        "hint": "Instrument index (INST discipline). System and subsystem come from the list section titles."
+      },
+      "fg": {
+        "title": "F&G and safety",
+        "hint": "F&G list by zones: in «Values for the whole file», System «SISTEMA F&G» and Safety criticality."
+      },
+      "signals": {
+        "title": "Signals (DCS, ESD, F&G)",
+        "hint": "Signal index: creates the tags that only appear there (pumps, MOVs). Keep the safety sheets ticked."
+      },
+      "equipment": {
+        "title": "Mechanical and electrical equipment",
+        "hint": "Static, rotating, package and electrical equipment lists (MECH or ELEC). New items are placed by their P&ID."
+      },
+      "vendors": {
+        "title": "Vendor packages",
+        "hint": "Package equipment list: one package per item with its scope and tags."
+      },
+      "ce": {
+        "title": "Cause & effect matrices",
+        "hint": "An Excel with matrix structure is read without AI; the F&G one, one matrix per zone."
+      },
+      "pid": {
+        "title": "P&IDs",
+        "hint": "P&ID documents with their PDF: viewer, tag pins and system boundaries."
+      },
+      "pending": {
+        "title": "Cables, lines and PSVs",
+        "hint": "Cable, line and relief valve lists: no importer yet."
+      }
+    },
+    "issues": {
+      "title": "To resolve",
+      "general": "{n, plural, one {# tag is} other {# tags are}} in the general system (no system in the list nor a known P&ID).",
+      "untyped": "{n, plural, one {# tag has} other {# tags have}} no equipment type: without a type they have no required ITRs.",
+      "open": "View"
     }
   }
 }

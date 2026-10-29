@@ -52,7 +52,7 @@ describe('menú por rol (N1) con módulos fijos y fases de la org (A19 · C)', (
     expect(owner.groups.map(g => g.group)).toEqual(['work', 'field', 'startup', 'mgmt'])
     // A19: ITR y Punch tienen un lugar fijo, fuera de cualquier fase
     expect(owner.groups[0].items.map(l => l.key)).toEqual(['systems', 'tags', 'itrs', 'punches', 'documents'])
-    expect(owner.config.map(l => l.key)).toEqual(['scope', 'vendors', 'signatories', 'import'])
+    expect(owner.config.map(l => l.key)).toEqual(['scope', 'vendors', 'signatories', 'engineering'])
     expect(owner.phaseMode).toBe('each')
   })
 
@@ -88,7 +88,7 @@ describe('menú por rol (N1) con módulos fijos y fases de la org (A19 · C)', (
     // Su inicio (homeForRole) es el Portafolio: visible, no en «Más…»
     expect(client.portfolio.map(l => l.key)).toContain('dashboard')
     const keys = [...client.personal, ...client.project, ...client.more].map(l => l.key)
-    expect(keys).not.toContain('import')
+    expect(keys).not.toContain('engineering')
     expect(keys).not.toContain('scan')
     expect(buildMenu('leader', P).project[0].href).toBe(`/projects/${P}`)
   })

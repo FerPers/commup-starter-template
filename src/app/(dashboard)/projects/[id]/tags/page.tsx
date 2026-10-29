@@ -164,7 +164,8 @@ export default async function TagsPage({
 
   return (
     <div style={{ padding: 'clamp(12px, 4vw, 32px)' }}>
-      <TagsHeader projectId={id} title={tNav('tags')} subtitle={tagCount === 0 ? t('subtitle.empty') : t('subtitle.list', { count: tagCount })} canEdit={canEdit} importLabel={t('import')} />
+      {/* Lista: «Importar» va en la barra de disciplinas (la preselecciona); el encabezado no lo repite. */}
+      <TagsHeader projectId={id} title={tNav('tags')} subtitle={tagCount === 0 ? t('subtitle.empty') : t('subtitle.list', { count: tagCount })} canEdit={false} importLabel={t('import')} />
       <TagModeSwitch view="list" />
 
       {tagCount === 0 && !sp.q && !sp.disc && !sp.status ? (

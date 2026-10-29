@@ -113,7 +113,7 @@ Un ITR **devuelto** por el supervisor o el cliente muestra el motivo en la lista
      - **Inspector:** Resumen · Tags y equipos · ITRs · Punch · Preservación · Registros de campo · Arranque.
      - **Líder:** Resumen · Liberación de sistemas, y debajo los mismos grupos fijos que gerencia con lo suyo: *Trabajo* (Sistemas, Tags y equipos, ITRs, Punch, Documentos) · *Campo y cierre* (Preservación, Registros de campo, Certificados, PSSR) · *Arranque y operación* (Arranque) · *Gestión* (Gestión diaria) · *Configuración del proyecto* plegada (Proveedores) · **Por fase**, plegado, con los atajos de cada fase.
      - **Arquitecto:** Resumen · Liberación de sistemas · Planificación · Sistemas · Gestión diaria · KPIs.
-     - **Propietario y administrador:** Resumen · Liberación de sistemas y los módulos fijos por tipo de trabajo: *Trabajo* (Sistemas, Tags y equipos, ITRs, Punch, Documentos) · *Campo y cierre* (Preservación, Registros de campo, Certificados, PSSR, Señales y lazos) · *Arranque y operación* (Arranque, Desempeño (PTC), Operación y traspaso) · *Gestión* (Gestión diaria, Planificación, KPIs) · *Configuración del proyecto* plegada (Alcance, Proveedores, Firmantes, Importar). Debajo, **Fases**: una sección plegable por fase de tu organización, con cuántos sistemas tiene liberados (por ejemplo «4/20») y tres atajos: *ITR de la fase*, *Punch de la fase* y *Sistemas por liberar*. Cada atajo abre la lista de siempre ya filtrada. Se abre sola la fase que más sistemas tienen como siguiente liberación; si abres otras, el menú lo recuerda en ese dispositivo.
+     - **Propietario y administrador:** Resumen · Liberación de sistemas y los módulos fijos por tipo de trabajo: *Trabajo* (Sistemas, Tags y equipos, ITRs, Punch, Documentos) · *Campo y cierre* (Preservación, Registros de campo, Certificados, PSSR, Señales y lazos) · *Arranque y operación* (Arranque, Desempeño (PTC), Operación y traspaso) · *Gestión* (Gestión diaria, Planificación, KPIs) · *Configuración del proyecto* plegada (Alcance, Proveedores, Firmantes, Carga de ingeniería). Debajo, **Fases**: una sección plegable por fase de tu organización, con cuántos sistemas tiene liberados (por ejemplo «4/20») y tres atajos: *ITR de la fase*, *Punch de la fase* y *Sistemas por liberar*. Cada atajo abre la lista de siempre ya filtrada. Se abre sola la fase que más sistemas tienen como siguiente liberación; si abres otras, el menú lo recuerda en ese dispositivo.
      - **Cliente:** Resumen · Liberación de sistemas · Documentos · Punch · Certificados · PSSR · Desempeño (PTC) · Operación y traspaso · Gestión diaria.
   3. **Portafolio** (propietario y administrador) — Proyectos · Portafolio (KPIs y la tabla de liberación por proyecto) · Post-handover · Paquetes de entrega.
   4. **Más…** — todo lo demás que tu rol puede abrir (se recuerda abierto o cerrado).
@@ -145,7 +145,7 @@ Esta es la secuencia típica de un proyecto. Cada fase termina en una **liberaci
 | Activar tipos de registro controlado y qué liberación bloquea cada uno | Arquitecto | Administración › Tipos de registro |
 | Invitar usuarios y asignarles rol y empresa | Administrador | Administración › Usuarios / Empresas |
 | Designar firmantes por capacidad del proyecto | Propietario / Administrador | Proyecto › Firmantes |
-| Importar jerarquía y tags (Excel) | Arquitecto | Proyecto › Importar (o «+ Importar tags» en Tags y equipos) |
+| Cargar la ingeniería (tags, señales, equipos, paquetes, C&E, P&ID) | Arquitecto | Configuración del proyecto › **Carga de ingeniería** (o el botón de importar de cada módulo) |
 | Importar el índice de señales y lazos (Excel) | Arquitecto | Señales y lazos › Importar señales |
 | Revisar sistemas, prioridades, límites y **dependencias** entre sistemas | Líder / Arquitecto | Proyecto › Sistemas → ficha › Dependencias |
 | Plantillas ITR (crear, importar del catálogo, activar revisiones) y matriz tipo de equipo × plantilla (con IA) | Arquitecto / Líder | Administración › Plantillas ITR › Matriz |
@@ -330,7 +330,7 @@ Todo lo del administrador, y además: borrar proyectos, elegir el catálogo de p
 ## 5. Procedimientos paso a paso por módulo
 
 ### 5.1 Importar jerarquía y tags (arquitecto, administrador, propietario)
-1. *Proyecto › Importar* (o «+ Importar tags» en Tags y equipos) → subir .xlsx/.xls. La app elige la hoja y detecta la fila de encabezados. Es el importador de **tags**: una lista de señales (tag de señal, tipo AI/DI…) va por *Señales y lazos › Importar señales* (§5.17); aquí daría «No se encontró columna TAG».
+1. *Configuración del proyecto › Carga de ingeniería* → paso que corresponda (o «Importar tags» en la barra de disciplinas de Tags y equipos, que deja elegida la disciplina) → subir .xlsx/.xls. La app elige la hoja y detecta la fila de encabezados. Es el importador de **tags**: una lista de señales (tag de señal, tipo AI/DI…) va por *Señales y lazos › Importar señales* (§5.17); aquí daría «No se encontró columna TAG».
 2. Columnas: **TAG** (obligatoria), DESCRIPCIÓN o EQUIPO, DISCIPLINA, AREA_CODE/NAME, SYSTEM_CODE/NAME, SUBSYSTEM_CODE/NAME, TIPO DE EQUIPO, P&ID, FABRICANTE, MODELO, SERIE, PRESERVACIÓN (SI/YES), DATASHEET y revisión, RANGO MIN/MAX, UNIDAD, CAJA DE CONEXIONES, CRITICIDAD, SIL.
 3. **Disciplina:** si el archivo no trae columna DISCIPLINA, elige una arriba antes de subirlo (vale para todo el archivo). Si se te pasó, la vista previa muestra «N filas no traen una disciplina reconocida» con un botón por disciplina: elígela ahí, sin volver a cargar el archivo. Reimportar con otra disciplina la cambia también en los tags que ya existen (p. ej. bombas creadas por la lista de señales como INST pasan a MECH).
 4. **Valores para todo el archivo** (opcional, antes de subir): **Sistema** para las filas que no traen uno (p. ej. `SISTEMA F&G` en la lista de F&G por zonas: las zonas quedan como subsistemas) y **Criticidad** para las filas sin ella (**Seguridad** hace que la liberación del sistema espere sus ITR aprobados y sin punch A/B).
@@ -342,7 +342,7 @@ Todo lo del administrador, y además: borrar proyectos, elegir el catálogo de p
 10. Las columnas ausentes o las celdas vacías no se tocan; un tag con ITR o punch no cambia de subsistema por importación (la vista previa lo avisa).
 11. Errores comunes: disciplina inexistente → fila omitida; tags repetidos → gana la última fila (por eso puede haber menos tags que filas).
 
-**Orden recomendado para cargar la ingeniería de un proyecto nuevo** (probado con CPF Orotoy):
+**Orden recomendado para cargar la ingeniería de un proyecto nuevo** (probado con CPF Orotoy). La página *Configuración del proyecto › Carga de ingeniería* muestra estos pasos con lo que ya hay cargado de cada uno, el botón para importar y lo que queda por resolver (tags en el sistema general, tags sin tipo de equipo):
 1. Lista de **instrumentos** (INST) — fija los sistemas desde sus títulos.
 2. Lista de **F&G** (INST, Sistema `SISTEMA F&G`, Criticidad Seguridad).
 3. Lista de **señales** (*Importar señales*, hojas ESD/F&G marcadas como seguridad) — crea los tags de equipos que solo aparecen en las señales (bombas, MOV) en su sistema.

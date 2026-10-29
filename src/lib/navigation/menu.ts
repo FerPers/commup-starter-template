@@ -88,7 +88,9 @@ export const PROJECT_ITEMS: readonly MenuItemDef[] = [
   { key: 'scope', href: '/projects/{p}/scope', labelKey: 'scope', audience: ['plan', 'mgmt'], group: 'config' },
   { key: 'vendors', href: '/projects/{p}/vendors', labelKey: 'vendors', audience: ['lead', 'mgmt'], group: 'config' },
   { key: 'signatories', href: '/projects/{p}/signatories', labelKey: 'signatories', audience: ['mgmt'], group: 'config' },
-  { key: 'import', href: '/projects/{p}/import', labelKey: 'import', tier: 'privileged', audience: ['mgmt'], group: 'config' },
+  // Carga de ingeniería: todos los importadores en orden, con su estado (2026-10-29; antes «Importar» = el de tags).
+  { key: 'engineering', href: '/projects/{p}/engineering', labelKey: 'engineeringLoad', tier: 'privileged', audience: ['mgmt'], group: 'config',
+    also: ['/projects/{p}/import'] },
 ]
 
 /** Portafolio (organización). Lo que no es de su audiencia va a «Más…». */
