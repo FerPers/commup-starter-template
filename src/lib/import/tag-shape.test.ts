@@ -7,7 +7,7 @@ describe('looksLikeTag', () => {
   })
   it('rechaza títulos de sección y notas de las listas de ingeniería', () => {
     for (const t of [
-      'SEPARADORES GENERALES 762101A/B', 'CUARTO SATÉLITE 1', 'TANQUES FWKO TK-762101/02', 'NOTAS:',
+      'SEPARADORES GENERALES 762101A/B', 'CUARTO SATÉLITE 1', 'TANQUES FWKO TK-762101/02', 'NOTAS:', 'HOLD', 'F&G', 'ESD-DCS', 'Tabla',
       '1. Los diagramas de lazo y cableado serán elaborados en la siguiente etapa', '2) Ver plano', 'CAFETERÍA', '', 'A',
     ]) expect(looksLikeTag(t)).toBe(false)
   })
@@ -28,6 +28,14 @@ describe('expandTagCell', () => {
     expect(expandTagCell('TK-762101 / 02')).toEqual(['TK-762101', 'TK-762102'])
     expect(expandTagCell('BG-762103/ 04')).toEqual(['BG-762103', 'BG-762104'])
     expect(expandTagCell('P-762101/2/3')).toEqual(['P-762101', 'P-762102', 'P-762103'])
+  })
+  it('tags completos a cada lado de la barra y letra después de guion (ELE-LI-102)', () => {
+    expect(expandTagCell('TRF-76029001/TRF-76029002')).toEqual(['TRF-76029001', 'TRF-76029002'])
+    expect(expandTagCell('PR02-DB-01A / PR02-DB-01B')).toEqual(['PR02-DB-01A', 'PR02-DB-01B'])
+    expect(expandTagCell('PR03-COND-01-A/B')).toEqual(['PR03-COND-01-A', 'PR03-COND-01-B'])
+    expect(expandTagCell('KSEC-11501.01/02.01')).toEqual(['KSEC-11501.01/02.01'])
+    expect(expandTagCell('CPF-DPS-A/B')).toEqual(['CPF-DPS-A', 'CPF-DPS-B'])
+    expect(expandTagCell('TA-AC-URV')).toEqual(['TA-AC-URV'])
   })
   it('paquete y su bomba en la misma celda', () => {
     expect(expandTagCell('PQUIM-762102\nP-762106')).toEqual(['PQUIM-762102', 'P-762106'])

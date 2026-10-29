@@ -31,12 +31,18 @@ function toKeyword(raw: string): Keyword {
   return raw.startsWith('=') ? { kw: normalizeHeader(raw.slice(1)), exactOnly: true } : { kw: normalizeHeader(raw), exactOnly: false }
 }
 
-function allKeywords(colKeywords: ColumnKeywords): Keyword[] {
-  return Object.values(colKeywords).flat().map(toKeyword)
+function fieldKeywords(colKeywords: ColumnKeywords): Keyword[][] {
+  return Object.values(colKeywords).map(kws => kws.map(toKeyword))
 }
 
-function rowScore(cells: string[], keywords: Keyword[]): number {
-  return keywords.filter(({ kw, exactOnly }) => cells.some(c => c === kw || (!exactOnly && c.includes(kw)))).length
+/**
+ * Puntaje de una fila como encabezado: cuántos CAMPOS reconoce (no cuántas palabras clave: «Revisión: 1» sumaba 3
+ * por REV/REVISION/REVISIÓN y empataba con la fila «TAG | DESCRIPCIÓN», CPF Orotoy ELE-LI-101, 2026-10-29). El
+ * primer campo de la tabla (TAG, TAG DE SEÑAL…) desempata: la fila que lo tiene gana.
+ */
+function rowScore(cells: string[], fields: Keyword[][]): number {
+  const hit = (kws: Keyword[]) => kws.some(({ kw, exactOnly }) => cells.some(c => c === kw || (!exactOnly && c.includes(kw))))
+  return fields.filter(hit).length * 2 + (fields.length && hit(fields[0]) ? 1 : 0)
 }
 
 /** Elige la hoja con más encabezados reconocibles (evita carátulas e índices). */
@@ -44,13 +50,15 @@ export function pickBestSheet(
   wb: XLSX.WorkBook,
   colKeywords: ColumnKeywords,
 ): { name: string; rows: unknown[][] } {
-  const kws = allKeywords(colKeywords)
+  const kws = fieldKeywords(colKeywords)
   let best: { name: string; rows: unknown[][]; score: number } = { name: wb.SheetNames[0], rows: [], score: -1 }
   for (const name of wb.SheetNames) {
     const rows = sheetToRows(wb.Sheets[name])
+    // La hoja vale por su MEJOR fila (su encabezado), no por la suma: una hoja «REVISIONES» con nueve filas «Emitido
+    // para revisión…» le ganaba a la lista de equipos (ELE-LI-102).
     let score = 0
     for (let i = 0; i < Math.min(rows.length, SCAN_ROWS); i++) {
-      score += rowScore(rows[i].map(normalizeHeader), kws)
+      score = Math.max(score, rowScore(rows[i].map(normalizeHeader), kws))
     }
     if (score > best.score) best = { name, rows, score }
   }
@@ -75,7 +83,7 @@ export function detectHeaderRow(
   rawRows: unknown[][],
   colKeywords: ColumnKeywords,
 ): { headerRowIdx: number; colIndex: Record<string, number>; headers: string[] } {
-  const kws = allKeywords(colKeywords)
+  const kws = fieldKeywords(colKeywords)
   let bestRow = -1
   let bestScore = 0
   for (let i = 0; i < Math.min(rawRows.length, SCAN_ROWS); i++) {
