@@ -147,11 +147,15 @@ async function prepareTagImport(
     eqtByKey.set(normalizeTypeKey(e.name), e.id)
   }
   const unknownTypes = new Set<string>()
+  // Listas mecánicas (CPF Orotoy): la columna «TIPO» trae la norma o el alcance del paquete («API-650, Techo Fijo»,
+  // «Equipo paquetizado en skid compuesto por…»), no un tipo. Se cuentan aparte y el aviso no los copia.
+  let descriptiveTypes = 0
   const resolveEquipmentType = (explicit: string | undefined, tagNumber: string): string | null => {
     if (explicit?.trim()) {
       const id = eqtByKey.get(normalizeTypeKey(explicit))
       if (id) return id
-      unknownTypes.add(explicit.trim())
+      if (explicit.trim().length > 40 || /[,;:.]/.test(explicit)) descriptiveTypes++
+      else unknownTypes.add(explicit.trim())
     }
     const detected = detectEquipmentTypeCode(tagNumber)
     return detected ? eqtByKey.get(normalizeTypeKey(detected)) ?? null : null
@@ -246,6 +250,7 @@ async function prepareTagImport(
     plans.push({ plan, index, tag: tagNumber, isNew: !existing, id: existing?.id ?? null })
   }
 
+  if (descriptiveTypes > 0) warnings.push(t('import.typeColumnDescriptive', { count: descriptiveTypes }))
   if (unknownTypes.size > 0) {
     const list = [...unknownTypes]
     warnings.push(t('import.unknownEquipmentTypes', { list: `${list.slice(0, 6).join(', ')}${list.length > 6 ? '…' : ''}` }))

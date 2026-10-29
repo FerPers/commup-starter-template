@@ -8915,7 +8915,8 @@
       "subsystemNotCreated": "El subsistema «{code}» no pudo crearse",
       "unknownEquipmentTypes": "Tipos de equipo no reconocidos (se usó la detección por prefijo del tag): {list}. Créalos en Admin → Configuración → Tipos de equipo",
       "noEquipmentTypes": "La organización no tiene tipos de equipo configurados: los tags quedaron sin tipo. Carga el catálogo estándar en Admin → Configuración",
-      "movesBlocked": "{count, plural, one {# tag con ITR o punch no se movió} other {# tags con ITR o punch no se movieron}} de subsistema (muévelos desde el detalle de cada tag → «Mover de subsistema»): {list}"
+      "movesBlocked": "{count, plural, one {# tag con ITR o punch no se movió} other {# tags con ITR o punch no se movieron}} de subsistema (muévelos desde el detalle de cada tag → «Mover de subsistema»): {list}",
+      "typeColumnDescriptive": "La columna TIPO trae descripciones (norma, alcance del paquete), no tipos de equipo, en {count, plural, one {# fila} other {# filas}}: el tipo se tomó del prefijo del tag."
     },
     "importSignals": {
       "disciplineNotFound": "La disciplina «{code}» no existe",

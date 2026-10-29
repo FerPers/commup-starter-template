@@ -8915,7 +8915,8 @@
       "subsystemNotCreated": "Subsystem «{code}» could not be created",
       "unknownEquipmentTypes": "Unrecognized equipment types (detection by tag prefix was used): {list}. Create them in Admin → Configuration → Equipment types",
       "noEquipmentTypes": "The organization has no equipment types configured: the tags were left without a type. Load the standard catalog in Admin → Configuration",
-      "movesBlocked": "{count, plural, one {# tag with ITR or punch was not moved} other {# tags with ITR or punch were not moved}} to another subsystem (move them from each tag detail → «Move subsystem»): {list}"
+      "movesBlocked": "{count, plural, one {# tag with ITR or punch was not moved} other {# tags with ITR or punch were not moved}} to another subsystem (move them from each tag detail → «Move subsystem»): {list}",
+      "typeColumnDescriptive": "The TYPE column holds descriptions (standard, package scope), not equipment types, in {count, plural, one {# row} other {# rows}}: the type was taken from the tag prefix."
     },
     "importSignals": {
       "disciplineNotFound": "Discipline «{code}» does not exist",
