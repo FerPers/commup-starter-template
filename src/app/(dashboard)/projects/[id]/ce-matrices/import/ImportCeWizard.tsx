@@ -173,9 +173,18 @@ export default function ImportCeWizard({ project, systems, aiReady }: {
 
   function save() {
     if (!review || !meta) return
+    // El botón no se deshabilita en silencio (un deshabilitado se veía igual, CPF Orotoy 2026-10-29): dice qué falta.
+    if (!meta.code.trim() || !meta.title.trim()) { setError(ti('codeTitleMissing')); return }
+    if (errors.length > 0) { setError(ti('fixErrors')); return }
     setError('')
     startSaving(async () => {
-      const res = await createCeMatrixFromReview({ projectId: project.id, systemId: meta.systemId || null, code: meta.code, title: meta.title, revision: meta.revision, sourceDocument: meta.sourceDocument, fileName: meta.fileName, review })
+      let res: Awaited<ReturnType<typeof createCeMatrixFromReview>>
+      try {
+        res = await createCeMatrixFromReview({ projectId: project.id, systemId: meta.systemId || null, code: meta.code, title: meta.title, revision: meta.revision, sourceDocument: meta.sourceDocument, fileName: meta.fileName, review })
+      } catch (e) {
+        setError(ti('saveFailed', { detail: e instanceof Error ? e.message : String(e) }))
+        return
+      }
       if (res.error || !res.id) { setError(res.error ?? ti('createError')); return }
       if (activeZone !== null) { closeZone({ status: 'saved', matrixId: res.id }); return }
       router.push(`/projects/${project.id}/ce-matrices/${res.id}`)
@@ -227,7 +236,7 @@ export default function ImportCeWizard({ project, systems, aiReady }: {
           </div>
         </div>
       )}
-      {error && <p role="alert" style={{ color: 'var(--danger-700)', fontSize: '13px' }}>{error}</p>}
+      {error && !review && <p role="alert" style={{ color: 'var(--danger-700)', fontSize: '13px' }}>{error}</p>}
 
       {review && meta && (
         <>
@@ -323,8 +332,9 @@ export default function ImportCeWizard({ project, systems, aiReady }: {
           </section>
 
           {errors.length > 0 && <ul role="alert" style={{ color: 'var(--danger-700)', fontSize: '12px', margin: '12px 0 0' }}>{errors.map(e => <li key={e}>{e}</li>)}</ul>}
+          {error && <p role="alert" style={{ color: 'var(--danger-700)', fontSize: '13px', fontWeight: 600, margin: '12px 0 0' }}>{error}</p>}
           <div style={{ display: 'flex', gap: '8px', marginTop: '14px', flexWrap: 'wrap' }}>
-            <button type="button" style={primary} disabled={saving || errors.length > 0 || !meta.code.trim() || !meta.title.trim()} onClick={save}>{saving ? ti('creating') : ti('create')}</button>
+            <button type="button" style={{ ...primary, opacity: saving ? 0.6 : 1 }} disabled={saving} onClick={save}>{saving ? ti('creating') : ti('create')}</button>
             {activeZone !== null && <button type="button" onClick={() => closeZone()} style={{ padding: '9px 14px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--card-bg)', cursor: 'pointer', fontSize: '13px' }}>{ti('zones.back')}</button>}
             <button type="button" onClick={async () => {
               if (!(await confirm({ message: ti('discardConfirm'), confirmLabel: ti('discard'), danger: true }))) return

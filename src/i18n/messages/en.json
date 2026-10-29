@@ -7592,7 +7592,10 @@
         "back": "← Back to zones",
         "restart": "Start with another file",
         "restartConfirm": "Some zones were read but not saved. Discard them and start over?"
-      }
+      },
+      "codeTitleMissing": "Enter the matrix code (e.g. CE-PRO-01) and the title, above.",
+      "fixErrors": "Fix the errors in red above before creating the matrix.",
+      "saveFailed": "Could not save ({detail}). Copy this message; if it mentions «Server Action» or «fetch», reload the page and read the sheet again."
     },
     "list": {
       "createError": "Could not create",

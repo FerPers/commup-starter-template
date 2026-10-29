@@ -7592,7 +7592,10 @@
         "back": "← Volver a las zonas",
         "restart": "Empezar con otro archivo",
         "restartConfirm": "Hay zonas leídas sin guardar. ¿Descartarlas y empezar de nuevo?"
-      }
+      },
+      "codeTitleMissing": "Escribe el código de la matriz (por ejemplo CE-PRO-01) y el título, arriba.",
+      "fixErrors": "Corrige los errores en rojo de arriba antes de crear la matriz.",
+      "saveFailed": "No se pudo guardar ({detail}). Copia este mensaje; si dice «Server Action» o «fetch», recarga la página y vuelve a leer la hoja."
     },
     "list": {
       "createError": "No se pudo crear",
