@@ -65,3 +65,33 @@ describe('valores para todo el archivo (lista F&G por zonas)', () => {
       .toMatchObject({ system_code: 'SISTEMA-F-G', subsystem_code: 'SISTEMA-F-G', subsystem_name: 'SISTEMA F&G' })
   })
 })
+
+// Forma de la lista de equipos eléctricos de CPF Orotoy (ELE-LI-102): «SE / Sitio» por fila, tags agrupados.
+describe('parseTagRows (lista eléctrica: sitio como subsistema)', () => {
+  const ELE: unknown[][] = [
+    ['Lista de equipos eléctricos', '', '', '', 'Revisión: 2'],
+    ['ITEM', 'SE / Sitio', 'ETIQUETA', 'EQUIPO', 'TIPO'],
+    ['2', 'POWER ROOM 1', 'SWG-CPF-1', 'Celdas de Media Tensión 34.5 kV', 'Uso interior, Autosoportado'],
+    ['11', 'POWER ROOM 2', 'TRF-76029001 / TRF-76029002', 'Transformador de potencia', 'Uso exterior'],
+    ['20', 'VFD-AP-762401A/B', 'VFD-AP-762401A/B', 'Variador de frecuencia', 'Uso interior'],
+    ['40', 'PÓRTICO 34.5 kV', 'CPF-DPS-A/B', 'DPS', 'Uso exterior'],
+  ]
+  const { headerRowIdx, colIndex } = detectHeaderRow(ELE, TAG_COLUMNS)
+  it('con sistema para el archivo, cada sitio es un subsistema; un sitio con forma de tag sigue al anterior', () => {
+    const rows = parseTagRows(ELE, colIndex, headerRowIdx + 1, 'ELEC', { system: 'SISTEMA ELÉCTRICO' })
+    expect(rows.map(r => `${r.tag_number}:${r.area_code}/${r.system_code}/${r.subsystem_code}`)).toEqual([
+      'SWG-CPF-1:GENERAL/SISTEMA-ELECTRICO/ELECTRICO-POWER-ROOM-1',
+      'TRF-76029001:GENERAL/SISTEMA-ELECTRICO/ELECTRICO-POWER-ROOM-2',
+      'TRF-76029002:GENERAL/SISTEMA-ELECTRICO/ELECTRICO-POWER-ROOM-2',
+      'VFD-AP-762401A:GENERAL/SISTEMA-ELECTRICO/ELECTRICO-POWER-ROOM-2',
+      'VFD-AP-762401B:GENERAL/SISTEMA-ELECTRICO/ELECTRICO-POWER-ROOM-2',
+      'CPF-DPS-A:GENERAL/SISTEMA-ELECTRICO/ELECTRICO-PORTICO-34-5-KV',
+      'CPF-DPS-B:GENERAL/SISTEMA-ELECTRICO/ELECTRICO-PORTICO-34-5-KV',
+    ])
+  })
+  it('sin sistema para el archivo, el sitio sigue siendo el área', () => {
+    const rows = parseTagRows(ELE, colIndex, headerRowIdx + 1, 'ELEC')
+    expect(rows[0].area_code).toBe('POWER ROOM 1')
+    expect(rows[0].system_code).toBe('GEN-SYS')
+  })
+})

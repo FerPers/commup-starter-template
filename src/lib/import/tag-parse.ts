@@ -67,9 +67,20 @@ export function parseTagRows(
   const sections = usesSectionTitles(colIndex)
     ? sectionsByRow(rawRows, dataStart, row => expandTagCell(cellText(row, colIndex.tag)).length > 0)
     : null
+  // Sitio como subsistema (decisión de Luis, 2026-10-29; ELE-LI-102 «SE / Sitio»): con un sistema para todo el archivo
+  // y una columna de sitio/área, cada sitio es un subsistema de ese sistema (Power Room 1…5, Pórtico 34,5 kV) y el
+  // área queda la general. Un «sitio» con forma de tag (los VFD traen su propio nombre) sigue al de la fila anterior.
+  const siteAsSubsystem = sitesAsSubsystems(colIndex, fileSystem)
+  let lastSite = ''
   for (let i = dataStart; i < rawRows.length; i++) {
     const row = rawRows[i]
     const get = (field: string) => cellText(row, colIndex[field])
+    let site = ''
+    if (siteAsSubsystem) {
+      const raw = get('area_code').replace(/\s+/g, ' ')
+      if (raw && !expandTagCell(raw).some(t => /\d/.test(t) && !/\s/.test(t))) lastSite = raw
+      site = lastSite
+    }
     // Una fila puede traer varios tags («P-762402 A/B/C», «TK-762101 / 02»): uno por tag, con los mismos datos.
     for (const tagNumber of expandTagCell(get('tag'))) {
       const disciplineCode = (disciplinePrefill || get('discipline')).toUpperCase()
@@ -79,13 +90,13 @@ export function parseTagRows(
         tag_number:           tagNumber,
         description:          get('description'),
         discipline_code:      disciplineCode,
-        area_code:            get('area_code')      || 'GENERAL',
-        area_name:            get('area_name')      || 'General',
+        area_code:            (siteAsSubsystem ? '' : get('area_code')) || 'GENERAL',
+        area_name:            (siteAsSubsystem ? '' : get('area_name')) || 'General',
         system_code:          get('system_code')    || (systemTitle ? sectionCode(systemTitle) : 'GEN-SYS'),
         system_name:          get('system_code')    || (systemTitle ?? 'General System'),
         // Sin títulos de sección, el sistema del archivo es también su único subsistema.
-        subsystem_code:       get('subsystem_code') || (section ? subsystemCode(section.subsystem, systemTitle) : fileSystem ? sectionCode(fileSystem) : 'GEN-SUB'),
-        subsystem_name:       get('subsystem_code') || (section?.subsystem ?? fileSystem ?? 'General Subsystem'),
+        subsystem_code:       get('subsystem_code') || (site && fileSystem ? subsystemCode(site, fileSystem) : section ? subsystemCode(section.subsystem, systemTitle) : fileSystem ? sectionCode(fileSystem) : 'GEN-SUB'),
+        subsystem_name:       get('subsystem_code') || (site || (section?.subsystem ?? fileSystem ?? 'General Subsystem')),
         manufacturer:         get('manufacturer')       || undefined,
         model:                get('model')              || undefined,
         serial_number:        get('serial')             || undefined,
@@ -106,6 +117,11 @@ export function parseTagRows(
     }
   }
   return result
+}
+
+/** Con sistema para todo el archivo, sin columnas de sistema ni subsistema y con columna de sitio/área: sitio = subsistema. */
+export function sitesAsSubsystems(colIndex: Record<string, number>, fileSystem: string | undefined): boolean {
+  return !!fileSystem?.trim() && colIndex.area_code !== undefined && usesSectionTitles(colIndex)
 }
 
 /** El archivo no trae columnas de sistema ni de subsistema: se usan los títulos de sección. */

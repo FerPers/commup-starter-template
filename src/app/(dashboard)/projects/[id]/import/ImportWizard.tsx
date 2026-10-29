@@ -9,7 +9,7 @@ import { dedupeLast, mergeCounts, runBatches, IMPORT_BATCH } from '@/lib/import/
 import { detectTagType } from '@/lib/tag-types'
 import { detectEquipmentTypeCode } from '@/lib/equipment-types'
 import { pickBestSheet, detectHeaderRow } from '@/lib/excel/detect-header'
-import { TAG_COLUMNS, parseTagRows, usesSectionTitles, type TagFileDefaults } from '@/lib/import/tag-parse'
+import { TAG_COLUMNS, parseTagRows, sitesAsSubsystems, usesSectionTitles, type TagFileDefaults } from '@/lib/import/tag-parse'
 import { CRITICALITY_LEVELS, type Criticality } from '@/lib/tags/criticality'
 import { alpha, ink } from '@/lib/theme'
 import { pressable } from '@/lib/a11y/pressable'
@@ -52,7 +52,7 @@ export default function ImportWizard({
   const ti = useTranslations('TagImport')
   const tTags = useTranslations('Tags')
   const [step, setStep]               = useState<Step>('upload')
-  const [sectionNote, setSectionNote] = useState<{ systems: number; subsystems: number } | null>(null)
+  const [sectionNote, setSectionNote] = useState<{ systems: number; subsystems: number; sites: boolean } | null>(null)
   // Valores para todo el archivo: sistema (filas sin título «SISTEMA …») y criticidad (filas sin ella).
   const [fileSystem, setFileSystem]   = useState('')
   const [fileCriticality, setFileCriticality] = useState<Criticality | ''>('')
@@ -157,7 +157,7 @@ export default function ImportWizard({
         const fromSections = usesSectionTitles(colIndex) && parsed.some(r => r.system_code !== 'GEN-SYS')
         const hierarchyFromFile = fromSections || (usesSectionTitles(colIndex) && !!defaults.system?.trim())
         setSectionNote(fromSections
-          ? { systems: new Set(parsed.map(r => r.system_code)).size, subsystems: new Set(parsed.map(r => r.subsystem_code)).size }
+          ? { systems: new Set(parsed.map(r => r.system_code)).size, subsystems: new Set(parsed.map(r => r.subsystem_code)).size, sites: sitesAsSubsystems(colIndex, defaults.system) }
           : null)
         setColumns([...Object.keys(colIndex).filter(k => colIndex[k] !== undefined), ...(hierarchyFromFile ? ['system_code', 'subsystem_code'] : []), ...(defaults.criticality ? ['criticality'] : [])])
         setFallbackDiscipline('')
@@ -440,7 +440,7 @@ export default function ImportWizard({
 
           {sectionNote && (
             <p style={{ padding: '10px 16px', background: 'var(--primary-50)', border: '1px solid var(--primary-200)', borderRadius: '10px', marginBottom: '14px', fontSize: '13px', color: 'var(--primary-800)' }}>
-              {ti('fromSections', sectionNote)}
+              {ti(sectionNote.sites ? 'fromSites' : 'fromSections', { systems: sectionNote.systems, subsystems: sectionNote.subsystems })}
             </p>
           )}
 

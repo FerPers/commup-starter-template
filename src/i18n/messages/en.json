@@ -7781,8 +7781,9 @@
       "systemPh": "e.g. F&G SYSTEM",
       "criticality": "Criticality",
       "fromFile": "— from the file",
-      "hint": "System: for rows without a «SYSTEM …» title; the list's titles (zones) become subsystems. Criticality: for rows without one. «Safety» makes the system release wait for its approved ITRs and no A/B punches. Choose before uploading the file."
-    }
+      "hint": "System: for rows without a «SYSTEM …» title; the list's titles (zones) become subsystems. Criticality: for rows without one. «Safety» makes the system release wait for its approved ITRs and no A/B punches. Choose before uploading the file. With a site or area column (e.g. the electrical list «SE / Site»), each site becomes a subsystem of that system."
+    },
+    "fromSites": "Each site in the «SE / Site» (or «Area») column became a subsystem of the file system: {subsystems} subsystems. Check them in the «Area / System / Subsystem» column."
   },
   "SignalImport": {
     "title": "Import Signal List",
