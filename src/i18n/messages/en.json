@@ -9217,11 +9217,11 @@
       "tags": "{n, plural, =0 {No INST tags} one {# INST tag} other {# INST tags}}",
       "safety": "{n, plural, =0 {No tags with Safety criticality} one {# tag with Safety criticality} other {# tags with Safety criticality}}",
       "signals": "{n, plural, =0 {No signals} one {# signal} other {# signals}}",
-      "equipment": "{mech} MECH · {elec} ELEC",
       "vendors": "{n, plural, =0 {No packages} one {# package} other {# packages}}",
       "ce": "{n, plural, =0 {No matrices} one {# matrix} other {# matrices}}",
       "pid": "{n, plural, =0 {No P&IDs} one {# P&ID} other {# P&IDs}}",
-      "noImporter": "No importer yet"
+      "noImporter": "No importer yet",
+      "discipline": "{n, plural, =0 {No {code} tags} one {# {code} tag} other {# {code} tags}}"
     },
     "step": {
       "instruments": {
@@ -9236,9 +9236,13 @@
         "title": "Signals (DCS, ESD, F&G)",
         "hint": "Signal index: creates the tags that only appear there (pumps, MOVs). Keep the safety sheets ticked."
       },
-      "equipment": {
-        "title": "Mechanical and electrical equipment",
-        "hint": "Static, rotating, package and electrical equipment lists (MECH or ELEC). New items are placed by their P&ID."
+      "mechanical": {
+        "title": "Mechanical equipment",
+        "hint": "Static, rotating and package equipment lists (MECH discipline). New items are placed by their P&ID."
+      },
+      "electrical": {
+        "title": "Electrical equipment",
+        "hint": "Electrical equipment list (ELEC discipline). In «Values for the whole file», System «SISTEMA ELÉCTRICO»: each site (power room, gantry, shelters) becomes a subsystem. The load list is not imported here."
       },
       "vendors": {
         "title": "Vendor packages",

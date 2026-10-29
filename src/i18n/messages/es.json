@@ -9217,11 +9217,11 @@
       "tags": "{n, plural, =0 {Sin tags INST} one {# tag INST} other {# tags INST}}",
       "safety": "{n, plural, =0 {Ningún tag con criticidad Seguridad} one {# tag con criticidad Seguridad} other {# tags con criticidad Seguridad}}",
       "signals": "{n, plural, =0 {Sin señales} one {# señal} other {# señales}}",
-      "equipment": "{mech} MECH · {elec} ELEC",
       "vendors": "{n, plural, =0 {Sin paquetes} one {# paquete} other {# paquetes}}",
       "ce": "{n, plural, =0 {Sin matrices} one {# matriz} other {# matrices}}",
       "pid": "{n, plural, =0 {Sin P&ID} one {# P&ID} other {# P&ID}}",
-      "noImporter": "Sin importador todavía"
+      "noImporter": "Sin importador todavía",
+      "discipline": "{n, plural, =0 {Sin tags {code}} one {# tag {code}} other {# tags {code}}}"
     },
     "step": {
       "instruments": {
@@ -9236,9 +9236,13 @@
         "title": "Señales (DCS, ESD, F&G)",
         "hint": "Índice de señales: crea los tags que solo aparecen ahí (bombas, MOV). Deja marcadas las hojas de seguridad."
       },
-      "equipment": {
-        "title": "Equipos mecánicos y eléctricos",
-        "hint": "Listados de equipos estáticos, rotativos, paquetes y eléctricos (MECH o ELEC). Lo nuevo se ubica por su P&ID."
+      "mechanical": {
+        "title": "Equipos mecánicos",
+        "hint": "Listados de equipos estáticos, rotativos y paquetes (disciplina MECH). Lo nuevo se ubica por su P&ID."
+      },
+      "electrical": {
+        "title": "Equipos eléctricos",
+        "hint": "Lista de equipos eléctricos (disciplina ELEC). En «Valores para todo el archivo», Sistema «SISTEMA ELÉCTRICO»: cada sitio (Power Room, pórtico, casetas) queda como subsistema. La lista de cargas no se importa aquí."
       },
       "vendors": {
         "title": "Paquetes de vendor",

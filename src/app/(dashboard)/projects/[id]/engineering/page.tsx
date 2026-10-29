@@ -49,7 +49,9 @@ export default async function EngineeringLoadPage({ params }: { params: Promise<
     { key: 'instruments', href: `${p}/import?discipline=INST`, status: t('status.tags', { n: n('INST') }), done: n('INST') > 0 },
     { key: 'fg', href: `${p}/import?discipline=INST`, status: t('status.safety', { n: safety }), done: safety > 0 },
     { key: 'signals', href: `${p}/import-signals`, status: t('status.signals', { n: signals }), done: signals > 0 },
-    { key: 'equipment', href: `${p}/import?discipline=MECH`, status: t('status.equipment', { mech: n('MECH'), elec: n('ELEC') }), done: n('MECH') + n('ELEC') > 0 },
+    // Un paso por disciplina: el enlace fija la disciplina en el importador (con ?discipline= no hay selector).
+    { key: 'mechanical', href: `${p}/import?discipline=MECH`, status: t('status.discipline', { n: n('MECH'), code: 'MECH' }), done: n('MECH') > 0 },
+    { key: 'electrical', href: `${p}/import?discipline=ELEC`, status: t('status.discipline', { n: n('ELEC'), code: 'ELEC' }), done: n('ELEC') > 0 },
     { key: 'vendors', href: `${p}/vendors/import`, status: t('status.vendors', { n: vendors }), done: vendors > 0 },
     { key: 'ce', href: `${p}/ce-matrices/import`, status: t('status.ce', { n: matrices }), done: matrices > 0 },
     { key: 'pid', href: `${p}/documents?type=pid`, status: t('status.pid', { n: pids }), done: pids > 0 },
