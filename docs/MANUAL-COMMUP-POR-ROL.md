@@ -330,11 +330,26 @@ Todo lo del administrador, y además: borrar proyectos, elegir el catálogo de p
 ## 5. Procedimientos paso a paso por módulo
 
 ### 5.1 Importar jerarquía y tags (arquitecto, administrador, propietario)
-1. *Proyecto › Importar* (o «+ Importar tags» en Tags y equipos) → subir .xlsx/.xls. La app elige la hoja y detecta la fila de encabezados.
-2. Columnas: **TAG** (obligatoria), DESCRIPCIÓN, DISCIPLINA (o una para todo el archivo), AREA_CODE/NAME, SYSTEM_CODE/NAME, SUBSYSTEM_CODE/NAME, TIPO DE EQUIPO, P&ID, FABRICANTE, MODELO, SERIE, PRESERVACIÓN (SI/YES), DATASHEET y revisión, RANGO MIN/MAX, UNIDAD, CAJA DE CONEXIONES, CRITICIDAD, SIL.
-3. Vista previa (marca las existentes y los cambios) → **Importar**: crea las nuevas y actualiza las existentes, por lotes con progreso; los errores se descargan en un reporte. La jerarquía se crea sola; sin código, el tag va a GENERAL / GEN-SYS / GEN-SUB.
-4. Las columnas ausentes o las celdas vacías no se tocan; un tag con ITR o punch no cambia de subsistema por importación (la vista previa lo avisa).
-5. Errores comunes: disciplina inexistente → fila omitida; tags repetidos → gana la última fila.
+1. *Proyecto › Importar* (o «+ Importar tags» en Tags y equipos) → subir .xlsx/.xls. La app elige la hoja y detecta la fila de encabezados. Es el importador de **tags**: una lista de señales (tag de señal, tipo AI/DI…) va por *Señales y lazos › Importar señales* (§5.17); aquí daría «No se encontró columna TAG».
+2. Columnas: **TAG** (obligatoria), DESCRIPCIÓN o EQUIPO, DISCIPLINA, AREA_CODE/NAME, SYSTEM_CODE/NAME, SUBSYSTEM_CODE/NAME, TIPO DE EQUIPO, P&ID, FABRICANTE, MODELO, SERIE, PRESERVACIÓN (SI/YES), DATASHEET y revisión, RANGO MIN/MAX, UNIDAD, CAJA DE CONEXIONES, CRITICIDAD, SIL.
+3. **Disciplina:** si el archivo no trae columna DISCIPLINA, elige una arriba antes de subirlo (vale para todo el archivo). Si se te pasó, la vista previa muestra «N filas no traen una disciplina reconocida» con un botón por disciplina: elígela ahí, sin volver a cargar el archivo. Reimportar con otra disciplina la cambia también en los tags que ya existen (p. ej. bombas creadas por la lista de señales como INST pasan a MECH).
+4. **Valores para todo el archivo** (opcional, antes de subir): **Sistema** para las filas que no traen uno (p. ej. `SISTEMA F&G` en la lista de F&G por zonas: las zonas quedan como subsistemas) y **Criticidad** para las filas sin ella (**Seguridad** hace que la liberación del sistema espere sus ITR aprobados y sin punch A/B).
+5. **Sistema y subsistema desde los títulos de la lista:** sin columnas de sistema, se toman de las filas de título de la lista de ingeniería («SISTEMA DE CRUDO» › «MÚLTIPLES DE RECIBO» y debajo los tags). Un título puede llevar el número de ítem en otra celda («625 | SISTEMA DE NAFTA»). La vista previa dice cuántos sistemas y subsistemas salieron: revísalo en la columna «Área / Sistema / Subsistema».
+6. **Equipos agrupados en una fila** (listas mecánicas): «P-762402 A/B/C/D/E/F» se carga como seis tags (P-762402A…F), «TK-762101 / 02» como TK-762101 y TK-762102, y una celda con el paquete y su bomba («PQUIM-762102 P-762106») como los dos. «N/D» o «HOLD» no son tags.
+7. **Equipos sin sistema en la lista** (los listados mecánicos solo dicen «EQUIPO ESTÁTICO / ROTATIVO / PAQUETE»): un tag **nuevo** va al subsistema donde están la mayoría de los tags ya cargados de **su mismo P&ID** (se compara el número del plano: PID-123, sin contratista, hoja ni revisión); sin P&ID conocido, al sistema general (GEN-SYS). Los tags que ya existen no se mueven. La vista previa y el resultado dicen cuántos fueron por P&ID y cuántos al general. Por eso conviene cargar primero los instrumentos (que fijan el sistema de cada P&ID).
+8. **Tipo de equipo:** si la columna TIPO trae una norma o el alcance del paquete («API-650, Techo Fijo», «Equipo paquetizado en skid…») el tipo se toma del prefijo del tag (P → bomba, TK → tanque) y el aviso solo dice cuántas filas. Los tags cuyo prefijo no está en el catálogo (filtros F, mezcladores MZ, botas BG…) quedan sin tipo: crea el tipo en *Administración › Configuración › Tipos de equipo* y asígnalo en *ITR › Requisitos › Sin tipo* (de eso dependen sus ITR requeridos).
+9. Vista previa (marca las existentes y los cambios) → **Importar**: crea las nuevas y actualiza las existentes, por lotes con progreso; los errores se descargan en un reporte. La jerarquía se crea sola; sin código, el tag va a GENERAL / GEN-SYS / GEN-SUB.
+10. Las columnas ausentes o las celdas vacías no se tocan; un tag con ITR o punch no cambia de subsistema por importación (la vista previa lo avisa).
+11. Errores comunes: disciplina inexistente → fila omitida; tags repetidos → gana la última fila (por eso puede haber menos tags que filas).
+
+**Orden recomendado para cargar la ingeniería de un proyecto nuevo** (probado con CPF Orotoy):
+1. Lista de **instrumentos** (INST) — fija los sistemas desde sus títulos.
+2. Lista de **F&G** (INST, Sistema `SISTEMA F&G`, Criticidad Seguridad).
+3. Lista de **señales** (*Importar señales*, hojas ESD/F&G marcadas como seguridad) — crea los tags de equipos que solo aparecen en las señales (bombas, MOV) en su sistema.
+4. Listados **mecánicos** (MECH): rotativos, estáticos y paquetes — ubican por P&ID lo nuevo y corrigen la disciplina de lo que ya existía.
+5. **Paquetes de vendor** desde el listado de paquetes (§5.19).
+6. **Matrices C&E** de proceso y de F&G (§5.17), cuando los equipos ya existen (si no, sus efectos quedan sin tag).
+Después de cada carga, revisa la vista previa: cantidad de tags, sistemas, avisos ámbar.
 
 ### 5.2 Plantillas ITR y asignación (líder+)
 **Plantillas**
@@ -485,10 +500,18 @@ Todo en *Proyecto › Señales y lazos* (pestañas Señales · Lazos · Matrices
 **Señales y lazos** (importa arquitecto o superior; genera ITR líder+)
 1. Excel del índice: TAG INSTRUMENTO, TAG DE SEÑAL, DESCRIPCIÓN, TIPO (AI/AO/DI/DO/PI/PO), DISCIPLINA, rango, unidad, alarmas, P&ID, diagramas, N° LAZO, JB, MARSHALLING, TARJETA y CANAL I/O, TAG DCS, DESPLIEGUE HMI, AREA/SISTEMA/SUBSISTEMA.
 2. Pestaña *Importar señales* → vista previa → Importar (crea jerarquía, tags de instrumento que falten, señales y lazos). Las columnas ausentes no se tocan; la cadena se corrige también en el detalle de la señal.
+   - Se leen **todas las hojas** con lista de señales (p. ej. LISTADO-DCS y LISTADO-ESD). Las hojas de un sistema de seguridad (ESD, SIS, F&G) vienen marcadas: sus instrumentos pasan a criticidad **Seguridad** (solo sube, nunca baja). Desmarca la que no lo sea.
+   - Sin columnas de sistema, los títulos de la lista ubican **solo los tags nuevos** que cree la importación; los existentes no se mueven.
+   - El tag de señal es único en el proyecto: si el archivo repite uno (dos instrumentos con el mismo SY, ZSC…), se conserva la primera fila y las demás salen como «Ya existe una señal activa … en este proyecto». Es un error de la lista de ingeniería: llévalo a un **TQ** y reimporta la revisión corregida (crea lo que falte, sin duplicar).
 3. Pestaña *Lazos* → plantilla con tabla de lazo (I29C) → «Generar» por lazo o «Generar faltantes». Si el lazo cambia después, el ITR aparece «desactualizado» y se genera R2.
 
 **Matrices C&E** (líder+)
 1. Pestaña *Matrices C&E* → «Nueva matriz» o **«Importar con IA»** (Excel o PDF ≤ 4 MB): la IA propone causas, efectos y cruces; revisa en la grilla (tags inexistentes en ámbar) → «Aceptar y crear».
+   - **Una hoja = una matriz.** Un libro con varias hojas de matriz (p. ej. «MCE pag 1…4») se importa hoja por hoja: elige la hoja, lee, revisa y crea; luego la siguiente. Cada lectura tarda 1–2 minutos y consume la cuota diaria de IA de la organización.
+   - **Efectos sobre varios equipos** («TK-762103/104», «MZ-762101A/B, MZ-762102A/B») se separan en un efecto por equipo (E-05.1, E-05.2…) con los mismos cruces; la revisión lo avisa.
+   - **Matrices grandes por zona** (F&G): si la hoja tiene zonas (filas de título con sus causas debajo), aparece **«Una matriz por zona (N zonas)»**. La IA lee las zonas de dos en dos y muestra la lista con su estado (En cola · Leyendo · Por revisar · Guardada); define una vez el **prefijo** del código (CE-FG → CE-FG-01, CE-FG-02…) y el **sistema**, y revisa y guarda cada zona desde la lista. Si sales de la página, las zonas sin guardar se pierden.
+   - Los **avisos** de la IA incluyen inconsistencias del propio documento (numeración de solenoides que no coincide, tags del encabezado distintos del área): anótalos para un TQ.
+   - Carga primero los equipos (listados mecánicos): los efectos sobre equipos que no existen quedan sin tag.
 2. Editor: causas, efectos y celdas (directa o con N segundos).
 3. Generar pruebas con la plantilla I30C: una por causa; cada celda muestra el resultado.
 - Una matriz, causa o efecto con pruebas generadas no se puede borrar.
@@ -513,6 +536,7 @@ Todo en *Proyecto › Señales y lazos* (pestañas Señales · Lazos · Matrices
 
 ### 5.19 Paquetes de vendor (VND)
 1. **Crear** (líder+): *Proyecto › Proveedores › Nuevo paquete* → empresa, título, sistemas; después en la ficha: alcance, límites, tags del paquete, **liberación de movilización** (sistema + liberación) y fecha prevista.
+   - **Desde el listado de equipos tipo paquete:** *Proveedores › Importar desde listado* → Excel (ITEM, TAG, EQUIPO, TIPO) → vista previa editable → Importar. Cada ítem es un paquete con sus tags y su **alcance** (la columna TIPO); los sub-ítems (3.1, 3.2…) quedan como componentes del alcance; las filas sin tag (N/D) también son paquetes. **«Agrupar filas con el mismo alcance»** une, p. ej., 19 skids de inyección de químicos en un paquete de un proveedor. Sin proveedor adjudicado, elige **«Proveedor por definir»** (la crea una vez un propietario o administrador) y cámbialo en cada paquete al adjudicar. Los sistemas salen de los tags (sin el general). Reimportar una revisión actualiza alcance y tags del paquete con el mismo título, sin duplicarlo, y conserva empresa, límites y movilización.
 2. **Interfaces:** contraparte, descripción, responsable, estado (abierta, acordada, cerrada). Ninguna abierta para movilizar.
 3. **Checklist de movilización:** alcance e interfaces acordados, inducción HSE, permisos, equipo calibrado, documentos vigentes.
 4. **Movilizar** (líder+): verifica la liberación aprobada con firmas, checklist e interfaces. Un paquete planificado se puede **cancelar** con motivo.
@@ -659,7 +683,12 @@ Límites vigentes y qué hacer mientras se corrigen:
 | «Sin permisos» o aviso «Esta página requiere…» | Tu rol (o tu capacidad en el proyecto) no permite la acción. | Revisa la matriz §7 y pide a la persona habilitada. |
 | Certificado «Bloqueado» | La base cambió después de emitirlo (punch, ITR o excepción). | Resuelve lo que indica el motivo; se desbloquea solo. |
 | Pantalla «Sin conexión» | Página no disponible sin red. | Vuelve a intentar con señal; prepara con red lo que usarás sin red. |
+| «Sin respuesta del servidor… Recarga la página» al importar | La página quedó abierta desde antes de una actualización de la app (o se cortó la red): la importación no se aplicó. | Recarga la página (Cmd/Ctrl + Shift + R) y vuelve a importar; no se duplica nada. |
+| «N filas no traen una disciplina reconocida» (importar tags) | El archivo no tiene columna DISCIPLINA o usa códigos que tu organización no tiene. | Elige la disciplina en la vista previa. |
+| «No se encontró columna TAG / ETIQUETA» con una lista de señales | Subiste la lista de señales al importador de tags. | Usa *Señales y lazos › Importar señales*. |
+| «Ya existe una señal activa … en este proyecto» | El archivo repite un tag de señal (error de la lista de ingeniería). | Se conservó la primera fila; reporta el caso en un TQ y reimporta la revisión corregida. |
+| «La matriz es demasiado grande para una sola lectura: divide el documento» | La hoja C&E es demasiado grande para una lectura de la IA. | Usa «Una matriz por zona» (si la hoja tiene zonas) o divide la hoja. |
 
 ---
 
-*Manual mantenido junto con la app: es la fuente de la Ayuda (`/ayuda`) y de la guía pública (`/guia`). Última revisión: glosario definitivo (liberación, punto de espera, roles en español) y Portafolio unificado (2026-10-22).*
+*Manual mantenido junto con la app: es la fuente de la Ayuda (`/ayuda`) y de la guía pública (`/guia`). Última revisión: carga de ingeniería desde cero (CPF Orotoy): importación de tags, señales, listados mecánicos, paquetes de vendor y matrices C&E (2026-10-29).*
