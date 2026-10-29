@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { looksLikeTag } from './tag-shape'
+import { expandTagCell, looksLikeTag } from './tag-shape'
 
 describe('looksLikeTag', () => {
   it('acepta tags ISA y con un espacio', () => {
@@ -10,5 +10,29 @@ describe('looksLikeTag', () => {
       'SEPARADORES GENERALES 762101A/B', 'CUARTO SATÉLITE 1', 'TANQUES FWKO TK-762101/02', 'NOTAS:',
       '1. Los diagramas de lazo y cableado serán elaborados en la siguiente etapa', '2) Ver plano', 'CAFETERÍA', '', 'A',
     ]) expect(looksLikeTag(t)).toBe(false)
+  })
+})
+
+describe('expandTagCell', () => {
+  it('un tag queda igual', () => {
+    expect(expandTagCell('ESDV-7621001')).toEqual(['ESDV-7621001'])
+    expect(expandTagCell('FT 101')).toEqual(['FT 101'])
+  })
+  it('trenes por letra (listas mecánicas de CPF Orotoy)', () => {
+    expect(expandTagCell('P-762402 \nA/B/C/D/E/F')).toEqual(['P-762402A', 'P-762402B', 'P-762402C', 'P-762402D', 'P-762402E', 'P-762402F'])
+    expect(expandTagCell('P-762401A/B')).toEqual(['P-762401A', 'P-762401B'])
+    expect(expandTagCell('F-762002 A/C')).toEqual(['F-762002A', 'F-762002C'])
+    expect(expandTagCell('P-762002 A')).toEqual(['P-762002A'])
+  })
+  it('equipos por número: el sufijo cambia los últimos dígitos', () => {
+    expect(expandTagCell('TK-762101 / 02')).toEqual(['TK-762101', 'TK-762102'])
+    expect(expandTagCell('BG-762103/ 04')).toEqual(['BG-762103', 'BG-762104'])
+    expect(expandTagCell('P-762101/2/3')).toEqual(['P-762101', 'P-762102', 'P-762103'])
+  })
+  it('paquete y su bomba en la misma celda', () => {
+    expect(expandTagCell('PQUIM-762102\nP-762106')).toEqual(['PQUIM-762102', 'P-762106'])
+  })
+  it('títulos, N/D y HOLD no son tags', () => {
+    for (const t of ['SEPARADORES GENERALES 762101A/B', 'TANQUES FWKO TK-762101/02', 'N/D', 'HOLD', 'CUARTO SATÉLITE 1', '']) expect(expandTagCell(t)).toEqual([])
   })
 })

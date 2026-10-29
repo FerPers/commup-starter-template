@@ -7695,6 +7695,7 @@
       "sheet": "Errores",
       "file": "errores"
     },
+    "byPid": "Tags nuevos sin sistema en el archivo: {placed, plural, one {# va} other {# van}} al sistema de su P&ID (donde están los tags ya cargados de ese plano){general, plural, =0 {} one {; # sin P&ID conocido queda en el sistema general} other {; # sin P&ID conocido quedan en el sistema general}}.",
     "fromSections": "Sistema y subsistema tomados de los títulos de sección de la lista: {systems} sistemas y {subsystems} subsistemas. Revísalos en la columna «Área / Sistema / Subsistema».",
     "fileDefaults": {
       "title": "Valores para todo el archivo (opcional)",

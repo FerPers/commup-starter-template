@@ -6,7 +6,8 @@ import { getTranslations } from 'next-intl/server'
 import { checkProjectAccess } from '@/lib/auth/access'
 import { accessError } from '@/lib/i18n/action-errors'
 import { createAdminClient, emitImportSummary } from '@/lib/supabase/admin'
-import { upsertHierarchy, DEFAULT_SUBSYSTEM } from '@/lib/import/hierarchy'
+import { upsertHierarchy, DEFAULT_SUBSYSTEM, DEFAULT_SYSTEM } from '@/lib/import/hierarchy'
+import { dominantSubsystemByPid, pidSheetKey } from '@/lib/import/pid-place'
 import { normalizeCode } from '@/lib/excel/normalize'
 import { detectEquipmentTypeCode, normalizeTypeKey } from '@/lib/equipment-types'
 import type { TablesInsert } from '@/types/supabase.generated'
@@ -50,6 +51,9 @@ export interface ImportResult {
   skipped: number
   errors: { row: number; tag: string; reason: string }[]
   warnings: string[]
+  /** Tags nuevos sin sistema en el archivo: ubicados por su P&ID / quedan en el sistema general. */
+  placedByPid?: number
+  inGeneral?: number
 }
 
 // Filas por lote: una sola sentencia por lote en vez de un round-trip por fila.
@@ -87,12 +91,30 @@ export interface TagImportPreview {
   fieldChanges: Record<string, number>
   /** Tags que el archivo cambia de subsistema; `blocked` = tienen ITR o punch y se quedan donde están. */
   moves: { tag: string; tagId: string | null; blocked: boolean }[]
+  /** Tags nuevos sin sistema en el archivo: ubicados por su P&ID / quedan en el sistema general. */
+  placedByPid: number
+  inGeneral: number
 }
 
 type Prepared = {
   plans: { plan: TagPlan; index: number; tag: string; isNew: boolean; id: string | null }[]
   errors: ImportResult['errors']
   warnings: string[]
+  placedByPid: number
+  inGeneral: number
+}
+
+/** Por hoja de P&ID, el subsistema con más tags del proyecto (src/lib/import/pid-place.ts). */
+async function pidSubsystems(admin: ReturnType<typeof createAdminClient>, projectId: string): Promise<Map<string, string> | { error: string }> {
+  const tags: { pid_drawing: string | null; subsystem_id: string }[] = []
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await admin.from('tags').select('pid_drawing, subsystem_id')
+      .eq('project_id', projectId).not('pid_drawing', 'is', null).order('id').range(from, from + 999)
+    if (error) return { error: error.message }
+    tags.push(...(data ?? []))
+    if ((data ?? []).length < 1000) break
+  }
+  return dominantSubsystemByPid(tags)
 }
 
 /**
@@ -173,12 +195,27 @@ async function prepareTagImport(
     for (const tg of found) existingByTag.set(tg.tag_number, { ...tg, has_work: busy.has(tg.id) })
   }
 
+  // Sin sistema en el archivo (listas mecánicas: solo «EQUIPO ESTÁTICO / ROTATIVO»), un tag NUEVO va al subsistema
+  // con más tags de su hoja de P&ID (decisión de Luis, 2026-10-29); sin P&ID conocido, al sistema general. Los que
+  // ya existen no se mueven.
+  const byPid = new Map<string, string>()
+  const unplaced = uniqueRows.filter(u => !existingByTag.has(u.row.tag_number.trim()) && normalizeCode(u.row.system_code, DEFAULT_SYSTEM) === DEFAULT_SYSTEM)
+  if (unplaced.some(u => pidSheetKey(u.row.pid_drawing))) {
+    const sheets = await pidSubsystems(admin, projectId)
+    if ('error' in sheets) return sheets
+    for (const u of unplaced) {
+      const key = pidSheetKey(u.row.pid_drawing)
+      const sub = key ? sheets.get(key) : undefined
+      if (sub) byPid.set(u.row.tag_number.trim(), sub)
+    }
+  }
+
   // ── Jerarquía (la vista previa solo lee la existente) ─────────
   let subsystemIdMap: Map<string, string>
   if (createHierarchy) {
     // Sin columna de subsistema, la jerarquía solo hace falta para los tags nuevos (antes se creaba
     // «GEN-SUB» aunque todos existieran).
-    const needHierarchy = uniqueRows.filter(u => present.has('subsystem') || !existingByTag.has(u.row.tag_number.trim()))
+    const needHierarchy = uniqueRows.filter(u => !byPid.has(u.row.tag_number.trim()) && (present.has('subsystem') || !existingByTag.has(u.row.tag_number.trim())))
     const hier = needHierarchy.length
       ? await upsertHierarchy(admin, projectId, needHierarchy.map(u => u.row))
       : { subsystemIdMap: new Map<string, string>(), warnings: [] as string[] }
@@ -198,7 +235,7 @@ async function prepareTagImport(
     const subsystemId = subsystemIdMap.get(normalizeCode(row.subsystem_code, DEFAULT_SUBSYSTEM))
     if (!disciplineId) { errors.push({ row: index + 2, tag: tagNumber, reason: t('import.disciplineNotFound', { code: row.discipline_code }) }); continue }
     // Sin columna de subsistema, un tag existente se queda en el suyo; uno nuevo necesita el del archivo (o el genérico).
-    const target = subsystemId ?? (existing && !present.has('subsystem') ? existing.subsystem_id : undefined)
+    const target = byPid.get(tagNumber) ?? subsystemId ?? (existing && !present.has('subsystem') ? existing.subsystem_id : undefined)
     if (!target) {
       if (createHierarchy) { errors.push({ row: index + 2, tag: tagNumber, reason: t('import.subsystemNotCreated', { code: row.subsystem_code }) }); continue }
     }
@@ -220,7 +257,7 @@ async function prepareTagImport(
   if (blocked.length) {
     warnings.push(t('import.movesBlocked', { count: blocked.length, list: `${blocked.slice(0, 6).join(', ')}${blocked.length > 6 ? '…' : ''}` }))
   }
-  return { plans, errors, warnings }
+  return { plans, errors, warnings, placedByPid: byPid.size, inGeneral: unplaced.length - byPid.size }
 }
 
 /** Vista previa del diff por campo antes de aplicar (S07). No escribe nada. */
@@ -231,7 +268,7 @@ export const previewTagImport = withAuthOnly(
     if (!access.ok) return { error: await accessError(access) }
     const prep = await prepareTagImport(ctx, createAdminClient(), projectId, rows, presentFromColumns(columns), false)
     if ('error' in prep) return { error: prep.error }
-    const preview: TagImportPreview = { newTags: 0, updatedTags: 0, unchangedTags: 0, fieldChanges: {}, moves: [] }
+    const preview: TagImportPreview = { newTags: 0, updatedTags: 0, unchangedTags: 0, fieldChanges: {}, moves: [], placedByPid: prep.placedByPid, inGeneral: prep.inGeneral }
     for (const { plan, isNew, tag, id } of prep.plans) {
       if (isNew) { preview.newTags++; continue }
       if (plan.changes.length) preview.updatedTags++; else preview.unchangedTags++
@@ -261,7 +298,7 @@ export const importTags = withAuthOnly(
     const admin = createAdminClient({ bulk: 'tags' })
     const prep = await prepareTagImport(ctx, admin, projectId, rows, presentFromColumns(columns), true)
     if ('error' in prep) return { error: prep.error }
-    const result: ImportResult = { imported: 0, updated: 0, skipped: prep.errors.length, errors: prep.errors, warnings: prep.warnings }
+    const result: ImportResult = { imported: 0, updated: 0, skipped: prep.errors.length, errors: prep.errors, warnings: prep.warnings, placedByPid: prep.placedByPid, inGeneral: prep.inGeneral }
 
     // ── Upsert por lotes con claves uniformes (fallback fila a fila solo si el lote falla) ──
     for (let i = 0; i < prep.plans.length; i += CHUNK) {

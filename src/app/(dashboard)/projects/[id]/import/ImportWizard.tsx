@@ -91,12 +91,13 @@ export default function ImportWizard({
       .catch(() => { if (!cancelled) setExistingTags(new Set()) })
     // S07: diff por campo antes de aplicar (por lotes, sin escribir nada).
     void (async () => {
-      const acc: TagImportPreview = { newTags: 0, updatedTags: 0, unchangedTags: 0, fieldChanges: {}, moves: [] }
+      const acc: TagImportPreview = { newTags: 0, updatedTags: 0, unchangedTags: 0, fieldChanges: {}, moves: [], placedByPid: 0, inGeneral: 0 }
       const unique = dedupeLast(rows, r => r.tag_number.trim().toUpperCase())
       for (let i = 0; i < unique.length; i += IMPORT_BATCH) {
         const res = await previewTagImport(projectId, unique.slice(i, i + IMPORT_BATCH), columns)
         if (cancelled || !res.preview) return
         acc.newTags += res.preview.newTags; acc.updatedTags += res.preview.updatedTags; acc.unchangedTags += res.preview.unchangedTags
+        acc.placedByPid += res.preview.placedByPid; acc.inGeneral += res.preview.inGeneral
         for (const [k, v] of Object.entries(res.preview.fieldChanges)) acc.fieldChanges[k] = (acc.fieldChanges[k] ?? 0) + v
         acc.moves.push(...res.preview.moves)
       }
@@ -151,7 +152,9 @@ export default function ImportWizard({
         setPreview(null)
         // Sistema › subsistema desde los títulos de sección: cuentan como columnas presentes (un reimport mueve
         // los tags sin ITR ni punch, como con columnas explícitas).
-        const fromSections = usesSectionTitles(colIndex) && parsed.some(r => r.subsystem_code !== 'GEN-SUB')
+        // Solo títulos que dan sistema («SISTEMA …»): «EQUIPO ESTÁTICO / ROTATIVO» de las listas mecánicas no mueve
+        // los tags que ya existen (los nuevos van por su P&ID, ver prepareTagImport).
+        const fromSections = usesSectionTitles(colIndex) && parsed.some(r => r.system_code !== 'GEN-SYS')
         const hierarchyFromFile = fromSections || (usesSectionTitles(colIndex) && !!defaults.system?.trim())
         setSectionNote(fromSections
           ? { systems: new Set(parsed.map(r => r.system_code)).size, subsystems: new Set(parsed.map(r => r.subsystem_code)).size }
@@ -429,6 +432,12 @@ export default function ImportWizard({
             </div>
           )}
 
+          {preview && preview.placedByPid + preview.inGeneral > 0 && (
+            <p style={{ padding: '10px 16px', background: 'var(--primary-50)', border: '1px solid var(--primary-200)', borderRadius: '10px', marginBottom: '14px', fontSize: '13px', color: 'var(--primary-800)' }}>
+              {ti('byPid', { placed: preview.placedByPid, general: preview.inGeneral })}
+            </p>
+          )}
+
           {sectionNote && (
             <p style={{ padding: '10px 16px', background: 'var(--primary-50)', border: '1px solid var(--primary-200)', borderRadius: '10px', marginBottom: '14px', fontSize: '13px', color: 'var(--primary-800)' }}>
               {ti('fromSections', sectionNote)}
@@ -560,6 +569,9 @@ export default function ImportWizard({
               </div>
             )}
           </div>
+          {(result.placedByPid ?? 0) + (result.inGeneral ?? 0) > 0 && (
+            <p style={{ fontSize: '13px', color: 'var(--primary-800)', margin: '0 0 24px' }}>{ti('byPid', { placed: result.placedByPid ?? 0, general: result.inGeneral ?? 0 })}</p>
+          )}
           {result.warnings.length > 0 && (
             <div style={{ textAlign: 'left', background: 'var(--warning-100)', borderRadius: '10px', padding: '16px', marginBottom: '24px', border: '1px solid var(--warning-200)' }}>
               <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--warning-800)', margin: '0 0 8px' }}>{ti('warnings')}</p>

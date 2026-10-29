@@ -7695,6 +7695,7 @@
       "sheet": "Errors",
       "file": "errors"
     },
+    "byPid": "New tags with no system in the file: {placed, plural, one {# goes} other {# go}} to the system of their P&ID (where the tags already loaded from that drawing are){general, plural, =0 {} one {; # with no known P&ID stays in the general system} other {; # with no known P&ID stay in the general system}}.",
     "fromSections": "System and subsystem taken from the list's section titles: {systems} systems and {subsystems} subsystems. Check them in the «Area / System / Subsystem» column.",
     "fileDefaults": {
       "title": "Values for the whole file (optional)",

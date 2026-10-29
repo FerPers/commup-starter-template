@@ -1,6 +1,6 @@
 import type { TagRow } from '@/app/actions/import'
 import { cellText, type ColumnKeywords } from '@/lib/excel/detect-header'
-import { looksLikeTag } from '@/lib/import/tag-shape'
+import { expandTagCell } from '@/lib/import/tag-shape'
 import { sectionCode, sectionsByRow, subsystemCode } from '@/lib/import/sections'
 import { parseCriticality, parseSilLevel, type Criticality } from '@/lib/tags/criticality'
 
@@ -65,44 +65,45 @@ export function parseTagRows(
   const result: TagRow[] = []
   // Sin columnas de sistema ni subsistema: salen de los títulos de sección de la lista (src/lib/import/sections.ts).
   const sections = usesSectionTitles(colIndex)
-    ? sectionsByRow(rawRows, dataStart, row => looksLikeTag(cellText(row, colIndex.tag)))
+    ? sectionsByRow(rawRows, dataStart, row => expandTagCell(cellText(row, colIndex.tag)).length > 0)
     : null
   for (let i = dataStart; i < rawRows.length; i++) {
     const row = rawRows[i]
     const get = (field: string) => cellText(row, colIndex[field])
-    const tagNumber = get('tag')
-    if (!tagNumber || !looksLikeTag(tagNumber)) continue
-    const disciplineCode = (disciplinePrefill || get('discipline')).toUpperCase()
-    const section = sections?.get(i)
-    const systemTitle = section?.system ?? fileSystem
-    result.push({
-      tag_number:           tagNumber,
-      description:          get('description'),
-      discipline_code:      disciplineCode,
-      area_code:            get('area_code')      || 'GENERAL',
-      area_name:            get('area_name')      || 'General',
-      system_code:          get('system_code')    || (systemTitle ? sectionCode(systemTitle) : 'GEN-SYS'),
-      system_name:          get('system_code')    || (systemTitle ?? 'General System'),
-      // Sin títulos de sección, el sistema del archivo es también su único subsistema.
-      subsystem_code:       get('subsystem_code') || (section ? subsystemCode(section.subsystem, systemTitle) : fileSystem ? sectionCode(fileSystem) : 'GEN-SUB'),
-      subsystem_name:       get('subsystem_code') || (section?.subsystem ?? fileSystem ?? 'General Subsystem'),
-      manufacturer:         get('manufacturer')       || undefined,
-      model:                get('model')              || undefined,
-      serial_number:        get('serial')             || undefined,
-      preservation_required: ['YES', 'SI', 'SÍ'].includes(get('preservation').toUpperCase()),
-      pid_drawing:          get('pid_drawing')        || undefined,
-      datasheet_number:     get('datasheet')          || undefined,
-      revision:             get('datasheet_rev')      || undefined,
-      range_min:            numberOrUndefined(get('range_min')),
-      range_max:            numberOrUndefined(get('range_max')),
-      eng_unit:             get('eng_unit')           || undefined,
-      junction_box:         get('junction_box')       || undefined,
-      fluid_type:           get('fluid_type')         || undefined,
-      mounting_typical:     get('mounting_typical')   || undefined,
-      equipment_type_code:  get('equipment_type')     || undefined,
-      criticality:          parseCriticality(get('criticality')) ?? defaults.criticality,
-      sil_level:            parseSilLevel(get('sil')),
-    })
+    // Una fila puede traer varios tags («P-762402 A/B/C», «TK-762101 / 02»): uno por tag, con los mismos datos.
+    for (const tagNumber of expandTagCell(get('tag'))) {
+      const disciplineCode = (disciplinePrefill || get('discipline')).toUpperCase()
+      const section = sections?.get(i)
+      const systemTitle = section?.system ?? fileSystem
+      result.push({
+        tag_number:           tagNumber,
+        description:          get('description'),
+        discipline_code:      disciplineCode,
+        area_code:            get('area_code')      || 'GENERAL',
+        area_name:            get('area_name')      || 'General',
+        system_code:          get('system_code')    || (systemTitle ? sectionCode(systemTitle) : 'GEN-SYS'),
+        system_name:          get('system_code')    || (systemTitle ?? 'General System'),
+        // Sin títulos de sección, el sistema del archivo es también su único subsistema.
+        subsystem_code:       get('subsystem_code') || (section ? subsystemCode(section.subsystem, systemTitle) : fileSystem ? sectionCode(fileSystem) : 'GEN-SUB'),
+        subsystem_name:       get('subsystem_code') || (section?.subsystem ?? fileSystem ?? 'General Subsystem'),
+        manufacturer:         get('manufacturer')       || undefined,
+        model:                get('model')              || undefined,
+        serial_number:        get('serial')             || undefined,
+        preservation_required: ['YES', 'SI', 'SÍ'].includes(get('preservation').toUpperCase()),
+        pid_drawing:          get('pid_drawing')        || undefined,
+        datasheet_number:     get('datasheet')          || undefined,
+        revision:             get('datasheet_rev')      || undefined,
+        range_min:            numberOrUndefined(get('range_min')),
+        range_max:            numberOrUndefined(get('range_max')),
+        eng_unit:             get('eng_unit')           || undefined,
+        junction_box:         get('junction_box')       || undefined,
+        fluid_type:           get('fluid_type')         || undefined,
+        mounting_typical:     get('mounting_typical')   || undefined,
+        equipment_type_code:  get('equipment_type')     || undefined,
+        criticality:          parseCriticality(get('criticality')) ?? defaults.criticality,
+        sil_level:            parseSilLevel(get('sil')),
+      })
+    }
   }
   return result
 }
