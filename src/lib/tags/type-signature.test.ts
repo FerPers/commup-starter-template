@@ -126,3 +126,18 @@ describe('R3: propuestas de la IA', () => {
     expect(estimateClassifyUsd(300, 76)).toBeGreaterThan(0)
   })
 })
+
+describe('detectFree — sinónimos y segundo segmento (lista eléctrica)', () => {
+  const cat: CatalogType[] = [
+    { id: 't', code: 'T', name: 'Transformador', category: 'Eléctricos' },
+    { id: 'ups', code: 'UPS', name: 'UPS', category: 'Eléctricos' },
+    { id: 'tab', code: 'TAB', name: 'Tablero de distribución BT', category: 'Eléctricos' },
+  ]
+  it('el sinónimo del prefijo y el segundo bloque de las muestras', () => {
+    expect(detectFree({ prefix: 'TRF', desc_norm: 'transformador de potencia', samples: ['TRF-76029001', 'TRF-76029003'] }, cat, new Map())?.typeId).toBe('t')
+    expect(detectFree({ prefix: 'PR', desc_norm: 'sistema ininterrumpido de potencia ac', samples: ['PR01-UPS-AC-01', 'PR02-UPS-AC-01'] }, cat, new Map())?.typeId).toBe('ups')
+  })
+  it('si las muestras no coinciden en el tipo, no decide', () => {
+    expect(detectFree({ prefix: 'PR', desc_norm: 'equipos varios', samples: ['PR01-UPS-AC-01', 'PR01-TSA-AC-01'] }, cat, new Map())).toBeNull()
+  })
+})

@@ -5,7 +5,11 @@
 // cálculo en TS (test de paridad con los mismos casos) para comparar contra los nombres del catálogo.
 //
 // Detección gratis, en orden: el prefijo es el código de un tipo · el prefijo aprendido (los tags ya tipados de la
-// org con ese prefijo usan casi siempre el mismo tipo) · la descripción es el nombre de un tipo. Lo demás va a la IA.
+// org con ese prefijo usan casi siempre el mismo tipo) · un sinónimo o el segundo segmento de los tags de muestra
+// (equipos eléctricos: «PR01-UPS-AC-01» → UPS, «TRF-76029001» → T) · la descripción es el nombre de un tipo.
+// Lo demás va a la IA.
+
+import { TYPE_ALIASES, typeSegments } from '@/lib/equipment-types'
 
 export type TypeGroup = {
   prefix: string
@@ -66,12 +70,30 @@ export function learnedMap(rows: LearnedPrefix[]): Map<string, string> {
 }
 
 /** Tipo de la firma sin IA, o null. Un nombre que coincide con dos tipos no decide (ambiguo). */
-export function detectFree(g: Pick<TypeGroup, 'prefix' | 'desc_norm'>, catalog: CatalogType[], learned: Map<string, string>): FreeMatch | null {
+/** Código del catálogo de la org que dan los segmentos del tag (el código mismo o su sinónimo). */
+function segmentCode(tag: string, catalog: CatalogType[]): string | null {
+  const codes = new Set(catalog.map(t => t.code.toUpperCase()))
+  for (const seg of typeSegments(tag)) {
+    if (codes.has(seg)) return seg
+    const alias = TYPE_ALIASES[seg]
+    if (alias && codes.has(alias)) return alias
+  }
+  return null
+}
+
+export function detectFree(g: Pick<TypeGroup, 'prefix' | 'desc_norm'> & { samples?: string[] }, catalog: CatalogType[], learned: Map<string, string>): FreeMatch | null {
   if (g.prefix) {
     const byCode = catalog.find(t => t.code.toUpperCase() === g.prefix)
     if (byCode) return { source: 'prefix', typeId: byCode.id }
     const lt = learned.get(g.prefix)
     if (lt && catalog.some(t => t.id === lt)) return { source: 'learned', typeId: lt }
+  }
+  // Sinónimo o segundo segmento: tiene que darlo el mismo código en todas las muestras del grupo.
+  const codes = new Set((g.samples ?? []).map(tag => segmentCode(tag, catalog)))
+  if (codes.size === 1) {
+    const [code] = codes
+    const t = code ? catalog.find(x => x.code.toUpperCase() === code) : undefined
+    if (t) return { source: 'prefix', typeId: t.id }
   }
   if (!g.desc_norm) return null
   const exact = catalog.filter(t => normDesc(t.name) === g.desc_norm)

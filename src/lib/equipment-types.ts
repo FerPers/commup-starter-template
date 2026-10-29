@@ -53,6 +53,18 @@ const EXTRA_TYPES: EquipmentTypeDefault[] = [
   { code: 'D',    name: 'Tambor / Drum',          category: 'Estáticos',  discipline: 'MECH' },
   { code: 'BAT',  name: 'Banco de Baterías',      category: 'Eléctricos', discipline: 'ELEC' },
   { code: 'LUM',  name: 'Luminaria',              category: 'Eléctricos', discipline: 'ELEC' },
+  // Lista de equipos eléctricos de CPF Orotoy (ELE-LI-102, 2026-10-29): lo que el catálogo no tenía.
+  { code: 'TAB',  name: 'Tablero de distribución BT', category: 'Eléctricos', discipline: 'ELEC' },
+  { code: 'CP',   name: 'Tablero de control / comunicaciones', category: 'Eléctricos', discipline: 'ELEC' },
+  { code: 'BD',   name: 'Ducto de barras',        category: 'Eléctricos', discipline: 'ELEC' },
+  { code: 'REC',  name: 'Reconectador',           category: 'Eléctricos', discipline: 'ELEC' },
+  { code: 'SEC',  name: 'Seccionador',            category: 'Eléctricos', discipline: 'ELEC' },
+  { code: 'DPS',  name: 'Dispositivo de protección contra sobretensiones (DPS)', category: 'Eléctricos', discipline: 'ELEC' },
+  { code: 'FUS',  name: 'Fusible / cortacircuito', category: 'Eléctricos', discipline: 'ELEC' },
+  { code: 'RPT',  name: 'Resistencia de puesta a tierra', category: 'Eléctricos', discipline: 'ELEC' },
+  { code: 'COND', name: 'Banco de condensadores',  category: 'Eléctricos', discipline: 'ELEC' },
+  { code: 'TSOL', name: 'Toma de soldadura',       category: 'Eléctricos', discipline: 'ELEC' },
+  { code: 'RED',  name: 'Red aérea de media tensión', category: 'Eléctricos', discipline: 'ELEC' },
   { code: 'CBL',  name: 'Cable',                  category: 'Cables',     discipline: 'ELEC' },
   { code: 'LINE', name: 'Línea de tubería',       category: 'Tubería',    discipline: 'PIPE' },
 ]
@@ -81,10 +93,42 @@ const DEFAULT_CODES = new Set(EQUIPMENT_TYPE_DEFAULTS.map(t => t.code))
  * tener el tipo o no — quien llama decide qué hacer si no existe.
  */
 export function detectEquipmentTypeCode(tagNumber: string): string | null {
-  const prefix = extractTagPrefix(tagNumber)
-  if (!prefix) return null
-  if (DEFAULT_CODES.has(prefix)) return prefix
-  return isaVariant(prefix)
+  for (const segment of typeSegments(tagNumber)) {
+    const code = codeForSegment(segment)
+    if (code) return code
+  }
+  return null
+}
+
+/**
+ * Sinónimos que usan las listas de ingeniería para un tipo del catálogo (ELE-LI-102 de CPF Orotoy: «TRF» para el
+ * transformador, «CCM» en español para el MCC, una familia de siglas para los tableros de BT). «DB» no está: en esa
+ * lista es ducto de barras y en otras, tablero de distribución.
+ */
+export const TYPE_ALIASES: Record<string, string> = {
+  TRF: 'T', CCM: 'MCC',
+  TA: 'TAB', TSA: 'TAB', TSG: 'TAB', TAH: 'TAB', DP: 'TAB', TPC: 'TAB', HVAC: 'TAB',
+  LCP: 'CP', KRCP: 'REC', KSEC: 'SEC', FL: 'FUS',
+}
+
+/**
+ * Segmentos del tag donde puede estar el tipo: la primera racha de letras y, si no es un código conocido, la
+ * siguiente — los equipos eléctricos llevan primero la ubicación («PR01-UPS-AC-01» → UPS, «CPF-DPS-A» → DPS).
+ */
+export function typeSegments(tagNumber: string): string[] {
+  const tag = tagNumber.toUpperCase()
+  const first = extractTagPrefix(tag.replace(/^[^A-Z]+/, ''))
+  // Solo el segundo bloque entre guiones y con 2+ letras: el sufijo de un tren («XY-7620001C») no es un tipo.
+  const second = tag.split('-')[1]?.match(/^[A-Z]{2,}/)?.[0] ?? ''
+  return [...new Set([first, second].filter(Boolean))]
+}
+
+/** Código del catálogo estándar para un segmento: el código mismo, su variante ISA o su sinónimo. */
+function codeForSegment(segment: string): string | null {
+  if (DEFAULT_CODES.has(segment)) return segment
+  const alias = TYPE_ALIASES[segment]
+  if (alias && DEFAULT_CODES.has(alias)) return alias
+  return isaVariant(segment)
 }
 
 /**
