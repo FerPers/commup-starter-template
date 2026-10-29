@@ -103,15 +103,37 @@ export const extractCeMatrixWithAi = withAuthOnly(
     if (run.response.stop_reason === 'max_tokens') return { error: t('ceImport.tooLargeForOneRead') }
     const output: AiCeOutput | null = run.response.parsed_output
     if (!output) return { error: t('ceImport.aiUnparsable') }
-    const parsed = splitGroupedEffects(output)
-    if (!parsed.causes.length || !parsed.effects.length) return { error: parsed.warnings.length ? t('ceImport.noMatrixWithWarnings', { warnings: parsed.warnings.join(' · ') }) : t('ceImport.noMatrix') }
+    return reviewFromOutput(ctx.supabase, projectId, output, fileName)
+  },
+)
 
-    const tags = await matchingTags(ctx.supabase, projectId, [...parsed.causes.map(c => c.tag ?? ''), ...parsed.effects.map(e => e.tag ?? '')])
-    const review = toReview(parsed, tags.keys())
-    return {
-      review,
-      meta: { title: parsed.matrix_title ?? '', sourceDocument: parsed.source_document ?? fileName, revision: parsed.revision ?? '', fileName },
-    }
+/** Propuesta (de la IA o del lector sin IA) → estado de revisión: efectos separados por equipo y tags emparejados. */
+async function reviewFromOutput(supabase: SupabaseClient<Database>, projectId: string, output: AiCeOutput, fileName: string): Promise<ExtractResult> {
+  const t = await getTranslations('ActionErrors')
+  const parsed = splitGroupedEffects(output)
+  if (!parsed.causes.length || !parsed.effects.length) return { error: parsed.warnings.length ? t('ceImport.noMatrixWithWarnings', { warnings: parsed.warnings.join(' · ') }) : t('ceImport.noMatrix') }
+  const tags = await matchingTags(supabase, projectId, [...parsed.causes.map(c => c.tag ?? ''), ...parsed.effects.map(e => e.tag ?? '')])
+  return {
+    review: toReview(parsed, tags.keys()),
+    meta: { title: parsed.matrix_title ?? '', sourceDocument: parsed.source_document ?? fileName, revision: parsed.revision ?? '', fileName },
+  }
+}
+
+/**
+ * Lectura SIN IA (src/lib/ce/sheet-reader.ts, en el cliente): el servidor solo valida la forma, separa efectos y
+ * empareja tags. Sin costo ni cuota de IA (decisión de Luis, 2026-10-29).
+ */
+export const reviewCeSheetReading = withAuthOnly(
+  { role: EDITOR_ROLES },
+  async (ctx, input: { projectId: string; fileName: string; output: AiCeOutput }): Promise<ExtractResult> => {
+    const t = await getTranslations('ActionErrors')
+    const access = await checkProjectAccess(ctx.supabase, ctx.orgId, input.projectId)
+    if (!access.ok) return { error: await accessError(access) }
+    const parsed = AiCeOutput.safeParse(input.output)
+    if (!parsed.success) return { error: t('ceImport.noMatrix') }
+    const { causes, effects, links } = parsed.data
+    if (causes.length > 500 || effects.length > 500 || links.length > 5000) return { error: t('ceImport.tooLarge') }
+    return reviewFromOutput(ctx.supabase, input.projectId, parsed.data, String(input.fileName ?? 'documento').slice(0, 200))
   },
 )
 

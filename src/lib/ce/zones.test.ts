@@ -18,7 +18,7 @@ const rows: unknown[][] = [
 describe('splitSheetByZones', () => {
   const zones = splitSheetByZones(rows)
   it('una zona por título, con sus causas', () => {
-    expect(zones.map(z => `${z.title}:${z.rows}`)).toEqual(['ENTRADA SISTEMA DE ESPUMA:1', 'BOMBAS DESCARGADERO DE NAFTA:2'])
+    expect(zones.map(z => `${z.title}:${z.causeRows}`)).toEqual(['ENTRADA SISTEMA DE ESPUMA:1', 'BOMBAS DESCARGADERO DE NAFTA:2'])
   })
   it('cada zona lleva el encabezado y solo las columnas que usa', () => {
     expect(zones[0].csv.split('\n')[1]).toBe(',,,EFECTO,DY-7628001,HMI')

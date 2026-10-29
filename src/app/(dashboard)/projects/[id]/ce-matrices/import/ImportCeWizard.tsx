@@ -5,6 +5,9 @@
 // 2) la IA propone causas, efectos y cruces;
 // 3) revisión en pantalla — dudas y tags sin pareja en ámbar, todo editable — y solo al aceptar se crea
 //    la matriz. Si se cierra la página antes, la propuesta se pierde (no se guarda nada).
+// Excel con estructura de matriz (efectos en columnas, causas en filas, «x»): se lee SIN IA (src/lib/ce/sheet-reader.ts,
+// gratis e instantáneo); la IA queda para PDF, hojas sin esa estructura o para pedir sus avisos (decisión de Luis,
+// 2026-10-29).
 // Hoja con zonas (matriz F&G, src/lib/ce/zones.ts): «una matriz por zona» lee cada zona aparte (dos a la vez) y
 // cada una se revisa y se guarda desde la lista de zonas (CeZoneList).
 
@@ -14,9 +17,10 @@ import { useMemo, useState, useTransition } from 'react'
 import * as XLSX from 'xlsx'
 import { useTranslations } from 'next-intl'
 import { useAskDialog } from '@/components/ui/AskDialog'
-import { createCeMatrixFromReview, extractCeMatrixWithAi } from '@/app/actions/ce-import'
+import { createCeMatrixFromReview, extractCeMatrixWithAi, reviewCeSheetReading, type ExtractResult } from '@/app/actions/ce-import'
 import { MAX_PDF_BYTES, MAX_SHEET_CHARS, reviewErrors, type ReviewState } from '@/lib/ce/import'
 import { CE_ACTIONS, CE_VOTINGS, type CeAction, type CeVoting } from '@/lib/ce/matrix'
+import { readCeSheet } from '@/lib/ce/sheet-reader'
 import { splitSheetByZones } from '@/lib/ce/zones'
 import CeZoneList, { zoneCode, type ZoneRun } from './CeZoneList'
 
@@ -52,11 +56,16 @@ export default function ImportCeWizard({ project, systems, aiReady }: {
   const [saving, startSaving] = useTransition()
 
   const isPdf = file?.type === 'application/pdf' || file?.name.toLowerCase().endsWith('.pdf')
-  const zones = useMemo(() => {
+  const sheetRows = useMemo(() => {
     const ws = workbook?.Sheets[sheetName]
-    return ws ? splitSheetByZones(XLSX.utils.sheet_to_json<unknown[]>(ws, { header: 1, defval: '', raw: false })) : []
+    return ws ? XLSX.utils.sheet_to_json<unknown[]>(ws, { header: 1, defval: '', raw: false }) : null
   }, [workbook, sheetName])
+  const zones = useMemo(() => (sheetRows ? splitSheetByZones(sheetRows) : []), [sheetRows])
   const zoneMode = !isPdf && byZone && zones.length >= 2
+  // Lectura sin IA: de la hoja entera o de cada zona; null = la hoja no tiene la estructura (solo IA).
+  const sheetReading = useMemo(() => (sheetRows && !isPdf ? readCeSheet(sheetRows) : null), [sheetRows, isPdf])
+  const zoneReadings = useMemo(() => zones.map(z => readCeSheet(z.rows)), [zones])
+  const canReadWithoutAi = zoneMode ? zoneReadings.some(Boolean) : !!sheetReading
 
   async function pick(f: File | null) {
     setError(''); setReview(null); setWorkbook(null); setFile(f)
@@ -71,25 +80,31 @@ export default function ImportCeWizard({ project, systems, aiReady }: {
     setZoneRuns(runs => runs && runs.map((r, j) => j === i ? { ...r, ...patch } : r))
   }
 
-  async function readZone(i: number) {
+  async function readZone(i: number, withAi: boolean) {
     if (!file) return
     patchZone(i, { status: 'reading', error: undefined })
-    const form = new FormData()
-    form.set('projectId', project.id)
-    form.set('fileName', file.name)
-    form.set('hint', `Zona «${zones[i].title}». Extrae solo la matriz de esta zona.${hint ? ` ${hint}` : ''}`.slice(0, 300))
-    form.set('sheet', zones[i].csv)
-    const res = await extractCeMatrixWithAi(form)
+    let res: ExtractResult
+    const local = withAi ? null : zoneReadings[i]
+    if (local) {
+      res = await reviewCeSheetReading({ projectId: project.id, fileName: file.name, output: local })
+    } else {
+      const form = new FormData()
+      form.set('projectId', project.id)
+      form.set('fileName', file.name)
+      form.set('hint', `Zona «${zones[i].title}». Extrae solo la matriz de esta zona.${hint ? ` ${hint}` : ''}`.slice(0, 300))
+      form.set('sheet', zones[i].csv)
+      res = await extractCeMatrixWithAi(form)
+    }
     if (res.error || !res.review || !res.meta) patchZone(i, { status: 'error', error: res.error ?? ti('noProposal') })
     else patchZone(i, { status: 'ready', review: res.review, revision: res.meta.revision, sourceDocument: res.meta.sourceDocument })
   }
 
-  function readZones() {
+  function readZones(withAi: boolean) {
     setError('')
     setZoneRuns(zones.map(z => ({ title: z.title, status: 'pending' })))
     startReading(async () => {
       let next = 0
-      const worker = async () => { while (next < zones.length) await readZone(next++) }
+      const worker = async () => { while (next < zones.length) await readZone(next++, withAi) }
       await Promise.all([worker(), worker()])
     })
   }
@@ -109,10 +124,23 @@ export default function ImportCeWizard({ project, systems, aiReady }: {
     setActiveZone(null); setReview(null); setMeta(null)
   }
 
-  function read() {
+  function showProposal(res: ExtractResult) {
+    if (res.error || !res.review || !res.meta) { setError(res.error ?? ti('noProposal')); return }
+    setReview(res.review)
+    setMeta({ code: '', title: res.meta.title, systemId: '', revision: res.meta.revision, sourceDocument: res.meta.sourceDocument, fileName: res.meta.fileName })
+  }
+
+  function read(withAi: boolean) {
     if (!file) return
-    if (zoneMode) { readZones(); return }
+    if (zoneMode) { readZones(withAi); return }
     setError('')
+    if (!withAi && sheetReading) {
+      startReading(async () => {
+        try { showProposal(await reviewCeSheetReading({ projectId: project.id, fileName: file.name, output: { ...sheetReading, matrix_title: sheetName } })) }
+        catch (e) { setError(ti('saveFailed', { detail: e instanceof Error ? e.message : String(e) })) }
+      })
+      return
+    }
     const form = new FormData()
     form.set('projectId', project.id)
     form.set('fileName', file.name)
@@ -128,10 +156,8 @@ export default function ImportCeWizard({ project, systems, aiReady }: {
       form.set('sheet', csv)
     }
     startReading(async () => {
-      const res = await extractCeMatrixWithAi(form)
-      if (res.error || !res.review || !res.meta) { setError(res.error ?? ti('noProposal')); return }
-      setReview(res.review)
-      setMeta({ code: '', title: res.meta.title, systemId: '', revision: res.meta.revision, sourceDocument: res.meta.sourceDocument, fileName: res.meta.fileName })
+      try { showProposal(await extractCeMatrixWithAi(form)) }
+      catch (e) { setError(ti('saveFailed', { detail: e instanceof Error ? e.message : String(e) })) }
     })
   }
 
@@ -203,7 +229,7 @@ export default function ImportCeWizard({ project, systems, aiReady }: {
 
       {!review && zoneRuns && (
         <CeZoneList projectId={project.id} runs={zoneRuns} prefix={zonePrefix} systemId={zoneSystem} systems={systems}
-          onPrefix={setZonePrefix} onSystem={setZoneSystem} onOpen={openZone} onRetry={i => startReading(() => readZone(i))}
+          onPrefix={setZonePrefix} onSystem={setZoneSystem} onOpen={openZone} onRetry={i => startReading(() => readZone(i, !zoneReadings[i]))}
           onRestart={async () => {
             if (zoneRuns.some(r => r.status === 'ready') && !(await confirm({ message: ti('zones.restartConfirm'), confirmLabel: ti('zones.restart'), danger: true }))) return
             setZoneRuns(null)
@@ -232,7 +258,25 @@ export default function ImportCeWizard({ project, systems, aiReady }: {
             <input style={field} maxLength={300} value={hint} onChange={e => setHint(e.target.value)} placeholder={ti('hintPlaceholder')} />
           </label>
           <div>
-            <button type="button" style={primary} disabled={!file || reading || !aiReady || (!isPdf && !workbook)} onClick={read}>{reading ? ti('reading') : zoneMode ? ti('zones.read', { n: zones.length }) : ti('read')}</button>
+            {canReadWithoutAi && (
+              <p style={{ fontSize: '12px', color: 'var(--success-700)', margin: '0 0 8px' }}>
+                {zoneMode
+                  ? ti('structured.zones', { n: zoneReadings.filter(Boolean).length, total: zones.length })
+                  : ti('structured.sheet', { causes: sheetReading!.causes.length, effects: sheetReading!.effects.length, links: sheetReading!.links.length })}
+              </p>
+            )}
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              {canReadWithoutAi && (
+                <button type="button" style={primary} disabled={!file || reading} onClick={() => read(false)}>
+                  {reading ? ti('reading') : zoneMode ? ti('structured.readZones', { n: zones.length }) : ti('structured.read')}
+                </button>
+              )}
+              <button type="button" style={canReadWithoutAi ? { ...primary, background: 'var(--card-bg)', color: 'var(--primary-700)', border: '1px solid var(--primary-300)' } : primary}
+                disabled={!file || reading || !aiReady || (!isPdf && !workbook)} onClick={() => read(true)}>
+                {reading && !canReadWithoutAi ? ti('reading') : zoneMode ? ti('zones.read', { n: zones.length }) : ti('read')}
+              </button>
+            </div>
+            {canReadWithoutAi && <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '8px 0 0' }}>{ti('structured.aiHint')}</p>}
           </div>
         </div>
       )}

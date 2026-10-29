@@ -5,7 +5,8 @@ import { looksLikeTag } from '@/lib/import/tag-shape'
 // título («ENTRADA SISTEMA DE ESPUMA») con sus causas debajo; cada zona se lee aparte (encabezado + sus filas, solo
 // las columnas que esa zona usa) y queda como una matriz propia. Puro: lo prueba zones.test.ts.
 
-export type CeZone = { title: string; csv: string; rows: number }
+/** `rows` = encabezado + filas de la zona con solo sus columnas (para leer sin IA, sheet-reader.ts); `csv` = lo mismo para la IA. */
+export type CeZone = { title: string; csv: string; rows: string[][]; causeRows: number }
 
 const text = (v: unknown) => String(v ?? '').replace(/\s+/g, ' ').trim()
 
@@ -45,7 +46,7 @@ export function splitSheetByZones(raw: unknown[][]): CeZone[] {
     const body = rows.slice(start, k + 1 < starts.length ? starts[k + 1] : end).filter(r => r.some(Boolean))
     const width = Math.max(...body.map(r => r.length))
     const keep = Array.from({ length: width }, (_, c) => c).filter(c => body.some(r => r[c]))
-    const csv = [...header, ...body].map(r => keep.map(c => csvCell(r[c] ?? '')).join(',')).join('\n')
-    return { title: rows[start][0], csv, rows: body.length - 1 }
+    const table = [...header, ...body].map(r => keep.map(c => r[c] ?? ''))
+    return { title: rows[start][0], csv: table.map(r => r.map(csvCell).join(',')).join('\n'), rows: table, causeRows: body.length - 1 }
   })
 }

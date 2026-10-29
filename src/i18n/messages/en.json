@@ -7595,7 +7595,14 @@
       },
       "codeTitleMissing": "Enter the matrix code (e.g. CE-PRO-01) and the title, above.",
       "fixErrors": "Fix the errors in red above before creating the matrix.",
-      "saveFailed": "Could not save ({detail}). Copy this message; if it mentions «Server Action» or «fetch», reload the page and read the sheet again."
+      "saveFailed": "Could not save ({detail}). Copy this message; if it mentions «Server Action» or «fetch», reload the page and read the sheet again.",
+      "structured": {
+        "sheet": "Matrix structure recognized: {causes} causes · {effects} effects · {links} links. Read without AI (free and instant).",
+        "zones": "Matrix structure recognized in {n} of {total} zones: read without AI (free and instant); the rest, with AI.",
+        "read": "Read without AI",
+        "readZones": "Read {n} zones without AI",
+        "aiHint": "«Read with AI» (≈ USD 0.35 and 1–2 min per sheet) is for PDFs, sheets without this structure or to get the document inconsistency warnings. Without AI, delays written only in the footnotes are not read: mark them in the grid."
+      }
     },
     "list": {
       "createError": "Could not create",
