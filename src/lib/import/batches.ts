@@ -32,7 +32,9 @@ export async function runBatches<R extends { errors: BatchErrors }>(
   let acc: R | null = null
   for (let offset = 0; offset < rows.length; offset += size) {
     const batch = rows.slice(offset, offset + size)
-    const res = await send(batch)
+    // Una action que lanza (Worker caído, red, despliegue nuevo) no puede dejar el asistente en «Importando…».
+    let res: { error?: string; result?: R }
+    try { res = await send(batch) } catch (e) { res = { error: `Sin respuesta del servidor (${e instanceof Error ? e.message : String(e)}). Recarga la página (puede haber una versión nueva) y vuelve a intentar.` } }
     if (res.error || !res.result) return { error: res.error ?? 'Sin respuesta del servidor', result: acc }
     const shifted = { ...res.result, errors: res.result.errors.map(e => ({ ...e, row: e.row + offset })) }
     acc = merge(acc, shifted)

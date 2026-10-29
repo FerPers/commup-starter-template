@@ -23,4 +23,11 @@ describe('importación por lotes (S07)', () => {
     expect(res.error).toBe('boom')
     expect(calls).toBe(2)
   })
+
+  it('runBatches: una action que lanza devuelve error (el asistente no queda en «Importando…»)', async () => {
+    let calls = 0
+    const res = await runBatches([1, 2], async () => { if (++calls === 2) throw new Error('fetch failed'); return { result: { errors: [], warnings: [] } } }, mergeCounts, undefined, 1)
+    expect(res.error).toContain('fetch failed')
+    expect(res.result).toEqual({ errors: [], warnings: [] })
+  })
 })
