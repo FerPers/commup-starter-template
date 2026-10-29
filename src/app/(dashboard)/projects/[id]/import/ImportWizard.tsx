@@ -58,12 +58,14 @@ export default function ImportWizard({
   const [fileCriticality, setFileCriticality] = useState<Criticality | ''>('')
   const [dragging, setDragging]       = useState(false)
   const [fileName, setFileName]       = useState<string | null>(null)
-  const [rows, setRows]               = useState<TagRow[]>([])
+  const [parsedRows, setParsedRows]   = useState<TagRow[]>([])
   const [parseWarnings, setParseWarnings] = useState<string[]>([])
   const [loading, setLoading]         = useState(false)
   const [result, setResult]           = useState<ImportResult | null>(null)
   const [importError, setImportError] = useState<string | null>(null)
   const [manualDiscipline, setManualDiscipline] = useState<string>('')
+  // Disciplina elegida en la vista previa para las filas sin una reconocida (archivo sin columna DISCIPLINA).
+  const [fallbackDiscipline, setFallbackDiscipline] = useState<string>('')
   // S07 (D9): columnas que trae el archivo — lo que no viene no se toca al reimportar.
   const [columns, setColumns] = useState<string[]>([])
   const [preview, setPreview] = useState<TagImportPreview | null>(null)
@@ -74,6 +76,10 @@ export default function ImportWizard({
   const disciplineCodes  = useMemo(() => new Set(disciplines.map(d => d.code.toUpperCase())), [disciplines])
   const prefillCode      = disciplinePrefill?.code.toUpperCase() ?? ''
   const effectivePrefill = prefillCode || manualDiscipline
+  const missingDiscipline = effectivePrefill ? 0 : parsedRows.filter(r => !disciplineCodes.has(r.discipline_code)).length
+  const rows = useMemo(() => fallbackDiscipline
+    ? parsedRows.map(r => disciplineCodes.has(r.discipline_code) ? r : { ...r, discipline_code: fallbackDiscipline })
+    : parsedRows, [parsedRows, fallbackDiscipline, disciplineCodes])
 
   // Al entrar a la vista previa consultamos qué tags ya existen. El reset a
   // null ocurre donde cambian las filas (parseFile / "Cambiar archivo").
@@ -134,7 +140,8 @@ export default function ImportWizard({
         }
 
         if (!disciplineCode) {
-          const unknown = [...new Set(parsed.map(r => r.discipline_code).filter(c => !disciplineCodes.has(c)))]
+          // Las filas sin disciplina las resuelve el selector de la vista previa; aquí solo los códigos desconocidos.
+          const unknown = [...new Set(parsed.map(r => r.discipline_code).filter(c => c && !disciplineCodes.has(c)))]
           if (unknown.length > 0) warnings.push(ti('warn.unknownDisciplines', { list: unknown.join(', ') }))
         }
 
@@ -150,7 +157,8 @@ export default function ImportWizard({
           ? { systems: new Set(parsed.map(r => r.system_code)).size, subsystems: new Set(parsed.map(r => r.subsystem_code)).size }
           : null)
         setColumns([...Object.keys(colIndex).filter(k => colIndex[k] !== undefined), ...(hierarchyFromFile ? ['system_code', 'subsystem_code'] : []), ...(defaults.criticality ? ['criticality'] : [])])
-        setRows(parsed)
+        setFallbackDiscipline('')
+        setParsedRows(parsed)
         setStep('preview')
       } catch {
         setParseWarnings([ti('warn.readError')])
@@ -384,12 +392,40 @@ export default function ImportWizard({
               <span style={{ color: 'var(--success-700)', fontWeight: 500 }}>{ti('valid', { n: validRows.length })}</span>
               {invalidRows.length > 0 && <span style={{ color: 'var(--danger-700)', fontWeight: 500, marginLeft: '8px' }}>{ti('skippedN', { n: invalidRows.length })}</span>}
             </div>
-            <button onClick={() => { setStep('upload'); setRows([]); setFileName(null); setExistingTags(null) }} style={{ fontSize: '13px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>← {ti('changeFile')}</button>
+            <button onClick={() => { setStep('upload'); setParsedRows([]); setFileName(null); setExistingTags(null) }} style={{ fontSize: '13px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>← {ti('changeFile')}</button>
           </div>
 
           {parseWarnings.length > 0 && (
             <div style={{ padding: '12px 16px', background: 'var(--warning-100)', borderRadius: '10px', marginBottom: '14px', border: '1px solid var(--warning-200)' }}>
               {parseWarnings.map((w, i) => <p key={i} style={{ fontSize: '13px', color: 'var(--warning-800)', margin: '2px 0' }}>⚠ {w}</p>)}
+            </div>
+          )}
+
+          {missingDiscipline > 0 && (
+            <div style={{ padding: '12px 16px', background: 'var(--warning-50)', borderRadius: '10px', marginBottom: '14px', border: '1px solid var(--warning-200)', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '13px', color: 'var(--warning-800)', flex: '1 1 320px' }}>⚠ {ti('warn.missingDiscipline', { n: missingDiscipline })}</span>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                {disciplines.map(d => {
+                  const on = fallbackDiscipline === d.code.toUpperCase()
+                  return (
+                    <button
+                      key={d.code}
+                      type="button"
+                      aria-pressed={on}
+                      onClick={() => setFallbackDiscipline(on ? '' : d.code.toUpperCase())}
+                      style={{
+                        padding: '4px 12px', borderRadius: '7px', border: '1px solid',
+                        borderColor: on ? d.color : 'var(--border)',
+                        background: on ? alpha(d.color, 8) : 'var(--card-bg)',
+                        color: ink(on ? d.color : 'var(--text-muted)'),
+                        fontSize: '12px', fontWeight: on ? 700 : 400, cursor: 'pointer',
+                      }}
+                    >
+                      {d.code}
+                    </button>
+                  )
+                })}
+              </div>
             </div>
           )}
 
@@ -540,7 +576,7 @@ export default function ImportWizard({
           )}
           <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
             <Link href={`/projects/${projectId}/tags`} style={{ padding: '10px 22px', background: 'var(--primary-600)', color: '#fff', borderRadius: '8px', fontSize: '13px', fontWeight: 500, textDecoration: 'none' }}>{ti('viewTags')} →</Link>
-            <button onClick={() => { setStep('upload'); setRows([]); setFileName(null); setExistingTags(null); setResult(null) }} style={{ padding: '10px 22px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)', cursor: 'pointer' }}>{ti('importMore')}</button>
+            <button onClick={() => { setStep('upload'); setParsedRows([]); setFileName(null); setExistingTags(null); setResult(null) }} style={{ padding: '10px 22px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)', cursor: 'pointer' }}>{ti('importMore')}</button>
           </div>
         </div>
       )}

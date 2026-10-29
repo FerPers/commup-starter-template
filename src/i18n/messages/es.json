@@ -7665,6 +7665,7 @@
       "noTagColumn": "No se encontró columna TAG / ETIQUETA. Verifica que tu archivo tenga encabezados reconocibles.",
       "noRows": "No se encontraron filas de datos válidas (TAG debe contener letras y números).",
       "unknownDisciplines": "Disciplinas no reconocidas: {list} — esas filas serán omitidas.",
+      "missingDiscipline": "{n, plural, one {# fila no trae} other {# filas no traen}} una disciplina reconocida (el archivo no tiene columna «Disciplina» o usa códigos que la organización no tiene). Elige la disciplina para {n, plural, one {ella} other {ellas}}:",
       "readError": "Error al leer el archivo. Verifica que sea un .xlsx o .xls válido."
     },
     "field": {

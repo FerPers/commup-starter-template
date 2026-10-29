@@ -7665,6 +7665,7 @@
       "noTagColumn": "No TAG column found. Check that your file has recognizable headers.",
       "noRows": "No valid data rows found (TAG must contain letters and numbers).",
       "unknownDisciplines": "Unrecognized disciplines: {list} — those rows will be skipped.",
+      "missingDiscipline": "{n, plural, one {# row has} other {# rows have}} no recognized discipline (the file has no «Discipline» column or uses codes your organization doesn't have). Pick the discipline for {n, plural, one {it} other {them}}:",
       "readError": "Could not read the file. Check that it is a valid .xlsx or .xls."
     },
     "field": {
