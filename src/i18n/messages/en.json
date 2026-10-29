@@ -5790,6 +5790,40 @@
       "docs": "Document register: {current} of {n} company documents at IFC or later.",
       "asBuilt": "Document register: {done} of {n} company documents at As-Built or Final.",
       "equipment": "Company test equipment: {valid} of {n} with valid calibration."
+    },
+    "import": {
+      "button": "Import from list",
+      "title": "Import vendor packages",
+      "back": "Vendor packages",
+      "intro": "Reads the package equipment list (item, TAG, EQUIPMENT, TYPE): each item is a package with its tags and scope; sub-items (3.1, 3.2…) become scope components. Nothing is saved until you confirm. Re-importing a revision updates the scope and tags of the package with the same title, without duplicating it.",
+      "notExcel": "The file could not be read as Excel.",
+      "noPackages": "The sheet has no package rows (ITEM and EQUIPMENT columns).",
+      "failed": "Import failed.",
+      "file": "File",
+      "sheet": "Sheet",
+      "group": "Group rows with the same scope",
+      "groupHint": "For example, 19 chemical injection skids with the same description = one package from one vendor. Untick for one package per row.",
+      "found": "{n, plural, one {# package} other {# packages}} in the sheet",
+      "preview": "Preview",
+      "company": "Company (vendor)",
+      "tbdNew": "Vendor to be defined (created)",
+      "companyHint": "Assigned to new packages; existing ones keep theirs. Change it on each package when awarded.",
+      "noCompany": "There are no companies: create them in Admin → Companies.",
+      "summary": "{n, plural, one {# package} other {# packages}} to import from {file}",
+      "col": {
+        "include": "Import",
+        "items": "Items",
+        "title": "Title",
+        "tags": "Tags",
+        "scope": "Scope"
+      },
+      "noTags": "No tag",
+      "import": "Import {n, plural, one {# package} other {# packages}}",
+      "importing": "Importing…",
+      "change": "← Change file",
+      "done": "Done: {created, plural, one {# package created} other {# packages created}}, {updated} updated.",
+      "missingTags": "{n, plural, one {# tag in the file does not exist} other {# tags in the file do not exist}} in the project and were not linked: {list}",
+      "toList": "View packages"
     }
   },
   "PunchCancel": {
@@ -8718,7 +8752,10 @@
       "activitiesRequired": "Describe the activities",
       "recommendationRequired": "Describe the recommendation",
       "invalidDecision": "Invalid decision",
-      "recommendationNotFound": "Recommendation not found"
+      "recommendationNotFound": "Recommendation not found",
+      "leadOnly": "Only leaders or above manage vendor packages.",
+      "nothingToImport": "There are no packages to import.",
+      "tbdCompanyAdmin": "The «Vendor to be defined» company does not exist and only an Owner or Admin can create it: ask them or pick a company."
     },
     "documents": {
       "invalidCompanyKind": "Invalid company type",

@@ -5790,6 +5790,40 @@
       "docs": "Registro de documentos: {current} de {n} documentos de la empresa con revisión IFC o superior.",
       "asBuilt": "Registro de documentos: {done} de {n} documentos de la empresa en As-Built o Final.",
       "equipment": "Equipos de prueba de la empresa: {valid} de {n} con calibración vigente."
+    },
+    "import": {
+      "button": "Importar desde listado",
+      "title": "Importar paquetes de vendor",
+      "back": "Paquetes de vendor",
+      "intro": "Lee la lista de equipos tipo paquete (ítem, TAG, EQUIPO, TIPO): cada ítem es un paquete con sus tags y su alcance; los sub-ítems (3.1, 3.2…) quedan como componentes del alcance. Nada se guarda hasta que confirmes. Reimportar una revisión actualiza el alcance y los tags del paquete con el mismo título, sin duplicarlo.",
+      "notExcel": "No se pudo leer el archivo como Excel.",
+      "noPackages": "La hoja no tiene filas de paquete (columnas ITEM y EQUIPO).",
+      "failed": "No se pudo importar.",
+      "file": "Archivo",
+      "sheet": "Hoja",
+      "group": "Agrupar filas con el mismo alcance",
+      "groupHint": "Por ejemplo, 19 skids de inyección de químicos con la misma descripción = un paquete de un proveedor. Desmárcalo para un paquete por fila.",
+      "found": "{n, plural, one {# paquete} other {# paquetes}} en la hoja",
+      "preview": "Vista previa",
+      "company": "Empresa (proveedor)",
+      "tbdNew": "Proveedor por definir (se crea)",
+      "companyHint": "Se asigna a los paquetes nuevos; los que ya existen conservan la suya. Cámbiala en cada paquete al adjudicar.",
+      "noCompany": "No hay empresas: créalas en Admin → Empresas.",
+      "summary": "{n, plural, one {# paquete} other {# paquetes}} para importar de {file}",
+      "col": {
+        "include": "Importar",
+        "items": "Ítems",
+        "title": "Título",
+        "tags": "Tags",
+        "scope": "Alcance"
+      },
+      "noTags": "Sin tag",
+      "import": "Importar {n, plural, one {# paquete} other {# paquetes}}",
+      "importing": "Importando…",
+      "change": "← Cambiar archivo",
+      "done": "Listo: {created, plural, one {# paquete creado} other {# paquetes creados}}, {updated, plural, one {# actualizado} other {# actualizados}}.",
+      "missingTags": "{n, plural, one {# tag del archivo no existe} other {# tags del archivo no existen}} en el proyecto y no se enlazaron: {list}",
+      "toList": "Ver paquetes"
     }
   },
   "PunchCancel": {
@@ -8718,7 +8752,10 @@
       "activitiesRequired": "Describe las actividades",
       "recommendationRequired": "Describe la recomendación",
       "invalidDecision": "Decisión no válida",
-      "recommendationNotFound": "Recomendación no encontrada"
+      "recommendationNotFound": "Recomendación no encontrada",
+      "leadOnly": "Solo líderes o superiores gestionan paquetes de vendor.",
+      "nothingToImport": "No hay paquetes para importar.",
+      "tbdCompanyAdmin": "La empresa «Proveedor por definir» no existe y solo un Propietario o Administrador puede crearla: pídeselo o elige una empresa."
     },
     "documents": {
       "invalidCompanyKind": "Tipo de empresa no válido",

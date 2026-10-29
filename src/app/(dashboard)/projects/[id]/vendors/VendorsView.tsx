@@ -64,7 +64,10 @@ export default function VendorsView({ project, rows, systems, companies, canEdit
           <p style={{ ...small, margin: '4px 0 0' }}>{project.code} · {project.name} — {t('subtitle')}</p>
         </div>
         {canEdit && !form && (
-          <button type="button" style={btn('primary')} onClick={() => setForm({ title: '', companyId: companyOpts[0]?.id ?? '', systemIds: [] })}>+ {t('new')}</button>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <Link href={`/projects/${project.id}/vendors/import`} style={btn('outline')}>{t('import.button')}</Link>
+            <button type="button" style={btn('primary')} onClick={() => setForm({ title: '', companyId: companyOpts[0]?.id ?? '', systemIds: [] })}>+ {t('new')}</button>
+          </div>
         )}
       </div>
 

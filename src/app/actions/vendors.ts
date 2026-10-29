@@ -5,9 +5,10 @@ import { revalidatePath } from 'next/cache'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { withAuth } from '@/lib/auth/withAuth'
 import type { Database } from '@/types/supabase.generated'
+import { ADMIN_ROLES } from '@/lib/constants/roles'
 import {
   ACTIVITY_KINDS, ACTIVITY_RESULTS, CHECKLIST_PHASES, INTERFACE_STATUSES, PUNCH_CATEGORIES, REPORT_KINDS, VENDOR_CHECKLIST,
-  type ActivityKind, type ActivityResult, type ChecklistPhase, type InterfaceStatus, type PunchCategory, type ReportKind,
+  isVendorLead, type ActivityKind, type ActivityResult, type ChecklistPhase, type InterfaceStatus, type PunchCategory, type ReportKind,
 } from '@/lib/vendors/catalog'
 import { sqlArg } from '@/lib/supabase/casts'
 
@@ -247,5 +248,81 @@ export const implementVendorRecommendation = withAuth(
     if (error) return { error: error.message }
     revalidate(input.projectId, input.packageId)
     return {}
+  },
+)
+
+// ── Importar paquetes desde la lista de equipos tipo paquete (decisión de Luis, 2026-10-29) ──
+// La lectura del Excel es del cliente (src/lib/vendors/package-list.ts); aquí cada paquete se crea o, si ya hay uno
+// abierto con el mismo título, se actualiza (alcance y tags del archivo; empresa, límites y movilización se conservan).
+// Los sistemas salen de los tags (sin el general) y se suman a los que el paquete ya tenía.
+
+export type PackageImportItem = { title: string; scope: string; tagNumbers: string[] }
+export type PackageImportResult = { created: number; updated: number; missingTags: string[]; errors: { title: string; reason: string }[] }
+
+/** Empresa provisional para paquetes sin proveedor adjudicado (FEED). */
+const TBD_COMPANY = 'Proveedor por definir'
+const titleKey = (v: string) => v.replace(/\s+/g, ' ').trim().toUpperCase()
+
+export const importVendorPackages = withAuth(
+  { guards: projectGuard },
+  async (ctx, input: { projectId: string; companyId: string; packages: PackageImportItem[] }): Promise<{ error?: string; result?: PackageImportResult }> => {
+    const t = await getTranslations('ActionErrors')
+    if (!isVendorLead(ctx.role)) return { error: t('vendors.leadOnly') }
+    const packages = (input.packages ?? []).slice(0, 200).filter(p => txt(p.title, 200))
+    if (!packages.length) return { error: t('vendors.nothingToImport') }
+
+    // Empresa: una de la org o la provisional (se crea una vez; crear empresas es de Propietario/Administrador).
+    let companyId = input.companyId
+    if (companyId === 'tbd') {
+      const { data: found } = await ctx.supabase.from('companies').select('id').eq('org_id', ctx.orgId).eq('name', TBD_COMPANY).maybeSingle()
+      if (found) companyId = found.id
+      else {
+        if (!ADMIN_ROLES.includes(ctx.role)) return { error: t('vendors.tbdCompanyAdmin') }
+        const { data, error } = await ctx.supabase.rpc('save_company', {
+          p_org_id: ctx.orgId, p_id: sqlArg<string>(null), p_name: TBD_COMPANY, p_short_name: sqlArg<string>(null), p_kind: 'vendor',
+          p_tax_id: sqlArg<string>(null), p_notes: 'Creada al importar paquetes de vendor: cámbiala en cada paquete al adjudicar.', p_is_active: true,
+        })
+        if (error || !data) return { error: error?.message ?? t('vendors.companyRequired') }
+        companyId = data as string
+      }
+    }
+    if (!companyId) return { error: t('vendors.companyRequired') }
+
+    // Tags del archivo → id y sistema (el general no cuenta como sistema del paquete).
+    const numbers = [...new Set(packages.flatMap(p => p.tagNumbers.map(n => n.trim()).filter(Boolean)))]
+    const tagInfo = new Map<string, { id: string; systemId: string | null }>()
+    for (let i = 0; i < numbers.length; i += 200) {
+      const { data, error } = await ctx.supabase.from('tags').select('id, tag_number, subsystems(systems(id, code))') // bounded: lote de 200 números
+        .eq('project_id', input.projectId).in('tag_number', numbers.slice(i, i + 200))
+      if (error) return { error: error.message }
+      for (const tg of data ?? []) {
+        const sys = tg.subsystems?.systems
+        tagInfo.set(tg.tag_number, { id: tg.id, systemId: sys && sys.code !== 'GEN-SYS' ? sys.id : null })
+      }
+    }
+
+    const { data: existing, error: exErr } = await ctx.supabase.from('vendor_packages') // bounded: paquetes del proyecto (decenas)
+      .select('id, title, status, company_id, boundaries, mob_system_id, mob_gate_id, planned_mobilization, vendor_package_systems(system_id)')
+      .eq('project_id', input.projectId)
+    if (exErr) return { error: exErr.message }
+    const open = new Map((existing ?? []).filter(p => !['demobilized', 'cancelled'].includes(p.status)).map(p => [titleKey(p.title), p]))
+
+    const result: PackageImportResult = { created: 0, updated: 0, missingTags: numbers.filter(n => !tagInfo.has(n)), errors: [] }
+    for (const p of packages) {
+      const title = txt(p.title, 200)
+      const tags = p.tagNumbers.map(n => tagInfo.get(n.trim())).filter((x): x is { id: string; systemId: string | null } => !!x)
+      const prev = open.get(titleKey(title))
+      const systems = [...new Set([...tags.map(x => x.systemId).filter((s): s is string => !!s), ...(prev?.vendor_package_systems ?? []).map(s => s.system_id)])]
+      const { error } = await ctx.supabase.rpc('save_vendor_package', {
+        p_project_id: input.projectId, p_id: opt(prev?.id), p_company_id: prev?.company_id ?? companyId, p_title: title,
+        p_scope: opt(txt(p.scope, 8000)), p_boundaries: opt(prev?.boundaries), p_systems: systems.slice(0, 200), p_tags: [...new Set(tags.map(x => x.id))].slice(0, 500),
+        p_mob_system_id: opt(prev?.mob_system_id), p_mob_gate_id: opt(prev?.mob_gate_id), p_planned_mobilization: date(prev?.planned_mobilization),
+      })
+      if (error) { result.errors.push({ title, reason: error.message }); continue }
+      if (prev) result.updated++
+      else result.created++
+    }
+    revalidate(input.projectId)
+    return { result }
   },
 )
