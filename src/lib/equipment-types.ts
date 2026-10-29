@@ -65,6 +65,25 @@ const EXTRA_TYPES: EquipmentTypeDefault[] = [
   { code: 'COND', name: 'Banco de condensadores',  category: 'Eléctricos', discipline: 'ELEC' },
   { code: 'TSOL', name: 'Toma de soldadura',       category: 'Eléctricos', discipline: 'ELEC' },
   { code: 'RED',  name: 'Red aérea de media tensión', category: 'Eléctricos', discipline: 'ELEC' },
+  // Listas de instrumentos, F&G y mecánicos de CPF Orotoy (INS-LI-006/007, MEE/MER, 2026-10-29).
+  { code: 'SD',   name: 'Detector de humo',        category: 'Control y seguridad', discipline: 'INST' },
+  { code: 'TD',   name: 'Detector térmico (calor)', category: 'Control y seguridad', discipline: 'INST' },
+  { code: 'EMA',  name: 'Estación manual de alarma', category: 'Control y seguridad', discipline: 'INST' },
+  { code: 'AS',   name: 'Alarma sonora (sirena)',  category: 'Control y seguridad', discipline: 'INST' },
+  { code: 'AV',   name: 'Alarma visual (baliza)',  category: 'Control y seguridad', discipline: 'INST' },
+  { code: 'HS',   name: 'Interruptor manual (hand switch)', category: 'Instrumentos', discipline: 'INST' },
+  { code: 'PS',   name: 'Interruptor de presión',  category: 'Instrumentos', discipline: 'INST' },
+  { code: 'FS',   name: 'Interruptor de flujo',    category: 'Instrumentos', discipline: 'INST' },
+  { code: 'ZS',   name: 'Interruptor de posición (final de carrera)', category: 'Instrumentos', discipline: 'INST' },
+  { code: 'ZT',   name: 'Transmisor de posición',  category: 'Instrumentos', discipline: 'INST' },
+  { code: 'SOL',  name: 'Válvula solenoide',       category: 'Instrumentos', discipline: 'INST' },
+  { code: 'POS',  name: 'Posicionador de válvula', category: 'Instrumentos', discipline: 'INST' },
+  { code: 'TW',   name: 'Termopozo',               category: 'Instrumentos', discipline: 'INST' },
+  { code: 'CC',   name: 'Cupón de corrosión',      category: 'Instrumentos', discipline: 'INST' },
+  { code: 'RO',   name: 'Orificio de restricción', category: 'Instrumentos', discipline: 'INST' },
+  { code: 'MZ',   name: 'Mezclador estático',      category: 'Estáticos', discipline: 'MECH' },
+  { code: 'PKG',  name: 'Paquete (skid)',          category: 'Estáticos', discipline: 'MECH' },
+  { code: 'TEA',  name: 'Tea (flare)',             category: 'Estáticos', discipline: 'MECH' },
   { code: 'CBL',  name: 'Cable',                  category: 'Cables',     discipline: 'ELEC' },
   { code: 'LINE', name: 'Línea de tubería',       category: 'Tubería',    discipline: 'PIPE' },
 ]
@@ -101,14 +120,19 @@ export function detectEquipmentTypeCode(tagNumber: string): string | null {
 }
 
 /**
- * Sinónimos que usan las listas de ingeniería para un tipo del catálogo (ELE-LI-102 de CPF Orotoy: «TRF» para el
- * transformador, «CCM» en español para el MCC, una familia de siglas para los tableros de BT). «DB» no está: en esa
- * lista es ducto de barras y en otras, tablero de distribución.
+ * Sinónimos que usan las listas de ingeniería para un tipo del catálogo (CPF Orotoy: «TRF» para el transformador,
+ * «CCM» en español para el MCC, familias de siglas para tableros de BT, solenoides y posicionadores). «DB» no está:
+ * en ELE-LI-102 es ducto de barras y en otras listas, tablero de distribución.
  */
 export const TYPE_ALIASES: Record<string, string> = {
   TRF: 'T', CCM: 'MCC',
   TA: 'TAB', TSA: 'TAB', TSG: 'TAB', TAH: 'TAB', DP: 'TAB', TPC: 'TAB', HVAC: 'TAB',
   LCP: 'CP', KRCP: 'REC', KSEC: 'SEC', FL: 'FUS',
+  // Instrumentos y F&G: finales de carrera, solenoides y posicionadores con sus siglas de lazo.
+  ZSO: 'ZS', ZSC: 'ZS', SV: 'SOL', SY: 'SOL', XY: 'SOL', DY: 'SOL', SDY: 'SOL', XVY: 'SOL',
+  LCY: 'POS', PCY: 'POS', FCY: 'POS', TCY: 'POS', FACP: 'PLC', HMI: 'DCS',
+  // Mecánicos: filtros, botas de gas (recipiente) y paquetes.
+  F: 'FIL', BG: 'V', X: 'PKG', URV: 'PKG', PQUIM: 'PKG',
 }
 
 /**

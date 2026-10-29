@@ -19,8 +19,8 @@ describe('detectEquipmentTypeCode — variantes ISA', () => {
     expect(detectEquipmentTypeCode('PVV-7621001')).toBe('PSV')
   })
   it('lo que no conoce queda sin tipo', () => {
-    expect(detectEquipmentTypeCode('TW-7621001')).toBeNull()
-    expect(detectEquipmentTypeCode('ZSC-7621001')).toBeNull()
+    expect(detectEquipmentTypeCode('QW-7621001')).toBeNull()
+    expect(detectEquipmentTypeCode('ZZY-7621001')).toBeNull()
     expect(detectEquipmentTypeCode('7621001')).toBeNull()
   })
 })
@@ -41,9 +41,22 @@ describe('detectEquipmentTypeCode — lista eléctrica (CPF Orotoy ELE-LI-102)',
     expect(detectEquipmentTypeCode('CPF-FL-A')).toBe('FUS')
   })
   it('el sufijo de un tren no es un tipo; lo desconocido queda sin tipo', () => {
-    expect(detectEquipmentTypeCode('XY-7620001C')).toBeNull()
-    expect(detectEquipmentTypeCode('ZSC-7620001A')).toBeNull()
+    expect(detectEquipmentTypeCode('QQ-7620001C')).toBeNull()
+    expect(detectEquipmentTypeCode('XY-7620001C')).toBe('SOL')
     expect(detectEquipmentTypeCode('PR02-DB-01A')).toBeNull()
     expect(detectEquipmentTypeCode('10-PT-1001A')).toBe('PT')
+  })
+})
+
+describe('detectEquipmentTypeCode — instrumentos, F&G y mecánicos (CPF Orotoy)', () => {
+  it('tipos propios', () => {
+    for (const [tag, code] of [['SD-762600', 'SD'], ['TW-7620001', 'TW'], ['EMA-762500', 'EMA'], ['AS-762500', 'AS'], ['AV-762507', 'AV'],
+      ['HS-7628001', 'HS'], ['PS-7628004', 'PS'], ['FS-7620001', 'FS'], ['ZT-7621001', 'ZT'], ['CC-7621001', 'CC'], ['RO-7620001', 'RO'],
+      ['TD-762500', 'TD'], ['MZ-762101A', 'MZ'], ['TEA-762501', 'TEA']] as const) expect(detectEquipmentTypeCode(tag), tag).toBe(code)
+  })
+  it('sinónimos', () => {
+    for (const [tag, code] of [['ZSO-7620001', 'ZS'], ['ZSC-7620001A', 'ZS'], ['SV-7621007B', 'SOL'], ['XY-7620001A', 'SOL'], ['DY-7628001', 'SOL'],
+      ['SDY-7620007', 'SOL'], ['LCY-7621007A', 'POS'], ['FCY-7621001', 'POS'], ['FACP-762500', 'PLC'], ['F-762001A', 'FIL'], ['BG-762101', 'V'],
+      ['PQUIM-762101', 'PKG'], ['X-762701', 'PKG'], ['URV-762501', 'PKG']] as const) expect(detectEquipmentTypeCode(tag), tag).toBe(code)
   })
 })
