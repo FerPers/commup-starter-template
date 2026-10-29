@@ -268,7 +268,7 @@ export default function ImportCeWizard({ project, systems, aiReady }: {
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               {canReadWithoutAi && (
                 <button type="button" style={primary} disabled={!file || reading} onClick={() => read(false)}>
-                  {reading ? ti('reading') : zoneMode ? ti('structured.readZones', { n: zones.length }) : ti('structured.read')}
+                  {reading ? ti('structured.reading') : zoneMode ? ti('structured.readZones', { n: zones.length }) : ti('structured.read')}
                 </button>
               )}
               <button type="button" style={canReadWithoutAi ? { ...primary, background: 'var(--card-bg)', color: 'var(--primary-700)', border: '1px solid var(--primary-300)' } : primary}

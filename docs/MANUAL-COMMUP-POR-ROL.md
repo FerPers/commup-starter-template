@@ -284,7 +284,7 @@ CommUp no tiene un rol «gerente» ni «planner»: normalmente son **arquitecto*
 - **Importar** jerarquía y tags (§5.1) e índice de señales (§5.17); editar tags.
 - **Plantillas ITR**: crear, importar del catálogo, activar revisiones, traducciones; **matriz** tipo de equipo × plantilla con IA; **Generar ITR** en masa.
 - **Tipos de registro controlado** y qué liberación bloquea cada uno.
-- **P&ID** (documentos tipo P&ID con visor y pines); lazos y matrices C&E (también importación con IA).
+- **P&ID** (documentos tipo P&ID con visor y pines); lazos y matrices C&E (también importación desde Excel o PDF).
 - **Aprobar liberaciones** (es aprobador por defecto); reabrir ITR aprobados; revocar o reabrir certificados.
 - **Integraciones:** claves de API, webhooks, automatizaciones; calidad de datos; paquetes de entrega.
 
@@ -506,7 +506,7 @@ Todo en *Proyecto › Señales y lazos* (pestañas Señales · Lazos · Matrices
 3. Pestaña *Lazos* → plantilla con tabla de lazo (I29C) → «Generar» por lazo o «Generar faltantes». Si el lazo cambia después, el ITR aparece «desactualizado» y se genera R2.
 
 **Matrices C&E** (líder+)
-1. Pestaña *Matrices C&E* → «Nueva matriz» o **«Importar con IA»** (Excel o PDF ≤ 4 MB): la IA propone causas, efectos y cruces; revisa en la grilla (tags inexistentes en ámbar) → «Aceptar y crear».
+1. Pestaña *Matrices C&E* → «Nueva matriz» o **«Importar matriz»** (Excel o PDF ≤ 4 MB): un Excel con estructura de matriz se lee sin IA; un PDF o una hoja sin esa estructura, con IA. Revisa en la grilla (tags inexistentes en ámbar) → «Aceptar y crear matriz».
    - **Excel con estructura de matriz → sin IA.** Si la hoja tiene los efectos en columnas (tag de salida, acción, descripción), las causas en filas (tag, estado, valor, descripción, ítem) y los cruces con «x», el asistente lo dice («Estructura de matriz reconocida: N causas · M efectos · K cruces») y **«Leer sin IA»** la lee al instante y sin costo. Sin IA no se leen los retardos que solo están en las notas al pie (márcalos en la grilla: clic en la celda) ni salen los avisos de inconsistencias del documento. **«Leer con IA»** (≈ 0,35 USD y 1–2 min por hoja, cuota diaria de la organización) queda para PDF, hojas sin esa estructura o para pedir esos avisos.
    - **Una hoja = una matriz.** Un libro con varias hojas de matriz (p. ej. «MCE pag 1…4») se importa hoja por hoja: elige la hoja, lee, escribe el **código** (p. ej. CE-PRO-01; el texto gris es solo un ejemplo) y «Aceptar y crear matriz»; luego la siguiente. Si algo falta o falla, el mensaje sale junto al botón.
    - **Efectos sobre varios equipos** («TK-762103/104», «MZ-762101A/B, MZ-762102A/B») se separan en un efecto por equipo (E-05.1, E-05.2…) con los mismos cruces; la revisión lo avisa.
