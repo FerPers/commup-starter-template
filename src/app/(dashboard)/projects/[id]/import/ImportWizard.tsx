@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useMemo, useEffect } from 'react'
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import * as XLSX from 'xlsx'
@@ -53,6 +53,11 @@ export default function ImportWizard({
   const tTags = useTranslations('Tags')
   const [step, setStep]               = useState<Step>('upload')
   const [sectionNote, setSectionNote] = useState<{ systems: number; subsystems: number; sites: boolean } | null>(null)
+  // Archivo con columna de sitio/área y sin «Sistema»: los sitios quedarían como áreas y los tags en el sistema general
+  // (CPF Orotoy ELE-LI-102). La vista previa lo avisa y deja escribir el sistema y volver a leer el archivo.
+  const [siteHint, setSiteHint] = useState<number | null>(null)
+  const [siteSystem, setSiteSystem] = useState('')
+  const lastFile = useRef<File | null>(null)
   // Valores para todo el archivo: sistema (filas sin título «SISTEMA …») y criticidad (filas sin ella).
   const [fileSystem, setFileSystem]   = useState('')
   const [fileCriticality, setFileCriticality] = useState<Criticality | ''>('')
@@ -114,6 +119,7 @@ export default function ImportWizard({
   )
 
   const parseFile = useCallback((file: File, disciplineCode: string, defaults: TagFileDefaults) => {
+    lastFile.current = file
     const reader = new FileReader()
     reader.onload = (e) => {
       try {
@@ -156,6 +162,8 @@ export default function ImportWizard({
         // los tags que ya existen (los nuevos van por su P&ID, ver prepareTagImport).
         const fromSections = usesSectionTitles(colIndex) && parsed.some(r => r.system_code !== 'GEN-SYS')
         const hierarchyFromFile = fromSections || (usesSectionTitles(colIndex) && !!defaults.system?.trim())
+        const sites = new Set(parsed.map(r => r.area_code).filter(a => a !== 'GENERAL'))
+        setSiteHint(colIndex.area_code !== undefined && usesSectionTitles(colIndex) && !defaults.system?.trim() && sites.size >= 2 ? sites.size : null)
         setSectionNote(fromSections
           ? { systems: new Set(parsed.map(r => r.system_code)).size, subsystems: new Set(parsed.map(r => r.subsystem_code)).size, sites: sitesAsSubsystems(colIndex, defaults.system) }
           : null)
@@ -401,6 +409,19 @@ export default function ImportWizard({
           {parseWarnings.length > 0 && (
             <div style={{ padding: '12px 16px', background: 'var(--warning-100)', borderRadius: '10px', marginBottom: '14px', border: '1px solid var(--warning-200)' }}>
               {parseWarnings.map((w, i) => <p key={i} style={{ fontSize: '13px', color: 'var(--warning-800)', margin: '2px 0' }}>⚠ {w}</p>)}
+            </div>
+          )}
+
+          {siteHint !== null && (
+            <div style={{ padding: '12px 16px', background: 'var(--warning-50)', borderRadius: '10px', marginBottom: '14px', border: '1px solid var(--warning-200)', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '13px', color: 'var(--warning-800)', flex: '1 1 360px' }}>⚠ {ti('siteHint', { n: siteHint })}</span>
+              <input aria-label={ti('fileDefaults.system')} value={siteSystem} onChange={e => setSiteSystem(e.target.value)} placeholder="SISTEMA ELÉCTRICO" maxLength={120}
+                style={{ padding: '7px 10px', border: '1px solid var(--border)', borderRadius: 8, fontSize: 13, background: 'var(--card-bg)', color: 'var(--text-strong)', minWidth: 200 }} />
+              <button type="button" disabled={!siteSystem.trim()}
+                onClick={() => { const sys = siteSystem.trim(); setFileSystem(sys); if (lastFile.current) parseFile(lastFile.current, effectivePrefill, { ...fileDefaults, system: sys }) }}
+                style={{ padding: '7px 14px', borderRadius: 8, border: 0, background: 'var(--primary-600)', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: siteSystem.trim() ? 1 : 0.5 }}>
+                {ti('siteApply')}
+              </button>
             </div>
           )}
 

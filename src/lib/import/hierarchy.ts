@@ -84,19 +84,29 @@ export async function upsertHierarchy(
     warnings.push(`Subsistema "${code}" aparece bajo varios sistemas (${[...parents].join(', ')}); se asignó a ${subsystems.get(code)!.parent}. Usa códigos de subsistema únicos en el proyecto.`)
   }
 
-  // Áreas
-  const { error: areaErr } = await admin
-    .from('areas')
-    .upsert(
-      [...areas].map(([code, name]) => ({ project_id: projectId, code, name, description: null })),
-      { onConflict: 'project_id,code', ignoreDuplicates: true },
-    )
-  if (areaErr) return { error: `Error creando áreas: ${areaErr.message}` }
+  // Áreas: solo las que usa un sistema NUEVO. Un sistema que ya existe se queda en su área (códigos únicos por
+  // proyecto): antes se creaban igual las áreas del archivo y quedaban vacías (CPF Orotoy ELE-LI-102: 23 áreas
+  // «POWER ROOM …» sin sistemas, con los tags en GEN-SYS del área GENERAL).
+  const existingSystems = await idsByCode(admin, 'systems', projectId, [...systems.keys()])
+  const neededAreas = new Set([...systems].filter(([code]) => !existingSystems.has(code)).map(([, node]) => node.parent))
+  const existingAreas = await idsByCode(admin, 'areas', projectId, [...areas.keys()])
+  const unused = [...areas.keys()].filter(a => !neededAreas.has(a) && !existingAreas.has(a))
+  if (unused.length) {
+    warnings.push(`La columna de área no se aplicó en ${unused.length} ${unused.length === 1 ? 'valor' : 'valores'} (${unused.slice(0, 5).join(', ')}${unused.length > 5 ? '…' : ''}): sus filas van a sistemas que ya existen en otra área. Para un subsistema por sitio, escribe el «Sistema» en «Valores para todo el archivo».`)
+  }
+  const toCreate = [...areas].filter(([code]) => neededAreas.has(code) && !existingAreas.has(code))
+  if (toCreate.length) {
+    const { error: areaErr } = await admin
+      .from('areas')
+      .upsert(toCreate.map(([code, name]) => ({ project_id: projectId, code, name, description: null })), { onConflict: 'project_id,code', ignoreDuplicates: true })
+    if (areaErr) return { error: `Error creando áreas: ${areaErr.message}` }
+  }
   const areaIdMap = await idsByCode(admin, 'areas', projectId, [...areas.keys()])
 
   // Sistemas
   const systemRows = []
   for (const [code, node] of systems) {
+    if (existingSystems.has(code)) continue
     const areaId = areaIdMap.get(node.parent)
     if (!areaId) { warnings.push(`Sistema "${code}": no se encontró el área ${node.parent}`); continue }
     systemRows.push({ project_id: projectId, area_id: areaId, code, name: node.name, description: null })

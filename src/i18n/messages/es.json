@@ -7783,7 +7783,9 @@
       "fromFile": "— la del archivo",
       "hint": "Sistema: para las filas sin título «SISTEMA …»; los títulos de la lista (zonas) quedan como subsistemas, y si el archivo trae columna de sitio o área (p. ej. «SE / Sitio» de la lista eléctrica), cada sitio queda como subsistema. Criticidad: para las filas sin ella. «Seguridad» hace que la liberación del sistema espere sus ITR aprobados y sin punch A/B. Elige antes de subir el archivo."
     },
-    "fromSites": "Cada sitio de la columna «SE / Sitio» (o «Área») quedó como subsistema del sistema del archivo: {subsystems} subsistemas. Revísalos en la columna «Área / Sistema / Subsistema»."
+    "fromSites": "Cada sitio de la columna «SE / Sitio» (o «Área») quedó como subsistema del sistema del archivo: {subsystems} subsistemas. Revísalos en la columna «Área / Sistema / Subsistema».",
+    "siteHint": "El archivo trae una columna de sitio o área con {n} valores y no indicaste «Sistema»: quedarían como áreas y los tags en el sistema general. Para un subsistema por sitio, escribe el sistema y vuelve a leer el archivo.",
+    "siteApply": "Aplicar y volver a leer"
   },
   "SignalImport": {
     "title": "Importar Lista de Señales",
