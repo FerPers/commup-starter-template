@@ -38,6 +38,16 @@ describe('sectionsByRow', () => {
     expect(f.get(2)).toEqual({ system: null, subsystem: 'SEPARADORES BIFÁSICOS HORIZONTALES SEP-762101A/B/C/D' })
     expect(f.get(4)).toEqual({ system: null, subsystem: 'CUARTO DE CONTROL' })
   })
+  it('un título con el número de ítem en otra celda sigue siendo título (LI-006 de CPF Orotoy)', () => {
+    const numbered: unknown[][] = [
+      H('SISTEMA DE TEA'), D('PIT-7626001'),
+      ['625', '', 'SISTEMA DE NAFTA'], ['626', '', 'RECIBO, ALMACENAMIENTO Y ENVÍO DE DILUYENTE'], D('PIT-7627001'),
+      ['627', 'PIT-7627002', 'Descripción'],
+    ]
+    const n = sectionsByRow(numbered, 0, isData)
+    expect(n.get(4)).toEqual({ system: 'SISTEMA DE NAFTA', subsystem: 'RECIBO, ALMACENAMIENTO Y ENVÍO DE DILUYENTE' })
+    expect(n.get(5)).toEqual({ system: 'SISTEMA DE NAFTA', subsystem: 'RECIBO, ALMACENAMIENTO Y ENVÍO DE DILUYENTE' })
+  })
   it('las notas al pie y el texto en minúsculas no son títulos', () => {
     const r: unknown[][] = [H('SISTEMA DE AGUA'), H('Ver nota 3 del documento'), D('PIT-7624001')]
     expect(sectionsByRow(r, 0, isData).get(2)).toEqual({ system: 'SISTEMA DE AGUA', subsystem: 'SISTEMA DE AGUA' })

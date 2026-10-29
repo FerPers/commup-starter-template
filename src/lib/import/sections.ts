@@ -4,7 +4,8 @@ import { looksLikeTag } from '@/lib/import/tag-shape'
  * Sistema › subsistema desde los TÍTULOS DE SECCIÓN de una lista de ingeniería (decisión de Luis, 2026-10-26).
  * Las listas de instrumentos y de señales no traen columnas de sistema: lo agrupan con filas de título
  * («SISTEMA DE CRUDO» › «MULTIPLES DE RECIBO», luego las filas de tags). Reglas:
- *  - Título = fila con UNA sola celda con texto, en mayúsculas, que no es un tag ni una nota («1. …», «NOTAS:»).
+ *  - Título = fila con UNA sola celda con texto, en mayúsculas, que no es un tag ni una nota («1. …», «NOTAS:»);
+ *    puede llevar antes el número de ítem en su propia celda («625 | SISTEMA DE NAFTA», LI-006 de CPF Orotoy).
  *  - Los títulos seguidos se apilan; la primera fila de datos después de la pila la resuelve:
  *    · subsistema = el último título de la pila;
  *    · sistema = el último título de la pila (antes del subsistema) que empieza por «SISTEMA(S)»/«SYSTEM(S)»;
@@ -19,6 +20,8 @@ const SYSTEM_HEAD = /^(?:SISTEMAS?|SYSTEMS?)\b/i
 
 function headingText(row: unknown[]): string | null {
   const cells = row.map(v => String(v ?? '').replace(/\s+/g, ' ').trim()).filter(Boolean)
+  // El número de ítem de la fila («625») no cuenta como celda del título.
+  if (cells.length === 2 && /^\d+$/.test(cells[0])) cells.shift()
   if (cells.length !== 1) return null
   const text = cells[0]
   if (text.length < 3 || text.length > 160) return null
